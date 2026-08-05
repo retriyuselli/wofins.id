@@ -1,0 +1,149 @@
+{
+  "" : {
+    "diagnostics" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/Wofins-primary.dia",
+    "emit-module-dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/Wofins-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/Wofins-primary-emit-module.dia",
+    "pch" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/Wofins-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/Wofins-primary.swiftdeps"
+  },
+  "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/GeneratedAssetSymbols.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/GeneratedAssetSymbols.dia",
+    "index-unit-output-path" : "/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/GeneratedAssetSymbols.bc",
+    "object" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftdeps",
+    "swiftmodule" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/GeneratedAssetSymbols~partial.swiftmodule"
+  },
+  "/Applications/MAMP/htdocs/wofins/ios/Wofins/App/AppState.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/AppState.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/AppState.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/AppState.dia",
+    "index-unit-output-path" : "/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/AppState.o",
+    "llvm-bc" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/AppState.bc",
+    "object" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/AppState.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/AppState.swiftdeps",
+    "swiftmodule" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/AppState~partial.swiftmodule"
+  },
+  "/Applications/MAMP/htdocs/wofins/ios/Wofins/App/RootView.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/RootView.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/RootView.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/RootView.dia",
+    "index-unit-output-path" : "/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/RootView.o",
+    "llvm-bc" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/RootView.bc",
+    "object" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/RootView.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/RootView.swiftdeps",
+    "swiftmodule" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/RootView~partial.swiftmodule"
+  },
+  "/Applications/MAMP/htdocs/wofins/ios/Wofins/App/WofinsApp.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/WofinsApp.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/WofinsApp.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/WofinsApp.dia",
+    "index-unit-output-path" : "/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/WofinsApp.o",
+    "llvm-bc" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/WofinsApp.bc",
+    "object" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/WofinsApp.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/WofinsApp.swiftdeps",
+    "swiftmodule" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/WofinsApp~partial.swiftmodule"
+  },
+  "/Applications/MAMP/htdocs/wofins/ios/Wofins/Config/APIConfig.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/APIConfig.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/APIConfig.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/APIConfig.dia",
+    "index-unit-output-path" : "/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/APIConfig.o",
+    "llvm-bc" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/APIConfig.bc",
+    "object" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/APIConfig.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/APIConfig.swiftdeps",
+    "swiftmodule" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/APIConfig~partial.swiftmodule"
+  },
+  "/Applications/MAMP/htdocs/wofins/ios/Wofins/Core/APIClient.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/APIClient.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/APIClient.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/APIClient.dia",
+    "index-unit-output-path" : "/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/APIClient.o",
+    "llvm-bc" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/APIClient.bc",
+    "object" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/APIClient.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/APIClient.swiftdeps",
+    "swiftmodule" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/APIClient~partial.swiftmodule"
+  },
+  "/Applications/MAMP/htdocs/wofins/ios/Wofins/Core/KeychainStore.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/KeychainStore.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/KeychainStore.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/KeychainStore.dia",
+    "index-unit-output-path" : "/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/KeychainStore.o",
+    "llvm-bc" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/KeychainStore.bc",
+    "object" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/KeychainStore.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/KeychainStore.swiftdeps",
+    "swiftmodule" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/KeychainStore~partial.swiftmodule"
+  },
+  "/Applications/MAMP/htdocs/wofins/ios/Wofins/Features/Account/AccountView.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/AccountView.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/AccountView.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/AccountView.dia",
+    "index-unit-output-path" : "/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/AccountView.o",
+    "llvm-bc" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/AccountView.bc",
+    "object" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/AccountView.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/AccountView.swiftdeps",
+    "swiftmodule" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/AccountView~partial.swiftmodule"
+  },
+  "/Applications/MAMP/htdocs/wofins/ios/Wofins/Features/Attendance/AttendanceView.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/AttendanceView.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/AttendanceView.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/AttendanceView.dia",
+    "index-unit-output-path" : "/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/AttendanceView.o",
+    "llvm-bc" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/AttendanceView.bc",
+    "object" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/AttendanceView.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/AttendanceView.swiftdeps",
+    "swiftmodule" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/AttendanceView~partial.swiftmodule"
+  },
+  "/Applications/MAMP/htdocs/wofins/ios/Wofins/Features/Auth/LoginView.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/LoginView.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/LoginView.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/LoginView.dia",
+    "index-unit-output-path" : "/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/LoginView.o",
+    "llvm-bc" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/LoginView.bc",
+    "object" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/LoginView.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/LoginView.swiftdeps",
+    "swiftmodule" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/LoginView~partial.swiftmodule"
+  },
+  "/Applications/MAMP/htdocs/wofins/ios/Wofins/Features/Compensation/CompensationView.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/CompensationView.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/CompensationView.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/CompensationView.dia",
+    "index-unit-output-path" : "/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/CompensationView.o",
+    "llvm-bc" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/CompensationView.bc",
+    "object" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/CompensationView.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/CompensationView.swiftdeps",
+    "swiftmodule" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/CompensationView~partial.swiftmodule"
+  },
+  "/Applications/MAMP/htdocs/wofins/ios/Wofins/Features/Home/HomeView.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/HomeView.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/HomeView.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/HomeView.dia",
+    "index-unit-output-path" : "/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/HomeView.o",
+    "llvm-bc" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/HomeView.bc",
+    "object" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/HomeView.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/HomeView.swiftdeps",
+    "swiftmodule" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/HomeView~partial.swiftmodule"
+  },
+  "/Applications/MAMP/htdocs/wofins/ios/Wofins/Features/Leave/LeaveViews.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/LeaveViews.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/LeaveViews.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/LeaveViews.dia",
+    "index-unit-output-path" : "/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/LeaveViews.o",
+    "llvm-bc" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/LeaveViews.bc",
+    "object" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/LeaveViews.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/LeaveViews.swiftdeps",
+    "swiftmodule" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/LeaveViews~partial.swiftmodule"
+  },
+  "/Applications/MAMP/htdocs/wofins/ios/Wofins/Models/APIModels.swift" : {
+    "const-values" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/APIModels.swiftconstvalues",
+    "dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/APIModels.d",
+    "diagnostics" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/APIModels.dia",
+    "index-unit-output-path" : "/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/APIModels.o",
+    "llvm-bc" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/APIModels.bc",
+    "object" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/APIModels.o",
+    "swift-dependencies" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/APIModels.swiftdeps",
+    "swiftmodule" : "/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/Objects-normal/arm64/APIModels~partial.swiftmodule"
+  }
+}

@@ -1,0 +1,107 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
+
+class VendorPriceHistory extends Model
+{
+    use LogsActivity;
+
+    protected $fillable = [
+        'vendor_id',
+        'harga_publish',
+        'harga_vendor',
+        'profit_amount',
+        'profit_margin',
+        'effective_from',
+        'effective_to',
+        'status',
+        'kontrak',
+        'description',
+    ];
+
+    protected $casts = [
+        'harga_publish' => 'integer',
+        'harga_vendor' => 'integer',
+        'profit_amount' => 'integer',
+        'profit_margin' => 'integer',
+        'effective_from' => 'datetime',
+        'effective_to' => 'datetime',
+    ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $history): void {
+            $hp = (float) ($history->harga_publish ?? 0);
+            $hv = (float) ($history->harga_vendor ?? 0);
+            $profit = $hp - $hv;
+            $history->profit_amount = $profit;
+            $marginPercent = $hp > 0 ? ($profit / $hp) * 100 : 0;
+            $history->profit_margin = (int) round($marginPercent * 100);
+
+            // Ensure only one 'active' status per vendor (block save if more than one)
+            if (Schema::hasColumn('vendor_price_histories', 'status')) {
+                $status = $history->status ?? null;
+                if ($status === 'active' && $history->vendor_id) {
+                    $existsOtherActive = DB::table('vendor_price_histories')
+                        ->where('vendor_id', $history->vendor_id)
+                        ->where('id', '!=', $history->id ?? 0)
+                        ->where('status', 'active')
+                        ->exists();
+
+                    if ($existsOtherActive) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'priceHistories' => 'Hanya satu riwayat harga dapat berstatus active untuk setiap vendor.',
+                        ]);
+                    }
+                }
+            }
+        });
+
+        static::retrieved(function (self $history): void {
+            $hp = (float) ($history->harga_publish ?? 0);
+            $hv = (float) ($history->harga_vendor ?? 0);
+            $profit = $hp - $hv;
+            $marginPercent = $hp > 0 ? ($profit / $hp) * 100 : 0;
+            $margin = (int) round($marginPercent * 100);
+
+            $needsUpdate = ($history->profit_amount === null) || ($history->profit_margin === null) ||
+                ((float) $history->profit_amount !== (float) $profit) ||
+                ((int) $history->profit_margin !== (int) $margin);
+
+            if ($needsUpdate) {
+                $history->profit_amount = $profit;
+                $history->profit_margin = $margin;
+                try {
+                    $history->saveQuietly();
+                } catch (\Throwable $e) {
+                }
+            }
+        });
+    }
+
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['vendor_id', 'harga_publish', 'harga_vendor', 'effective_from', 'status'])
+            ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}")
+            ->useLogName('vendor_price_history');
+    }
+
+    public function calculateProfitAmount(): void
+    {
+        $this->profit_amount = $this->harga_publish - $this->harga_vendor;
+    }
+
+    public function vendor(): BelongsTo
+    {
+        return $this->belongsTo(Vendor::class);
+    }
+}

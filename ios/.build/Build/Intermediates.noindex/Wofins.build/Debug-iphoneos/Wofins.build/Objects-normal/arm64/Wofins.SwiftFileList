@@ -1,0 +1,14 @@
+/Applications/MAMP/htdocs/wofins/ios/Wofins/Core/APIClient.swift
+/Applications/MAMP/htdocs/wofins/ios/Wofins/Config/APIConfig.swift
+/Applications/MAMP/htdocs/wofins/ios/Wofins/Models/APIModels.swift
+/Applications/MAMP/htdocs/wofins/ios/Wofins/Features/Account/AccountView.swift
+/Applications/MAMP/htdocs/wofins/ios/Wofins/App/AppState.swift
+/Applications/MAMP/htdocs/wofins/ios/Wofins/Features/Attendance/AttendanceView.swift
+/Applications/MAMP/htdocs/wofins/ios/Wofins/Features/Compensation/CompensationView.swift
+/Applications/MAMP/htdocs/wofins/ios/Wofins/Features/Home/HomeView.swift
+/Applications/MAMP/htdocs/wofins/ios/Wofins/Core/KeychainStore.swift
+/Applications/MAMP/htdocs/wofins/ios/Wofins/Features/Leave/LeaveViews.swift
+/Applications/MAMP/htdocs/wofins/ios/Wofins/Features/Auth/LoginView.swift
+/Applications/MAMP/htdocs/wofins/ios/Wofins/App/RootView.swift
+/Applications/MAMP/htdocs/wofins/ios/Wofins/App/WofinsApp.swift
+/Applications/MAMP/htdocs/wofins/ios/.build/Build/Intermediates.noindex/Wofins.build/Debug-iphoneos/Wofins.build/DerivedSources/GeneratedAssetSymbols.swift

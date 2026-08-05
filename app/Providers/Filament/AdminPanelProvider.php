@@ -1,0 +1,110 @@
+<?php
+
+namespace App\Providers\Filament;
+
+use App\Filament\Pages\ProjectDashboard;
+use App\Http\Middleware\RedirectUnauthenticatedToAppUrl;
+use App\Models\Company;
+use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
+use CmsMulti\FilamentClearCache\FilamentClearCachePlugin;
+use Filament\Enums\GlobalSearchPosition;
+use Filament\Http\Middleware\Authenticate;
+use Filament\Http\Middleware\AuthenticateSession;
+use Filament\Http\Middleware\DisableBladeIconComponents;
+use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Panel;
+use Filament\PanelProvider;
+use Filament\Support\Colors\Color;
+use Filament\Support\Enums\Width;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Throwable;
+
+class AdminPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        $hasTable = function (string $table): bool {
+            try {
+                return Schema::hasTable($table);
+            } catch (Throwable) {
+                return false;
+            }
+        };
+
+        $cache = Cache::store();
+        if (config('cache.default') === 'database' && ! $hasTable('cache')) {
+            $cache = Cache::store('array');
+        }
+
+        $brandVersion = $cache->remember('company_brand_version', 60, function () use ($hasTable) {
+            if (! $hasTable('companies')) {
+                return 1;
+            }
+
+            try {
+                return Company::query()->value('updated_at')?->timestamp ?? 1;
+            } catch (Throwable) {
+                return 1;
+            }
+        });
+
+        $brandLogo = url('/brand/logo').'?v='.$brandVersion;
+        $favicon = url('/brand/favicon').'?v='.$brandVersion;
+
+        return $panel
+            ->globalSearch(position: GlobalSearchPosition::Topbar)
+            ->default()
+            ->id('admin')
+            ->path('admin')
+            ->font('Noto Sans')
+            ->login()
+            ->maxContentWidth(Width::Full)
+            ->brandLogo($brandLogo)
+            ->brandLogoHeight('2rem')
+            ->brandName('Makna Kreatif')
+            ->favicon($favicon)
+            ->sidebarCollapsibleOnDesktop(true)
+            ->colors([
+                'primary' => Color::Blue,
+            ])
+            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
+            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
+            ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\\Filament\\Clusters')
+            ->pages([
+                // Dashboard::class,
+                ProjectDashboard::class,
+            ])
+            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
+            ->renderHook('panels::body.end', fn () => view('filament.inactivity-redirect'))
+            ->viteTheme('resources/css/filament/admin/theme.css')
+            ->middleware([
+                EncryptCookies::class,
+                AddQueuedCookiesToResponse::class,
+                StartSession::class,
+                AuthenticateSession::class,
+                ShareErrorsFromSession::class,
+                VerifyCsrfToken::class,
+                SubstituteBindings::class,
+                DisableBladeIconComponents::class,
+                DispatchServingFilamentEvent::class,
+            ])
+            ->authMiddleware([
+                RedirectUnauthenticatedToAppUrl::class,
+                Authenticate::class,
+            ])
+            ->plugins([
+                FilamentShieldPlugin::make()
+                    ->navigationLabel('Role')
+                    ->navigationGroup('SDM')
+                    ->globallySearchable(false),
+                FilamentClearCachePlugin::make(),
+            ]);
+    }
+}

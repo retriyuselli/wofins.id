@@ -1,0 +1,73 @@
+<?php
+
+namespace App\Filament\Resources\LeaveBalances;
+
+use App\Filament\Resources\LeaveBalanceResource\Pages;
+use App\Filament\Resources\LeaveBalances\Pages\EditLeaveBalance;
+use App\Filament\Resources\LeaveBalances\Pages\ListLeaveBalances;
+use App\Filament\Resources\LeaveBalances\Schemas\LeaveBalanceForm;
+use App\Filament\Resources\LeaveBalances\Tables\LeaveBalancesTable;
+use App\Models\LeaveBalance;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Tables\Table;
+
+class LeaveBalanceResource extends Resource
+{
+    protected static ?string $model = LeaveBalance::class;
+
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-scale';
+
+    protected static ?string $navigationLabel = 'Saldo Cuti';
+
+    protected static ?string $modelLabel = 'Saldo Cuti';
+
+    protected static ?string $pluralModelLabel = 'Saldo Cuti';
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Manajemen Cuti';
+
+    public static function form(Schema $schema): Schema
+    {
+        return LeaveBalanceForm::configure($schema);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return LeaveBalancesTable::configure($table);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            RelationManagers\HistoriesRelationManager::class,
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => ListLeaveBalances::route('/'),
+            // 'create' => Pages\CreateLeaveBalance::route('/create'), // Dihilangkan karena otomatis
+            'edit' => EditLeaveBalance::route('/{record}/edit'),
+        ];
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return (string) static::getModel()::count();
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'Total saldo cuti karyawan';
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()
+            ->with([
+                'user:id,name',
+                'leaveType:id,name',
+            ]);
+    }
+}

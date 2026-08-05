@@ -1,0 +1,66 @@
+<?php
+
+namespace App\Filament\Pages;
+
+use App\Filament\Widgets\AccountManagerWidget;
+use App\Filament\Widgets\ComingSoonAkadWidget;
+use App\Filament\Widgets\ComingSoonResepsiWidget;
+use App\Filament\Widgets\DashboardKeuangan;
+use App\Filament\Widgets\DocumentInboxWidget;
+use App\Filament\Widgets\EventManager;
+use App\Filament\Widgets\StatsOverviewWidget;
+use BackedEnum;
+use Filament\Forms\Components\DatePicker;
+use Filament\Pages\Dashboard as BaseDashboard;
+use Filament\Pages\Page;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Filament\Widgets\AccountWidget;
+
+class ProjectDashboard extends Page
+{
+    use BaseDashboard\Concerns\HasFiltersForm;
+
+    protected static ?string $title = 'Welcome';
+
+    protected ?string $heading = 'Welcome';
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBriefcase;
+
+    // protected string $view = 'filament.pages.project-dashboard';
+
+    public function filtersForm(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                Section::make()
+                    ->schema([
+                        DatePicker::make('startDate')
+                            ->default(now()->startOfMonth()->toDateString())
+                            ->maxDate(fn (Get $get) => $get('endDate') ?: now()),
+                        DatePicker::make('endDate')
+                            ->default(now()->endOfMonth()->toDateString())
+                            ->minDate(fn (Get $get) => $get('startDate') ?: now())
+                            ->maxDate(now()),
+                    ])
+                    ->columns(2)
+                    ->columnSpanFull(),
+            ]);
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            AccountWidget::class,
+            DocumentInboxWidget::class,
+            DashboardKeuangan::class,
+            StatsOverviewWidget::class,
+            EventManager::class,
+            AccountManagerWidget::class,
+            ComingSoonAkadWidget::class,
+            ComingSoonResepsiWidget::class,
+        ];
+    }
+}
