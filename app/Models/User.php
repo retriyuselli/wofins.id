@@ -359,7 +359,10 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             ->sum('total_price');
     }
 
-    public function canAccessPanel(Panel $panel): bool
+    /**
+     * User boleh akses admin/Filament hanya jika punya role dan akun aktif.
+     */
+    public function canAccessAdmin(): bool
     {
         if ($this->status === 'terminated' || $this->status === 'inactive') {
             return false;
@@ -369,7 +372,12 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             return false;
         }
 
-        return true;
+        return $this->roles()->exists();
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->canAccessAdmin();
     }
 
     /**

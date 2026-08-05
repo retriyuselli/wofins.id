@@ -197,8 +197,10 @@
 
             <div class="hidden lg:flex items-center gap-3">
                 @auth
-                    <a href="{{ route('profile') }}" class="wf-btn-ghost px-5 py-2.5 text-sm">Portal</a>
-                    <a href="{{ route('dashboard') }}" class="wf-btn-navy px-5 py-2.5 text-sm">Admin</a>
+                    <a href="{{ route('profile') }}" class="wf-btn-ghost px-5 py-2.5 text-sm">Dashboard</a>
+                    @if (Auth::user()->canAccessAdmin())
+                        <a href="{{ route('dashboard') }}" class="wf-btn-navy px-5 py-2.5 text-sm">Admin</a>
+                    @endif
                 @else
                     <a href="{{ route('front.login') }}" class="wf-btn-ghost px-5 py-2.5 text-sm">Masuk</a>
                     <a href="{{ route('kontak') }}" class="wf-btn-navy px-5 py-2.5 text-sm">Jadwalkan Demo Gratis</a>
@@ -243,8 +245,10 @@
             <a href="{{ route('kontak') }}" class="wf-nav-link-mobile" :class="activeNav === 'kontak' && 'is-active'">Kontak</a>
             <div class="flex flex-col gap-2 pt-2">
                 @auth
-                    <a href="{{ route('profile') }}" class="wf-btn-ghost px-4 py-2.5 text-center text-sm">Portal</a>
-                    <a href="{{ route('dashboard') }}" class="wf-btn-navy px-4 py-2.5 text-center text-sm">Admin</a>
+                    <a href="{{ route('profile') }}" class="wf-btn-ghost px-4 py-2.5 text-center text-sm">Dashboard</a>
+                    @if (Auth::user()->canAccessAdmin())
+                        <a href="{{ route('dashboard') }}" class="wf-btn-navy px-4 py-2.5 text-center text-sm">Admin</a>
+                    @endif
                 @else
                     <a href="{{ route('front.login') }}" class="wf-btn-ghost px-4 py-2.5 text-center text-sm">Masuk</a>
                     <a href="{{ route('kontak') }}" class="wf-btn-navy px-4 py-2.5 text-center text-sm">Jadwalkan Demo Gratis</a>
