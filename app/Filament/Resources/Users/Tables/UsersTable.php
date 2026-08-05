@@ -22,7 +22,11 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema as DBSchema;
+use Spatie\Permission\Models\Role;
+use Throwable;
 
 class UsersTable
 {
@@ -124,6 +128,7 @@ class UsersTable
                             'admin' => 'warning',
                             'Account Manager' => 'info',
                             'employee' => 'success',
+                            'pengunjung' => 'primary',
                             default => 'gray',
                         };
                     }),
@@ -585,6 +590,84 @@ class UsersTable
                             $user = Auth::user();
 
                             return $user && $user->id === $record->id;
+                        }),
+
+                    Action::make('approve_user')
+                        ->label('Approve')
+                        ->icon('heroicon-o-check-badge')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalHeading('Approve User')
+                        ->modalDescription(function (User $record) {
+                            return "Aktifkan {$record->name} dan berikan role pengunjung? User akan menerima email pemberitahuan.";
+                        })
+                        ->modalSubmitActionLabel('Approve & Aktifkan')
+                        ->action(function (User $record): void {
+                            try {
+                                DB::transaction(function () use ($record) {
+                                    $role = Role::findOrCreate('pengunjung', 'web');
+
+                                    if (! $record->hasRole('pengunjung')) {
+                                        $record->assignRole($role);
+                                    }
+
+                                    $record->forceFill([
+                                        'status' => 'active',
+                                    ])->save();
+                                });
+
+                                $record->refresh();
+                                $dashboardUrl = route('profile');
+
+                                try {
+                                    Mail::send('emails.user-activated', [
+                                        'user' => $record,
+                                        'dashboardUrl' => $dashboardUrl,
+                                    ], function ($message) use ($record) {
+                                        $message->to($record->email, $record->name)
+                                            ->subject('Akun WOFINS Anda telah diaktifkan');
+                                    });
+                                } catch (Throwable $e) {
+                                    Log::warning('Failed to send user activation email', [
+                                        'user_id' => $record->id,
+                                        'message' => $e->getMessage(),
+                                    ]);
+                                }
+
+                                Notification::make()
+                                    ->title("{$record->name} berhasil di-approve")
+                                    ->body('Role pengunjung diberikan dan email aktivasi telah dikirim.')
+                                    ->success()
+                                    ->send();
+                            } catch (Throwable $e) {
+                                Log::error('Failed to approve user', [
+                                    'user_id' => $record->id,
+                                    'message' => $e->getMessage(),
+                                ]);
+
+                                Notification::make()
+                                    ->title('Gagal approve user')
+                                    ->body('Terjadi kesalahan saat mengaktifkan user. Silakan coba lagi.')
+                                    ->danger()
+                                    ->send();
+                            }
+                        })
+                        ->visible(function (?User $record) {
+                            if (! $record || $record->status === 'terminated') {
+                                return false;
+                            }
+
+                            if ($record->hasAssignedRole()) {
+                                return false;
+                            }
+
+                            if (static::isSuperAdmin()) {
+                                return true;
+                            }
+
+                            $user = Auth::user();
+
+                            return $user && $user->roles->contains(fn ($role) => in_array($role->name, ['admin', 'hr_manager'], true));
                         }),
 
                     Action::make('reset_password')
