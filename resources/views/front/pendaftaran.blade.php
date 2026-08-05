@@ -170,14 +170,34 @@
         'non-hastana' => 'Paket Non Hastana',
         default => null,
     };
-    $defaultService = old('service') ?? match ($plan) {
+    $prospect = $prospect ?? null;
+    $authUser = Auth::user();
+    $isApproved = $prospect?->status === \App\Enums\ProspectAppStatus::Approved;
+    $isRejected = $prospect?->status === \App\Enums\ProspectAppStatus::Rejected;
+    $isPending = $prospect?->status === \App\Enums\ProspectAppStatus::Pending;
+    $canRegister = ! $isApproved;
+
+    $defaultFullName = old('full_name', $prospect?->full_name ?: $authUser?->name);
+    $defaultCompany = old('company_name', $prospect?->company_name);
+    $defaultIndustryId = old('industry_id', $prospect?->industry_id);
+    $defaultUserSize = old('user_size', $prospect?->user_size);
+    $defaultPhone = old('phone', $prospect?->phone ?: $authUser?->phone_number);
+    $defaultService = old('service') ?? $prospect?->service ?? match ($plan) {
         'hastana' => 'hastana',
         'non-hastana' => 'non_hastana',
         default => '',
     };
+    $defaultReason = old('reason_for_interest', $prospect?->reason_for_interest);
+    $defaultTerms = old('terms', $prospect?->position === 'Decision Maker' ? '1' : null);
+
+    $serviceLabel = match ($prospect?->service) {
+        'hastana' => 'Paket Anggota Hastana',
+        'non_hastana' => 'Paket Non Hastana',
+        default => $prospect?->service ?: '—',
+    };
 @endphp
 
-<div class="wf-page" x-data="{ termsOpen: false, privacyOpen: false, successOpen: {{ session('success') ? 'true' : 'false' }}, errorOpen: {{ $errors->any() ? 'true' : 'false' }} }">
+<div class="wf-page" x-data="{ termsOpen: false, privacyOpen: false, successOpen: {{ session('success') ? 'true' : 'false' }}, errorOpen: {{ ($errors->any() || session('error')) ? 'true' : 'false' }} }">
     @include('front.partials.wf-nav')
 
     <section class="wf-hero-reg pt-12 pb-10">
@@ -186,7 +206,11 @@
         <div class="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center wf-fade-up">
             <p class="text-xs font-bold tracking-[0.2em] uppercase text-[var(--wf-gold)] mb-3">Pendaftaran WOFINS</p>
             <h1 class="text-3xl sm:text-4xl lg:text-[2.75rem] font-bold text-[var(--wf-navy)] leading-tight">
-                @if ($plan === 'hastana')
+                @if ($isApproved)
+                    Pendaftaran Anda telah disetujui
+                @elseif ($isRejected)
+                    Pendaftaran perlu ditinjau ulang
+                @elseif ($plan === 'hastana')
                     Bergabung dengan Komunitas Hastana
                 @elseif ($plan === 'non-hastana')
                     Mulai Perjalanan Bisnis Anda
@@ -195,9 +219,15 @@
                 @endif
             </h1>
             <p class="mt-4 text-[var(--wf-muted)] max-w-xl mx-auto">
-                Isi formulir singkat — tim kami akan menghubungi Anda untuk menjadwalkan meeting dan menyiapkan akses WOFINS.
+                @if ($isApproved)
+                    Akun Anda sudah aktif. Silakan lanjut ke Dashboard untuk mulai menggunakan WOFINS.
+                @elseif ($isRejected)
+                    Tim kami menandai pendaftaran sebelumnya sebagai ditolak. Anda dapat menghubungi support atau mengisi ulang formulir.
+                @else
+                    Isi formulir singkat — tim kami akan menghubungi Anda untuk menjadwalkan meeting dan menyiapkan akses WOFINS.
+                @endif
             </p>
-            @if ($planLabel)
+            @if ($planLabel && $canRegister)
                 <div class="mt-5 inline-flex items-center gap-2 rounded-full bg-[rgba(201,162,39,0.14)] px-3.5 py-1.5 text-xs font-bold text-[#9a7a12]">
                     <i class="fa-solid fa-tag"></i>
                     {{ $planLabel }}
@@ -209,10 +239,50 @@
     <section class="pb-16 pt-8 sm:pt-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid lg:grid-cols-5 gap-8 items-start wf-fade-up-delay">
-                {{-- Form --}}
+                {{-- Main column --}}
                 <div class="lg:col-span-3 rounded-2xl border border-[var(--wf-line)] bg-white p-6 sm:p-8 shadow-[0_18px_40px_-28px_rgba(11,31,58,0.28)]">
-                    <h2 class="text-xl sm:text-2xl font-bold text-[var(--wf-navy)]">Formulir konsultasi</h2>
-                    <p class="mt-1.5 text-sm text-[var(--wf-muted)]">Lengkapi data di bawah. Semua field bertanda * wajib diisi.</p>
+                    @if ($isApproved)
+                        <div class="text-center sm:text-left">
+                            <span class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                                <i class="fa-solid fa-circle-check"></i>
+                                Status: Disetujui
+                            </span>
+                            <h2 class="mt-4 text-xl sm:text-2xl font-bold text-[var(--wf-navy)]">Pendaftaran sudah aktif</h2>
+                            <p class="mt-2 text-sm text-[var(--wf-muted)]">
+                                Form pendaftaran tidak lagi tersedia karena akun Anda sudah disetujui admin.
+                            </p>
+                        </div>
+
+                        <div class="mt-6 rounded-2xl border border-[var(--wf-line)] bg-[var(--wf-cream)] p-5 space-y-3 text-sm">
+                            <p class="text-xs font-bold uppercase tracking-wide text-[var(--wf-muted)]">Ringkasan data</p>
+                            <div class="text-[var(--wf-ink)]"><span class="text-[var(--wf-muted)]">Nama</span> : <strong>{{ $prospect->full_name }}</strong></div>
+                            <div class="text-[var(--wf-ink)]"><span class="text-[var(--wf-muted)]">Perusahaan</span> : <strong>{{ $prospect->company_name }}</strong></div>
+                            <div class="text-[var(--wf-ink)]"><span class="text-[var(--wf-muted)]">Email</span> : <strong>{{ $prospect->email }}</strong></div>
+                            <div class="text-[var(--wf-ink)]"><span class="text-[var(--wf-muted)]">Paket</span> : <strong>{{ $serviceLabel }}</strong></div>
+                            <div class="text-[var(--wf-ink)]"><span class="text-[var(--wf-muted)]">Departemen</span> : <strong>{{ $prospect->industry?->industry_name ?? '—' }}</strong></div>
+                        </div>
+
+                        <div class="mt-6 flex flex-col sm:flex-row gap-3">
+                            <a href="{{ route('profile') }}" class="wf-btn-gold inline-flex flex-1 items-center justify-center gap-2 px-5 py-3 text-sm">
+                                <i class="fa-solid fa-gauge-high"></i>
+                                Buka Dashboard
+                            </a>
+                            <a href="{{ route('kontak') }}" class="wf-btn-ghost inline-flex flex-1 items-center justify-center gap-2 px-5 py-3 text-sm">
+                                Hubungi support
+                            </a>
+                        </div>
+                    @else
+                        <h2 class="text-xl sm:text-2xl font-bold text-[var(--wf-navy)]">Formulir pendaftaran</h2>
+                        <p class="mt-1.5 text-sm text-[var(--wf-muted)]">Lengkapi data di bawah. Semua field bertanda * wajib diisi.</p>
+                        @if ($isPending)
+                            <p class="mt-2 text-xs font-medium text-[var(--wf-gold)]">
+                                Data pendaftaran sebelumnya ditampilkan. Anda dapat memperbarui lalu mengirim ulang.
+                            </p>
+                        @elseif ($isRejected)
+                            <p class="mt-2 text-xs font-medium text-red-600">
+                                Pendaftaran sebelumnya ditolak. Silakan perbarui data dan daftar ulang, atau hubungi support.
+                            </p>
+                        @endif
 
                     <form action="{{ route('prospect-app.store') }}" method="POST" class="mt-6 space-y-5">
                         @csrf
@@ -222,7 +292,7 @@
                             <div>
                                 <label for="full_name" class="block text-sm font-semibold text-[var(--wf-navy)] mb-1.5">Nama lengkap *</label>
                                 <input id="full_name" name="full_name" type="text" required
-                                    value="{{ old('full_name', Auth::user()?->name) }}"
+                                    value="{{ $defaultFullName }}"
                                     class="wf-input @error('full_name') is-error @enderror"
                                     placeholder="Contoh: Budi Santoso">
                                 @error('full_name')
@@ -231,7 +301,7 @@
                             </div>
                             <div>
                                 <label for="company_name" class="block text-sm font-semibold text-[var(--wf-navy)] mb-1.5">Nama perusahaan *</label>
-                                <input id="company_name" name="company_name" type="text" required value="{{ old('company_name') }}"
+                                <input id="company_name" name="company_name" type="text" required value="{{ $defaultCompany }}"
                                     class="wf-input @error('company_name') is-error @enderror"
                                     placeholder="Contoh: PT Sukses Maju">
                                 @error('company_name')
@@ -247,7 +317,7 @@
                                     class="wf-input @error('industry_id') is-error @enderror">
                                     <option value="">Pilih departemen</option>
                                     @foreach ($industries as $industry)
-                                        <option value="{{ $industry->id }}" @selected(old('industry_id') == $industry->id)>
+                                        <option value="{{ $industry->id }}" @selected((string) $defaultIndustryId === (string) $industry->id)>
                                             {{ $industry->industry_name }}
                                         </option>
                                     @endforeach
@@ -262,7 +332,7 @@
                                     class="wf-input @error('user_size') is-error @enderror">
                                     <option value="">Pilih jumlah karyawan</option>
                                     @foreach (['1-10', '11-50', '51-200', '201-500', '501-1000', '1000+'] as $size)
-                                        <option value="{{ $size }}" @selected(old('user_size') === $size)>
+                                        <option value="{{ $size }}" @selected($defaultUserSize === $size)>
                                             {{ $size === '1000+' ? 'Lebih dari 1000 karyawan' : $size.' karyawan' }}
                                         </option>
                                     @endforeach
@@ -276,7 +346,7 @@
                         <div class="grid sm:grid-cols-2 gap-4">
                             <div>
                                 <label for="phone" class="block text-sm font-semibold text-[var(--wf-navy)] mb-1.5">Nomor ponsel *</label>
-                                <input id="phone" name="phone" type="tel" required value="{{ old('phone') }}"
+                                <input id="phone" name="phone" type="tel" required value="{{ $defaultPhone }}"
                                     class="wf-input @error('phone') is-error @enderror"
                                     placeholder="08xxxxxxxxxx">
                                 @error('phone')
@@ -317,7 +387,7 @@
                             <label for="reason_for_interest" class="block text-sm font-semibold text-[var(--wf-navy)] mb-1.5">Kebutuhan & tantangan bisnis *</label>
                             <textarea id="reason_for_interest" name="reason_for_interest" rows="4" required
                                 class="wf-input @error('reason_for_interest') is-error @enderror"
-                                placeholder="Ceritakan singkat kebutuhan dan tantangan operasional Anda...">{{ old('reason_for_interest') }}</textarea>
+                                placeholder="Ceritakan singkat kebutuhan dan tantangan operasional Anda...">{{ $defaultReason }}</textarea>
                             @error('reason_for_interest')
                                 <p class="mt-1.5 text-sm text-red-600">{{ $message }}</p>
                             @enderror
@@ -328,16 +398,17 @@
                             value="Form submitted via consultation page - interested in {{ $plan === 'hastana' ? 'Hastana Member Package' : ($plan === 'non-hastana' ? 'Non Hastana Package' : 'WOFINS') }}">
 
                         <label class="flex items-start gap-3 cursor-pointer">
-                            <input id="terms" name="terms" type="checkbox" required
-                                class="mt-1 h-4 w-4 rounded border-[var(--wf-line)] text-[var(--wf-navy)] focus:ring-[var(--wf-gold)]">
+                            <input id="terms" name="terms" type="checkbox" required value="1"
+                                class="mt-1 h-4 w-4 rounded border-[var(--wf-line)] text-[var(--wf-navy)] focus:ring-[var(--wf-gold)]"
+                                @checked($defaultTerms)>
                             <span class="text-sm text-[var(--wf-muted)]">
                                 Saya pengambil keputusan dalam pembelian software.
                             </span>
                         </label>
 
                         <button type="submit" class="wf-btn-gold w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm">
-                            <i class="fa-solid fa-calendar-check"></i>
-                            Jadwalkan meeting
+                            <i class="fa-solid fa-user-plus"></i>
+                            Daftar
                         </button>
 
                         <p class="text-xs text-[var(--wf-muted)] leading-relaxed">
@@ -348,6 +419,7 @@
                             WOFINS.
                         </p>
                     </form>
+                    @endif
                 </div>
 
                 {{-- Sidebar --}}
@@ -484,7 +556,7 @@
     </div>
 
     {{-- Error modal --}}
-    @if ($errors->any())
+    @if ($errors->any() || session('error'))
     <div x-show="errorOpen" x-cloak
          class="fixed inset-0 z-[100] flex items-center justify-center p-4"
          role="dialog" aria-modal="true" aria-labelledby="pendaftaran-error-title">
@@ -502,9 +574,15 @@
                     <i class="fa-solid fa-circle-exclamation text-2xl"></i>
                 </span>
                 <h3 id="pendaftaran-error-title" class="mt-4 text-xl font-bold text-[var(--wf-navy)]">
-                    Terdapat kesalahan pada form
+                    {{ session('error') ? 'Pemberitahuan' : 'Terdapat kesalahan pada form' }}
                 </h3>
                 <ul class="mt-4 text-left space-y-2 text-sm text-[var(--wf-muted)]">
+                    @if (session('error'))
+                        <li class="flex items-start gap-2.5 rounded-xl border border-red-100 bg-red-50/80 px-3.5 py-2.5 text-red-700">
+                            <i class="fa-solid fa-xmark mt-0.5 text-red-400 shrink-0"></i>
+                            <span>{{ session('error') }}</span>
+                        </li>
+                    @endif
                     @foreach ($errors->all() as $error)
                         <li class="flex items-start gap-2.5 rounded-xl border border-red-100 bg-red-50/80 px-3.5 py-2.5 text-red-700">
                             <i class="fa-solid fa-xmark mt-0.5 text-red-400 shrink-0"></i>
@@ -516,7 +594,7 @@
             <div class="px-6 py-5 flex justify-center">
                 <button type="button" @click="errorOpen = false"
                         class="wf-btn-navy inline-flex items-center justify-center px-6 py-3 text-sm">
-                    Perbaiki form
+                    {{ session('error') ? 'Mengerti' : 'Perbaiki form' }}
                 </button>
             </div>
         </div>

@@ -15,6 +15,7 @@ class ProspectApp extends Model
     use HasFactory, SoftDeletes, LogsActivity;
 
     protected $fillable = [
+        'user_id',
         'full_name',
         'email',
         'position',
@@ -46,9 +47,14 @@ class ProspectApp extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['full_name', 'email', 'company_name', 'service'])
+            ->logOnly(['full_name', 'email', 'company_name', 'service', 'user_id'])
             ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}")
             ->useLogName('prospect_app');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function industry(): BelongsTo

@@ -444,6 +444,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $this->hasMany(LeaveBalance::class);
     }
 
+    public function prospectApps(): HasMany
+    {
+        return $this->hasMany(ProspectApp::class);
+    }
+
     public function absensis(): HasMany
     {
         return $this->hasMany(Absensi::class);
