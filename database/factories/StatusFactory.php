@@ -17,7 +17,7 @@ class StatusFactory extends Factory
     public function definition(): array
     {
         return [
-            'status_name' => fake()->unique()->word().' '.fake()->unique()->word(2),
+            'status_name' => $this->faker->unique()->word().' '.$this->faker->unique()->word(),
             'created_at' => now(),
             'updated_at' => now(),
         ];

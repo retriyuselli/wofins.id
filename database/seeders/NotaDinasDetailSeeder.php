@@ -100,8 +100,8 @@ class NotaDinasDetailSeeder extends Seeder
                         'payment_stage' => $data['payment_stage'],
                         'order_id' => $order?->id,
                         'jumlah_transfer' => $data['jumlah_transfer'],
-                        'status_invoice' => fake()->randomElement($invoiceStatuses),
-                        'created_at' => fake()->dateTimeBetween('-30 days', 'now'),
+                        'status_invoice' => \fake()->randomElement($invoiceStatuses),
+                        'created_at' => \fake()->dateTimeBetween('-30 days', 'now'),
                         'updated_at' => now(),
                     ]
                 );
@@ -130,8 +130,8 @@ class NotaDinasDetailSeeder extends Seeder
                         'jenis_pengeluaran' => PengeluaranJenis::OPERASIONAL->value,
                         'event' => $data['event'],
                         'jumlah_transfer' => $data['jumlah_transfer'],
-                        'status_invoice' => fake()->randomElement($invoiceStatuses),
-                        'created_at' => fake()->dateTimeBetween('-30 days', 'now'),
+                        'status_invoice' => \fake()->randomElement($invoiceStatuses),
+                        'created_at' => \fake()->dateTimeBetween('-30 days', 'now'),
                         'updated_at' => now(),
                     ]
                 );
@@ -160,8 +160,8 @@ class NotaDinasDetailSeeder extends Seeder
                         'jenis_pengeluaran' => PengeluaranJenis::LAIN_LAIN->value,
                         'event' => $data['event'],
                         'jumlah_transfer' => $data['jumlah_transfer'],
-                        'status_invoice' => fake()->randomElement($invoiceStatuses),
-                        'created_at' => fake()->dateTimeBetween('-30 days', 'now'),
+                        'status_invoice' => \fake()->randomElement($invoiceStatuses),
+                        'created_at' => \fake()->dateTimeBetween('-30 days', 'now'),
                         'updated_at' => now(),
                     ]
                 );

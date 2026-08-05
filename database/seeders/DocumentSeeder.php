@@ -64,8 +64,8 @@ class DocumentSeeder extends Seeder
             Document::create([
                 'category_id' => $category->id,
                 'document_number' => $docNumber,
-                'title' => fake()->sentence(rand(4, 8)),
-                'summary' => fake()->paragraph().' Dibuat oleh '.$creator->name.'.',
+                'title' => \fake()->sentence(rand(4, 8)),
+                'summary' => \fake()->paragraph().' Dibuat oleh '.$creator->name.'.',
                 'content' => $this->generateHtmlContent(),
                 'date_effective' => $effective,
                 'date_expired' => rand(0, 1) ? $effective->copy()->addYears(rand(1, 5)) : null,
@@ -73,7 +73,7 @@ class DocumentSeeder extends Seeder
                 'confidentiality' => $confidentiality,
                 'created_by' => $creator->id,
                 'metadata' => [
-                    'keywords' => fake()->words(5),
+                    'keywords' => \fake()->words(5),
                     'version' => '1.'.rand(0, 5),
                     'priority' => rand(0, 1) ? 'high' : 'normal',
                     'created_by_email' => $creator->email,
@@ -95,16 +95,16 @@ class DocumentSeeder extends Seeder
     private function generateHtmlContent()
     {
         return '
-            <h2>'.fake()->sentence().'</h2>
-            <p>'.fake()->paragraph(4).'</p>
+            <h2>'.\fake()->sentence().'</h2>
+            <p>'.\fake()->paragraph(4).'</p>
             <ul>
-                <li>'.fake()->sentence().'</li>
-                <li>'.fake()->sentence().'</li>
-                <li>'.fake()->sentence().'</li>
+                <li>'.\fake()->sentence().'</li>
+                <li>'.\fake()->sentence().'</li>
+                <li>'.\fake()->sentence().'</li>
             </ul>
-            <p>'.fake()->paragraph(3).'</p>
+            <p>'.\fake()->paragraph(3).'</p>
             <h3>Conclusion</h3>
-            <p>'.fake()->paragraph(2).'</p>
+            <p>'.\fake()->paragraph(2).'</p>
         ';
     }
 }
