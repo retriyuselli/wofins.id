@@ -4,6 +4,9 @@
 @section('profile-page-subtitle', 'Ringkasan gaji, saldo cuti, dan statistik cuti')
 
 @section('profile-content')
-@include('profile.sections.hr-salary-leave')
-@endsection
+@include('profile.partials.pro-preview-banner')
 
+<div class="{{ ($proFeatureLocked ?? \App\Support\ProFeatures::locked()) ? 'wf-pro-readonly' : '' }}">
+    @include('profile.sections.hr-salary-leave')
+</div>
+@endsection

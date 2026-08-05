@@ -127,11 +127,11 @@ Route::get('/leave/create', [LeaveRequestController::class, 'create'])
 
 Route::post('/leave', [LeaveRequestController::class, 'store'])
     ->name('leave.store')
-    ->middleware($authNoStore);
+    ->middleware(array_merge($authNoStore, ['pro.feature']));
 
 Route::put('/leave/{id}', [LeaveRequestController::class, 'update'])
     ->name('leave.update')
-    ->middleware($authNoStore)
+    ->middleware(array_merge($authNoStore, ['pro.feature']))
     ->whereNumber('id');
 
 Route::get('/leave/status', [LeaveRequestController::class, 'status'])
@@ -357,26 +357,22 @@ Route::middleware(array_merge($frontAuthNoStore, ['role.required']))->group(func
         ->middleware('absensi.headers');
     Route::post('/profile/absensi/masuk', [ProfileAbsensiController::class, 'masuk'])
         ->name('profile.absensi.masuk')
-        ->middleware('absensi.headers')
-        ->middleware('throttle:20,1');
+        ->middleware(['pro.feature', 'absensi.headers', 'throttle:20,1']);
     Route::post('/profile/absensi/pulang', [ProfileAbsensiController::class, 'pulang'])
         ->name('profile.absensi.pulang')
-        ->middleware('absensi.headers')
-        ->middleware('throttle:20,1');
+        ->middleware(['pro.feature', 'absensi.headers', 'throttle:20,1']);
     Route::post('/profile/absensi/koreksi', [ProfileAbsensiController::class, 'koreksi'])
         ->name('profile.absensi.koreksi')
-        ->middleware('absensi.headers')
-        ->middleware('throttle:10,1');
+        ->middleware(['pro.feature', 'absensi.headers', 'throttle:10,1']);
     Route::post('/profile/absensi/lembur', [ProfileAbsensiController::class, 'lembur'])
         ->name('profile.absensi.lembur')
-        ->middleware('absensi.headers')
-        ->middleware('throttle:10,1');
+        ->middleware(['pro.feature', 'absensi.headers', 'throttle:10,1']);
     Route::get('/profile/absensi/laporan/excel', [ProfileAbsensiController::class, 'laporanExcel'])
         ->name('profile.absensi.laporan.excel')
-        ->middleware('throttle:20,1');
+        ->middleware(['pro.feature', 'throttle:20,1']);
     Route::get('/profile/absensi/laporan/pdf', [ProfileAbsensiController::class, 'laporanPdf'])
         ->name('profile.absensi.laporan.pdf')
-        ->middleware('throttle:20,1');
+        ->middleware(['pro.feature', 'throttle:20,1']);
     Route::get('/profile/compensation', [ProfileController::class, 'compensation'])->name('profile.compensation');
     Route::get('/profile/schedule', [ProfileController::class, 'schedule'])->name('profile.schedule');
     Route::get('/profile/laporan-keuangan', [ProfileController::class, 'financialReport'])

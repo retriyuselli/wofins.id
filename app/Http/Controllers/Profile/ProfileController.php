@@ -456,7 +456,7 @@ class ProfileController extends Controller
             'date_of_birth' => ['nullable', 'date'],
             'gender' => ['nullable', 'string', 'in:male,female'],
             'emergency_contact' => ['nullable', 'string', 'max:255'],
-            'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:2048'],
             'signature' => ['nullable', 'image', 'mimes:png', 'max:1024'],
         ];
 
@@ -466,45 +466,56 @@ class ProfileController extends Controller
             $rules['password'] = ['required', 'confirmed', Password::defaults()];
         }
 
-        $request->validate($rules);
+        $validated = $request->validate($rules, [
+            'avatar.image' => 'File foto profil harus berupa gambar.',
+            'avatar.mimes' => 'Foto profil harus berformat JPG, PNG, GIF, atau WEBP.',
+            'avatar.max' => 'Ukuran foto profil maksimal 2MB.',
+            'signature.image' => 'File tanda tangan harus berupa gambar.',
+            'signature.mimes' => 'Tanda tangan harus berformat PNG.',
+            'signature.max' => 'Ukuran tanda tangan maksimal 1MB.',
+        ]);
 
-        // Email tidak boleh diubah dari form
-        $request->merge(['email' => $user->email]);
+        $avatarPath = $user->avatar_url;
+        $signaturePath = $user->signature_url;
 
         // Handle avatar upload
         if ($request->hasFile('avatar')) {
-            // Delete old avatar if exists
-            if ($user->avatar_url && Storage::disk('public')->exists($user->avatar_url)) {
-                Storage::disk('public')->delete($user->avatar_url);
+            $file = $request->file('avatar');
+            if (! $file->isValid()) {
+                return back()->withErrors(['avatar' => 'Upload foto profil gagal. Coba lagi dengan file lain.'])->withInput();
             }
 
-            // Store new avatar
-            $avatarPath = $request->file('avatar')->store('avatars', 'public');
-            $user->avatar_url = $avatarPath;
+            if ($avatarPath && Storage::disk('public')->exists($avatarPath)) {
+                Storage::disk('public')->delete($avatarPath);
+            }
+
+            $avatarPath = $file->store('avatars', 'public');
         }
 
         // Handle signature upload
         if ($request->hasFile('signature')) {
-            // Delete old signature if exists
-            if ($user->signature_url && Storage::disk('public')->exists($user->signature_url)) {
-                Storage::disk('public')->delete($user->signature_url);
+            $file = $request->file('signature');
+            if (! $file->isValid()) {
+                return back()->withErrors(['signature' => 'Upload tanda tangan gagal. Coba lagi dengan file lain.'])->withInput();
             }
 
-            // Store new signature
-            $signaturePath = $request->file('signature')->store('signatures', 'public');
-            $user->signature_url = $signaturePath;
+            if ($signaturePath && Storage::disk('public')->exists($signaturePath)) {
+                Storage::disk('public')->delete($signaturePath);
+            }
+
+            $signaturePath = $file->store('signatures', 'public');
         }
 
         $updateData = [
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone_number' => $request->phone_number,
-            'address' => $request->address,
-            'date_of_birth' => $request->date_of_birth,
-            'gender' => $request->gender,
-            'emergency_contact' => $request->emergency_contact,
-            'avatar_url' => $user->avatar_url,
-            'signature_url' => $user->signature_url,
+            'name' => $validated['name'],
+            'email' => $user->email,
+            'phone_number' => $validated['phone_number'] ?? null,
+            'address' => $validated['address'] ?? null,
+            'date_of_birth' => $validated['date_of_birth'] ?? null,
+            'gender' => $validated['gender'] ?? null,
+            'emergency_contact' => $validated['emergency_contact'] ?? null,
+            'avatar_url' => $avatarPath,
+            'signature_url' => $signaturePath,
             'updated_at' => now(),
         ];
 
@@ -517,6 +528,9 @@ class ProfileController extends Controller
         DB::table('users')
             ->where('id', $user->id)
             ->update($updateData);
+
+        // Sinkronkan model di session
+        $user->refresh();
 
         return redirect()->route('profile.edit')->with('success', 'Profil berhasil diperbarui.');
     }

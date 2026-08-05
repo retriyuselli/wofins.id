@@ -4,6 +4,9 @@
 @section('profile-page-subtitle', 'Acara mendatang dan riwayat cuti Anda')
 
 @section('profile-content')
-@include('profile.sections.upcoming-events')
-@endsection
+@include('profile.partials.pro-preview-banner')
 
+<div class="{{ ($proFeatureLocked ?? \App\Support\ProFeatures::locked()) ? 'wf-pro-readonly' : '' }}">
+    @include('profile.sections.upcoming-events')
+</div>
+@endsection

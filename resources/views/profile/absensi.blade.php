@@ -95,7 +95,14 @@
             'radius_meter' => (int) $lokasi->radius_meter,
         ])->values();
         $defaultTab = $errors->any() ? 'hari-ini' : 'hari-ini';
+        $proLocked = $proFeatureLocked ?? \App\Support\ProFeatures::locked();
+        if ($proLocked) {
+            $canMasuk = false;
+            $canPulang = false;
+        }
     @endphp
+
+    @include('profile.partials.pro-preview-banner')
 
     <div
         x-data="{
@@ -107,7 +114,7 @@
                 });
             }
         }"
-        class="space-y-6"
+        class="space-y-6 {{ $proLocked ? 'wf-pro-readonly' : '' }}"
     >
         @if (session('success'))
             <div class="wf-alert-ok text-sm font-medium">{{ session('success') }}</div>
@@ -136,7 +143,7 @@
                 ] as $tabKey => $tabLabel)
                     <button type="button" @click="setTab('{{ $tabKey }}')"
                         :class="tab === '{{ $tabKey }}' ? 'wf-tab-active' : 'wf-tab-idle'"
-                        class="shrink-0 rounded-xl px-4 py-2.5 text-sm font-semibold transition">
+                        class="wf-pro-allow shrink-0 rounded-xl px-4 py-2.5 text-sm font-semibold transition">
                         {{ $tabLabel }}
                     </button>
                 @endforeach

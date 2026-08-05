@@ -30,11 +30,15 @@
     <nav class="p-3 space-y-1">
         @php
             $overviewActive = request()->routeIs('profile') || request()->routeIs('profile.show') || request()->routeIs('profile.overview');
-            $compensationActive = request()->routeIs('profile.compensation');
-            $scheduleActive = request()->routeIs('profile.schedule');
             $absensiActive = request()->routeIs('profile.absensi*');
+            $compensationActive = request()->routeIs('profile.compensation')
+                || request()->routeIs('leave.show')
+                || request()->routeIs('leave.create')
+                || request()->routeIs('leave.status');
+            $scheduleActive = request()->routeIs('profile.schedule');
             $financialReportActive = request()->routeIs('profile.financial-report*');
             $editActive = request()->routeIs('profile.edit');
+            $showProBadge = $proFeatureLocked ?? \App\Support\ProFeatures::locked();
         @endphp
 
         <a href="{{ route('profile') }}"
@@ -46,27 +50,39 @@
         </a>
 
         <a href="{{ route('profile.absensi') }}"
-            class="wf-profile-nav-link {{ $absensiActive ? 'is-active' : '' }}">
+            class="wf-profile-nav-link {{ $absensiActive ? 'is-active' : '' }}"
+            title="{{ $showProBadge ? 'Pratinjau paket Pro' : '' }}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span>Absensi</span>
+            @if ($showProBadge)
+                <span class="wf-pro-badge">Pro</span>
+            @endif
         </a>
 
         <a href="{{ route('profile.compensation') }}"
-            class="wf-profile-nav-link {{ $compensationActive ? 'is-active' : '' }}">
+            class="wf-profile-nav-link {{ $compensationActive ? 'is-active' : '' }}"
+            title="{{ $showProBadge ? 'Pratinjau paket Pro' : '' }}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l-2 1m12 12V6l-2 1M5 6h14" />
             </svg>
             <span>Kompensasi & Cuti</span>
+            @if ($showProBadge)
+                <span class="wf-pro-badge">Pro</span>
+            @endif
         </a>
 
         <a href="{{ route('profile.schedule') }}"
-            class="wf-profile-nav-link {{ $scheduleActive ? 'is-active' : '' }}">
+            class="wf-profile-nav-link {{ $scheduleActive ? 'is-active' : '' }}"
+            title="{{ $showProBadge ? 'Pratinjau paket Pro' : '' }}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             <span>Jadwal & Riwayat</span>
+            @if ($showProBadge)
+                <span class="wf-pro-badge">Pro</span>
+            @endif
         </a>
 
         @if($isSuperAdmin)

@@ -6,10 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Laravel\Socialite\Contracts\User as SocialiteUser;
 use Laravel\Socialite\Facades\Socialite;
 use Throwable;
 
@@ -161,10 +164,63 @@ class AuthController extends Controller
             ]);
         }
 
+        // Ambil foto Google sebagai avatar default jika user belum punya foto
+        $this->syncGoogleAvatar($user, $googleUser);
+
         Auth::login($user, true);
         $request->session()->regenerate();
 
         return $this->redirectAfterAuth($user);
+    }
+
+    /**
+     * Unduh foto profil Google dan simpan sebagai avatar default.
+     * Tidak menimpa foto yang sudah diunggah user.
+     */
+    protected function syncGoogleAvatar(User $user, SocialiteUser $googleUser): void
+    {
+        if (filled($user->avatar_url)) {
+            return;
+        }
+
+        $avatarUrl = $googleUser->getAvatar();
+        if (! filled($avatarUrl)) {
+            return;
+        }
+
+        // Minta resolusi lebih besar dari default (sering =s96-c)
+        $avatarUrl = preg_replace('/=s\d+(-c)?/', '=s400$1', $avatarUrl) ?: $avatarUrl;
+
+        try {
+            $response = Http::timeout(12)
+                ->withHeaders(['Accept' => 'image/*'])
+                ->get($avatarUrl);
+
+            if (! $response->successful() || blank($response->body())) {
+                return;
+            }
+
+            $contentType = strtolower((string) $response->header('Content-Type'));
+            $extension = match (true) {
+                str_contains($contentType, 'png') => 'png',
+                str_contains($contentType, 'webp') => 'webp',
+                str_contains($contentType, 'gif') => 'gif',
+                default => 'jpg',
+            };
+
+            $path = 'avatars/google_'.$user->id.'_'.Str::lower(Str::random(12)).'.'.$extension;
+
+            if (! Storage::disk('public')->put($path, $response->body())) {
+                return;
+            }
+
+            $user->forceFill(['avatar_url' => $path])->save();
+        } catch (Throwable $e) {
+            Log::warning('Gagal mengambil foto profil Google', [
+                'user_id' => $user->id,
+                'message' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**

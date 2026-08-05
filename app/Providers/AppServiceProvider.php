@@ -14,6 +14,7 @@ use App\Observers\DocumentObserver;
 use App\Observers\LeaveRequestObserver;
 use App\Observers\OrderObserver;
 use App\Observers\UserObserver;
+use App\Support\ProFeatures;
 use CmsMulti\FilamentClearCache\Facades\FilamentClearCache;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\Cache;
@@ -156,7 +157,11 @@ class AppServiceProvider extends ServiceProvider
 
             return 1;
         }));
-        
+
+        View::composer(['profile.*', 'leave.*'], function ($view) {
+            $view->with('proFeatureLocked', ProFeatures::locked());
+        });
+
         FilamentClearCache::addCommand('optimize:clear');
 
         // Log Viewer — hanya bisa diakses oleh super_admin
