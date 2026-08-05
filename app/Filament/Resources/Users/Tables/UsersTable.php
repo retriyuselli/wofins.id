@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Users\Tables;
 
+use App\Enums\ProspectAppStatus;
 use App\Models\Status;
+use App\Models\ProspectApp;
 use App\Models\User;
 use Exception;
 use Filament\Actions\Action;
@@ -614,6 +616,18 @@ class UsersTable
                                     $record->forceFill([
                                         'status' => 'active',
                                     ])->save();
+
+                                    // Samakan status ProspectApp agar form pendaftaran tidak muncul lagi
+                                    ProspectApp::query()
+                                        ->where(function ($q) use ($record) {
+                                            $q->where('user_id', $record->id)
+                                                ->orWhere('email', $record->email);
+                                        })
+                                        ->where('status', '!=', ProspectAppStatus::Approved->value)
+                                        ->update([
+                                            'status' => ProspectAppStatus::Approved->value,
+                                            'user_id' => $record->id,
+                                        ]);
                                 });
 
                                 $record->refresh();
@@ -636,7 +650,7 @@ class UsersTable
 
                                 Notification::make()
                                     ->title("{$record->name} berhasil di-approve")
-                                    ->body('Role pengunjung diberikan dan email aktivasi telah dikirim.')
+                                    ->body('Role pengunjung diberikan, pendaftaran disetujui, dan email aktivasi telah dikirim.')
                                     ->success()
                                     ->send();
                             } catch (Throwable $e) {

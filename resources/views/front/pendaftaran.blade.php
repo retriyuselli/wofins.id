@@ -172,9 +172,10 @@
     };
     $prospect = $prospect ?? null;
     $authUser = Auth::user();
-    $isApproved = $prospect?->status === \App\Enums\ProspectAppStatus::Approved;
-    $isRejected = $prospect?->status === \App\Enums\ProspectAppStatus::Rejected;
-    $isPending = $prospect?->status === \App\Enums\ProspectAppStatus::Pending;
+    $userAlreadyActive = $authUser?->hasAssignedRole() ?? false;
+    $isApproved = $userAlreadyActive || $prospect?->status === \App\Enums\ProspectAppStatus::Approved;
+    $isRejected = ! $isApproved && $prospect?->status === \App\Enums\ProspectAppStatus::Rejected;
+    $isPending = ! $isApproved && $prospect?->status === \App\Enums\ProspectAppStatus::Pending;
     $canRegister = ! $isApproved;
 
     $defaultFullName = old('full_name', $prospect?->full_name ?: $authUser?->name);

@@ -450,15 +450,14 @@ class ProfileController extends Controller
 
         $rules = [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$user->id],
+            'email' => ['required', 'string', 'email', 'max:255'],
             'phone_number' => ['nullable', 'string', 'max:20'],
             'address' => ['nullable', 'string', 'max:500'],
             'date_of_birth' => ['nullable', 'date'],
             'gender' => ['nullable', 'string', 'in:male,female'],
-            'hire_date' => ['nullable', 'date'],
             'emergency_contact' => ['nullable', 'string', 'max:255'],
             'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
-            'signature_url' => ['nullable', 'image', 'mimes:png', 'max:1024'],
+            'signature' => ['nullable', 'image', 'mimes:png', 'max:1024'],
         ];
 
         // Add password validation if password field is filled
@@ -468,6 +467,9 @@ class ProfileController extends Controller
         }
 
         $request->validate($rules);
+
+        // Email tidak boleh diubah dari form
+        $request->merge(['email' => $user->email]);
 
         // Handle avatar upload
         if ($request->hasFile('avatar')) {
@@ -500,7 +502,6 @@ class ProfileController extends Controller
             'address' => $request->address,
             'date_of_birth' => $request->date_of_birth,
             'gender' => $request->gender,
-            'hire_date' => $request->hire_date,
             'emergency_contact' => $request->emergency_contact,
             'avatar_url' => $user->avatar_url,
             'signature_url' => $user->signature_url,
@@ -517,7 +518,7 @@ class ProfileController extends Controller
             ->where('id', $user->id)
             ->update($updateData);
 
-        return redirect()->back()->with('success', 'Profile updated successfully!');
+        return redirect()->route('profile.edit')->with('success', 'Profil berhasil diperbarui.');
     }
 
     /**

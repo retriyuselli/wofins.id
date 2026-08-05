@@ -68,7 +68,10 @@ class ProspectAppController extends Controller
                 ->first();
         }
 
-        if ($existingProspect && $existingProspect->status === ProspectAppStatus::Approved) {
+        if (
+            ($existingProspect && $existingProspect->status === ProspectAppStatus::Approved)
+            || ($authUser && $authUser->hasAssignedRole())
+        ) {
             return redirect()
                 ->route('pendaftaran')
                 ->with('error', 'Pendaftaran Anda sudah disetujui. Silakan gunakan Dashboard.');

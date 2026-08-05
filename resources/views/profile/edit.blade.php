@@ -54,8 +54,9 @@
 
                 <div class="sm:col-span-3">
                     <label for="email" class="block text-sm font-semibold text-[var(--wf-navy)]">Email <span class="text-red-500">*</span></label>
-                    <input type="email" name="email" id="email" value="{{ old('email', $user->email) }}" required
-                           class="mt-1.5 block w-full rounded-xl border border-[var(--wf-line)] bg-white px-3 py-2.5 text-sm text-[var(--wf-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--wf-gold)]/40 focus:border-[var(--wf-gold)]">
+                    <input type="email" name="email" id="email" value="{{ old('email', $user->email) }}" required readonly
+                           class="mt-1.5 block w-full rounded-xl border border-[var(--wf-line)] bg-[var(--wf-cream)] px-3 py-2.5 text-sm text-[var(--wf-muted)] cursor-not-allowed">
+                    <p class="mt-1 text-xs text-[var(--wf-muted)]">Email mengikuti akun login dan tidak dapat diubah.</p>
                 </div>
 
                 <div class="sm:col-span-3">

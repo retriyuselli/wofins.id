@@ -633,7 +633,7 @@ bg-gray-300
                                         <i class="fas fa-edit mr-2"></i>Edit
                                     </button>
                                 @else
-                                    <a href="{{ route('login') }}"
+                                    <a href="{{ route('front.login') }}"
                                         class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors text-sm font-medium text-center">
                                         <i class="fas fa-sign-in-alt mr-2"></i>Login untuk Masuk
                                     </a>

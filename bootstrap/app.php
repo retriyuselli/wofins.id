@@ -22,6 +22,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->use([
             \Illuminate\Http\Middleware\HandleCors::class,
         ]);
+
+        // Redirect guest ke halaman login front (bukan route 'login' default)
+        $middleware->redirectGuestsTo(fn () => route('front.login'));
+
         // Add middleware aliases for better organization
         $middleware->alias([
             'filament.auth' => \Filament\Http\Middleware\Authenticate::class,
@@ -53,7 +57,8 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Unauthenticated'], 401);
             }
-            return response()->redirectTo(config('app.url'));
+
+            return redirect()->guest(route('front.login'));
         });
 
         $exceptions->render(function (Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException $e, $request) {
