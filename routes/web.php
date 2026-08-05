@@ -18,6 +18,7 @@ use App\Http\Controllers\Front\InvoiceController as FrontInvoiceController;
 use App\Http\Controllers\Front\LaporanFeatureController;
 use App\Http\Controllers\Front\PayrollFeatureController;
 use App\Http\Controllers\Front\ProductCatalogController;
+use App\Http\Controllers\Front\ContactController;
 use App\Http\Controllers\Front\RegistrationController;
 use App\Http\Controllers\FrontendDataPribadiController;
 use App\Http\Controllers\InvoiceOrderController;
@@ -47,6 +48,9 @@ use Illuminate\Support\Facades\Route;
 $authNoStore = ['filament.auth', 'no-store'];
 $authNoStoreThrottle = [...$authNoStore, 'throttle:60,1'];
 $phpInfoMiddleware = [...$authNoStore, 'super-admin', 'throttle:10,1'];
+// Portal front/profile: auth Laravel biasa (bukan filament.auth),
+// agar user tanpa role tidak kena abort 403 dari canAccessPanel().
+$frontAuthNoStore = ['auth', 'no-store'];
 
 Route::get('/_phpinfo', function () {
     ob_start();
@@ -170,6 +174,9 @@ Route::get('/pendaftaran', [RegistrationController::class, 'pendaftaran'])->name
 
 // CONTACT
 Route::view('/kontak', 'front.kontak')->name('kontak');
+Route::post('/kontak', [ContactController::class, 'store'])
+    ->name('kontak.store')
+    ->middleware('throttle:10,1');
 
 // BLOG
 Route::get('/blog', [BlogController::class, 'index'])->name('blog');
@@ -321,8 +328,27 @@ Route::middleware(['guest', 'no-store'])->group(function () {
 
 });
 
-// PROFILE ROUTES
-Route::middleware($authNoStore)->group(function () {
+// PROFILE ROUTES — auth only (tanpa role masih boleh akses)
+Route::middleware($frontAuthNoStore)->group(function () {
+    Route::get('/akun-belum-aktif', function () {
+        $user = Auth::user();
+        if ($user?->hasAssignedRole()) {
+            return redirect()->route('profile');
+        }
+
+        return view('front.account-pending');
+    })->name('account.pending');
+
+    Route::post('/logout', function () {
+        Auth::logout();
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+
+        return redirect('/');
+    })->name('logout')->middleware('throttle:10,1');
+});
+
+Route::middleware(array_merge($frontAuthNoStore, ['role.required']))->group(function () {
     Route::get('/profile', [ProfileController::class, 'overview'])->name('profile');
     Route::get('/profile/show', [ProfileController::class, 'overview'])->name('profile.show');
     Route::get('/profile/overview', [ProfileController::class, 'overview'])->name('profile.overview');
@@ -391,15 +417,6 @@ Route::middleware($authNoStore)->group(function () {
     Route::get('/dashboard', function () {
         return redirect()->route('filament.admin.pages.dashboard');
     })->name('dashboard');
-
-    // Logout
-    Route::post('/logout', function () {
-        Auth::logout();
-        request()->session()->invalidate();
-        request()->session()->regenerateToken();
-
-        return redirect('/');
-    })->name('logout')->middleware('throttle:10,1');
 });
 
 // Route untuk Prospect (Original)

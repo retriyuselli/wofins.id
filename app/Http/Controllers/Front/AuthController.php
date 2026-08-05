@@ -39,7 +39,7 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
 
-            return redirect()->route('profile');
+            return $this->redirectAfterAuth(Auth::user());
         }
 
         throw ValidationException::withMessages([
@@ -74,7 +74,7 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        return redirect()->route('home')->with('success', 'Akun berhasil dibuat!');
+        return $this->redirectAfterAuth($user);
     }
 
     /**
@@ -164,7 +164,7 @@ class AuthController extends Controller
         Auth::login($user, true);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('profile'));
+        return $this->redirectAfterAuth($user);
     }
 
     /**
@@ -177,6 +177,24 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('home')->with('success', 'Anda telah logout.');
+    }
+
+    /**
+     * Redirect after successful authentication.
+     */
+    protected function redirectAfterAuth(?User $user)
+    {
+        if (! $user) {
+            return redirect()->route('home');
+        }
+
+        if (! $user->hasAssignedRole()) {
+            return redirect()
+                ->route('account.pending')
+                ->with('info', 'Akun Anda berhasil masuk. Lanjutkan pendaftaran melalui aplikasi WOFINS untuk mengaktifkan akses.');
+        }
+
+        return redirect()->intended(route('profile'));
     }
 
     protected function googleRedirectUri(): string

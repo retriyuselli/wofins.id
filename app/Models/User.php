@@ -360,6 +360,14 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     }
 
     /**
+     * Apakah user sudah punya minimal satu role Spatie.
+     */
+    public function hasAssignedRole(): bool
+    {
+        return $this->roles()->exists();
+    }
+
+    /**
      * User boleh akses admin/Filament hanya jika punya role dan akun aktif.
      */
     public function canAccessAdmin(): bool
@@ -372,7 +380,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             return false;
         }
 
-        return $this->roles()->exists();
+        return $this->hasAssignedRole();
     }
 
     public function canAccessPanel(Panel $panel): bool

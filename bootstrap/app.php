@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'no-store' => \App\Http\Middleware\NoStoreResponse::class,
             'super-admin' => \App\Http\Middleware\EnsureSuperAdmin::class,
             'absensi.headers' => \App\Http\Middleware\AbsensiPageSecurityHeaders::class,
+            'role.required' => \App\Http\Middleware\EnsureUserHasRole::class,
         ]);
 
         // Ensure proper web middleware group for Niaga Hoster

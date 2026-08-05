@@ -39,6 +39,13 @@ class ProspectAppController extends Controller
      */
     public function store(Request $request)
     {
+        // Email wajib sesuai akun login (abaikan perubahan dari client)
+        if ($request->user()) {
+            $request->merge([
+                'email' => $request->user()->email,
+            ]);
+        }
+
         $validator = Validator::make($request->all(), [
             'full_name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:prospect_apps,email',
@@ -100,9 +107,10 @@ class ProspectAppController extends Controller
                 Log::error('Failed to send prospect notification email: '.$e->getMessage());
             }
 
-            return redirect()->route('prospect-app.success')->with('success',
-                'Terima kasih! Aplikasi Anda telah berhasil dikirim. Tim kami akan menghubungi Anda dalam 24 jam.'
-            );
+            return redirect()
+                ->route('pendaftaran', array_filter(['plan' => $request->input('plan') ?: $request->query('plan')]))
+                ->with('success', 'Pendaftaran Anda berhasil dikirim. Tim admin WOFINS akan segera menghubungi Anda.');
+
 
         } catch (Exception $e) {
             Log::error('Failed to create prospect application: '.$e->getMessage());
@@ -118,18 +126,20 @@ class ProspectAppController extends Controller
      */
     private function sendNotificationEmail(ProspectApp $prospect)
     {
-        // Send to admin
-        if (config('mail.admin_email')) {
-            Mail::send('emails.prospect-app.admin-notification', compact('prospect'), function ($message) {
-                $message->to(config('mail.admin_email'))
-                    ->subject('New Prospect Application - '.config('app.name'));
-            });
-        }
+        $prospect->loadMissing('industry');
+        $supportEmail = config('mail.support_email', 'support@wofins.id');
 
-        // Send confirmation to prospect
+        // Notifikasi ke support@wofins.id
+        Mail::send('emails.prospect-app.admin-notification', compact('prospect'), function ($message) use ($prospect, $supportEmail) {
+            $message->to($supportEmail)
+                ->replyTo($prospect->email, $prospect->full_name)
+                ->subject('Pendaftaran Prospek WOFINS — '.$prospect->full_name);
+        });
+
+        // Email balasan ke pengirim
         Mail::send('emails.prospect-app.confirmation', compact('prospect'), function ($message) use ($prospect) {
             $message->to($prospect->email, $prospect->full_name)
-                ->subject('Konfirmasi Aplikasi Prospek - '.config('app.name'));
+                ->subject('Pendaftaran Anda sudah kami terima — WOFINS');
         });
     }
 

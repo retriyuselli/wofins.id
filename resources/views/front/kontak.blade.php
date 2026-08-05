@@ -82,15 +82,38 @@
             border-radius: 0.85rem;
             padding: 0.8rem 1rem;
             font-size: 0.9rem;
+            line-height: 1.4;
+            min-height: 3rem;
+            box-sizing: border-box;
             background: #fff;
             color: var(--wf-ink);
             outline: none;
             transition: border-color .15s ease, box-shadow .15s ease;
         }
 
+        select.wf-input {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235c6675' d='M2.1 4.2L6 8.1l3.9-3.9 1.1 1.1L6 10.3 1 5.3z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 12px;
+            padding-right: 2.5rem;
+        }
+
+        textarea.wf-input {
+            min-height: auto;
+            resize: vertical;
+        }
+
         .wf-input:focus {
             border-color: rgba(201, 162, 39, 0.7);
             box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.15);
+        }
+
+        .wf-modal-backdrop {
+            background: rgba(7, 21, 38, 0.55);
+            backdrop-filter: blur(4px);
         }
 
         [x-cloak] { display: none !important; }
@@ -109,7 +132,7 @@
     };
 @endphp
 
-    <div class="wf-page">
+    <div class="wf-page" x-data="{ successOpen: {{ session('success') ? 'true' : 'false' }} }">
         @include('front.partials.wf-nav')
 
         <section class="pt-12 pb-8 bg-gradient-to-b from-white to-[var(--wf-cream)]">
@@ -151,11 +174,10 @@
                 </div>
 
                 <div class="grid lg:grid-cols-5 gap-8 items-start">
-                    <div class="lg:col-span-3 rounded-2xl border border-[var(--wf-line)] bg-white p-6 sm:p-8"
-                         x-data="wfContactForm(@js($paketLabel))">
+                    <div class="lg:col-span-3 rounded-2xl border border-[var(--wf-line)] bg-white p-6 sm:p-8">
                         <h2 class="text-2xl font-bold text-[var(--wf-navy)]">Kirim pesan / jadwalkan demo</h2>
                         <p class="mt-2 text-sm text-[var(--wf-muted)]">
-                            Isi formulir — pesan akan dibuka di WhatsApp agar kami bisa merespons lebih cepat.
+                            Isi formulir — pesan akan dikirim ke <strong class="text-[var(--wf-navy)]">support@wofins.id</strong>.
                         </p>
 
                         @if ($paketLabel)
@@ -165,51 +187,85 @@
                             </div>
                         @endif
 
-                        <form class="mt-6 space-y-4" @submit.prevent="submit()">
+                        @if (session('error'))
+                            <div class="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                                {{ session('error') }}
+                            </div>
+                        @endif
+
+                        @if ($errors->any())
+                            <div class="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+                                <ul class="list-disc list-inside text-sm text-red-700 space-y-0.5">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
+                        <form class="mt-6 space-y-4" method="POST" action="{{ route('kontak.store') }}">
+                            @csrf
+                            <input type="hidden" name="paket" value="{{ $paketLabel }}">
+                            <input type="hidden" name="paket_slug" value="{{ $paket }}">
+
                             <div class="grid sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-semibold text-[var(--wf-navy)] mb-1.5">Nama lengkap *</label>
-                                    <input type="text" class="wf-input" x-model="form.name" placeholder="Nama Anda" required>
+                                    <label for="contact_name" class="block text-sm font-semibold text-[var(--wf-navy)] mb-1.5">Nama lengkap *</label>
+                                    <input id="contact_name" name="name" type="text" class="wf-input" required
+                                           value="{{ old('name', Auth::user()?->name) }}"
+                                           placeholder="Nama Anda">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-semibold text-[var(--wf-navy)] mb-1.5">Nama WO / perusahaan</label>
-                                    <input type="text" class="wf-input" x-model="form.company" placeholder="Nama wedding organizer">
+                                    <label for="contact_company" class="block text-sm font-semibold text-[var(--wf-navy)] mb-1.5">Nama WO / perusahaan</label>
+                                    <input id="contact_company" name="company" type="text" class="wf-input"
+                                           value="{{ old('company') }}"
+                                           placeholder="Nama wedding organizer">
                                 </div>
                             </div>
 
                             <div class="grid sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-semibold text-[var(--wf-navy)] mb-1.5">Email *</label>
-                                    <input type="email" class="wf-input" x-model="form.email" placeholder="email@domain.com" required>
+                                    <label for="contact_email" class="block text-sm font-semibold text-[var(--wf-navy)] mb-1.5">Email *</label>
+                                    <input id="contact_email" name="email" type="email" class="wf-input" required
+                                           value="{{ old('email', Auth::user()?->email) }}"
+                                           placeholder="email@domain.com"
+                                           @auth readonly @endauth>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-semibold text-[var(--wf-navy)] mb-1.5">WhatsApp *</label>
-                                    <input type="tel" class="wf-input" x-model="form.phone" placeholder="08xxxxxxxxxx" required>
+                                    <label for="contact_phone" class="block text-sm font-semibold text-[var(--wf-navy)] mb-1.5">WhatsApp *</label>
+                                    <input id="contact_phone" name="phone" type="tel" class="wf-input" required
+                                           value="{{ old('phone') }}"
+                                           placeholder="08xxxxxxxxxx">
                                 </div>
                             </div>
 
                             <div>
-                                <label class="block text-sm font-semibold text-[var(--wf-navy)] mb-1.5">Kebutuhan *</label>
-                                <select class="wf-input" x-model="form.need" required>
+                                <label for="contact_need" class="block text-sm font-semibold text-[var(--wf-navy)] mb-1.5">Kebutuhan *</label>
+                                <select id="contact_need" name="need" class="wf-input" required>
                                     <option value="">Pilih kebutuhan</option>
-                                    <option value="Demo gratis">Jadwalkan demo gratis</option>
-                                    <option value="Konsultasi paket">Konsultasi paket harga</option>
-                                    <option value="Pertanyaan fitur">Pertanyaan fitur</option>
-                                    <option value="Onboarding">Onboarding / migrasi</option>
-                                    <option value="Lainnya">Lainnya</option>
+                                    @foreach ([
+                                        'Demo gratis' => 'Jadwalkan demo gratis',
+                                        'Konsultasi paket' => 'Konsultasi paket harga',
+                                        'Pertanyaan fitur' => 'Pertanyaan fitur',
+                                        'Onboarding' => 'Onboarding / migrasi',
+                                        'Lainnya' => 'Lainnya',
+                                    ] as $value => $label)
+                                        <option value="{{ $value }}" @selected(old('need', $paketLabel ? 'Konsultasi paket' : '') === $value)>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
                                 </select>
                             </div>
 
                             <div>
-                                <label class="block text-sm font-semibold text-[var(--wf-navy)] mb-1.5">Pesan *</label>
-                                <textarea class="wf-input" rows="5" x-model="form.message" placeholder="Ceritakan singkat kebutuhan WO Anda..." required></textarea>
+                                <label for="contact_message" class="block text-sm font-semibold text-[var(--wf-navy)] mb-1.5">Pesan *</label>
+                                <textarea id="contact_message" name="message" class="wf-input" rows="5" required
+                                          placeholder="Ceritakan singkat kebutuhan WO Anda...">{{ old('message', $paketLabel ? "Saya tertarik dengan {$paketLabel} dan ingin konsultasi lebih lanjut." : '') }}</textarea>
                             </div>
 
-                            <p x-show="error" x-cloak class="text-sm text-red-600" x-text="error"></p>
-
                             <button type="submit" class="wf-btn-navy w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm">
-                                <i class="fa-brands fa-whatsapp text-lg"></i>
-                                Kirim via WhatsApp
+                                <i class="fa-solid fa-paper-plane"></i>
+                                Kirim ke support@wofins.id
                             </button>
                         </form>
                     </div>
@@ -261,40 +317,45 @@
         </section>
 
         @include('front.partials.wf-footer')
+
+        {{-- Success modal --}}
+        <div x-show="successOpen" x-cloak
+             class="fixed inset-0 z-[100] flex items-center justify-center p-4"
+             role="dialog" aria-modal="true" aria-labelledby="contact-success-title">
+            <div class="absolute inset-0 wf-modal-backdrop" @click="successOpen = false"></div>
+            <div class="relative w-full max-w-md rounded-2xl bg-white border border-[var(--wf-line)] shadow-xl overflow-hidden"
+                 @click.stop
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 translate-y-3 scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave-end="opacity-0 translate-y-2 scale-95">
+                <div class="px-6 pt-8 pb-2 text-center">
+                    <span class="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-full bg-[rgba(201,162,39,0.15)] text-[var(--wf-gold)]">
+                        <i class="fa-solid fa-envelope-circle-check text-2xl"></i>
+                    </span>
+                    <h3 id="contact-success-title" class="mt-4 text-xl font-bold text-[var(--wf-navy)]">
+                        Email berhasil terkirim
+                    </h3>
+                    <p class="mt-3 text-sm text-[var(--wf-muted)] leading-relaxed">
+                        {{ session('success', 'Pesan Anda sudah kami terima. Tim admin WOFINS akan segera menghubungi Anda.') }}
+                    </p>
+                    <p class="mt-3 text-xs text-[var(--wf-muted)]">
+                        Kami juga mengirim konfirmasi ke email Anda.
+                    </p>
+                </div>
+                <div class="px-6 py-5 flex flex-col sm:flex-row gap-2.5 justify-center">
+                    <button type="button" @click="successOpen = false"
+                            class="wf-btn-navy inline-flex items-center justify-center px-6 py-3 text-sm">
+                        Mengerti
+                    </button>
+                    <a href="{{ route('home') }}"
+                       class="wf-btn-ghost inline-flex items-center justify-center px-6 py-3 text-sm">
+                        Kembali ke beranda
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <script>
-        function wfContactForm(paketLabel) {
-            return {
-                error: '',
-                form: {
-                    name: '',
-                    company: '',
-                    email: '',
-                    phone: '',
-                    need: paketLabel ? 'Konsultasi paket' : '',
-                    message: paketLabel ? `Saya tertarik dengan ${paketLabel} dan ingin konsultasi lebih lanjut.` : '',
-                },
-                submit() {
-                    this.error = '';
-                    const f = this.form;
-                    if (!f.name || !f.email || !f.phone || !f.need || !f.message) {
-                        this.error = 'Mohon lengkapi semua field yang wajib diisi.';
-                        return;
-                    }
-
-                    let text = `Halo, saya ingin menghubungi tim WOFINS.\n\n`;
-                    text += `Nama: ${f.name}\n`;
-                    if (f.company) text += `WO/Perusahaan: ${f.company}\n`;
-                    text += `Email: ${f.email}\n`;
-                    text += `WhatsApp: ${f.phone}\n`;
-                    text += `Kebutuhan: ${f.need}\n`;
-                    if (paketLabel) text += `Paket: ${paketLabel}\n`;
-                    text += `\nPesan:\n${f.message}`;
-
-                    window.open(`https://wa.me/6281373183794?text=${encodeURIComponent(text)}`, '_blank');
-                }
-            }
-        }
-    </script>
 @endsection

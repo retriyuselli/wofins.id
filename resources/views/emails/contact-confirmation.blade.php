@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Konfirmasi Pendaftaran — {{ config('app.name') }}</title>
+    <title>Konfirmasi Pesan — {{ config('app.name') }}</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -64,8 +64,14 @@
             line-height: 1.5;
         }
         .summary-line:last-child { border-bottom: none; }
-        .summary-line .label { color: #5c6675; }
-        .summary-line .value { color: #0b1f3a; font-weight: 600; }
+        .summary-line .label {
+            color: #5c6675;
+            font-weight: 400;
+        }
+        .summary-line .value {
+            color: #0b1f3a;
+            font-weight: 600;
+        }
         .steps {
             margin: 0;
             padding-left: 18px;
@@ -83,59 +89,56 @@
     </style>
 </head>
 <body>
-@php
-    $serviceLabel = match ($prospect->service) {
-        'hastana' => 'Paket Anggota Hastana',
-        'non_hastana' => 'Paket Non Hastana',
-        default => $prospect->service ?: '—',
-    };
-@endphp
     <div class="container">
         <div class="header">
             <p>WOFINS</p>
-            <h1>Pendaftaran Anda sudah kami terima</h1>
+            <h1>Pesan Anda sudah kami terima</h1>
         </div>
 
         <p class="lead">
-            Halo <strong>{{ $prospect->full_name }}</strong>, terima kasih telah mendaftar konsultasi WOFINS.
-            Data Anda sudah berhasil kami catat dan akan segera ditindaklanjuti oleh tim admin.
+            Halo <strong>{{ $inquiry->name }}</strong>, terima kasih telah menghubungi WOFINS.
+            Data permintaan Anda sudah berhasil kami catat dan akan segera ditindaklanjuti oleh tim admin.
         </p>
 
         <div class="box">
             <h2>Ringkasan permintaan</h2>
             <div class="summary-line">
-                <span class="label">Perusahaan</span> : <span class="value">{{ $prospect->company_name }}</span>
+                <span class="label">Kebutuhan</span> : <span class="value">{{ $inquiry->need }}</span>
+            </div>
+            @if ($inquiry->company)
+                <div class="summary-line">
+                    <span class="label">Perusahaan / WO</span> : <span class="value">{{ $inquiry->company }}</span>
+                </div>
+            @endif
+            @if ($inquiry->paket)
+                <div class="summary-line">
+                    <span class="label">Paket</span> : <span class="value">{{ $inquiry->paket }}</span>
+                </div>
+            @endif
+            <div class="summary-line">
+                <span class="label">Email</span> : <span class="value">{{ $inquiry->email }}</span>
             </div>
             <div class="summary-line">
-                <span class="label">Paket layanan</span> : <span class="value">{{ $serviceLabel }}</span>
-            </div>
-            <div class="summary-line">
-                <span class="label">Jumlah karyawan</span> : <span class="value">{{ $prospect->user_size }}</span>
-            </div>
-            <div class="summary-line">
-                <span class="label">Email</span> : <span class="value">{{ $prospect->email }}</span>
-            </div>
-            <div class="summary-line">
-                <span class="label">Nomor ponsel</span> : <span class="value">{{ $prospect->phone }}</span>
+                <span class="label">WhatsApp</span> : <span class="value">{{ $inquiry->phone }}</span>
             </div>
         </div>
 
         <div class="box">
             <h2>Langkah selanjutnya</h2>
             <ol class="steps">
-                <li>Tim admin meninjau kebutuhan bisnis Anda.</li>
+                <li>Tim admin meninjau kebutuhan Anda.</li>
                 <li>Kami akan menghubungi Anda melalui email atau WhatsApp dalam 1–2 hari kerja.</li>
-                <li>Jika diperlukan, kami akan menjadwalkan meeting / demo WOFINS.</li>
+                <li>Jika diperlukan, kami akan menjadwalkan demo atau sesi konsultasi.</li>
             </ol>
         </div>
 
         <p class="lead">
-            Apabila ada informasi tambahan, balas email ini atau hubungi kami di
+            Apabila ada informasi tambahan, cukup balas email ini atau hubungi kami di
             <span class="gold">support@wofins.id</span> / WhatsApp <span class="gold">+62 813-7318-3794</span>.
         </p>
 
         <p class="footer">
-            Email otomatis dari {{ config('app.name') }}. Mohon abaikan jika Anda tidak mengirim formulir pendaftaran.
+            Email otomatis dari {{ config('app.name') }}. Mohon tidak membalas jika Anda tidak mengirim formulir kontak.
         </p>
     </div>
 </body>
