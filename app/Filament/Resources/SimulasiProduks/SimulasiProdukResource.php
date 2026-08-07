@@ -10,14 +10,16 @@ use App\Filament\Resources\SimulasiProduks\Schemas\SimulasiProdukForm;
 use App\Filament\Resources\SimulasiProduks\Tables\SimulasiProduksTable;
 use App\Models\SimulasiProduk;
 use App\Support\Rupiah;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
+use App\Support\UserVisibility;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Cache;
 
-class SimulasiProdukResource extends Resource
+class SimulasiProdukResource extends BaseResource
 {
     protected static ?string $model = SimulasiProduk::class;
 
@@ -75,13 +77,15 @@ class SimulasiProdukResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
-            ->with([
-                'prospect:id,name_event',
-                'prospect.latestOrder',
-                'product:id,name,price,product_price',
-                'user:id,name',
-            ]);
+        return \App\Support\UserVisibility::constrainOwnedQuery(
+            parent::getEloquentQuery()
+                ->with([
+                    'prospect:id,name_event',
+                    'prospect.latestOrder',
+                    'product:id,name,price,product_price',
+                    'user:id,name',
+                ])
+        );
     }
 
     public static function getNavigationBadgeTooltip(): ?string
@@ -91,6 +95,12 @@ class SimulasiProdukResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::count();
+        $scope = UserVisibility::cacheScopeKey();
+
+        return (string) Cache::remember(
+            "nav:simulasi:count:{$scope}",
+            60,
+            fn (): int => (int) static::getEloquentQuery()->count()
+        );
     }
 }

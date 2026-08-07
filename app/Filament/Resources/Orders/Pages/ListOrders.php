@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Orders\Pages;
 use App\Enums\OrderStatus;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Filament\Resources\Orders\Widgets\OrderOverview;
+use App\Support\CompanySubscription;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -12,8 +13,7 @@ use Filament\Actions\CreateAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
-use Illuminate\Support\Facades\Auth; // Add this
-// Add this
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class ListOrders extends ListRecords
@@ -22,8 +22,21 @@ class ListOrders extends ListRecords
 
     protected function getHeaderActions(): array
     {
+        $canCreate = CompanySubscription::canCreate(CompanySubscription::RESOURCE_ORDERS);
+
         return [
-            CreateAction::make(),
+            Action::make('subscription_quota')
+                ->label(CompanySubscription::summary(CompanySubscription::RESOURCE_ORDERS))
+                ->icon('heroicon-o-ticket')
+                ->color($canCreate ? 'gray' : 'warning')
+                ->disabled()
+                ->extraAttributes(['class' => 'pointer-events-none']),
+
+            CreateAction::make()
+                ->disabled(fn () => ! $canCreate)
+                ->tooltip(fn () => $canCreate
+                    ? null
+                    : CompanySubscription::fullMessage(CompanySubscription::RESOURCE_ORDERS)),
 
             ActionGroup::make([
                 Action::make('downloadProfitLossReport')

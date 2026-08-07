@@ -17,9 +17,11 @@ class AccountManagerTargetForm
             ->components([
                 Select::make('user_id')
                     ->relationship('user', 'name', function (Builder $query) {
-                        return $query->whereHas('roles', function ($q) {
-                            $q->where('name', 'Account Manager');
-                        });
+                        return \App\Support\UserVisibility::constrainUsersQuery(
+                            $query->whereHas('roles', function ($q) {
+                                $q->where('name', 'Account Manager');
+                            })
+                        );
                     })
                     ->required()
                     ->searchable()

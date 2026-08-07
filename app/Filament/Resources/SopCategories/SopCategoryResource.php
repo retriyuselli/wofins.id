@@ -8,13 +8,13 @@ use App\Filament\Resources\SopCategories\Pages\ListSopCategories;
 use App\Filament\Resources\SopCategories\Schemas\SopCategoryForm;
 use App\Filament\Resources\SopCategories\Tables\SopCategoriesTable;
 use App\Models\SopCategory;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class SopCategoryResource extends Resource
+class SopCategoryResource extends BaseResource
 {
     protected static ?string $model = SopCategory::class;
 

@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\FixedAssets\Schemas;
 
-use App\Models\ChartOfAccount;
 use App\Models\FixedAsset;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -14,7 +13,6 @@ use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Schema;
 use Filament\Support\RawJs;
-use Illuminate\Database\Eloquent\Builder;
 
 class FixedAssetForm
 {
@@ -150,38 +148,6 @@ class FixedAssetForm
                                             ->minValue(0)
                                             ->maxValue(11)
                                             ->hintIcon('heroicon-m-question-mark-circle', tooltip: 'Bulan tambahan selain tahun (0-11). Contoh: 3 tahun 6 bulan = Years: 3, Months: 6.'),
-                                    ]),
-
-                                Grid::make(2)
-                                    ->schema([
-                                        Select::make('chart_of_account_id')
-                                            ->label('Akun Aset')
-                                            ->relationship(
-                                                'chartOfAccount',
-                                                'account_name',
-                                                fn (Builder $query) => $query->where('account_type', 'HARTA')
-                                                    ->where('is_active', true)
-                                            )
-                                            ->getOptionLabelFromRecordUsing(fn (ChartOfAccount $record): string => "{$record->account_code} - {$record->account_name}")
-                                            ->searchable()
-                                            ->preload()
-                                            ->required()
-                                            ->hintIcon('heroicon-m-question-mark-circle', tooltip: 'Pilih akun neraca untuk mencatat nilai aset ini. Biasanya "Aset Tetap - [Kategori]".'),
-
-                                        Select::make('depreciation_account_id')
-                                            ->label('Akun Akumulasi Penyusutan')
-                                            ->relationship(
-                                                'depreciationAccount',
-                                                'account_name',
-                                                fn (Builder $query) => $query->where('account_type', 'HARTA')
-                                                    ->where('account_name', 'like', '%akumulasi%')
-                                                    ->where('is_active', true)
-                                            )
-                                            ->getOptionLabelFromRecordUsing(fn (ChartOfAccount $record): string => "{$record->account_code} - {$record->account_name}")
-                                            ->searchable()
-                                            ->preload()
-                                            ->required()
-                                            ->hintIcon('heroicon-m-question-mark-circle', tooltip: 'Akun untuk mencatat akumulasi penyusutan. Akan mengurangi nilai aset di neraca.'),
                                     ]),
                             ]),
 

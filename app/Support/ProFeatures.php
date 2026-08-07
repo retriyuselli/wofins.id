@@ -2,19 +2,54 @@
 
 namespace App\Support;
 
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+
 class ProFeatures
 {
     /**
-     * Apakah fitur Pro (Absensi, Kompensasi & Cuti, Jadwal) aktif penuh.
-     * Saat false, halaman tetap bisa dilihat (preview) tetapi aksi dinonaktifkan.
+     * Force-unlock semua fitur (lokal/dev) lewat env.
      */
-    public static function enabled(): bool
+    public static function forceUnlocked(): bool
     {
         return (bool) config('wofins.pro_features_enabled', false);
     }
 
-    public static function locked(): bool
+    /**
+     * Super admin platform: tidak dibatasi paket perusahaan.
+     */
+    public static function actorIsSuperAdmin(): bool
     {
-        return ! static::enabled();
+        $user = Auth::user();
+
+        return $user instanceof User
+            && method_exists($user, 'hasRole')
+            && $user->hasRole('super_admin');
+    }
+
+    /**
+     * Apakah fitur diizinkan paket perusahaan saat ini.
+     * Default feature = hris (absensi / cuti / jadwal).
+     */
+    public static function allows(string $feature = PricingPlans::FEATURE_HRIS): bool
+    {
+        if (static::forceUnlocked() || static::actorIsSuperAdmin()) {
+            return true;
+        }
+
+        return CompanySubscription::allows($feature);
+    }
+
+    /**
+     * @deprecated Gunakan allows() — dipertahankan untuk kompatibilitas singkat.
+     */
+    public static function enabled(): bool
+    {
+        return static::allows(PricingPlans::FEATURE_HRIS);
+    }
+
+    public static function locked(string $feature = PricingPlans::FEATURE_HRIS): bool
+    {
+        return ! static::allows($feature);
     }
 }

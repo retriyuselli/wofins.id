@@ -9,13 +9,13 @@ use App\Filament\Resources\PaymentMethods\Schemas\PaymentMethodForm;
 use App\Filament\Resources\PaymentMethods\Tables\PaymentMethodsTable;
 use App\Filament\Resources\PaymentMethods\Widgets\PaymentMethodStatsWidget;
 use App\Models\PaymentMethod;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 
-class PaymentMethodResource extends Resource
+class PaymentMethodResource extends BaseResource
 {
     protected static ?string $model = PaymentMethod::class;
 
@@ -64,6 +64,10 @@ class PaymentMethodResource extends Resource
         $user = Auth::user();
 
         if (! $user) {
+            return false;
+        }
+
+        if (! static::canViewAny()) {
             return false;
         }
 

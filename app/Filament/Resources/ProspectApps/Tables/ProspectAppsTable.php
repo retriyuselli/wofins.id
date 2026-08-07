@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ProspectApps\Tables;
 use App\Enums\ProspectAppStatus;
 use App\Filament\Resources\ProspectApps\ProspectAppResource;
 use App\Models\ProspectApp;
+use App\Support\PricingPlans;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -37,13 +38,19 @@ class ProspectAppsTable
                     ->copyable()
                     ->icon('heroicon-o-envelope'),
 
+                TextColumn::make('user.name')
+                    ->label('Akun User')
+                    ->placeholder('—')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 TextColumn::make('company_name')
                     ->label('Perusahaan')
                     ->searchable()
                     ->sortable(),
 
                 TextColumn::make('industry.industry_name')
-                    ->label('Industri')
+                    ->label('Departemen')
                     ->sortable()
                     ->badge()
                     ->color('info'),
@@ -62,19 +69,15 @@ class ProspectAppsTable
 
                 TextColumn::make('status')
                     ->label('Status')
-                    ->badge(),
+                    ->badge()
+                    ->tooltip('Status lead saja. Aktivasi akun lewat Users → Approve.'),
 
                 TextColumn::make('service')
-                    ->label('Paket Layanan')
+                    ->label('Minat Paket')
                     ->badge()
                     ->color('primary')
-                    ->formatStateUsing(fn (?string $state): string => match ($state) {
-                        'hastana'     => 'Paket Hastana',
-                        'non_hastana' => 'Paket Non Hastana',
-                        'lain_lain'   => 'Lain-lain',
-                        default       => ucfirst((string) $state),
-                    })
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->formatStateUsing(fn (?string $state): string => PricingPlans::shortLabel($state))
+                    ->tooltip('Minat calon (sales) — bukan paket aktif di Company.'),
 
                 TextColumn::make('harga')
                     ->label('Anggaran')
@@ -102,9 +105,10 @@ class ProspectAppsTable
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('user_size')
-                    ->label('Ukuran Perusahaan')
+                    ->label('Jumlah Karyawan')
                     ->badge()
                     ->color('gray')
+                    ->formatStateUsing(fn (?string $state): string => ProspectApp::userSizeOptions($state)[$state] ?? ($state ?: '—'))
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('submitted_at')
@@ -128,31 +132,24 @@ class ProspectAppsTable
                 SelectFilter::make('status')
                     ->label('Status')
                     ->options(ProspectAppStatus::class)
-                    ->placeholder('All Statuses'),
+                    ->placeholder('Semua Status'),
 
                 SelectFilter::make('industry')
+                    ->label('Departemen')
                     ->relationship('industry', 'industry_name')
                     ->searchable()
                     ->preload()
-                    ->placeholder('All Industries'),
+                    ->placeholder('Semua Departemen'),
 
                 SelectFilter::make('service')
-                    ->label('Paket Layanan')
-                    ->options([
-                        'hastana'     => 'Paket Anggota Hastana',
-                        'non_hastana' => 'Paket Non Hastana',
-                        'lain_lain'   => 'Lain-lain (Custom)',
-                    ])
-                    ->placeholder('Semua Paket'),
+                    ->label('Minat Paket')
+                    ->options(PricingPlans::filamentFilterOptions())
+                    ->placeholder('Semua Minat Paket'),
 
                 SelectFilter::make('user_size')
-                    ->label('Ukuran Perusahaan')
-                    ->options([
-                        '1-10'  => '1-10 karyawan',
-                        '11-50' => '11-50 karyawan',
-                        '50+'   => '50+ karyawan',
-                    ])
-                    ->placeholder('Semua Ukuran'),
+                    ->label('Jumlah Karyawan')
+                    ->options(ProspectApp::userSizeOptions())
+                    ->placeholder('Semua Jumlah Karyawan'),
 
                 TrashedFilter::make(),
             ])
@@ -173,7 +170,7 @@ class ProspectAppsTable
 
                     DeleteAction::make(),
                 ])
-                    ->label('Actions')
+                    ->label('Aksi')
                     ->icon('heroicon-m-ellipsis-vertical')
                     ->size('sm')
                     ->color('gray')
@@ -189,10 +186,11 @@ class ProspectAppsTable
             ->defaultSort('submitted_at', 'desc')
             ->striped()
             ->paginated([10, 25, 50, 100])
-            ->emptyStateDescription('Silakan buat aplikasi prospek baru untuk memulai.')
+            ->emptyStateHeading('Belum ada pendaftaran')
+            ->emptyStateDescription('Belum ada data calon pelanggan. Buat entri baru atau tunggu pengajuan dari /pendaftaran.')
             ->emptyStateActions([
                 Action::make('create')
-                    ->label('Buat Aplikasi Prospek Baru')
+                    ->label('Buat Pendaftaran Baru')
                     ->url(fn (): string => ProspectAppResource::getUrl('create'))
                     ->icon('heroicon-o-plus')
                     ->button(),

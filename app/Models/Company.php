@@ -12,6 +12,17 @@ class Company extends Model
 {
     use LogsActivity;
 
+    protected static function booted(): void
+    {
+        static::saved(function () {
+            \App\Support\CompanySubscription::forgetCache();
+        });
+
+        static::deleted(function () {
+            \App\Support\CompanySubscription::forgetCache();
+        });
+    }
+
     protected $fillable = [
         'company_name',
         'business_license',
@@ -46,6 +57,14 @@ class Company extends Model
         'legal_documents',
         'legal_document_status',
         'payment_method_id',
+        'subscription_plan',
+        'seat_limit_override',
+        'vendor_limit_override',
+        'product_limit_override',
+        'order_limit_override',
+        'prospect_limit_override',
+        'simulasi_limit_override',
+        'subscription_expires_at',
     ];
 
     protected $casts = [
@@ -56,6 +75,13 @@ class Company extends Model
         'nib_valid_until' => 'date',
         'npwp_issued_date' => 'date',
         'legal_documents' => 'array',
+        'seat_limit_override' => 'integer',
+        'vendor_limit_override' => 'integer',
+        'product_limit_override' => 'integer',
+        'order_limit_override' => 'integer',
+        'prospect_limit_override' => 'integer',
+        'simulasi_limit_override' => 'integer',
+        'subscription_expires_at' => 'datetime',
     ];
 
 

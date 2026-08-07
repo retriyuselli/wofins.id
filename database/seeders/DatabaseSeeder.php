@@ -27,8 +27,6 @@ class DatabaseSeeder extends Seeder
             
             // DepartmentSeeder::class,       // Departemen perusahaan.
             DocumentCategorySeeder::class, // Kategori dokumen.
-            ChartOfAccountSeeder::class,   // Bagan Akun untuk akuntansi.
-            FixedAssetChartOfAccountsSeeder::class, // Akun aset tetap dan akumulasi penyusutan.
             CompanySeeder::class,          // Data perusahaan.
 
             // 2. Data Pengguna (tergantung pada Status dan Role)
@@ -75,7 +73,6 @@ class DatabaseSeeder extends Seeder
             PengeluaranLainSeeder::class,  // Pengeluaran di luar order.
             FixedAssetSeeder::class,       // Aset tetap.
             AssetDepreciationSeeder::class, // Penyusutan aset tetap.
-            JournalSeeder::class,          // JournalBatch & JournalEntry (created_by/approved_by user).
             PiutangSeeder::class,          // Piutang perusahaan.
             PembayaranPiutangSeeder::class, // Pembayaran piutang.
 

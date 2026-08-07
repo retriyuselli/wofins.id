@@ -9,14 +9,14 @@ use App\Filament\Resources\ExpenseOps\Schemas\ExpenseOpForm;
 use App\Filament\Resources\ExpenseOps\Tables\ExpenseOpsTable;
 use App\Filament\Resources\ExpenseOps\Widgets\ExpenseOpsOverview;
 use App\Models\ExpenseOps;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Cache;
 
-class ExpenseOpsResource extends Resource
+class ExpenseOpsResource extends BaseResource
 {
     protected static ?string $model = ExpenseOps::class;
 

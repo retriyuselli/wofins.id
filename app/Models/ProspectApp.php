@@ -42,6 +42,38 @@ class ProspectApp extends Model
         'status'       => ProspectAppStatus::class,
     ];
 
+    /**
+     * Opsi ukuran perusahaan — sumber tunggal untuk front & Filament.
+     *
+     * @return array<string, string>
+     */
+    public static function userSizeOptions(?string $current = null): array
+    {
+        $options = [
+            '1-10' => '1-10 karyawan',
+            '11-50' => '11-50 karyawan',
+            '51-200' => '51-200 karyawan',
+            '201-500' => '201-500 karyawan',
+            '501-1000' => '501-1000 karyawan',
+            '1000+' => 'Lebih dari 1000 karyawan',
+        ];
+
+        // Nilai lama dari Filament sebelumnya
+        if ($current === '50+' && ! isset($options['50+'])) {
+            $options['50+'] = '50+ karyawan (lama)';
+        }
+
+        return $options;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function userSizeKeys(): array
+    {
+        return array_keys(static::userSizeOptions());
+    }
+
     // Relationships
 
     public function getActivitylogOptions(): LogOptions

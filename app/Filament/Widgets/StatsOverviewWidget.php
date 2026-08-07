@@ -6,12 +6,14 @@ use App\Models\Employee;
 use App\Models\ExpenseOps;
 use App\Models\Order;
 use App\Models\Prospect;
+use App\Support\UserVisibility;
 use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Carbon\Carbon;
 use Filament\Support\Enums\IconPosition;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -34,7 +36,7 @@ class StatsOverviewWidget extends BaseWidget
         $previousStart = $start ? Carbon::parse($start)->subMonth() : Carbon::now()->subMonth()->startOfMonth();
         $previousEnd = $end ? Carbon::parse($end)->subMonth() : Carbon::now()->subMonth()->endOfMonth();
 
-        $cacheKey = 'dashboard:stats_overview:'
+        $cacheKey = 'dashboard:stats_overview:'.UserVisibility::cacheScopeKey().':'
             .md5(implode('|', [
                 (string) $start,
                 (string) $end,
@@ -150,30 +152,43 @@ class StatsOverviewWidget extends BaseWidget
         return $change >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down';
     }
 
+    private function ordersQuery(): Builder
+    {
+        return UserVisibility::constrainOrdersQuery(Order::query());
+    }
+
     private function calculateNewProspects(?string $start = null, ?string $end = null): int
     {
-        return Prospect::when($start, fn ($query) => $query->whereDate('created_at', '>=', $start))
-            ->when($end, fn ($query) => $query->whereDate('created_at', '<=', $end))
+        $query = UserVisibility::constrainOwnedQuery(Prospect::query(), 'user_id');
+
+        return $query
+            ->when($start, fn ($q) => $q->whereDate('created_at', '>=', $start))
+            ->when($end, fn ($q) => $q->whereDate('created_at', '<=', $end))
             ->count();
     }
 
     private function calculateNewEmployees(?string $start = null, ?string $end = null): int
     {
-        return Employee::when($start, fn ($query) => $query->whereDate('created_at', '>=', $start))
-            ->when($end, fn ($query) => $query->whereDate('created_at', '<=', $end))
+        $query = UserVisibility::constrainOwnedQuery(Employee::query(), 'user_id');
+
+        return $query
+            ->when($start, fn ($q) => $q->whereDate('created_at', '>=', $start))
+            ->when($end, fn ($q) => $q->whereDate('created_at', '<=', $end))
             ->count();
     }
 
     private function calculateNewOrders(?string $start = null, ?string $end = null): int
     {
-        return Order::when($start, fn ($query) => $query->whereDate('closing_date', '>=', $start))
+        return $this->ordersQuery()
+            ->when($start, fn ($query) => $query->whereDate('closing_date', '>=', $start))
             ->when($end, fn ($query) => $query->whereDate('closing_date', '<=', $end))
             ->count();
     }
 
     private function calculateTotalRevenue(?string $start = null, ?string $end = null): int
     {
-        return Order::when($start, fn ($query) => $query->whereDate('closing_date', '>=', $start))
+        return $this->ordersQuery()
+            ->when($start, fn ($query) => $query->whereDate('closing_date', '>=', $start))
             ->when($end, fn ($query) => $query->whereDate('closing_date', '<=', $end))
             ->selectRaw('SUM(total_price + penambahan - pengurangan - promo) as total_revenue')
             ->value('total_revenue') ?? 0;
@@ -181,7 +196,8 @@ class StatsOverviewWidget extends BaseWidget
 
     private function calculateTotalReceived(?string $start = null, ?string $end = null): int
     {
-        return Order::when($start, fn ($query) => $query->whereDate('closing_date', '>=', $start))
+        return $this->ordersQuery()
+            ->when($start, fn ($query) => $query->whereDate('closing_date', '>=', $start))
             ->when($end, fn ($query) => $query->whereDate('closing_date', '<=', $end))
             ->join('data_pembayarans', 'orders.id', '=', 'data_pembayarans.order_id')
             ->sum('data_pembayarans.nominal') ?? 0;
@@ -189,14 +205,18 @@ class StatsOverviewWidget extends BaseWidget
 
     private function calculateTotalExpenses(?string $start = null, ?string $end = null): int
     {
-        return ExpenseOps::when($start, fn ($query) => $query->whereDate('date_expense', '>=', $start))
-            ->when($end, fn ($query) => $query->whereDate('date_expense', '<=', $end))
+        $query = UserVisibility::constrainExpenseOpsQuery(ExpenseOps::query());
+
+        return $query
+            ->when($start, fn ($q) => $q->whereDate('date_expense', '>=', $start))
+            ->when($end, fn ($q) => $q->whereDate('date_expense', '<=', $end))
             ->sum('amount') ?? 0;
     }
 
     private function calculateMonthlyRevenue(): int
     {
-        return Order::whereMonth('closing_date', now()->month)
+        return $this->ordersQuery()
+            ->whereMonth('closing_date', now()->month)
             ->whereYear('closing_date', now()->year)
             ->selectRaw('SUM(total_price + penambahan - pengurangan - promo) as total_revenue')
             ->value('total_revenue') ?? 0;

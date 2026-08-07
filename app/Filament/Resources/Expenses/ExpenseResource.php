@@ -8,12 +8,12 @@ use App\Filament\Resources\Expenses\Schemas\ExpenseForm;
 use App\Filament\Resources\Expenses\Tables\ExpensesTable;
 use App\Filament\Resources\Expenses\Widgets\ExpenseOverview;
 use App\Models\Expense;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Cache;
 
-class ExpenseResource extends Resource
+class ExpenseResource extends BaseResource
 {
     protected static ?string $model = Expense::class;
 
@@ -62,12 +62,12 @@ class ExpenseResource extends Resource
 
     private static function getCachedNavigationBadgeCount(): int
     {
-        $modelClass = static::getModel();
+        $scope = \App\Support\UserVisibility::cacheScopeKey();
 
         return Cache::remember(
-            'nav:expenses:count',
+            "nav:expenses:count:{$scope}",
             60,
-            fn (): int => (int) $modelClass::count()
+            fn (): int => (int) static::getEloquentQuery()->count()
         );
     }
 
@@ -90,11 +90,13 @@ class ExpenseResource extends Resource
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        return parent::getEloquentQuery()
+        $query = parent::getEloquentQuery()
             ->with([
                 'order.prospect:id,name_event',
                 'vendor:id,name',
                 'paymentMethod:id,bank_name,name,no_rekening',
             ]);
+
+        return \App\Support\UserVisibility::constrainViaTeamOrders($query);
     }
 }

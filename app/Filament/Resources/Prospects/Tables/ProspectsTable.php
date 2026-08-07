@@ -170,7 +170,11 @@ class ProspectsTable
                 TrashedFilter::make(),
 
                 SelectFilter::make('user')
-                    ->relationship('user', 'name')
+                    ->relationship(
+                        'user',
+                        'name',
+                        fn (\Illuminate\Database\Eloquent\Builder $query) => \App\Support\UserVisibility::constrainUsersQuery($query)
+                    )
                     ->label('Manajer Akun')
                     ->searchable()
                     ->preload(),

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Products\Widgets;
 
 use App\Models\Product;
+use App\Support\UserVisibility;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -12,13 +13,14 @@ class ProductOverview extends BaseWidget
 
     protected function getStats(): array
     {
-        $totalProducts = Product::count();
-        $activeProducts = Product::where('is_active', true)->count();
-        $approvedProducts = Product::where('is_approved', true)->count();
+        $base = UserVisibility::constrainOwnedQuery(Product::query(), 'created_by');
 
-        $withVendors = Product::whereHas('items')->count();
-        $withoutVendors = Product::whereDoesntHave('items')->count();
-        $inOrders = Product::whereHas('orders')->count();
+        $totalProducts = (clone $base)->count();
+        $activeProducts = (clone $base)->where('is_active', true)->count();
+        $approvedProducts = (clone $base)->where('is_approved', true)->count();
+        $withVendors = (clone $base)->whereHas('items')->count();
+        $withoutVendors = (clone $base)->whereDoesntHave('items')->count();
+        $inOrders = (clone $base)->whereHas('orders')->count();
 
         return [
             Stat::make('Total Products', $totalProducts)

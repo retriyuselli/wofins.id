@@ -3,13 +3,14 @@
 namespace App\Filament\Resources\DataPembayarans\Widgets;
 
 use App\Models\DataPembayaran;
+use App\Support\UserVisibility;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Carbon;
 
 class DataPembayaranStatsOverview extends BaseWidget
 {
-    protected static ?int $sort = 1; // Atur urutan widget di dashboard
+    protected static ?int $sort = 1;
 
     protected function getStats(): array
     {
@@ -19,11 +20,13 @@ class DataPembayaranStatsOverview extends BaseWidget
         $startOfMonth = Carbon::now()->startOfMonth();
         $endOfMonth = Carbon::now()->endOfMonth();
 
-        $totalPembayaranHariIni = DataPembayaran::whereDate('tgl_bayar', $today)->sum('nominal');
-        $totalPembayaranMingguIni = DataPembayaran::whereBetween('tgl_bayar', [$startOfWeek, $endOfWeek])->sum('nominal');
-        $totalPembayaranBulanIni = DataPembayaran::whereBetween('tgl_bayar', [$startOfMonth, $endOfMonth])->sum('nominal');
-        $jumlahTransaksiBulanIni = DataPembayaran::whereBetween('tgl_bayar', [$startOfMonth, $endOfMonth])->count();
-        $jumlahTanpaImageTahunBerjalan = DataPembayaran::whereYear('tgl_bayar', Carbon::now()->year)
+        $base = UserVisibility::constrainViaTeamOrders(DataPembayaran::query());
+
+        $totalPembayaranHariIni = (clone $base)->whereDate('tgl_bayar', $today)->sum('nominal');
+        $totalPembayaranMingguIni = (clone $base)->whereBetween('tgl_bayar', [$startOfWeek, $endOfWeek])->sum('nominal');
+        $totalPembayaranBulanIni = (clone $base)->whereBetween('tgl_bayar', [$startOfMonth, $endOfMonth])->sum('nominal');
+        $jumlahTransaksiBulanIni = (clone $base)->whereBetween('tgl_bayar', [$startOfMonth, $endOfMonth])->count();
+        $jumlahTanpaImageTahunBerjalan = (clone $base)->whereYear('tgl_bayar', Carbon::now()->year)
             ->where(function ($q) {
                 $q->whereNull('image')->orWhere('image', '');
             })

@@ -16,7 +16,11 @@ class ExpenseForm
         return $schema
             ->components([
                 Select::make('order_id')
-                    ->relationship('order', 'name')
+                    ->relationship(
+                        'order',
+                        'name',
+                        fn ($query) => \App\Support\UserVisibility::constrainOrdersQuery($query)
+                    )
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record?->name ?? 'No Name')
                     ->required()
                     ->preload()
@@ -24,7 +28,11 @@ class ExpenseForm
                     ->label('Project')
                     ->searchable(),
                 Select::make('vendor_id')
-                    ->relationship('vendor', 'name')
+                    ->relationship(
+                        'vendor',
+                        'name',
+                        fn ($query) => \App\Support\UserVisibility::constrainOwnedQuery($query, 'created_by')
+                    )
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record?->name ?? 'No Vendor')
                     ->disabled()
                     ->required()

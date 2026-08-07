@@ -9,14 +9,14 @@ use App\Filament\Resources\PendapatanLains\Schemas\PendapatanLainForm;
 use App\Filament\Resources\PendapatanLains\Tables\PendapatanLainsTable;
 use App\Filament\Resources\PendapatanLains\Widgets\PendapatanLainOverviewWidget;
 use App\Models\PendapatanLain;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Cache;
 
-class PendapatanLainResource extends Resource
+class PendapatanLainResource extends BaseResource
 {
     protected static ?string $model = PendapatanLain::class;
 

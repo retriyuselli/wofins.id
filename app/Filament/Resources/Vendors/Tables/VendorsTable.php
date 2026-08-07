@@ -38,16 +38,15 @@ class VendorsTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->query(
-                Vendor::query()
-                    ->with(['category', 'parent'])
-                    ->withCount([
-                        'productVendors',
-                        'expenses',
-                        'notaDinasDetails',
-                        'productPenambahans',
-                    ])
-            )
+            // Query utama dari VendorResource::getEloquentQuery() (sudah di-scope tim)
+            ->modifyQueryUsing(fn (Builder $query) => $query
+                ->with(['category', 'parent'])
+                ->withCount([
+                    'productVendors',
+                    'expenses',
+                    'notaDinasDetails',
+                    'productPenambahans',
+                ]))
             ->poll('5s')
             ->defaultPaginationPageOption(25)
             ->columns([
@@ -203,11 +202,15 @@ class VendorsTable
 
                 SelectFilter::make('parent_id')
                     ->label('Vendor Induk')
-                    ->options(fn () => Vendor::query()
-                        ->whereNull('parent_id')
-                        ->whereIn('status', ['vendor', 'master'])
-                        ->orderBy('name')
-                        ->pluck('name', 'id'))
+                    ->options(function () {
+                        $query = Vendor::query()
+                            ->whereNull('parent_id')
+                            ->whereIn('status', ['vendor', 'master'])
+                            ->orderBy('name');
+                        \App\Support\UserVisibility::constrainOwnedQuery($query, 'created_by');
+
+                        return $query->pluck('name', 'id');
+                    })
                     ->searchable()
                     ->preload()
                     ->placeholder('Semua Vendor'),

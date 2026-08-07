@@ -4,6 +4,8 @@ namespace App\Filament\Pages;
 
 use App\Enums\OrderStatus;
 use App\Models\Order;
+use App\Support\PricingPlans;
+use App\Support\ProFeatures;
 use Barryvdh\DomPDF\Facade\Pdf;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Pages\Page;
@@ -35,8 +37,21 @@ class NetCashFlowReport extends Page
 
     public $pageTitle;
 
+    public static function canAccess(): bool
+    {
+        return ProFeatures::allows(PricingPlans::FEATURE_ADVANCED_REPORTS)
+            && parent::canAccess();
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::canAccess() && parent::shouldRegisterNavigation();
+    }
+
     public function mount()
     {
+        abort_unless(static::canAccess(), 403);
+
         $this->loadData();
     }
 
@@ -70,6 +85,8 @@ class NetCashFlowReport extends Page
 
     public function downloadPdf()
     {
+        abort_unless(static::canAccess(), 403);
+
         $this->loadData(); // Ensure data is loaded
 
         $pdf = Pdf::loadView('reports.net-cash-flow-pdf', [

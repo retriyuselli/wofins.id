@@ -9,12 +9,14 @@ use App\Filament\Resources\Products\Pages\ViewProduct;
 use App\Filament\Resources\Products\Schemas\ProductForm;
 use App\Filament\Resources\Products\Tables\ProductsTable;
 use App\Models\Product;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
+use App\Support\UserVisibility;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Cache;
 
-class ProductResource extends Resource
+class ProductResource extends BaseResource
 {
     protected static ?string $model = Product::class;
 
@@ -34,7 +36,13 @@ class ProductResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::count();
+        $scope = UserVisibility::cacheScopeKey();
+
+        return (string) Cache::remember(
+            "nav:products:count:{$scope}",
+            60,
+            fn (): int => (int) static::getEloquentQuery()->count()
+        );
     }
 
     public static function form(Schema $schema): Schema
@@ -72,7 +80,7 @@ class ProductResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
+        $query = parent::getEloquentQuery()
             ->with([
                 'items.vendor:id,name,harga_publish,harga_vendor,description',
                 'penambahanHarga.vendor:id,name,harga_publish,harga_vendor,description',
@@ -84,6 +92,8 @@ class ProductResource extends Resource
             ])
             // Bonus: Ini juga akan mengaktifkan kolom 'Total Sold'
             ->withSum('orderItems as total_quantity_sold', 'quantity');
+
+        return \App\Support\UserVisibility::constrainOwnedQuery($query, 'created_by');
     }
 
     protected function mutateFormDataBeforeCreate(array $data): array

@@ -9,7 +9,7 @@
 @section('profile-content')
 @php
     $usagePercent = $annualLeaveAllowance > 0 ? ($usedLeave / $annualLeaveAllowance) * 100 : 0;
-    $proLocked = $proFeatureLocked ?? \App\Support\ProFeatures::locked();
+    $proLocked = $proFeatureLocked ?? \App\Support\ProFeatures::locked(\App\Support\PricingPlans::FEATURE_EMPLOYEE_PORTAL);
 @endphp
 
 @include('profile.partials.pro-preview-banner')

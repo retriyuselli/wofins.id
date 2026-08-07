@@ -9,13 +9,13 @@ use App\Filament\Resources\Sops\Pages\ViewSop;
 use App\Filament\Resources\Sops\Schemas\SopForm;
 use App\Filament\Resources\Sops\Tables\SopsTable;
 use App\Models\Sop;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class SopResource extends Resource
+class SopResource extends BaseResource
 {
     protected static ?string $model = Sop::class;
 

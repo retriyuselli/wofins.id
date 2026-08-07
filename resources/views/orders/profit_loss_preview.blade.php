@@ -6,10 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laporan Laba Rugi - Order #{{ $order->number }}</title>
     {{-- Menggunakan Poppins dari Google Fonts untuk tampilan web --}}
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    {{-- Sertakan Tailwind CSS dari CDN untuk kemudahan --}}
+{{-- Sertakan Tailwind CSS dari CDN untuk kemudahan --}}
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {

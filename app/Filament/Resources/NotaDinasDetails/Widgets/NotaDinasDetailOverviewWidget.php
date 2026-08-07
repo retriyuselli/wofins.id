@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\NotaDinasDetails\Widgets;
 
 use App\Models\NotaDinasDetail;
+use App\Support\UserVisibility;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -13,30 +14,31 @@ class NotaDinasDetailOverviewWidget extends BaseWidget
     protected function getStats(): array
     {
         $currentYear = Carbon::now()->year;
+        $base = UserVisibility::constrainViaTeamOrders(NotaDinasDetail::query());
 
-        $totalDetails = NotaDinasDetail::count();
-        $totalTransferThisYear = NotaDinasDetail::whereYear('created_at', $currentYear)->sum('jumlah_transfer');
-        $invoicesRecorded = NotaDinasDetail::whereNotNull('invoice_number')->count();
-        $invoicesPaid = NotaDinasDetail::where('status_invoice', 'sudah_dibayar')->count();
-        $invoicesUnpaid = NotaDinasDetail::where(function ($q) {
+        $totalDetails = (clone $base)->count();
+        $totalTransferThisYear = (clone $base)->whereYear('created_at', $currentYear)->sum('jumlah_transfer');
+        $invoicesRecorded = (clone $base)->whereNotNull('invoice_number')->count();
+        $invoicesPaid = (clone $base)->where('status_invoice', 'sudah_dibayar')->count();
+        $invoicesUnpaid = (clone $base)->where(function ($q) {
             $q->whereNull('status_invoice')->orWhere('status_invoice', '!=', 'sudah_dibayar');
         })->count();
 
         $transferTrend = [];
         for ($i = 5; $i >= 0; $i--) {
             $d = Carbon::now()->subMonths($i);
-            $transferTrend[] = NotaDinasDetail::whereMonth('created_at', $d->month)
+            $transferTrend[] = (clone $base)->whereMonth('created_at', $d->month)
                 ->whereYear('created_at', $d->year)
                 ->sum('jumlah_transfer');
         }
 
         $currentMonth = Carbon::now()->month;
-        $largestTransactionRecord = NotaDinasDetail::whereMonth('created_at', $currentMonth)
+        $largestTransactionRecord = (clone $base)->whereMonth('created_at', $currentMonth)
             ->whereYear('created_at', $currentYear)
             ->orderByDesc('jumlah_transfer')
             ->first();
         $largestTransactionThisMonth = (int) ($largestTransactionRecord->jumlah_transfer ?? 0);
-        $totalTransferCurrentMonth = NotaDinasDetail::whereMonth('created_at', $currentMonth)
+        $totalTransferCurrentMonth = (clone $base)->whereMonth('created_at', $currentMonth)
             ->whereYear('created_at', $currentYear)
             ->sum('jumlah_transfer');
 

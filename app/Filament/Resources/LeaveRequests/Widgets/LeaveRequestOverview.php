@@ -3,23 +3,18 @@
 namespace App\Filament\Resources\LeaveRequests\Widgets;
 
 use App\Models\LeaveRequest;
+use App\Support\UserVisibility;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-use Illuminate\Support\Facades\Auth;
 
 class LeaveRequestOverview extends BaseWidget
 {
     protected function getStats(): array
     {
-        $user = Auth::user();
         $currentYear = Carbon::now()->year;
 
-        // Base query - filter berdasarkan role
-        $baseQuery = LeaveRequest::query();
-        if ($user && ! $user->roles->contains('name', 'super_admin')) {
-            $baseQuery->where('user_id', $user->id);
-        }
+        $baseQuery = UserVisibility::constrainOwnedQuery(LeaveRequest::query(), 'user_id');
 
         // Stats untuk tahun ini
         $thisYearQuery = (clone $baseQuery)->whereYear('start_date', $currentYear);

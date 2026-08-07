@@ -24,6 +24,11 @@ class ContactController extends Controller
             'paket' => ['nullable', 'string', 'max:255'],
         ]);
 
+        // Email mengikuti akun login bila ada
+        if ($request->user()?->email) {
+            $data['email'] = $request->user()->email;
+        }
+
         $redirectParams = array_filter(['paket' => $request->input('paket_slug')]);
         $supportEmail = config('mail.support_email', 'support@wofins.id');
 

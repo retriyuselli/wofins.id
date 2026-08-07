@@ -9,11 +9,11 @@ use App\Filament\Resources\JadwalKerjas\Pages\ListJadwalKerjas;
 use App\Filament\Resources\JadwalKerjas\Schemas\JadwalKerjaForm;
 use App\Filament\Resources\JadwalKerjas\Tables\JadwalKerjasTable;
 use App\Models\JadwalKerja;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 
-class JadwalKerjaResource extends Resource
+class JadwalKerjaResource extends BaseResource
 {
     use RestrictsToSuperAdmin;
     protected static ?string $model = JadwalKerja::class;

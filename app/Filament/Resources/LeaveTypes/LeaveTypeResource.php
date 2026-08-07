@@ -8,13 +8,13 @@ use App\Filament\Resources\LeaveTypes\Pages\ListLeaveTypes;
 use App\Filament\Resources\LeaveTypes\Schemas\LeaveTypeForm;
 use App\Filament\Resources\LeaveTypes\Tables\LeaveTypesTable;
 use App\Models\LeaveType;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class LeaveTypeResource extends Resource
+class LeaveTypeResource extends BaseResource
 {
     protected static ?string $model = LeaveType::class;
 

@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\LeaveRequests\Widgets;
 
 use App\Models\LeaveRequest;
+use App\Support\UserVisibility;
 use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
-use Illuminate\Support\Facades\Auth;
 
 class LeaveRequestChart extends ChartWidget
 {
@@ -17,13 +17,7 @@ class LeaveRequestChart extends ChartWidget
 
     protected function getData(): array
     {
-        $user = Auth::user();
-
-        // Base query - filter berdasarkan role
-        $baseQuery = LeaveRequest::query();
-        if ($user && ! $user->roles->contains('name', 'super_admin')) {
-            $baseQuery->where('user_id', $user->id);
-        }
+        $baseQuery = UserVisibility::constrainOwnedQuery(LeaveRequest::query(), 'user_id');
 
         // Data 7 bulan terakhir
         $data = [];

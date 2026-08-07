@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Absensis\Schemas;
 
 use App\Models\Absensi;
+use App\Support\UserVisibility;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
@@ -10,6 +11,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
 
 class AbsensiForm
 {
@@ -21,7 +23,11 @@ class AbsensiForm
                     ->schema([
                         Select::make('user_id')
                             ->label('Karyawan')
-                            ->relationship('user', 'name')
+                            ->relationship(
+                                'user',
+                                'name',
+                                fn (Builder $query) => UserVisibility::constrainUsersQuery($query)
+                            )
                             ->searchable()
                             ->preload()
                             ->required(),

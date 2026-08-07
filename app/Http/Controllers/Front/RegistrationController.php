@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Front;
 
+use App\Enums\ProspectAppStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Industry;
 use App\Models\ProspectApp;
@@ -29,6 +30,13 @@ class RegistrationController extends Controller
                 ->latest('submitted_at')
                 ->latest('id')
                 ->first();
+
+            // Sudah mengirim & menunggu tinjauan → jangan tampilkan form lagi
+            if ($prospect && $prospect->status === ProspectAppStatus::Pending) {
+                return redirect()
+                    ->route('account.pending')
+                    ->with('info', 'Pendaftaran Anda sedang ditinjau admin. Mohon menunggu aktivasi akun.');
+            }
         }
 
         return view('front.pendaftaran', [

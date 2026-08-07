@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\OrderStatus;
+use App\Notifications\VerifyEmail as VerifyEmailNotification;
 use Carbon\Carbon;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -23,7 +24,7 @@ use Spatie\Permission\Traits\HasRoles;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
-class User extends Authenticatable implements FilamentUser, HasAvatar
+class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, HasRoles, Notifiable, LogsActivity;
@@ -43,6 +44,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'google_id',
         'email_verified_at',
         'password', // Required field, tapi akan di-hash otomatis
+        'created_by',
 
         // Personal Info - Perlu validation ketat
         'phone_number',
@@ -286,6 +288,16 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $this->belongsTo(Status::class, 'status_id');
     }
 
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'created_by');
+    }
+
+    public function teamMembers(): HasMany
+    {
+        return $this->hasMany(self::class, 'created_by');
+    }
+
     public function statuses(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(Status::class, 'status_user');
@@ -365,6 +377,14 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function hasAssignedRole(): bool
     {
         return $this->roles()->exists();
+    }
+
+    /**
+     * Kirim notifikasi verifikasi email (register manual).
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new VerifyEmailNotification);
     }
 
     /**

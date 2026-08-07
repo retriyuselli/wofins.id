@@ -10,7 +10,7 @@ use App\Filament\Resources\DataPembayarans\Widgets\DataPembayaranStatsOverview;
 use App\Filament\Resources\DataPembayarans\Widgets\InvoiceStatsOverview;
 use App\Models\DataPembayaran;
 use Carbon\Carbon;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 // use App\Filament\Widgets\DataPembayaranStatsOverview;
 
-class DataPembayaranResource extends Resource
+class DataPembayaranResource extends BaseResource
 {
     protected static ?string $model = DataPembayaran::class;
 
@@ -80,20 +80,21 @@ class DataPembayaranResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
+        $query = parent::getEloquentQuery()
             ->with(['paymentMethod', 'order'])
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+
+        return \App\Support\UserVisibility::constrainViaTeamOrders($query);
     }
 
     public static function getNavigationBadge(): ?string
     {
-        /** @var class-string<DataPembayaran> $model */
-        $model = static::getModel();
+        $scope = \App\Support\UserVisibility::cacheScopeKey();
 
-        return cache()->remember('data_pembayaran_count', now()->addMinutes(5), function () use ($model) {
-            return $model::query()
+        return (string) cache()->remember("data_pembayaran_count:{$scope}", now()->addMinutes(5), function () {
+            return static::getEloquentQuery()
                 ->whereNull('deleted_at')
                 ->count();
         });
@@ -101,14 +102,7 @@ class DataPembayaranResource extends Resource
 
     public static function getNavigationBadgeColor(): ?string
     {
-        /** @var class-string<DataPembayaran> $model */
-        $model = static::getModel();
-
-        $count = cache()->remember('data_pembayaran_count', now()->addMinutes(5), function () use ($model) {
-            return $model::query()
-                ->whereNull('deleted_at')
-                ->count();
-        });
+        $count = (int) (static::getNavigationBadge() ?? 0);
 
         return match (true) {
             $count > 10 => 'warning',

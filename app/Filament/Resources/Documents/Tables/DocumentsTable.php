@@ -15,7 +15,6 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
 class DocumentsTable
@@ -23,19 +22,7 @@ class DocumentsTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(function (Builder $query) {
-                $user = Auth::user();
-                if (! $user) {
-                    return;
-                }
-
-                $query->where(function ($query) use ($user) {
-                    $query->where('created_by', $user->id)
-                        ->orWhereHas('recipientsList', function ($q) use ($user) {
-                            $q->where('users.id', $user->id);
-                        });
-                });
-            })
+            // Isolasi tim sudah di DocumentResource::getEloquentQuery()
             ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('document_number')

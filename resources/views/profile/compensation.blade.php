@@ -6,7 +6,7 @@
 @section('profile-content')
 @include('profile.partials.pro-preview-banner')
 
-<div class="{{ ($proFeatureLocked ?? \App\Support\ProFeatures::locked()) ? 'wf-pro-readonly' : '' }}">
+<div class="{{ ($proFeatureLocked ?? \App\Support\ProFeatures::locked(\App\Support\PricingPlans::FEATURE_EMPLOYEE_PORTAL)) ? 'wf-pro-readonly' : '' }}">
     @include('profile.sections.hr-salary-leave')
 </div>
 @endsection

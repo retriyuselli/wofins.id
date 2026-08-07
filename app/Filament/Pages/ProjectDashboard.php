@@ -9,6 +9,7 @@ use App\Filament\Widgets\DashboardKeuangan;
 use App\Filament\Widgets\DocumentInboxWidget;
 use App\Filament\Widgets\EventManager;
 use App\Filament\Widgets\StatsOverviewWidget;
+use App\Filament\Widgets\SubscriptionQuotaWidget;
 use BackedEnum;
 use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Dashboard as BaseDashboard;
@@ -54,6 +55,7 @@ class ProjectDashboard extends Page
     {
         return [
             AccountWidget::class,
+            SubscriptionQuotaWidget::class,
             DocumentInboxWidget::class,
             DashboardKeuangan::class,
             StatsOverviewWidget::class,

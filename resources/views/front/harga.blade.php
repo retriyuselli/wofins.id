@@ -3,10 +3,7 @@
 @section('title', 'Harga Paket — WOFINS')
 
 @push('styles')
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
+<style>
         :root {
             --wf-navy: #0b1f3a;
             --wf-navy-deep: #071526;
@@ -23,6 +20,10 @@
             font-family: 'Poppins', system-ui, sans-serif;
             color: var(--wf-ink);
             background: var(--wf-white);
+        }
+
+        [x-cloak] {
+            display: none !important;
         }
 
         .wf-page h1,
@@ -100,6 +101,7 @@
             flex-direction: column;
             height: 100%;
             position: relative;
+            overflow: visible;
             transition: transform .2s ease, box-shadow .2s ease;
         }
 
@@ -139,6 +141,43 @@
             border-radius: 999px;
         }
 
+        .wf-billing-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.3rem;
+            border-radius: 999px;
+            background: #fff;
+            border: 1px solid var(--wf-line);
+            box-shadow: 0 8px 24px -18px rgba(11, 31, 58, 0.35);
+        }
+
+        .wf-billing-toggle button {
+            border: 0;
+            background: transparent;
+            border-radius: 999px;
+            padding: 0.55rem 1.1rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--wf-muted);
+            cursor: pointer;
+            transition: background .2s ease, color .2s ease;
+        }
+
+        .wf-billing-toggle button.is-active {
+            background: var(--wf-navy);
+            color: #fff;
+        }
+
+        .wf-billing-toggle .wf-save-hint {
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #9a7a12;
+            margin-left: 0.15rem;
+        }
+
         .wf-check {
             width: 1.2rem;
             height: 1.2rem;
@@ -155,6 +194,61 @@
         .wf-check.navy {
             background: rgba(11, 31, 58, 0.08);
             color: var(--wf-navy);
+        }
+
+        .wf-feature-tip {
+            position: relative;
+            display: inline;
+            border-bottom: 1px dashed rgba(11, 31, 58, 0.35);
+            cursor: help;
+            outline: none;
+        }
+
+        .wf-feature-tip:hover,
+        .wf-feature-tip:focus-visible {
+            border-bottom-color: var(--wf-gold);
+            color: var(--wf-navy);
+        }
+
+        .wf-feature-tip__bubble {
+            position: absolute;
+            left: 0;
+            top: calc(100% + 0.65rem);
+            z-index: 40;
+            width: min(17.5rem, 70vw);
+            padding: 0.75rem 0.9rem;
+            border-radius: 0.65rem;
+            background: var(--wf-navy);
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 400;
+            line-height: 1.45;
+            letter-spacing: 0;
+            text-transform: none;
+            box-shadow: 0 14px 28px -16px rgba(7, 21, 38, 0.55);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transform: translateY(4px);
+            transition: opacity .15s ease, transform .15s ease, visibility .15s ease;
+        }
+
+        .wf-feature-tip__bubble::before {
+            content: '';
+            position: absolute;
+            left: 1rem;
+            top: -6px;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-bottom: 6px solid var(--wf-navy);
+        }
+
+        .wf-feature-tip:hover .wf-feature-tip__bubble,
+        .wf-feature-tip:focus-visible .wf-feature-tip__bubble,
+        .wf-feature-tip.is-open .wf-feature-tip__bubble {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
         }
 
         .wf-table-wrap {
@@ -233,111 +327,67 @@
 
 @section('content')
 @php
-    $plans = [
-        [
-            'key' => 'starter',
-            'name' => 'Starter',
-            'desc' => 'Cocok untuk WO yang baru mulai merapikan operasional.',
-            'price' => '199',
-            'unit' => 'RB',
-            'popular' => false,
-            'cta' => 'Pilih Paket Starter',
-            'cta_class' => 'wf-btn-ghost',
-            'check' => 'navy',
-            'features' => [
-                'Hingga 3 pengguna',
-                'Manajemen proyek wedding',
-                'Keuangan dasar',
-                'Nota dinas digital',
-                'Dokumen & SOP',
-                'Support email',
-            ],
-        ],
-        [
-            'key' => 'professional',
-            'name' => 'Professional',
-            'desc' => 'Paling cocok untuk WO yang ingin kendali penuh sehari-hari.',
-            'price' => '399',
-            'unit' => 'RB',
-            'popular' => true,
-            'cta' => 'Pilih Paket Professional',
-            'cta_class' => 'wf-btn-gold',
-            'check' => '',
-            'features' => [
-                'Hingga 10 pengguna',
-                'Semua fitur Starter',
-                'Rekonsiliasi rekening koran',
-                'HRIS & absensi GPS',
-                'Payroll dasar',
-                'Hak akses per jabatan',
-                'Support prioritas',
-            ],
-        ],
-        [
-            'key' => 'business',
-            'name' => 'Business',
-            'desc' => 'Untuk WO dengan banyak proyek dan tim lintas fungsi.',
-            'price' => '699',
-            'unit' => 'RB',
-            'popular' => false,
-            'cta' => 'Pilih Paket Business',
-            'cta_class' => 'wf-btn-ghost',
-            'check' => 'navy',
-            'features' => [
-                'Hingga 25 pengguna',
-                'Semua fitur Professional',
-                'Payroll & portal karyawan',
-                'Laporan lanjutan',
-                'Multi-approval workflow',
-                'Onboarding & training tim',
-                'Support WhatsApp',
-            ],
-        ],
-        [
-            'key' => 'enterprise',
-            'name' => 'Enterprise',
-            'desc' => 'Solusi kustom untuk grup WO / skala nasional.',
-            'price' => null,
-            'unit' => null,
-            'popular' => false,
-            'cta' => 'Hubungi Sales Kami',
-            'cta_class' => 'wf-btn-ghost',
-            'check' => 'navy',
-            'features' => [
-                'Pengguna tidak terbatas',
-                'Semua fitur Business',
-                'Custom workflow & integrasi',
-                'Dedicated account manager',
-                'SLA & keamanan lanjutan',
-                'Pelatihan onsite / online',
-                'Prioritas pengembangan fitur',
-            ],
-        ],
-    ];
+    use App\Support\PricingPlans;
+
+    $plans = collect(PricingPlans::all())->map(function (array $plan) {
+        $monthly = (int) ($plan['price_monthly'] ?? 0);
+        $annual = (int) ($plan['price_annual'] ?? 0);
+        $annualPerMonth = $annual > 0 ? (int) round($annual / 12) : 0;
+
+        $formatRb = static function (int $amount): string {
+            if ($amount <= 0) {
+                return '';
+            }
+
+            // Tampilkan dalam ribuan, dibulatkan tanpa desimal.
+            $rb = (int) round($amount / 1000);
+
+            return number_format($rb, 0, ',', '.');
+        };
+
+        $plan['monthly_display'] = $formatRb($monthly);
+        $plan['annual_monthly_display'] = $formatRb($annualPerMonth);
+        $plan['annual_total_display'] = $formatRb($annual);
+        $plan['monthly_yearly_total_display'] = $formatRb($monthly * 12);
+        $plan['has_price'] = $monthly > 0 && $annual > 0;
+
+        return $plan;
+    })->all();
 
     $compareRows = [
-        ['Jumlah pengguna', 'Hingga 3', 'Hingga 10', 'Hingga 25', 'Custom'],
-        ['Manajemen proyek', 'Dasar', 'Lengkap', 'Lengkap', 'Lengkap'],
-        ['Keuangan & laporan', 'Dasar', 'Lengkap', 'Lengkap', 'Lengkap'],
-        ['Rekonsiliasi rekening', false, true, true, true],
-        ['Nota dinas digital', true, true, true, true],
-        ['HRIS & absensi GPS', false, true, true, true],
-        ['Payroll', false, 'Dasar', 'Lengkap', 'Lengkap'],
-        ['Hak akses jabatan', 'Terbatas', true, true, true],
-        ['Approval workflow', false, 'Dasar', 'Multi-level', 'Custom'],
-        ['Support', 'Email', 'Prioritas', 'WhatsApp', 'Dedicated'],
+        ['Jumlah pengguna', 'Hingga 3', 'Hingga 10', 'Hingga 25'],
+        ['Vendor', 'Hingga 10', 'Hingga 50', 'Hingga 200'],
+        ['Produk', 'Hingga 10', 'Hingga 50', 'Hingga 200'],
+        ['Proyek wedding', 'Hingga 10', 'Hingga 50', 'Hingga 200'],
+        ['Prospek', 'Hingga 30', 'Hingga 150', 'Hingga 500'],
+        ['Simulasi', 'Hingga 20', 'Hingga 100', 'Hingga 400'],
+        ['Manajemen proyek', true, true, true],
+        ['Keuangan dasar', true, true, true],
+        ['Nota dinas digital', false, true, true],
+        ['Rekonsiliasi rekening', false, true, true],
+        ['Payroll', false, 'Dasar', 'Lengkap'],
+        ['Dokumen & SOP', false, false, true],
+        ['Domain', false, false, 'Gratis'],
+        ['HRIS & absensi GPS', false, false, true],
+        ['Portal karyawan', false, false, 'Lengkap'],
+        ['Laporan lanjutan', false, false, true],
+        ['Multi-approval workflow', false, false, true],
+        ['Onboarding & training', false, false, true],
+        ['Support', false, 'Prioritas', 'WhatsApp'],
     ];
 
     $faqs = [
         ['Apakah ada biaya instalasi?', 'Tidak. Semua paket WOFINS tanpa biaya instalasi. Anda hanya membayar biaya berlangganan sesuai paket yang dipilih.'],
+        ['Apa yang termasuk domain gratis?', 'Paket Business sudah termasuk domain (.com / .id sesuai ketersediaan) selama masa berlangganan aktif. Detail setup dibantu tim kami saat onboarding.'],
         ['Bisakah saya upgrade paket nanti?', 'Bisa. Anda dapat upgrade kapan saja; selisih biaya akan disesuaikan dengan sisa masa aktif langganan.'],
+        ['Apakah ada paket Enterprise?', 'Paket Enterprise adalah solusi terpisah di luar aplikasi WOFINS standar ini. Hubungi tim sales jika kebutuhan Anda melebihi paket Business.'],
         ['Apakah data saya aman?', 'Ya. Akses berbasis peran, riwayat aktivitas, approval, backup terpusat, dan audit trail membantu menjaga keamanan data bisnis Anda.'],
         ['Apakah ada masa uji coba?', 'Kami sediakan demo gratis dan konsultasi kebutuhan agar Anda bisa menilai kesesuaian WOFINS sebelum berlangganan.'],
         ['Bagaimana proses onboarding?', 'Setelah paket dipilih, tim kami membantu setup perusahaan, pengguna, dan alur kerja inti agar tim Anda siap memakai sistem.'],
     ];
 @endphp
 
-    <div class="wf-page" x-data="{ openFaq: 0 }">
+    <div class="wf-page" x-data="{ openFaq: 0, billing: 'annual', openTip: null }">
         @include('front.partials.wf-nav')
 
         {{-- Intro --}}
@@ -348,7 +398,7 @@
                     Pilih Paket yang Sesuai dengan Kebutuhan Wedding Organizer Anda
                 </h1>
                 <p class="mt-4 text-[var(--wf-muted)] max-w-2xl mx-auto">
-                    Paket WOFINS dirancang fleksibel — dari WO yang baru merapikan operasional hingga tim skala enterprise.
+                    Paket WOFINS dirancang fleksibel — dari WO yang baru merapikan operasional hingga tim Business.
                 </p>
                 <div class="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm font-semibold text-[var(--wf-navy)]">
                     @foreach (['Tanpa biaya instalasi', 'Update & support gratis', 'Aman & terpercaya'] as $benefit)
@@ -358,13 +408,33 @@
                         </span>
                     @endforeach
                 </div>
+
+                <div class="mt-8 flex flex-col items-center gap-3">
+                    <div class="wf-billing-toggle" role="group" aria-label="Pilih periode pembayaran">
+                        <button type="button"
+                                :class="billing === 'monthly' && 'is-active'"
+                                @click="billing = 'monthly'">
+                            Bulanan
+                        </button>
+                        <button type="button"
+                                :class="billing === 'annual' && 'is-active'"
+                                @click="billing = 'annual'">
+                            Tahunan
+                            <span class="wf-save-hint">−1 bln</span>
+                        </button>
+                    </div>
+                    <p class="text-xs text-[var(--wf-muted)]"
+                       x-text="billing === 'annual'
+                            ? 'Bayar tahunan = hemat 1 bulan dibanding bayar bulanan.'
+                            : 'Bayar bulanan tanpa komitmen tahunan.'"></p>
+                </div>
             </div>
         </section>
 
         {{-- Pricing cards --}}
         <section class="pb-14 pt-2">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="grid md:grid-cols-2 xl:grid-cols-4 gap-5 pt-3">
+                <div class="grid md:grid-cols-3 gap-5 pt-3 max-w-5xl mx-auto">
                     @foreach ($plans as $plan)
                         <div class="wf-price-card {{ $plan['popular'] ? 'is-popular' : '' }}">
                             @if ($plan['popular'])
@@ -377,16 +447,26 @@
                             </div>
 
                             <div class="mb-5">
-                                @if ($plan['price'])
-                                    <div class="flex items-end gap-1">
+                                @if ($plan['has_price'])
+                                    <div class="flex items-end gap-1" x-show="billing === 'monthly'" x-cloak>
                                         <span class="text-sm font-semibold text-[var(--wf-muted)] mb-1">Rp</span>
-                                        <span class="text-4xl font-extrabold text-[var(--wf-navy)] leading-none">{{ $plan['price'] }}</span>
-                                        <span class="text-lg font-bold text-[var(--wf-navy)] mb-0.5">{{ $plan['unit'] }}</span>
+                                        <span class="text-4xl font-extrabold text-[var(--wf-navy)] leading-none">{{ $plan['monthly_display'] }}</span>
+                                        <span class="text-lg font-bold text-[var(--wf-navy)] mb-0.5">RB</span>
                                         <span class="text-sm text-[var(--wf-muted)] mb-1">/ bulan</span>
                                     </div>
-                                    <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-[var(--wf-muted)]">
-                                        <span>Dibayar tahunan</span>
-                                        <span class="wf-save-pill">Hemat 2 bulan</span>
+                                    <div class="mt-2 text-xs text-[var(--wf-muted)]" x-show="billing === 'monthly'" x-cloak>
+                                        Ditagih bulanan · setara Rp {{ $plan['monthly_yearly_total_display'] }} RB / tahun
+                                    </div>
+
+                                    <div class="flex items-end gap-1" x-show="billing === 'annual'" x-cloak>
+                                        <span class="text-sm font-semibold text-[var(--wf-muted)] mb-1">Rp</span>
+                                        <span class="text-4xl font-extrabold text-[var(--wf-navy)] leading-none">{{ $plan['annual_monthly_display'] }}</span>
+                                        <span class="text-lg font-bold text-[var(--wf-navy)] mb-0.5">RB</span>
+                                        <span class="text-sm text-[var(--wf-muted)] mb-1">/ bulan</span>
+                                    </div>
+                                    <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-[var(--wf-muted)]" x-show="billing === 'annual'" x-cloak>
+                                        <span>Dibayar tahunan Rp {{ $plan['annual_total_display'] }} RB</span>
+                                        <span class="wf-save-pill">Hemat 1 bulan</span>
                                     </div>
                                 @else
                                     <p class="text-3xl font-extrabold text-[var(--wf-navy)] leading-tight">Hubungi Kami</p>
@@ -395,15 +475,28 @@
                             </div>
 
                             <ul class="space-y-2.5 mb-8 flex-1">
-                                @foreach ($plan['features'] as $feature)
+                                @foreach (\App\Support\PricingPlans::featureItems($plan) as $feature)
                                     <li class="flex items-start gap-2.5 text-sm text-[var(--wf-ink)]">
                                         <span class="wf-check {{ $plan['check'] }}"><i class="fa-solid fa-check"></i></span>
-                                        <span>{{ $feature }}</span>
+                                        @if ($feature['tip'])
+                                            <span class="wf-feature-tip"
+                                                  tabindex="0"
+                                                  role="button"
+                                                  aria-label="{{ $feature['label'] }}: {{ $feature['tip'] }}"
+                                                  @click.prevent="openTip = openTip === '{{ $plan['key'] }}-{{ $loop->index }}' ? null : '{{ $plan['key'] }}-{{ $loop->index }}'"
+                                                  @keydown.escape.window="openTip = null"
+                                                  :class="{ 'is-open': openTip === '{{ $plan['key'] }}-{{ $loop->index }}' }">
+                                                {{ $feature['label'] }}
+                                                <span class="wf-feature-tip__bubble" role="tooltip">{{ $feature['tip'] }}</span>
+                                            </span>
+                                        @else
+                                            <span>{{ $feature['label'] }}</span>
+                                        @endif
                                     </li>
                                 @endforeach
                             </ul>
 
-                            <a href="{{ route('kontak', ['paket' => $plan['key']]) }}"
+                            <a :href="'{{ route('kontak') }}?paket={{ $plan['key'] }}&billing=' + billing"
                                class="{{ $plan['cta_class'] }} w-full inline-flex items-center justify-center px-4 py-3 text-sm text-center">
                                 {{ $plan['cta'] }}
                             </a>
@@ -434,7 +527,6 @@
                                 <th>Starter</th>
                                 <th class="col-pro">Professional</th>
                                 <th>Business</th>
-                                <th>Enterprise</th>
                             </tr>
                         </thead>
                         <tbody>

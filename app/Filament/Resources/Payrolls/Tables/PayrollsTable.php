@@ -243,7 +243,11 @@ class PayrollsTable
             ->filters([
                 SelectFilter::make('user')
                     ->label('Karyawan')
-                    ->relationship('user', 'name')
+                    ->relationship(
+                        'user',
+                        'name',
+                        fn (\Illuminate\Database\Eloquent\Builder $query) => \App\Support\UserVisibility::constrainUsersQuery($query)
+                    )
                     ->searchable()
                     ->preload(),
 

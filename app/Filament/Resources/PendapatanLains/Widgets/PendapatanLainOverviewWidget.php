@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\PendapatanLains\Widgets;
 
+use App\Support\UserVisibility;
 use App\Models\PendapatanLain;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -11,31 +12,33 @@ class PendapatanLainOverviewWidget extends BaseWidget
 {
     protected function getStats(): array
     {
+        $base = UserVisibility::constrainPlatformOnlyQuery(PendapatanLain::query());
+
         // Get totals for current year
         $currentYear = Carbon::now()->year;
-        $totalPendapatan = PendapatanLain::where('kategori_transaksi', 'uang_masuk')
+        $totalPendapatan = (clone $base)->where('kategori_transaksi', 'uang_masuk')
             ->whereYear('tgl_bayar', $currentYear)
             ->sum('nominal');
-        $totalPengeluaran = PendapatanLain::where('kategori_transaksi', 'uang_keluar')
+        $totalPengeluaran = (clone $base)->where('kategori_transaksi', 'uang_keluar')
             ->whereYear('tgl_bayar', $currentYear)
             ->sum('nominal');
-        $totalTransaksi = PendapatanLain::whereYear('tgl_bayar', $currentYear)->count();
+        $totalTransaksi = (clone $base)->whereYear('tgl_bayar', $currentYear)->count();
 
         // Get monthly data for trend
         $currentMonth = Carbon::now()->startOfMonth();
         $lastMonth = Carbon::now()->subMonth()->startOfMonth();
 
-        $currentMonthPendapatan = PendapatanLain::where('kategori_transaksi', 'uang_masuk')
+        $currentMonthPendapatan = (clone $base)->where('kategori_transaksi', 'uang_masuk')
             ->whereDate('tgl_bayar', '>=', $currentMonth)
             ->sum('nominal');
 
-        $lastMonthPendapatan = PendapatanLain::where('kategori_transaksi', 'uang_masuk')
+        $lastMonthPendapatan = (clone $base)->where('kategori_transaksi', 'uang_masuk')
             ->whereDate('tgl_bayar', '>=', $lastMonth)
             ->whereDate('tgl_bayar', '<', $currentMonth)
             ->sum('nominal');
 
-        $currentMonthTransaksi = PendapatanLain::whereDate('tgl_bayar', '>=', $currentMonth)->count();
-        $lastMonthTransaksi = PendapatanLain::whereDate('tgl_bayar', '>=', $lastMonth)
+        $currentMonthTransaksi = (clone $base)->whereDate('tgl_bayar', '>=', $currentMonth)->count();
+        $lastMonthTransaksi = (clone $base)->whereDate('tgl_bayar', '>=', $lastMonth)
             ->whereDate('tgl_bayar', '<', $currentMonth)
             ->count();
 
@@ -85,12 +88,17 @@ class PendapatanLainOverviewWidget extends BaseWidget
         ];
     }
 
+    private function scopedQuery()
+    {
+        return UserVisibility::constrainPlatformOnlyQuery(PendapatanLain::query());
+    }
+
     private function getPendapatanChartData(): array
     {
         $data = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::now()->subDays($i)->startOfDay();
-            $amount = PendapatanLain::where('kategori_transaksi', 'uang_masuk')
+            $amount = $this->scopedQuery()->where('kategori_transaksi', 'uang_masuk')
                 ->whereDate('tgl_bayar', $date)
                 ->sum('nominal');
             $data[] = (int) $amount;
@@ -104,7 +112,7 @@ class PendapatanLainOverviewWidget extends BaseWidget
         $data = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::now()->subDays($i)->startOfDay();
-            $count = PendapatanLain::whereDate('tgl_bayar', $date)->count();
+            $count = $this->scopedQuery()->whereDate('tgl_bayar', $date)->count();
             $data[] = $count;
         }
 

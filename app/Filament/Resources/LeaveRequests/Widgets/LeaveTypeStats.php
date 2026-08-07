@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\LeaveRequests\Widgets;
 
 use App\Models\LeaveRequest;
+use App\Support\UserVisibility;
 use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
-use Illuminate\Support\Facades\Auth;
 
 class LeaveTypeStats extends ChartWidget
 {
@@ -19,17 +19,11 @@ class LeaveTypeStats extends ChartWidget
 
     protected function getData(): array
     {
-        $user = Auth::user();
         $currentYear = Carbon::now()->year;
 
-        // Base query - filter berdasarkan role
-        $baseQuery = LeaveRequest::query()
+        $baseQuery = UserVisibility::constrainOwnedQuery(LeaveRequest::query(), 'user_id')
             ->whereYear('start_date', $currentYear)
-            ->where('status', 'approved'); // Hanya yang approved
-
-        if ($user && ! $user->roles->contains('name', 'super_admin')) {
-            $baseQuery->where('user_id', $user->id);
-        }
+            ->where('status', 'approved');
 
         // Ambil data per jenis cuti
         $leaveTypeStats = $baseQuery

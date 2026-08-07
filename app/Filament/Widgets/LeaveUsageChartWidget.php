@@ -3,8 +3,10 @@
 namespace App\Filament\Widgets;
 
 use App\Models\LeaveRequest;
+use App\Support\UserVisibility;
 use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Filament\Widgets\ChartWidget;
+use Illuminate\Database\Eloquent\Builder;
 
 class LeaveUsageChartWidget extends ChartWidget
 {
@@ -47,10 +49,15 @@ class LeaveUsageChartWidget extends ChartWidget
         }
     }
 
+    protected function scopedLeaveRequests(): Builder
+    {
+        return UserVisibility::constrainOwnedQuery(LeaveRequest::query(), 'user_id');
+    }
+
     protected function getYearlyData(): array
     {
         // Get monthly leave usage for the current year
-        $monthlyData = LeaveRequest::selectRaw('
+        $monthlyData = $this->scopedLeaveRequests()->selectRaw('
                 MONTH(start_date) as month,
                 COUNT(*) as total_requests,
                 SUM(total_days) as total_days,
@@ -115,7 +122,7 @@ class LeaveUsageChartWidget extends ChartWidget
     {
         $quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
 
-        $quarterlyData = LeaveRequest::selectRaw('
+        $quarterlyData = $this->scopedLeaveRequests()->selectRaw('
                 QUARTER(start_date) as quarter,
                 SUM(total_days) as total_days,
                 leave_type_id
@@ -165,7 +172,7 @@ class LeaveUsageChartWidget extends ChartWidget
         $endOfMonth = now()->endOfMonth();
         $daysInMonth = $endOfMonth->day;
 
-        $dailyData = LeaveRequest::selectRaw('
+        $dailyData = $this->scopedLeaveRequests()->selectRaw('
                 DAY(start_date) as day,
                 SUM(total_days) as total_days
             ')

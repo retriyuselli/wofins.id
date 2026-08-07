@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Order;
+use App\Support\UserVisibility;
 use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
@@ -22,7 +23,7 @@ class OmsetTableWidget extends BaseWidget
 
     public function table(Table $table): Table
     {
-        $monthlyQuery = Order::query()
+        $monthlyQuery = UserVisibility::constrainOrdersQuery(Order::query())
             ->whereNotNull('closing_date')
             ->selectRaw('
                 MIN(id) as id,
@@ -82,7 +83,7 @@ class OmsetTableWidget extends BaseWidget
                 SelectFilter::make('year')
                     ->label('Tahun')
                     ->options(
-                        Order::query()
+                        UserVisibility::constrainOrdersQuery(Order::query())
                             ->whereNotNull('closing_date')
                             ->selectRaw('YEAR(closing_date) as year')
                             ->distinct()

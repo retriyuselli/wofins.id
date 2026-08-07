@@ -197,43 +197,47 @@ class DocumentationSeeder extends Seeder
             ['slug' => 'membuat-order-baru'],
             [
                 'documentation_category_id' => $orderCategory->id,
-                'title' => 'Cara Membuat Order Event Baru',
+                'title' => 'Cara Membuat Proyek Wedding Baru',
                 'content' => '
-<h2>Panduan Membuat Order Event Baru</h2>
-<p>Fitur ini digunakan untuk mencatat pesanan baru dari klien (calon pengantin). Order ini akan menjadi induk dari seluruh transaksi keuangan dan operasional event.</p>
+<h2>Panduan Membuat Proyek Wedding</h2>
+<p>Fitur ini mencatat proyek wedding dari klien. Satu proyek menjadi induk untuk produk, pembayaran, pengeluaran, dan operasional event.</p>
 
-<h3>Langkah-langkah:</h3>
+<div class="bg-amber-50 p-4 rounded-lg border border-amber-200 mt-2 mb-4">
+    <strong>Prasyarat:</strong> Prospek harus sudah dibuat di menu <strong>Penjualan → Prospek</strong> (termasuk tanggal resepsi dan lokasi venue). Satu prospek hanya bisa dihubungkan ke satu proyek.
+</div>
+
+<h3>Langkah-langkah</h3>
 <ol>
-    <li>Masuk ke menu <strong>Orders</strong> di sidebar.</li>
-    <li>Klik tombol <strong>+ New Order</strong> di pojok kanan atas.</li>
-    <li>Isi <strong>Informasi Klien</strong>:
+    <li>Buka menu <strong>Penjualan → Proyek Wedding</strong>.</li>
+    <li>Periksa badge kuota paket di halaman daftar. Jika kuota penuh, tombol buat proyek nonaktif — upgrade paket dulu.</li>
+    <li>Klik tombol <strong>New order</strong> (pojok kanan atas).</li>
+    <li>Isi wizard langkah <strong>Informasi Proyek</strong>:
         <ul>
-            <li><strong>Customer</strong>: Pilih nama klien yang sudah terdaftar. Jika belum ada, klik tanda (+) untuk membuat data customer baru.</li>
-            <li><strong>Event Date</strong>: Tentukan tanggal resepsi/acara.</li>
-            <li><strong>Venue</strong>: Lokasi acara berlangsung.</li>
+            <li><strong>Prospek</strong>: pilih prospek yang belum punya proyek. Nama acara terisi otomatis.</li>
+            <li><strong>Account Manager</strong> dan <strong>Event Manager</strong>: wajib diisi.</li>
+            <li><strong>No. Kontrak</strong> dan <strong>Pax</strong>: isi sesuai kesepakatan.</li>
+            <li><strong>Upload Kontrak</strong> dan <strong>File Persetujuan Produk</strong>: PDF yang sudah ditandatangani (wajib).</li>
+            <li><strong>Status Pesanan</strong>: pilih Pending, Processing, Done, atau Cancelled.</li>
+            <li><strong>Keterangan Tambahan</strong>: opsional.</li>
         </ul>
     </li>
-    <li>Pilih <strong>Paket & Produk</strong>:
+    <li>Lanjut ke langkah <strong>Detail Pembayaran</strong>:
         <ul>
-            <li>Klik "Add Item" untuk memasukkan paket pernikahan atau item satuan.</li>
-            <li>Sesuaikan kuantitas (Qty) dan harga jika ada diskon khusus.</li>
+            <li>Di bagian <strong>Product dipesan</strong>, tambah baris produk/paket dan sesuaikan quantity. Harga satuan mengikuti master produk (tidak diubah di form ini).</li>
+            <li>Opsional: di <strong>Data Pembayaran</strong>, klik <strong>Tambah Pembayaran</strong> untuk mencatat uang masuk/keluar aktual (metode, nominal, tanggal, bukti) — ini bukan pengaturan persentase DP/termin.</li>
+            <li>Total paket, penambahan, pengurangan, dan promo dihitung otomatis.</li>
         </ul>
     </li>
-    <li><strong>Informasi Pembayaran</strong>:
-        <ul>
-            <li>Sistem akan otomatis menghitung <strong>Grand Total</strong>.</li>
-            <li>Tentukan termin pembayaran (misal: DP 30%, Termin 1 50%, Pelunasan 20%).</li>
-        </ul>
-    </li>
-    <li>Klik <strong>Create Order</strong> untuk menyimpan.</li>
+    <li>Di langkah <strong>Informasi Keuangan</strong>, periksa <strong>Grand Total</strong>, uang dibayar, dan sisa (otomatis).</li>
+    <li>Klik <strong>Create</strong> untuk menyimpan.</li>
 </ol>
 
 <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mt-4">
-    <strong>Tips:</strong> Pastikan status order di-set ke "Draft" jika masih berupa penawaran, dan ubah ke "Confirmed" setelah klien membayar Booking Fee.
+    <strong>Tips status:</strong> gunakan <strong>Pending</strong> untuk proyek baru, <strong>Processing</strong> saat berjalan, <strong>Done</strong> setelah selesai (Finance biasanya hanya view), dan <strong>Cancelled</strong> jika dibatalkan. Tanggal acara dan venue dikelola di data Prospek, bukan di form proyek.
 </div>
                 ',
                 'is_published' => true,
-                'keywords' => 'order, event, buat pesanan, booking, invoice',
+                'keywords' => 'proyek wedding, order, prospek, buat proyek, kontrak, pembayaran',
                 'related_resource' => 'OrderResource',
                 'order' => 1,
             ]
@@ -433,7 +437,7 @@ class DocumentationSeeder extends Seeder
 <p>Penyusutan besar di awal tahun, mengecil di tahun-tahun berikutnya. Cocok untuk kendaraan atau elektronik yang cepat turun harganya.</p>
 
 <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-    <strong>Penting:</strong> Penyusutan akan otomatis menjurnal beban penyusutan setiap akhir bulan jika fitur auto-journal diaktifkan.
+    <strong>Penting:</strong> Catat penyusutan secara berkala agar nilai buku aset tetap akurat.
 </div>
                 ',
                 'is_published' => true,
@@ -481,30 +485,6 @@ class DocumentationSeeder extends Seeder
                 'icon' => 'heroicon-o-banknotes',
                 'order' => 5,
                 'is_active' => true,
-            ]
-        );
-
-        Documentation::updateOrCreate(
-            ['slug' => 'memahami-bagan-akun'],
-            [
-                'documentation_category_id' => $financeCategory->id,
-                'title' => 'Memahami Bagan Akun (COA)',
-                'content' => '
-<h2>Struktur Bagan Akun (Chart of Accounts)</h2>
-<p>Bagan Akun adalah fondasi dari laporan keuangan sistem WOFINS.</p>
-<ul>
-    <li><strong>1-xxxx ASET</strong>: Kas, Bank, Piutang, Perlengkapan.</li>
-    <li><strong>2-xxxx KEWAJIBAN</strong>: Utang Vendor, Uang Muka Klien (Pendapatan Diterima Dimuka).</li>
-    <li><strong>3-xxxx EKUITAS</strong>: Modal Owner, Laba Ditahan.</li>
-    <li><strong>4-xxxx PENDAPATAN</strong>: Pendapatan Jasa WO, Pendapatan Dekorasi.</li>
-    <li><strong>5-xxxx BEBAN POKOK</strong>: Biaya Vendor (HPP Event).</li>
-    <li><strong>6-xxxx BEBAN OPERASIONAL</strong>: Gaji Tim, Listrik, Sewa Kantor.</li>
-</ul>
-                ',
-                'is_published' => true,
-                'keywords' => 'coa, akun, chart of accounts',
-                'related_resource' => 'ChartOfAccountResource',
-                'order' => 1,
             ]
         );
 
@@ -926,7 +906,7 @@ class DocumentationSeeder extends Seeder
         );
 
         // ==========================================
-        // 9. UPDATE KEUANGAN: PIUTANG & JURNAL
+        // 9. UPDATE KEUANGAN: PIUTANG
         // ==========================================
         
         Documentation::updateOrCreate(
@@ -952,30 +932,6 @@ class DocumentationSeeder extends Seeder
                 'keywords' => 'piutang, ar, account receivable, tagihan, invoice',
                 'related_resource' => 'PiutangResource',
                 'order' => 5,
-            ]
-        );
-
-        Documentation::updateOrCreate(
-            ['slug' => 'jurnal-umum-manual'],
-            [
-                'documentation_category_id' => $financeCategory->id,
-                'title' => 'Jurnal Umum (General Journal)',
-                'content' => '
-<h2>Pencatatan Akuntansi Manual</h2>
-<p>Fitur <strong>Journal Batches</strong> digunakan oleh akuntan untuk mencatat transaksi yang tidak tercover oleh modul otomatis (seperti penyesuaian akhir bulan, koreksi kesalahan, atau depresiasi manual).</p>
-
-<h3>Cara Input Jurnal:</h3>
-<ol>
-    <li>Buat Batch Baru (misal: "Penyesuaian Jan 2026").</li>
-    <li>Tambah Item Jurnal (Debit & Kredit).</li>
-    <li>Pastikan Total Debit = Total Kredit (Balance).</li>
-    <li>Post/Posting jurnal agar masuk ke Buku Besar.</li>
-</ol>
-                ',
-                'is_published' => true,
-                'keywords' => 'jurnal, journal entry, akuntansi, debit kredit',
-                'related_resource' => 'JournalBatchResource',
-                'order' => 6,
             ]
         );
 

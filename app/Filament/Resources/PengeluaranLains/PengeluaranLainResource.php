@@ -9,12 +9,12 @@ use App\Filament\Resources\PengeluaranLains\Schemas\PengeluaranLainForm;
 use App\Filament\Resources\PengeluaranLains\Tables\PengeluaranLainsTable;
 use App\Filament\Resources\PengeluaranLains\Widgets\PengeluaranOverviewWidgets;
 use App\Models\PengeluaranLain;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Cache;
 
-class PengeluaranLainResource extends Resource
+class PengeluaranLainResource extends BaseResource
 {
     protected static ?string $model = PengeluaranLain::class;
 

@@ -26,6 +26,21 @@ return Application::configure(basePath: dirname(__DIR__))
         // Redirect guest ke halaman login front (bukan route 'login' default)
         $middleware->redirectGuestsTo(fn () => route('front.login'));
 
+        // User yang sudah login (middleware guest): arahkan sesuai status akun
+        $middleware->redirectUsersTo(function () {
+            $user = auth()->user();
+
+            if ($user && ! $user->hasVerifiedEmail()) {
+                return route('verification.notice');
+            }
+
+            if ($user && method_exists($user, 'hasAssignedRole') && ! $user->hasAssignedRole()) {
+                return route('account.pending');
+            }
+
+            return route('profile');
+        });
+
         // Add middleware aliases for better organization
         $middleware->alias([
             'filament.auth' => \Filament\Http\Middleware\Authenticate::class,
@@ -33,6 +48,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'project.access' => \App\Http\Middleware\CheckProjectAccess::class,
             'no-store' => \App\Http\Middleware\NoStoreResponse::class,
             'super-admin' => \App\Http\Middleware\EnsureSuperAdmin::class,
+            'admin-tools.access' => \App\Http\Middleware\EnsureAdminToolsAccess::class,
             'absensi.headers' => \App\Http\Middleware\AbsensiPageSecurityHeaders::class,
             'role.required' => \App\Http\Middleware\EnsureUserHasRole::class,
             'pro.feature' => \App\Http\Middleware\EnsureProFeature::class,

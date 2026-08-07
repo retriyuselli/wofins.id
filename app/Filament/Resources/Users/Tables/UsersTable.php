@@ -6,7 +6,7 @@ use App\Enums\ProspectAppStatus;
 use App\Models\Status;
 use App\Models\ProspectApp;
 use App\Models\User;
-use Exception;
+use App\Support\CompanySubscription;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
@@ -58,6 +58,108 @@ class UsersTable
 
         // $record->roles sudah di-eager load via ->with('roles') di UserResource
         return $record->roles->contains('name', 'super_admin');
+    }
+
+    /**
+     * Relasi yang benar-benar memblokir hapus (data historis bisnis).
+     * Catatan: leave_balances TIDAK ikut di sini — dibuat otomatis oleh UserObserver
+     * dan ikut terhapus (cascade + observer), jadi tidak boleh memblokir delete.
+     *
+     * @return array<string, list<string>>
+     */
+    private static function deleteBlockingTables(): array
+    {
+        return [
+            'nota_dinas' => ['approved_by', 'pengirim_id', 'penerima_id'],
+            'leave_requests' => ['user_id', 'replacement_employee_id'],
+            'payrolls' => ['user_id'],
+        ];
+    }
+
+    /**
+     * @return list<string> deskripsi constraint; kosong = boleh dihapus
+     */
+    private static function getDeleteBlockers(User $record): array
+    {
+        $details = [];
+
+        foreach (static::deleteBlockingTables() as $table => $columns) {
+            if (! DBSchema::hasTable($table)) {
+                continue;
+            }
+
+            if ($table === 'nota_dinas') {
+                $approvedCount = DB::table('nota_dinas')->where('approved_by', $record->id)->count();
+                $sentCount = DB::table('nota_dinas')->where('pengirim_id', $record->id)->count();
+                $recvCount = DBSchema::hasColumn('nota_dinas', 'penerima_id')
+                    ? DB::table('nota_dinas')->where('penerima_id', $record->id)->count()
+                    : 0;
+
+                if ($approvedCount + $sentCount + $recvCount > 0) {
+                    $parts = [];
+                    if ($sentCount > 0) {
+                        $parts[] = "pengirim ({$sentCount})";
+                    }
+                    if ($recvCount > 0) {
+                        $parts[] = "penerima ({$recvCount})";
+                    }
+                    if ($approvedCount > 0) {
+                        $parts[] = "approver ({$approvedCount})";
+                    }
+                    $details[] = '• Nota Dinas: sebagai '.implode(', ', $parts);
+                }
+
+                continue;
+            }
+
+            if ($table === 'leave_requests') {
+                $asUser = DB::table('leave_requests')->where('user_id', $record->id)->count();
+                $asReplacement = DB::table('leave_requests')->where('replacement_employee_id', $record->id)->count();
+                if ($asUser + $asReplacement > 0) {
+                    $details[] = '• Pengajuan Cuti: sebagai pemohon ('.$asUser.') atau pengganti ('.$asReplacement.')';
+                }
+
+                continue;
+            }
+
+            if ($table === 'payrolls') {
+                $count = DB::table('payrolls')->where('user_id', $record->id)->count();
+                if ($count > 0) {
+                    $details[] = '• Payroll: data gaji terkait ('.$count.')';
+                }
+            }
+        }
+
+        return $details;
+    }
+
+    private static function userHasDeleteBlockers(User $record): bool
+    {
+        return static::getDeleteBlockers($record) !== [];
+    }
+
+    /**
+     * Hapus data pendukung yang aman dihapus bersama user.
+     */
+    private static function cleanupDeletableUserRelations(User $record): void
+    {
+        if (method_exists($record, 'leaveBalances')) {
+            $record->leaveBalances()->delete();
+        }
+
+        if (DBSchema::hasTable('model_has_roles')) {
+            DB::table('model_has_roles')
+                ->where('model_type', $record->getMorphClass())
+                ->where('model_id', $record->id)
+                ->delete();
+        }
+
+        if (DBSchema::hasTable('model_has_permissions')) {
+            DB::table('model_has_permissions')
+                ->where('model_type', $record->getMorphClass())
+                ->where('model_id', $record->id)
+                ->delete();
+        }
     }
 
     public static function configure(Table $table): Table
@@ -601,10 +703,32 @@ class UsersTable
                         ->requiresConfirmation()
                         ->modalHeading('Approve User')
                         ->modalDescription(function (User $record) {
-                            return "Aktifkan {$record->name} dan berikan role pengunjung? User akan menerima email pemberitahuan.";
+                            $seat = CompanySubscription::seatSummary();
+                            $plan = CompanySubscription::planLabel();
+
+                            if (! CompanySubscription::hasSeatAvailable()) {
+                                return CompanySubscription::seatFullMessage()
+                                    ."\n\nKuota saat ini: {$seat}.";
+                            }
+
+                            return "Aktifkan {$record->name} dan berikan role pengunjung?\n"
+                                ."Paket perusahaan: {$plan} ({$seat}).\n"
+                                .'User akan menerima email pemberitahuan.';
                         })
                         ->modalSubmitActionLabel('Approve & Aktifkan')
+                        ->disabled(fn () => ! CompanySubscription::hasSeatAvailable())
                         ->action(function (User $record): void {
+                            if (! CompanySubscription::hasSeatAvailable()) {
+                                Notification::make()
+                                    ->title('Kuota pengguna penuh')
+                                    ->body(CompanySubscription::seatFullMessage())
+                                    ->warning()
+                                    ->persistent()
+                                    ->send();
+
+                                return;
+                            }
+
                             try {
                                 DB::transaction(function () use ($record) {
                                     $role = Role::findOrCreate('pengunjung', 'web');
@@ -615,9 +739,9 @@ class UsersTable
 
                                     $record->forceFill([
                                         'status' => 'active',
+                                        'email_verified_at' => $record->email_verified_at ?? now(),
                                     ])->save();
 
-                                    // Samakan status ProspectApp agar form pendaftaran tidak muncul lagi
                                     ProspectApp::query()
                                         ->where(function ($q) use ($record) {
                                             $q->where('user_id', $record->id)
@@ -628,6 +752,8 @@ class UsersTable
                                             'status' => ProspectAppStatus::Approved->value,
                                             'user_id' => $record->id,
                                         ]);
+
+                                    // Paket langganan hanya di-set di Filament → Company (bukan dari Approve).
                                 });
 
                                 $record->refresh();
@@ -650,7 +776,7 @@ class UsersTable
 
                                 Notification::make()
                                     ->title("{$record->name} berhasil di-approve")
-                                    ->body('Role pengunjung diberikan, pendaftaran disetujui, dan email aktivasi telah dikirim.')
+                                    ->body('Role pengunjung diberikan. '.CompanySubscription::seatSummary().'.')
                                     ->success()
                                     ->send();
                             } catch (Throwable $e) {
@@ -666,6 +792,9 @@ class UsersTable
                                     ->send();
                             }
                         })
+                        ->tooltip(fn () => CompanySubscription::hasSeatAvailable()
+                            ? 'Aktifkan user dan berikan role pengunjung'
+                            : CompanySubscription::seatFullMessage())
                         ->visible(function (?User $record) {
                             if (! $record || $record->status === 'terminated') {
                                 return false;
@@ -808,136 +937,25 @@ class UsersTable
                         ->color('danger')
                         ->requiresConfirmation()
                         ->modalHeading(function ($record) {
-                            $tablesToCheck = [
-                                'nota_dinas' => ['approved_by', 'pengirim_id'],
-                                'leave_requests' => ['user_id', 'replacement_employee_id'],
-                                'payrolls' => ['user_id'],
-                                'leave_balances' => ['user_id'],
-                                'annual_summaries' => ['user_id'],
-                            ];
-
-                            $constraintTables = [];
-                            foreach ($tablesToCheck as $table => $columns) {
-                                if (! DBSchema::hasTable($table)) {
-                                    continue;
-                                }
-                                foreach ($columns as $column) {
-                                    $count = DB::table($table)->where($column, $record->id)->count();
-                                    if ($count > 0) {
-                                        $constraintTables[] = $table;
-                                        break;
-                                    }
-                                }
-                            }
-
-                            return empty($constraintTables) ? 'Hapus User' : 'Tidak Dapat Menghapus User';
+                            return static::userHasDeleteBlockers($record)
+                                ? 'Tidak Dapat Menghapus User'
+                                : 'Hapus User';
                         })
                         ->modalDescription(function ($record) {
-                            $tablesToCheck = [
-                                'nota_dinas' => ['approved_by', 'pengirim_id'],
-                                'leave_requests' => ['user_id', 'replacement_employee_id'],
-                                'payrolls' => ['user_id'],
-                                'leave_balances' => ['user_id'],
-                                'annual_summaries' => ['user_id'],
-                            ];
+                            $details = static::getDeleteBlockers($record);
 
-                            $details = [];
-                            foreach ($tablesToCheck as $table => $columns) {
-                                if (! DBSchema::hasTable($table)) {
-                                    continue;
-                                }
-                                $tableCount = 0;
-                                foreach ($columns as $column) {
-                                    $c = DB::table($table)->where($column, $record->id)->count();
-                                    $tableCount += $c;
-                                }
-                                if ($tableCount > 0) {
-                                    if ($table === 'nota_dinas') {
-                                        $approvedCount = DB::table('nota_dinas')->where('approved_by', $record->id)->count();
-                                        $sentCount = DB::table('nota_dinas')->where('pengirim_id', $record->id)->count();
-                                        $details[] = '• Nota Dinas: sebagai pengirim ('.$sentCount.') atau approver ('.$approvedCount.')';
-                                    } elseif ($table === 'leave_requests') {
-                                        $asUser = DB::table('leave_requests')->where('user_id', $record->id)->count();
-                                        $asReplacement = DB::table('leave_requests')->where('replacement_employee_id', $record->id)->count();
-                                        $details[] = '• Pengajuan Cuti: sebagai pemohon ('.$asUser.') atau pengganti ('.$asReplacement.')';
-                                    } elseif ($table === 'payrolls') {
-                                        $details[] = '• Payroll: data gaji terkait ('.$tableCount.')';
-                                    } elseif ($table === 'leave_balances') {
-                                        $details[] = '• Saldo Cuti: catatan saldo cuti ('.$tableCount.')';
-                                    } elseif ($table === 'annual_summaries') {
-                                        $details[] = '• Ringkasan Tahunan: laporan tahunan terkait ('.$tableCount.')';
-                                    }
-                                }
+                            if ($details === []) {
+                                return 'Apakah Anda yakin ingin menghapus user ini? Saldo cuti otomatis ikut dihapus. Tindakan ini tidak dapat dibatalkan.';
                             }
 
-                            if (empty($details)) {
-                                return 'Apakah Anda yakin ingin menghapus user ini? Tindakan ini tidak dapat dibatalkan.';
-                            }
-
-                            return "User tidak dapat dihapus karena masih memiliki data terkait:\n".implode("\n", $details);
+                            return "User tidak dapat dihapus karena masih memiliki data terkait:\n".implode("\n", $details)
+                                ."\n\nGunakan Nonaktifkan Permanen jika ingin menutup akses tanpa menghapus data historis.";
                         })
                         ->action(function ($record) {
-                            if (($record->status ?? null) === 'terminated') {
-                                if (DBSchema::hasTable('nota_dinas')) {
-                                    DB::table('nota_dinas')
-                                        ->where('approved_by', $record->id)
-                                        ->update(['approved_by' => null]);
-                                }
-
-                                if (DBSchema::hasTable('leave_requests')) {
-                                    DB::table('leave_requests')
-                                        ->where('replacement_employee_id', $record->id)
-                                        ->update(['replacement_employee_id' => null]);
-                                }
-
-                                $pengirimBlocked = DBSchema::hasTable('nota_dinas')
-                                    && DB::table('nota_dinas')->where('pengirim_id', $record->id)->exists();
-
-                                if ($pengirimBlocked) {
-                                    Notification::make()
-                                        ->title('Tidak dapat dihapus')
-                                        ->body('User adalah pengirim pada Nota Dinas. Reassign pengirim terlebih dahulu sebelum menghapus.')
-                                        ->warning()
-                                        ->persistent()
-                                        ->send();
-
-                                    return;
-                                }
-
-                                $record->delete();
-
-                                Notification::make()
-                                    ->success()
-                                    ->title('User berhasil dihapus')
-                                    ->send();
-
-                                return;
-                            }
-                            $tablesToCheck = [
-                                'nota_dinas' => ['approved_by', 'pengirim_id'],
-                                'leave_requests' => ['user_id', 'replacement_employee_id'],
-                                'payrolls' => ['user_id'],
-                                'leave_balances' => ['user_id'],
-                                'annual_summaries' => ['user_id'],
-                            ];
-
-                            $hasConstraints = false;
-                            foreach ($tablesToCheck as $table => $columns) {
-                                if (! DBSchema::hasTable($table)) {
-                                    continue;
-                                }
-                                foreach ($columns as $column) {
-                                    if (DB::table($table)->where($column, $record->id)->exists()) {
-                                        $hasConstraints = true;
-                                        break 2;
-                                    }
-                                }
-                            }
-
-                            if ($hasConstraints) {
+                            if (static::userHasDeleteBlockers($record)) {
                                 Notification::make()
                                     ->title('Tidak dapat dihapus')
-                                    ->body('User memiliki data terkait dan tidak dapat dihapus.')
+                                    ->body('User memiliki data terkait (nota dinas, cuti, atau payroll).')
                                     ->warning()
                                     ->persistent()
                                     ->send();
@@ -945,12 +963,42 @@ class UsersTable
                                 return;
                             }
 
-                            $record->delete();
+                            try {
+                                DB::transaction(function () use ($record) {
+                                    // Soft-clear referensi opsional yang boleh di-null
+                                    if (DBSchema::hasTable('nota_dinas')) {
+                                        DB::table('nota_dinas')
+                                            ->where('approved_by', $record->id)
+                                            ->update(['approved_by' => null]);
+                                    }
 
-                            Notification::make()
-                                ->success()
-                                ->title('User berhasil dihapus')
-                                ->send();
+                                    if (DBSchema::hasTable('leave_requests')) {
+                                        DB::table('leave_requests')
+                                            ->where('replacement_employee_id', $record->id)
+                                            ->update(['replacement_employee_id' => null]);
+                                    }
+
+                                    static::cleanupDeletableUserRelations($record);
+                                    $record->delete();
+                                });
+
+                                Notification::make()
+                                    ->success()
+                                    ->title('User berhasil dihapus')
+                                    ->send();
+                            } catch (Throwable $e) {
+                                Log::warning('Gagal menghapus user', [
+                                    'user_id' => $record->id,
+                                    'message' => $e->getMessage(),
+                                ]);
+
+                                Notification::make()
+                                    ->title('Tidak dapat dihapus')
+                                    ->body('Masih ada data terkait di sistem. Nonaktifkan permanen sebagai alternatif, atau hubungi admin teknis.')
+                                    ->danger()
+                                    ->persistent()
+                                    ->send();
+                            }
                         })
                         ->visible(function ($record) {
                             return static::isSuperAdmin();
@@ -1008,51 +1056,27 @@ class UsersTable
                             $failedCount = 0;
                             $failedUsers = [];
 
-                            $recordIds = $records->pluck('id')->toArray();
-                            $constraintsByUserId = [];
-
-                            $tablesToCheck = [
-                                'nota_dinas' => ['approved_by', 'pengirim_id'],
-                                'leave_requests' => ['user_id', 'replacement_employee_id'],
-                                'payrolls' => ['user_id'],
-                                'leave_balances' => ['user_id'],
-                                'annual_summaries' => ['user_id'],
-                            ];
-
-                            foreach ($tablesToCheck as $table => $columns) {
-                                if (! DBSchema::hasTable($table)) {
-                                    continue;
-                                }
-                                foreach ($columns as $column) {
-                                    $foundIds = DB::table($table)
-                                        ->whereIn($column, $recordIds)
-                                        ->pluck($column)
-                                        ->unique();
-
-                                    foreach ($foundIds as $id) {
-                                        $constraintsByUserId[$id][] = $table;
-                                    }
-                                }
-                            }
-
                             foreach ($records as $record) {
                                 try {
-                                    if (isset($constraintsByUserId[$record->id])) {
+                                    if (static::userHasDeleteBlockers($record)) {
                                         $failedCount++;
-                                        $failedUsers[] = [
-                                            'name' => $record->name,
-                                            'tables' => array_unique($constraintsByUserId[$record->id]),
-                                        ];
-                                    } else {
-                                        $record->delete();
-                                        $deletedCount++;
+                                        $failedUsers[] = $record->name;
+
+                                        continue;
                                     }
-                                } catch (Exception $e) {
+
+                                    DB::transaction(function () use ($record) {
+                                        static::cleanupDeletableUserRelations($record);
+                                        $record->delete();
+                                    });
+                                    $deletedCount++;
+                                } catch (Throwable $e) {
                                     $failedCount++;
-                                    $failedUsers[] = [
-                                        'name' => $record->name,
-                                        'error' => 'Database constraint error',
-                                    ];
+                                    $failedUsers[] = $record->name;
+                                    Log::warning('Gagal bulk hapus user', [
+                                        'user_id' => $record->id,
+                                        'message' => $e->getMessage(),
+                                    ]);
                                 }
                             }
 
@@ -1064,10 +1088,10 @@ class UsersTable
                             }
 
                             if ($failedCount > 0) {
-                                $failedNames = collect($failedUsers)->pluck('name')->join(', ');
+                                $failedNames = collect($failedUsers)->join(', ');
                                 Notification::make()
                                     ->title("$failedCount user tidak dapat dihapus")
-                                    ->body("User berikut masih memiliki data terkait: $failedNames")
+                                    ->body("Masih ada data terkait (nota dinas / cuti / payroll): $failedNames")
                                     ->warning()
                                     ->persistent()
                                     ->send();
@@ -1077,9 +1101,8 @@ class UsersTable
                         })
                         ->requiresConfirmation()
                         ->modalHeading('Hapus User Terpilih')
-                        ->modalDescription('User yang memiliki data terkait (nota dinas, cuti, gaji, dll) tidak akan dihapus untuk menjaga integritas data.')
+                        ->modalDescription('User yang punya nota dinas, pengajuan cuti, atau payroll tidak akan dihapus. Saldo cuti otomatis tidak memblokir penghapusan.')
                         ->deselectRecordsAfterCompletion(),
-
                     BulkAction::make('bulk_deactivate_permanent')
                         ->label('Nonaktifkan Permanen')
                         ->icon('heroicon-o-archive-box-x-mark')

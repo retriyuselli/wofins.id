@@ -4,6 +4,7 @@ namespace App\Filament\Resources\BankStatements\Widgets;
 
 use App\Models\BankStatement;
 use App\Models\PaymentMethod;
+use App\Support\UserVisibility;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -13,6 +14,9 @@ class BankStatementOverview extends BaseWidget
 {
     protected function getStats(): array
     {
+        $statements = UserVisibility::constrainPlatformOnlyQuery(BankStatement::query());
+        $paymentMethods = UserVisibility::constrainPlatformOnlyQuery(PaymentMethod::query());
+
         // Ambil data bulan berjalan
         $currentMonth = Carbon::now();
         $startOfMonth = $currentMonth->copy()->startOfMonth();
@@ -24,11 +28,11 @@ class BankStatementOverview extends BaseWidget
         $endOfPreviousMonth = $previousMonth->copy()->endOfMonth();
 
         // Statistik bulan berjalan
-        $currentMonthStatements = BankStatement::whereBetween('period_start', [$startOfMonth, $endOfMonth])->get();
-        $previousMonthStatements = BankStatement::whereBetween('period_start', [$startOfPreviousMonth, $endOfPreviousMonth])->get();
+        $currentMonthStatements = (clone $statements)->whereBetween('period_start', [$startOfMonth, $endOfMonth])->get();
+        $previousMonthStatements = (clone $statements)->whereBetween('period_start', [$startOfPreviousMonth, $endOfPreviousMonth])->get();
 
         // Hitung total
-        $totalStatements = BankStatement::count();
+        $totalStatements = (clone $statements)->count();
         $totalCurrentCredit = $currentMonthStatements->sum('tot_credit') ?? 0;
         $totalCurrentDebit = $currentMonthStatements->sum('tot_debit') ?? 0;
         $totalPreviousCredit = $previousMonthStatements->sum('tot_credit') ?? 0;
@@ -52,7 +56,7 @@ class BankStatementOverview extends BaseWidget
             : ($currentNetFlow > 0 ? 100 : ($currentNetFlow < 0 ? -100 : 0));
 
         // Distribusi status
-        $statusCounts = BankStatement::selectRaw('status, COUNT(*) as count')
+        $statusCounts = (clone $statements)->selectRaw('status, COUNT(*) as count')
             ->groupBy('status')
             ->pluck('count', 'status')
             ->toArray();
@@ -62,7 +66,7 @@ class BankStatementOverview extends BaseWidget
         $parsedPercentage = $totalCount > 0 ? ($parsedCount / $totalCount) * 100 : 0;
 
         // Perhitungan rata-rata saldo
-        $latestStatements = BankStatement::latest('period_end')->take(5)->get();
+        $latestStatements = (clone $statements)->latest('period_end')->take(5)->get();
         $avgClosingBalance = $latestStatements->avg('closing_balance') ?? 0;
 
         return [
@@ -100,7 +104,7 @@ class BankStatementOverview extends BaseWidget
                 ->color('primary'),
 
             // Rekening Aktif
-            Stat::make('Rekening Aktif', Number::format(PaymentMethod::count(), 0))
+            Stat::make('Rekening Aktif', Number::format((clone $paymentMethods)->count(), 0))
                 ->description('Total metode pembayaran terdaftar')
                 ->descriptionIcon('heroicon-m-credit-card')
                 ->color('gray'),
@@ -146,7 +150,7 @@ class BankStatementOverview extends BaseWidget
     private function getNetFlowTrendData(): array
     {
         // Ambil data 7 hari terakhir untuk tren arus kas bersih
-        $statements = BankStatement::where('period_start', '>=', Carbon::now()->subDays(7))
+        $statements = (clone UserVisibility::constrainPlatformOnlyQuery(BankStatement::query()))->where('period_start', '>=', Carbon::now()->subDays(7))
             ->orderBy('period_start')
             ->get();
 

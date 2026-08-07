@@ -8,11 +8,11 @@ use App\Filament\Resources\LeaveBalances\Pages\ListLeaveBalances;
 use App\Filament\Resources\LeaveBalances\Schemas\LeaveBalanceForm;
 use App\Filament\Resources\LeaveBalances\Tables\LeaveBalancesTable;
 use App\Models\LeaveBalance;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 
-class LeaveBalanceResource extends Resource
+class LeaveBalanceResource extends BaseResource
 {
     protected static ?string $model = LeaveBalance::class;
 
@@ -64,10 +64,12 @@ class LeaveBalanceResource extends Resource
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        return parent::getEloquentQuery()
-            ->with([
-                'user:id,name',
-                'leaveType:id,name',
-            ]);
+        return \App\Support\UserVisibility::constrainOwnedQuery(
+            parent::getEloquentQuery()
+                ->with([
+                    'user:id,name',
+                    'leaveType:id,name',
+                ])
+        );
     }
 }

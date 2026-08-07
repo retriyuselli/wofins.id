@@ -44,10 +44,12 @@ class PayrollForm
                                                 Select::make('user_id')
                                                     ->label('Karyawan')
                                                     ->relationship('user', 'name', function (Builder $query) {
-                                                        return $query->with('status')
-                                                            ->whereHas('roles', function (Builder $query) {
-                                                                $query->where('name', 'Office');
-                                                            });
+                                                        return \App\Support\UserVisibility::constrainUsersQuery(
+                                                            $query->with('status')
+                                                                ->whereHas('roles', function (Builder $query) {
+                                                                    $query->where('name', 'Office');
+                                                                })
+                                                        );
                                                     })
                                                     ->searchable()
                                                     ->preload()

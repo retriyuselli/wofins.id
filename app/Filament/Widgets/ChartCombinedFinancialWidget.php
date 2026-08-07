@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use App\Models\Expense;
 use App\Models\ExpenseOps;
 use App\Models\Order;
+use App\Support\UserVisibility;
 use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Exception;
 use Filament\Forms\Components\DatePicker;
@@ -320,7 +321,9 @@ class ChartCombinedFinancialWidget extends ChartWidget
 
     protected function getRevenueData(Carbon $startDate, Carbon $endDate)
     {
-        return Order::select(
+        $query = UserVisibility::constrainOrdersQuery(Order::query());
+
+        return $query->select(
             DB::raw('YEAR(closing_date) as year'),
             DB::raw('MONTH(closing_date) as month'),
             DB::raw('SUM(total_price + COALESCE(penambahan,0) - COALESCE(pengurangan,0) - COALESCE(promo,0)) as revenue'),
@@ -337,7 +340,15 @@ class ChartCombinedFinancialWidget extends ChartWidget
 
     protected function getExpenseData(string $modelClass, Carbon $startDate, Carbon $endDate)
     {
-        return $modelClass::select(
+        $query = $modelClass::query();
+
+        if ($modelClass === ExpenseOps::class) {
+            UserVisibility::constrainExpenseOpsQuery($query);
+        } elseif ($modelClass === Expense::class) {
+            UserVisibility::constrainViaTeamOrders($query);
+        }
+
+        return $query->select(
             DB::raw('YEAR(date_expense) as year'),
             DB::raw('MONTH(date_expense) as month'),
             DB::raw('SUM(COALESCE(amount,0)) as total_amount'),

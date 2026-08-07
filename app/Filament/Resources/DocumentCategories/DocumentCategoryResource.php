@@ -9,14 +9,14 @@ use App\Filament\Resources\DocumentCategories\Schemas\DocumentCategoryForm;
 use App\Filament\Resources\DocumentCategories\Tables\DocumentCategoriesTable;
 use App\Models\DocumentCategory;
 use BackedEnum;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class DocumentCategoryResource extends Resource
+class DocumentCategoryResource extends BaseResource
 {
     protected static ?string $model = DocumentCategory::class;
 

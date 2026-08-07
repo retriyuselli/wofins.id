@@ -9,11 +9,11 @@ use App\Filament\Resources\Users\Pages\ViewUser;
 use App\Filament\Resources\Users\Schemas\UserForm;
 use App\Filament\Resources\Users\Tables\UsersTable;
 use App\Models\User;
+use App\Support\UserVisibility;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Auth;
 
 class UserResource extends Resource
 {
@@ -32,13 +32,7 @@ class UserResource extends Resource
      */
     public static function isSuperAdmin(): bool
     {
-        /** @var User $user */
-        $user = Auth::user();
-        if (! $user) {
-            return false;
-        }
-
-        return $user->hasRole('super_admin');
+        return UserVisibility::actorIsSuperAdmin();
     }
 
     /**
@@ -83,15 +77,7 @@ class UserResource extends Resource
                     ->whereYear('start_date', $currentYear),
             ], 'total_days');
 
-        // If current user is not super_admin, only show their own data
-        if (! static::isSuperAdmin()) {
-            $user = Auth::user();
-            if ($user) {
-                $query->where('id', $user->id);
-            }
-        }
-
-        return $query;
+        return UserVisibility::constrainUsersQuery($query);
     }
 
     public static function form(Schema $schema): Schema
@@ -140,6 +126,6 @@ class UserResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::count();
+        return (string) static::getEloquentQuery()->count();
     }
 }

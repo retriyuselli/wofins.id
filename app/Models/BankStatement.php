@@ -111,6 +111,14 @@ class BankStatement extends Model
         return $this->hasMany(BankReconciliationItem::class, 'bank_reconciliation_id', 'id');
     }
 
+    /**
+     * Relasi ke transaksi bank hasil parsing statement.
+     */
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(BankTransaction::class);
+    }
+
     // -------------------------------------------------------------------------
     // Query Scopes
     // -------------------------------------------------------------------------

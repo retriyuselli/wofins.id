@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use App\Models\DataPembayaran;
 use App\Models\Expense;
 use App\Models\ExpenseOps;
+use App\Support\UserVisibility;
 use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
@@ -39,7 +40,7 @@ class DashboardKeuangan extends BaseWidget
         $startOfPreviousMonth = $currentStart->copy()->subMonthNoOverflow();
         $endOfPreviousMonth = $currentEnd->copy()->subMonthNoOverflow();
 
-        $cacheKey = 'dashboard:finance:'
+        $cacheKey = 'dashboard:finance:'.UserVisibility::cacheScopeKey().':'
             .md5(implode('|', [
                 $currentStart->toIso8601String(),
                 $currentEnd->toIso8601String(),
@@ -55,13 +56,23 @@ class DashboardKeuangan extends BaseWidget
             'totalExpensePreviousMonth' => $totalExpensePreviousMonth,
             'totalExpenseOpsPreviousMonth' => $totalExpenseOpsPreviousMonth,
         ] = Cache::remember($cacheKey, 60, function () use ($currentStart, $currentEnd, $startOfPreviousMonth, $endOfPreviousMonth): array {
+            $payments = fn ($from, $to) => (float) UserVisibility::constrainViaTeamOrders(DataPembayaran::query())
+                ->whereBetween('created_at', [$from, $to])
+                ->sum('nominal');
+            $expenses = fn ($from, $to) => (float) UserVisibility::constrainViaTeamOrders(Expense::query())
+                ->whereBetween('created_at', [$from, $to])
+                ->sum('amount');
+            $ops = fn ($from, $to) => (float) UserVisibility::constrainExpenseOpsQuery(ExpenseOps::query())
+                ->whereBetween('created_at', [$from, $to])
+                ->sum('amount');
+
             return [
-                'totalPaymentCurrentMonth' => (float) DataPembayaran::whereBetween('created_at', [$currentStart, $currentEnd])->sum('nominal'),
-                'totalExpenseCurrentMonth' => (float) Expense::whereBetween('created_at', [$currentStart, $currentEnd])->sum('amount'),
-                'totalExpenseOpsCurrentMonth' => (float) ExpenseOps::whereBetween('created_at', [$currentStart, $currentEnd])->sum('amount'),
-                'totalPaymentPreviousMonth' => (float) DataPembayaran::whereBetween('created_at', [$startOfPreviousMonth, $endOfPreviousMonth])->sum('nominal'),
-                'totalExpensePreviousMonth' => (float) Expense::whereBetween('created_at', [$startOfPreviousMonth, $endOfPreviousMonth])->sum('amount'),
-                'totalExpenseOpsPreviousMonth' => (float) ExpenseOps::whereBetween('created_at', [$startOfPreviousMonth, $endOfPreviousMonth])->sum('amount'),
+                'totalPaymentCurrentMonth' => $payments($currentStart, $currentEnd),
+                'totalExpenseCurrentMonth' => $expenses($currentStart, $currentEnd),
+                'totalExpenseOpsCurrentMonth' => $ops($currentStart, $currentEnd),
+                'totalPaymentPreviousMonth' => $payments($startOfPreviousMonth, $endOfPreviousMonth),
+                'totalExpensePreviousMonth' => $expenses($startOfPreviousMonth, $endOfPreviousMonth),
+                'totalExpenseOpsPreviousMonth' => $ops($startOfPreviousMonth, $endOfPreviousMonth),
             ];
         });
 

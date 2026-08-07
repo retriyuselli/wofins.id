@@ -12,6 +12,7 @@ use App\Models\PaymentMethod;
 use App\Models\Prospect;
 use App\Models\Vendor;
 use App\Support\Rupiah;
+use App\Support\UserVisibility;
 use Exception;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
@@ -65,12 +66,16 @@ class OrderForm
                                 }
 
                                 $currentId = $get('prospect_id');
-                                $query = Prospect::query()->whereDoesntHave('orders', function ($q) {
-                                    $q->whereNotNull('status');
+                                $query = Prospect::query();
+                                UserVisibility::constrainOwnedQuery($query, 'user_id');
+                                $query->where(function (Builder $q) use ($currentId) {
+                                    $q->whereDoesntHave('orders', function (Builder $orders) {
+                                        $orders->whereNotNull('status');
+                                    });
+                                    if ($currentId) {
+                                        $q->orWhere('id', $currentId);
+                                    }
                                 });
-                                if ($currentId) {
-                                    $query->orWhere('id', $currentId);
-                                }
 
                                 return $query->pluck('name_event', 'id')->toArray();
                             })
@@ -104,11 +109,21 @@ class OrderForm
                             ->relationship(
                                 name: 'user',
                                 titleAttribute: 'name',
-                                modifyQueryUsing: fn (Builder $query) => $query->role('Account Manager'),
+                                modifyQueryUsing: function (Builder $query) {
+                                    UserVisibility::constrainUsersQuery($query);
+
+                                    // AM dalam tim; jika belum ada role AM, tampilkan anggota tim
+                                    $amQuery = (clone $query)->role('Account Manager');
+                                    if ($amQuery->exists()) {
+                                        return $query->role('Account Manager');
+                                    }
+
+                                    return $query;
+                                },
                             )
                             ->required()
                             ->searchable()
-                            ->default(Auth::user()->id)
+                            ->default(fn () => Auth::id())
                             ->label('Account Manager'),
                         TextInput::make('slug')
                             ->readOnly()

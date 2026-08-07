@@ -9,11 +9,11 @@ use App\Filament\Resources\LokasiAbsensis\Pages\ListLokasiAbsensis;
 use App\Filament\Resources\LokasiAbsensis\Schemas\LokasiAbsensiForm;
 use App\Filament\Resources\LokasiAbsensis\Tables\LokasiAbsensisTable;
 use App\Models\LokasiAbsensi;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 
-class LokasiAbsensiResource extends Resource
+class LokasiAbsensiResource extends BaseResource
 {
     use RestrictsToSuperAdmin;
     protected static ?string $model = LokasiAbsensi::class;

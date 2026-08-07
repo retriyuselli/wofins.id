@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -72,12 +73,54 @@ class AuthController extends Controller
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => bcrypt($request->password),
+            'password' => $request->password,
         ]);
 
         Auth::login($user);
+        $request->session()->regenerate();
 
-        return $this->redirectAfterAuth($user);
+        $user->sendEmailVerificationNotification();
+
+        return redirect()
+            ->route('verification.notice')
+            ->with('info', 'Akun berhasil dibuat. Silakan verifikasi email Anda untuk melanjutkan.');
+    }
+
+    /**
+     * Halaman pemberitahuan: cek email untuk verifikasi.
+     */
+    public function showVerificationNotice(Request $request)
+    {
+        if ($request->user()->hasVerifiedEmail()) {
+            return $this->redirectAfterAuth($request->user());
+        }
+
+        return view('front.auth.verify-email');
+    }
+
+    /**
+     * Proses tautan verifikasi dari email.
+     */
+    public function verifyEmail(EmailVerificationRequest $request)
+    {
+        $request->fulfill();
+
+        return $this->redirectAfterAuth($request->user())
+            ->with('success', 'Email berhasil diverifikasi.');
+    }
+
+    /**
+     * Kirim ulang email verifikasi.
+     */
+    public function resendVerificationEmail(Request $request)
+    {
+        if ($request->user()->hasVerifiedEmail()) {
+            return $this->redirectAfterAuth($request->user());
+        }
+
+        $request->user()->sendEmailVerificationNotification();
+
+        return back()->with('status', 'verification-link-sent');
     }
 
     /**
@@ -242,6 +285,12 @@ class AuthController extends Controller
     {
         if (! $user) {
             return redirect()->route('home');
+        }
+
+        if (! $user->hasVerifiedEmail()) {
+            return redirect()
+                ->route('verification.notice')
+                ->with('info', 'Silakan verifikasi email Anda sebelum melanjutkan.');
         }
 
         if (! $user->hasAssignedRole()) {

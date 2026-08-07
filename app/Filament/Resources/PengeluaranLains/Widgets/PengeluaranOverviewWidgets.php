@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\PengeluaranLains\Widgets;
 
+use App\Support\UserVisibility;
 use App\Models\PengeluaranLain;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -11,31 +12,33 @@ class PengeluaranOverviewWidgets extends BaseWidget
 {
     protected function getStats(): array
     {
+        $base = UserVisibility::constrainPlatformOnlyQuery(PengeluaranLain::query());
+
         // Get totals for current year
         $currentYear = Carbon::now()->year;
-        $totalPengeluaran = PengeluaranLain::where('kategori_transaksi', 'uang_keluar')
+        $totalPengeluaran = (clone $base)->where('kategori_transaksi', 'uang_keluar')
             ->whereYear('date_expense', $currentYear)
             ->sum('amount');
-        $totalPemasukan = PengeluaranLain::where('kategori_transaksi', 'uang_masuk')
+        $totalPemasukan = (clone $base)->where('kategori_transaksi', 'uang_masuk')
             ->whereYear('date_expense', $currentYear)
             ->sum('amount');
-        $totalTransaksi = PengeluaranLain::whereYear('date_expense', $currentYear)->count();
+        $totalTransaksi = (clone $base)->whereYear('date_expense', $currentYear)->count();
 
         // Get monthly data for trend
         $currentMonth = Carbon::now()->startOfMonth();
         $lastMonth = Carbon::now()->subMonth()->startOfMonth();
 
-        $currentMonthPengeluaran = PengeluaranLain::where('kategori_transaksi', 'uang_keluar')
+        $currentMonthPengeluaran = (clone $base)->where('kategori_transaksi', 'uang_keluar')
             ->whereDate('date_expense', '>=', $currentMonth)
             ->sum('amount');
 
-        $lastMonthPengeluaran = PengeluaranLain::where('kategori_transaksi', 'uang_keluar')
+        $lastMonthPengeluaran = (clone $base)->where('kategori_transaksi', 'uang_keluar')
             ->whereDate('date_expense', '>=', $lastMonth)
             ->whereDate('date_expense', '<', $currentMonth)
             ->sum('amount');
 
-        $currentMonthTransaksi = PengeluaranLain::whereDate('date_expense', '>=', $currentMonth)->count();
-        $lastMonthTransaksi = PengeluaranLain::whereDate('date_expense', '>=', $lastMonth)
+        $currentMonthTransaksi = (clone $base)->whereDate('date_expense', '>=', $currentMonth)->count();
+        $lastMonthTransaksi = (clone $base)->whereDate('date_expense', '>=', $lastMonth)
             ->whereDate('date_expense', '<', $currentMonth)
             ->count();
 
@@ -85,12 +88,17 @@ class PengeluaranOverviewWidgets extends BaseWidget
         ];
     }
 
+    private function scopedQuery()
+    {
+        return UserVisibility::constrainPlatformOnlyQuery(PengeluaranLain::query());
+    }
+
     private function getPengeluaranChartData(): array
     {
         $data = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::now()->subDays($i)->startOfDay();
-            $amount = PengeluaranLain::where('kategori_transaksi', 'uang_keluar')
+            $amount = $this->scopedQuery()->where('kategori_transaksi', 'uang_keluar')
                 ->whereDate('date_expense', $date)
                 ->sum('amount');
             $data[] = (int) $amount;
@@ -104,7 +112,7 @@ class PengeluaranOverviewWidgets extends BaseWidget
         $data = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::now()->subDays($i)->startOfDay();
-            $count = PengeluaranLain::whereDate('date_expense', $date)->count();
+            $count = $this->scopedQuery()->whereDate('date_expense', $date)->count();
             $data[] = $count;
         }
 

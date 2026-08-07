@@ -8,11 +8,13 @@ use App\Filament\Resources\KoreksiAbsensis\Pages\ListKoreksiAbsensis;
 use App\Filament\Resources\KoreksiAbsensis\Schemas\KoreksiAbsensiForm;
 use App\Filament\Resources\KoreksiAbsensis\Tables\KoreksiAbsensisTable;
 use App\Models\KoreksiAbsensi;
-use Filament\Resources\Resource;
+use App\Support\UserVisibility;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
-class KoreksiAbsensiResource extends Resource
+class KoreksiAbsensiResource extends BaseResource
 {
     protected static ?string $model = KoreksiAbsensi::class;
 
@@ -27,6 +29,11 @@ class KoreksiAbsensiResource extends Resource
     protected static string|\UnitEnum|null $navigationGroup = 'Absensi';
 
     protected static ?int $navigationSort = 8;
+
+    public static function getEloquentQuery(): Builder
+    {
+        return UserVisibility::constrainOwnedQuery(parent::getEloquentQuery());
+    }
 
     public static function form(Schema $schema): Schema
     {

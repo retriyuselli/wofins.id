@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Piutangs\Widgets;
 
 use App\Models\Piutang;
+use App\Support\UserVisibility;
 use Filament\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -19,7 +20,7 @@ class TopDebiturWidget extends BaseWidget
 
     public function table(Table $table): Table
     {
-        $subQuery = Piutang::query()
+        $subQuery = UserVisibility::constrainOwnedQuery(Piutang::query(), 'dibuat_oleh')
             ->select([
                 DB::raw('ROW_NUMBER() OVER (ORDER BY SUM(sisa_piutang) DESC) as id'),
                 'nama_debitur',

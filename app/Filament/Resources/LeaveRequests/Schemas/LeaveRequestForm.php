@@ -32,7 +32,11 @@ class LeaveRequestForm
                             ->schema([
                                 Select::make('user_id')
                                     ->label('Karyawan')
-                                    ->relationship('user', 'name')
+                                    ->relationship(
+                                'user',
+                                'name',
+                                fn (\Illuminate\Database\Eloquent\Builder $query) => \App\Support\UserVisibility::constrainUsersQuery($query)
+                            )
                                     ->required()
                                     ->disabled(function () {
                                         $user = Auth::user();
@@ -189,9 +193,10 @@ class LeaveRequestForm
                             ->placeholder('Pilih karyawan pengganti (opsional)')
                             ->helperText('Pilih karyawan yang akan menangani tanggung jawab Anda selama cuti')
                             ->options(function () {
-                                return User::where('status', 'active')
-                                    ->where('id', '!=', Auth::id())
-                                    ->pluck('name', 'id');
+                                return \App\Support\UserVisibility::constrainUsersQuery(
+                                    User::where('status', 'active')
+                                        ->where('id', '!=', Auth::id())
+                                )->pluck('name', 'id');
                             }),
                     ])
                     ->columnSpanFull(),

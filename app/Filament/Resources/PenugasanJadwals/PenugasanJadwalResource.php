@@ -9,11 +9,11 @@ use App\Filament\Resources\PenugasanJadwals\Pages\ListPenugasanJadwals;
 use App\Filament\Resources\PenugasanJadwals\Schemas\PenugasanJadwalForm;
 use App\Filament\Resources\PenugasanJadwals\Tables\PenugasanJadwalsTable;
 use App\Models\PenugasanJadwal;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 
-class PenugasanJadwalResource extends Resource
+class PenugasanJadwalResource extends BaseResource
 {
     use RestrictsToSuperAdmin;
     protected static ?string $model = PenugasanJadwal::class;

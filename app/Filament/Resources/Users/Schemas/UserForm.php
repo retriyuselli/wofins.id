@@ -13,6 +13,8 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
+use App\Support\UserVisibility;
+use Illuminate\Database\Eloquent\Builder;
 use Spatie\Permission\Models\Role;
 
 class UserForm
@@ -54,20 +56,53 @@ class UserForm
                                             ->schema([
                                                 Select::make('roles')
                                                     ->label('Role')
-                                                    ->relationship('roles', 'name')
+                                                    ->relationship(
+                                                        'roles',
+                                                        'name',
+                                                        function (Builder $query) {
+                                                            $allowed = UserVisibility::assignableRoleNames();
+
+                                                            if ($allowed !== null) {
+                                                                $query->whereIn('name', $allowed);
+                                                            }
+
+                                                            if (! UserVisibility::actorIsSuperAdmin()) {
+                                                                $query->where('name', '!=', 'super_admin');
+                                                            }
+
+                                                            return $query;
+                                                        }
+                                                    )
                                                     ->multiple()
                                                     ->preload()
-                                                    ->searchable()
+                                                    ->searchable(fn () => UserVisibility::actorIsSuperAdmin())
+                                                    ->required()
+                                                    ->disabled(fn () => ! UserVisibility::actorIsSuperAdmin())
+                                                    ->dehydrated()
+                                                    ->default(fn () => UserVisibility::actorIsSuperAdmin()
+                                                        ? null
+                                                        : UserVisibility::packageOwnerRoleIds())
                                                     ->placeholder('Pilih Role')
-                                                    ->maxItems(5)
-                                                    ->helperText('Pilih satu atau lebih role untuk pengguna (maksimal 5 role)')
-                                                    ->createOptionForm([
-                                                        TextInput::make('name')
-                                                            ->label('Nama Role')
-                                                            ->required()
-                                                            ->unique('roles', 'name'),
-                                                    ])
+                                                    ->maxItems(fn () => UserVisibility::actorIsSuperAdmin() ? 5 : max(1, count(UserVisibility::packageOwnerRoleNames())))
+                                                    ->helperText(fn () => UserVisibility::actorIsSuperAdmin()
+                                                        ? 'Pilih satu atau lebih role (maksimal 5).'
+                                                        : 'Role anggota = role jabatan Anda saat ini ('
+                                                            .implode(', ', UserVisibility::packageOwnerRoleNames())
+                                                            .'). Nama paket (Starter/Pro/Business) bukan Spatie role. '
+                                                            .'Untuk menambah pilihan role, minta super_admin menambahkan role jabatan ke akun pemilik paket.')
+                                                    ->createOptionForm(fn () => UserVisibility::actorIsSuperAdmin()
+                                                        ? [
+                                                            TextInput::make('name')
+                                                                ->label('Nama Role')
+                                                                ->required()
+                                                                ->unique('roles', 'name'),
+                                                        ]
+                                                        : null)
                                                     ->createOptionUsing(function (array $data) {
+                                                        if (! UserVisibility::actorIsSuperAdmin()) {
+                                                            return null;
+                                                        }
+
                                                         return Role::create($data)->getKey();
                                                     }),
 
@@ -96,7 +131,9 @@ class UserForm
                                             ->dehydrated(fn ($state) => filled($state))
                                             ->minLength(8)
                                             ->maxLength(255)
-                                            ->helperText('Minimal 8 karakter. Kosongkan jika tidak ingin mengubah password.')
+                                            ->helperText(fn () => UserVisibility::actorIsSuperAdmin()
+                                                ? 'Minimal 8 karakter. Kosongkan jika tidak ingin mengubah password.'
+                                                : 'Minimal 8 karakter. Password ini akan dikirim ke email anggota tim bersama tautan login.')
                                             ->columnSpan(2),
                                     ]),
                             ]),

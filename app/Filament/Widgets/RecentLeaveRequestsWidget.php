@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\LeaveRequest;
+use App\Support\UserVisibility;
 use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Carbon\Carbon;
 use Filament\Actions\Action;
@@ -35,11 +36,8 @@ class RecentLeaveRequestsWidget extends BaseWidget
     {
         return $table
             ->query(
-                LeaveRequest::query()
+                UserVisibility::constrainOwnedQuery(LeaveRequest::query(), 'user_id')
                     ->with(['user.roles', 'leaveType', 'approver'])
-                    ->whereHas('user.roles', function ($query) {
-                        $query->where('name', 'Office');
-                    })
                     ->latest()
                     ->limit(10)
             )
@@ -296,11 +294,8 @@ class RecentLeaveRequestsWidget extends BaseWidget
 
     protected function getTableQuery(): Builder
     {
-        return LeaveRequest::query()
+        return UserVisibility::constrainOwnedQuery(LeaveRequest::query(), 'user_id')
             ->with(['user.roles', 'leaveType', 'approver'])
-            ->whereHas('user.roles', function ($query) {
-                $query->where('name', 'Office');
-            })
             ->latest()
             ->limit(10);
     }

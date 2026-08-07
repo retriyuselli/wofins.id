@@ -9,16 +9,17 @@ use App\Filament\Resources\AccountManagerTargets\Tables\AccountManagerTargetsTab
 use App\Filament\Resources\AccountManagerTargets\Widgets\AmOverview;
 use App\Filament\Resources\AccountManagerTargets\Widgets\AmPerformanceChart;
 use App\Filament\Resources\AccountManagerTargets\Widgets\TopPerformersWidget;
+use App\Filament\Resources\BaseResource;
 use App\Models\AccountManagerTarget;
 use App\Models\User;
-use Filament\Resources\Resource;
+use App\Support\PlanResourceGate;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
-class AccountManagerTargetResource extends Resource
+class AccountManagerTargetResource extends BaseResource
 {
     protected static ?string $model = AccountManagerTarget::class;
 
@@ -33,20 +34,23 @@ class AccountManagerTargetResource extends Resource
     protected static ?string $pluralModelLabel = 'Target Account Manager';
 
     /**
-     * Check if user can access this resource
+     * Check if user can access this resource.
+     * Jangan panggil parent::canAccess() di sini: Filament canAccess = canViewAny,
+     * dan canViewAny di bawah memanggil canAccess lagi → infinite loop / OOM.
      */
     public static function canAccess(): bool
     {
+        if (! PlanResourceGate::allowsAccessTo(static::class)) {
+            return false;
+        }
+
         $user = Auth::user();
 
         if (! $user) {
             return false;
         }
 
-        // Check if user has super_admin or Account Manager role
-        $roleNames = $user->roles->pluck('name');
-
-        return $roleNames->contains('super_admin') || $roleNames->contains('Account Manager');
+        return $user->hasRole('super_admin') || $user->hasRole('Account Manager');
     }
 
     /**
@@ -128,14 +132,9 @@ class AccountManagerTargetResource extends Resource
 
         $user = Auth::user();
 
-        // If user is Account Manager, only show their own targets
-        if ($user) {
-            $isAccountManager = $user->roles->where('name', 'Account Manager')->count() > 0;
-            $isSuperAdmin = $user->roles->where('name', 'super_admin')->count() > 0;
-
-            if ($isAccountManager && ! $isSuperAdmin) {
-                $query->where('user_id', $user->id);
-            }
+        // Non–super_admin: hanya target milik sendiri
+        if ($user && ! \App\Support\UserVisibility::actorIsSuperAdmin()) {
+            $query->where('user_id', $user->id);
         }
 
         return $query;

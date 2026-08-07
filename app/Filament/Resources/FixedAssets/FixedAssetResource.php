@@ -10,11 +10,11 @@ use App\Filament\Resources\FixedAssets\Pages\ViewFixedAsset;
 use App\Filament\Resources\FixedAssets\Schemas\FixedAssetForm;
 use App\Filament\Resources\FixedAssets\Tables\FixedAssetsTable;
 use App\Models\FixedAsset;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 
-class FixedAssetResource extends Resource
+class FixedAssetResource extends BaseResource
 {
     protected static ?string $model = FixedAsset::class;
 

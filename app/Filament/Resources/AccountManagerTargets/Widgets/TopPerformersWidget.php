@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\AccountManagerTargets\Widgets;
 
 use App\Models\AccountManagerTarget;
+use App\Support\UserVisibility;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -24,7 +25,7 @@ class TopPerformersWidget extends BaseWidget
     {
         return $table
             ->query(
-                AccountManagerTarget::query()
+                UserVisibility::constrainOwnedQuery(AccountManagerTarget::query(), 'user_id')
                     ->with(['user'])
                     ->whereHas('user.roles', function ($query) {
                         $query->where('name', 'Account Manager');
@@ -38,7 +39,8 @@ class TopPerformersWidget extends BaseWidget
                 SelectFilter::make('year')
                     ->label('Tahun')
                     ->options(function () {
-                        $years = AccountManagerTarget::selectRaw('DISTINCT year')
+                        $years = UserVisibility::constrainOwnedQuery(AccountManagerTarget::query(), 'user_id')
+                            ->selectRaw('DISTINCT year')
                             ->orderBy('year', 'desc')
                             ->pluck('year', 'year')
                             ->toArray();

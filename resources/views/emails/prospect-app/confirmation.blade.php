@@ -84,11 +84,7 @@
 </head>
 <body>
 @php
-    $serviceLabel = match ($prospect->service) {
-        'hastana' => 'Paket Anggota Hastana',
-        'non_hastana' => 'Paket Non Hastana',
-        default => $prospect->service ?: '—',
-    };
+    $serviceLabel = \App\Support\PricingPlans::optionLabel($prospect->service);
 @endphp
     <div class="container">
         <div class="header">

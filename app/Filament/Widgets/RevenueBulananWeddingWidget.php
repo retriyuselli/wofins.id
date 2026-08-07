@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Order;
+use App\Support\UserVisibility;
 use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
@@ -27,7 +28,7 @@ class RevenueBulananWeddingWidget extends BaseWidget
 
     public function table(Table $table): Table
     {
-        $monthlyRevenueQuery = Order::query()
+        $monthlyRevenueQuery = UserVisibility::constrainOrdersQuery(Order::query())
             ->join('prospects', 'orders.prospect_id', '=', 'prospects.id')
             ->selectRaw('
                 MIN(orders.id) as id,
@@ -99,7 +100,7 @@ class RevenueBulananWeddingWidget extends BaseWidget
                 SelectFilter::make('year')
                     ->label('Tahun')
                     ->options(
-                        Order::query()
+                        UserVisibility::constrainOrdersQuery(Order::query())
                             ->join('prospects', 'orders.prospect_id', '=', 'prospects.id')
                             ->whereNotNull('prospects.date_resepsi')
                             ->selectRaw('YEAR(prospects.date_resepsi) as year')

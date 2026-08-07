@@ -5,6 +5,7 @@ namespace App\Filament\Resources\LeaveBalances\Widgets;
 use App\Models\LeaveBalance;
 use App\Models\LeaveType;
 use App\Models\User;
+use App\Support\UserVisibility;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Facades\Auth;
@@ -59,68 +60,52 @@ class LeaveBalanceWidget extends BaseWidget
             $stats[] = $stat;
         }
 
-        // Only show global stats for super_admin
-        if ($currentUser->roles->contains('name', 'super_admin')) {
-            // Get all active employees (excluding super_admin)
-            $totalEmployees = User::where('status', 'active')
+        // Agregat tim: SA (global) atau pemilik paket (tim)
+        if (UserVisibility::actorSeesGlobalAggregates() || UserVisibility::teamRootId() !== null) {
+            $teamUsers = UserVisibility::constrainUsersQuery(User::query())
+                ->where(function ($q) {
+                    $q->whereNull('status')->orWhere('status', 'active');
+                });
+
+            $totalEmployees = (clone $teamUsers)
                 ->whereHas('roles', function ($query) {
-                    $query->whereIn('name', ['Office', 'employee', 'Account Manager', 'Finance', 'Event Manager', 'admin_am'])
-                        ->whereNotIn('name', ['super_admin']);
+                    $query->where('name', '!=', 'super_admin');
                 })
                 ->count();
 
-            // Average remaining annual leave days for active employees only
-            $averageAnnualLeave = LeaveBalance::where('year', $currentYear)
+            $teamUserIds = UserVisibility::actorSeesGlobalAggregates()
+                ? null
+                : UserVisibility::teamUserIds();
+
+            $balanceBase = LeaveBalance::query()->where('year', $currentYear);
+            if ($teamUserIds !== null) {
+                $balanceBase->whereIn('user_id', $teamUserIds);
+            } else {
+                $balanceBase->whereHas('user', function ($query) {
+                    $query->where('status', 'active')
+                        ->whereHas('roles', fn ($roleQuery) => $roleQuery->where('name', '!=', 'super_admin'));
+                });
+            }
+
+            $averageAnnualLeave = (clone $balanceBase)
                 ->whereHas('leaveType', function ($query) {
                     $query->where('name', 'like', '%annual%')
                         ->orWhere('name', 'like', '%tahunan%');
                 })
-                ->whereHas('user', function ($query) {
-                    $query->where('status', 'active')
-                        ->whereHas('roles', function ($roleQuery) {
-                            $roleQuery->whereIn('name', ['Office', 'employee', 'Account Manager', 'Finance', 'Event Manager', 'admin_am'])
-                                ->whereNotIn('name', ['super_admin']);
-                        });
-                })
                 ->avg('remaining_days') ?? 0;
 
-            // Count employees with low ANNUAL leave balance (less than 5 days) - only active employees
-            $lowLeaveBalanceCount = LeaveBalance::where('year', $currentYear)
+            $lowLeaveBalanceCount = (clone $balanceBase)
                 ->where('remaining_days', '<', 5)
                 ->whereHas('leaveType', function ($query) {
                     $query->where('name', 'like', '%tahunan%')
                         ->orWhere('name', 'like', '%annual%');
                 })
-                ->whereHas('user', function ($query) {
-                    $query->where('status', 'active')
-                        ->whereHas('roles', function ($roleQuery) {
-                            $roleQuery->whereIn('name', ['Office', 'employee', 'Account Manager', 'Finance', 'Event Manager', 'admin_am'])
-                                ->whereNotIn('name', ['super_admin']);
-                        });
-                })
                 ->distinct('user_id')
                 ->count('user_id');
 
-            // Total leave days used this year by active employees only
-            $totalUsedLeave = LeaveBalance::where('year', $currentYear)
-                ->whereHas('user', function ($query) {
-                    $query->where('status', 'active')
-                        ->whereHas('roles', function ($roleQuery) {
-                            $roleQuery->whereIn('name', ['Office', 'employee', 'Account Manager', 'Finance', 'Event Manager', 'admin_am'])
-                                ->whereNotIn('name', ['super_admin']);
-                        });
-                })
-                ->sum('used_days') ?? 0;
+            $totalUsedLeave = (clone $balanceBase)->sum('used_days') ?? 0;
 
-            // Get active employees with leave balances
-            $activeEmployeesWithLeave = LeaveBalance::where('year', $currentYear)
-                ->whereHas('user', function ($query) {
-                    $query->where('status', 'active')
-                        ->whereHas('roles', function ($roleQuery) {
-                            $roleQuery->whereIn('name', ['Office', 'employee', 'Account Manager', 'Finance', 'Event Manager', 'admin_am'])
-                                ->whereNotIn('name', ['super_admin']);
-                        });
-                })
+            $activeEmployeesWithLeave = (clone $balanceBase)
                 ->distinct('user_id')
                 ->count('user_id');
 

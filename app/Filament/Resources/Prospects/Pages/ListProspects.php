@@ -4,7 +4,7 @@ namespace App\Filament\Resources\Prospects\Pages;
 
 use App\Filament\Resources\Prospects\ProspectResource;
 use App\Filament\Resources\Prospects\Widgets\ProspectOverviewWidget;
-use App\Models\Prospect;
+use App\Support\CompanySubscription;
 use Exception;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -16,21 +16,34 @@ class ListProspects extends ListRecords
 
     protected function getHeaderActions(): array
     {
+        $canCreate = CompanySubscription::canCreate(CompanySubscription::RESOURCE_PROSPECTS);
+
         return [
+            Action::make('subscription_quota')
+                ->label(CompanySubscription::summary(CompanySubscription::RESOURCE_PROSPECTS))
+                ->icon('heroicon-o-ticket')
+                ->color($canCreate ? 'gray' : 'warning')
+                ->disabled()
+                ->extraAttributes(['class' => 'pointer-events-none']),
+
             Action::make('view_prospects_without_orders')
                 ->label('Prospect Tanpa Order')
                 ->icon('heroicon-m-exclamation-triangle')
                 ->color('warning')
                 ->badge(function () {
                     try {
-                        return Prospect::doesntHave('orders')->count();
+                        return ProspectResource::getEloquentQuery()->doesntHave('orders')->count();
                     } catch (Exception $e) {
                         return 0;
                     }
                 })
                 ->url(fn () => static::getUrl(['tableFilters' => ['order_status' => ['value' => 'no_order']]])),
 
-            CreateAction::make(),
+            CreateAction::make()
+                ->disabled(fn () => ! $canCreate)
+                ->tooltip(fn () => $canCreate
+                    ? null
+                    : CompanySubscription::fullMessage(CompanySubscription::RESOURCE_PROSPECTS)),
         ];
     }
 

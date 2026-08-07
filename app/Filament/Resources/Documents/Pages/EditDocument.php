@@ -4,16 +4,21 @@ namespace App\Filament\Resources\Documents\Pages;
 
 use App\Filament\Resources\Documents\DocumentResource;
 use App\Models\DocumentApproval;
+use App\Models\User;
+use App\Support\PricingPlans;
+use App\Support\ProFeatures;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class EditDocument extends EditRecord
 {
@@ -52,6 +57,43 @@ class EditDocument extends EditRecord
 
                     Notification::make()
                         ->title('Submitted successfully')
+                        ->success()
+                        ->send();
+                }),
+
+            Action::make('addApprover')
+                ->label('Tambah Approver')
+                ->color('gray')
+                ->icon('heroicon-o-user-plus')
+                ->visible(fn ($record) => $record->status === 'pending'
+                    && ProFeatures::allows(PricingPlans::FEATURE_MULTI_APPROVAL))
+                ->form([
+                    Select::make('user_id')
+                        ->label('Approver berikutnya')
+                        ->options(fn () => User::query()->orderBy('name')->pluck('name', 'id'))
+                        ->searchable()
+                        ->required(),
+                ])
+                ->action(function ($record, array $data) {
+                    if (! ProFeatures::allows(PricingPlans::FEATURE_MULTI_APPROVAL)) {
+                        throw ValidationException::withMessages([
+                            'user_id' => \App\Support\CompanySubscription::upgradeMessage(PricingPlans::FEATURE_MULTI_APPROVAL),
+                        ]);
+                    }
+
+                    $nextStep = (int) DocumentApproval::query()
+                        ->where('document_id', $record->id)
+                        ->max('step_order') + 1;
+
+                    DocumentApproval::create([
+                        'document_id' => $record->id,
+                        'user_id' => $data['user_id'],
+                        'step_order' => max(2, $nextStep),
+                        'status' => 'pending',
+                    ]);
+
+                    Notification::make()
+                        ->title('Approver ditambahkan')
                         ->success()
                         ->send();
                 }),

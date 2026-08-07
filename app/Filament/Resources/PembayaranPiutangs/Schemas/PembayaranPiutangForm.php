@@ -32,6 +32,8 @@ class PembayaranPiutangForm
                                 Select::make('piutang_id')
                                     ->label('Piutang')
                                     ->relationship('piutang', 'nomor_piutang', function (Builder $query) {
+                                        \App\Support\UserVisibility::constrainOwnedQuery($query, 'dibuat_oleh');
+
                                         return $query->whereIn('status', ['aktif', 'dibayar_sebagian', 'jatuh_tempo']);
                                     })
                                     ->searchable()

@@ -8,11 +8,13 @@ use App\Filament\Resources\LogAbsensis\Pages\ListLogAbsensis;
 use App\Filament\Resources\LogAbsensis\Schemas\LogAbsensiForm;
 use App\Filament\Resources\LogAbsensis\Tables\LogAbsensisTable;
 use App\Models\LogAbsensi;
-use Filament\Resources\Resource;
+use App\Support\UserVisibility;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
-class LogAbsensiResource extends Resource
+class LogAbsensiResource extends BaseResource
 {
     protected static ?string $model = LogAbsensi::class;
 
@@ -27,6 +29,11 @@ class LogAbsensiResource extends Resource
     protected static string|\UnitEnum|null $navigationGroup = 'Absensi';
 
     protected static ?int $navigationSort = 2;
+
+    public static function getEloquentQuery(): Builder
+    {
+        return UserVisibility::constrainOwnedQuery(parent::getEloquentQuery());
+    }
 
     public static function form(Schema $schema): Schema
     {

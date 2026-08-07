@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Employee;
+use App\Support\UserVisibility;
 use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Filament\Facades\Filament;
 use Filament\Actions\BulkAction;
@@ -44,7 +45,7 @@ class EventManager extends BaseWidget
     {
         return $table
             ->query(
-                Employee::query()
+                UserVisibility::constrainOwnedQuery(Employee::query(), 'user_id')
                     ->where('position', 'Event Manager')
                     ->withCount('orders as events_count')
                     ->orderBy('events_count', 'desc')

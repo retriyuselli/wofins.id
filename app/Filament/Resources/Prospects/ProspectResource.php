@@ -11,14 +11,14 @@ use App\Filament\Resources\Prospects\Pages\ViewProspect;
 use App\Filament\Resources\Prospects\Schemas\ProspectForm;
 use App\Filament\Resources\Prospects\Tables\ProspectsTable;
 use App\Models\Prospect;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Cache;
 
-class ProspectResource extends Resource
+class ProspectResource extends BaseResource
 {
     protected static ?string $model = Prospect::class;
 
@@ -61,21 +61,23 @@ class ProspectResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
-            ->with(['user:id,name', 'latestOrder'])
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ]);
+        return \App\Support\UserVisibility::constrainOwnedQuery(
+            parent::getEloquentQuery()
+                ->with(['user:id,name', 'latestOrder'])
+                ->withoutGlobalScopes([
+                    SoftDeletingScope::class,
+                ])
+        );
     }
 
     private static function getCachedNavigationBadgeCount(): int
     {
-        $modelClass = static::$model;
+        $scope = \App\Support\UserVisibility::cacheScopeKey();
 
         return Cache::remember(
-            'nav:prospects:without_orders',
+            "nav:prospects:without_orders:{$scope}",
             60,
-            fn (): int => $modelClass::whereDoesntHave('orders')->count()
+            fn (): int => (int) static::getEloquentQuery()->whereDoesntHave('orders')->count()
         );
     }
 

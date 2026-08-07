@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Listeners\CheckUserExpirationOnLogin;
+use App\Http\Responses\Filament\LogoutResponse;
 use App\Models\BankStatement;
 use App\Models\Company;
 use App\Models\Document;
@@ -14,8 +15,11 @@ use App\Observers\DocumentObserver;
 use App\Observers\LeaveRequestObserver;
 use App\Observers\OrderObserver;
 use App\Observers\UserObserver;
+use App\Support\CompanySubscription;
+use App\Support\PricingPlans;
 use App\Support\ProFeatures;
 use CmsMulti\FilamentClearCache\Facades\FilamentClearCache;
+use Filament\Auth\Http\Responses\Contracts\LogoutResponse as LogoutResponseContract;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -34,7 +38,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(LogoutResponseContract::class, LogoutResponse::class);
     }
 
     /**
@@ -159,7 +163,22 @@ class AppServiceProvider extends ServiceProvider
         }));
 
         View::composer(['profile.*', 'leave.*'], function ($view) {
-            $view->with('proFeatureLocked', ProFeatures::locked());
+            $user = auth()->user();
+            $adminToolsReadonly = $user
+                && method_exists($user, 'hasRole')
+                && $user->hasRole('pengunjung')
+                && ! $user->hasRole('super_admin');
+
+            // Super admin: portal tidak dikunci paket (boleh pakai semua aksi).
+            // ESS (absensi/cuti/kompensasi/jadwal) digating employee_portal (Business).
+            $proLocked = $user && method_exists($user, 'hasRole') && $user->hasRole('super_admin')
+                ? false
+                : ProFeatures::locked(PricingPlans::FEATURE_EMPLOYEE_PORTAL);
+
+            $view->with('proFeatureLocked', $proLocked);
+            $view->with('subscriptionPlanLabel', CompanySubscription::planLabel());
+            $view->with('subscriptionSeatSummary', CompanySubscription::seatSummary());
+            $view->with('adminToolsReadonly', $adminToolsReadonly);
         });
 
         FilamentClearCache::addCommand('optimize:clear');

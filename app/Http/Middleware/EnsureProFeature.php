@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\CompanySubscription;
+use App\Support\PricingPlans;
 use App\Support\ProFeatures;
 use Closure;
 use Illuminate\Http\Request;
@@ -9,18 +11,20 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureProFeature
 {
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next, string $feature = PricingPlans::FEATURE_HRIS): Response
     {
-        if (ProFeatures::enabled()) {
+        if (ProFeatures::allows($feature)) {
             return $next($request);
         }
 
+        $message = CompanySubscription::upgradeMessage($feature);
+
         if ($request->expectsJson()) {
             return response()->json([
-                'message' => 'Fitur ini hanya tersedia di paket Pro.',
+                'message' => $message,
             ], 403);
         }
 
-        return back()->with('error', 'Fitur ini hanya tersedia di paket Pro. Halaman dapat dilihat sebagai pratinjau.');
+        return back()->with('error', $message);
     }
 }

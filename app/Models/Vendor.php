@@ -18,6 +18,7 @@ class Vendor extends Model
     use SoftDeletes, LogsActivity;
 
     protected $fillable = [
+        'created_by',
         'name',
         'phone',
         'slug',
@@ -78,6 +79,11 @@ class Vendor extends Model
             ->logOnly(['name', 'status', 'contact', 'email'])
             ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}")
             ->useLogName('vendor');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function category()

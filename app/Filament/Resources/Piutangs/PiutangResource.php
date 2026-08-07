@@ -15,7 +15,7 @@ use App\Filament\Resources\Piutangs\Widgets\PiutangOverviewWidget;
 use App\Filament\Resources\Piutangs\Widgets\TopDebiturWidget;
 use App\Models\Piutang;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -23,7 +23,7 @@ use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Cache;
 
-class PiutangResource extends Resource
+class PiutangResource extends BaseResource
 {
     protected static ?string $model = Piutang::class;
 
@@ -41,12 +41,20 @@ class PiutangResource extends Resource
 
     private static function getCachedNavigationBadgeCount(): int
     {
-        $modelClass = static::getModel();
+        $scope = \App\Support\UserVisibility::cacheScopeKey();
 
         return Cache::remember(
-            'nav:piutangs:aktif_count',
+            "nav:piutangs:aktif_count:{$scope}",
             60,
-            fn (): int => (int) $modelClass::where('status', 'aktif')->count()
+            fn (): int => (int) static::getEloquentQuery()->where('status', 'aktif')->count()
+        );
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return \App\Support\UserVisibility::constrainOwnedQuery(
+            parent::getEloquentQuery(),
+            'dibuat_oleh'
         );
     }
 

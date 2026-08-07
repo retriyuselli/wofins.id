@@ -115,7 +115,11 @@ class EmployeeForm
                                                     ->searchable(),
 
                                                 Select::make('user_id')
-                                                    ->relationship('user', 'name')
+                                                    ->relationship(
+                                'user',
+                                'name',
+                                fn (\Illuminate\Database\Eloquent\Builder $query) => \App\Support\UserVisibility::constrainUsersQuery($query)
+                            )
                                                     ->label('Akun Pengguna Terkait')
                                                     ->preload()
                                                     ->searchable()

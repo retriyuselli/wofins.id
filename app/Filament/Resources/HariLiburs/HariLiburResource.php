@@ -9,11 +9,11 @@ use App\Filament\Resources\HariLiburs\Pages\ListHariLiburs;
 use App\Filament\Resources\HariLiburs\Schemas\HariLiburForm;
 use App\Filament\Resources\HariLiburs\Tables\HariLibursTable;
 use App\Models\HariLibur;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 
-class HariLiburResource extends Resource
+class HariLiburResource extends BaseResource
 {
     use RestrictsToSuperAdmin;
     protected static ?string $model = HariLibur::class;

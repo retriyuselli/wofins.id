@@ -130,7 +130,11 @@ class LeaveRequestsTable
 
                 SelectFilter::make('user_id')
                     ->label('Karyawan')
-                    ->relationship('user', 'name')
+                    ->relationship(
+                        'user',
+                        'name',
+                        fn (\Illuminate\Database\Eloquent\Builder $query) => \App\Support\UserVisibility::constrainUsersQuery($query)
+                    )
                     ->searchable(),
 
                 SelectFilter::make('replacement_employee_id')

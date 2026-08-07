@@ -22,7 +22,6 @@ use App\Http\Controllers\Front\ContactController;
 use App\Http\Controllers\Front\RegistrationController;
 use App\Http\Controllers\FrontendDataPribadiController;
 use App\Http\Controllers\InvoiceOrderController;
-use App\Http\Controllers\JournalPdfController;
 use App\Http\Controllers\LaporanKeuanganController;
 use App\Http\Controllers\NotaDinasPdfController;
 use App\Http\Controllers\PayrollSlipController;
@@ -51,6 +50,7 @@ $phpInfoMiddleware = [...$authNoStore, 'super-admin', 'throttle:10,1'];
 // Portal front/profile: auth Laravel biasa (bukan filament.auth),
 // agar user tanpa role tidak kena abort 403 dari canAccessPanel().
 $frontAuthNoStore = ['auth', 'no-store'];
+$frontAuthVerified = ['auth', 'verified', 'no-store'];
 
 Route::get('/_phpinfo', function () {
     ob_start();
@@ -108,7 +108,7 @@ Route::get('/hr/user-form/filled-session', [UserFormPdfController::class, 'gener
 // Rute untuk download PDF slip gaji
 Route::get('/payroll/{record}/slip-gaji', [PayrollSlipController::class, 'download'])
     ->name('payroll.slip-gaji.download')
-    ->middleware($authNoStoreThrottle);
+    ->middleware(array_merge($authNoStoreThrottle, ['pro.feature:payroll']));
 
 // LEAVE APPROVAL DETAIL
 // Rute untuk melihat detail persetujuan cuti
@@ -127,11 +127,11 @@ Route::get('/leave/create', [LeaveRequestController::class, 'create'])
 
 Route::post('/leave', [LeaveRequestController::class, 'store'])
     ->name('leave.store')
-    ->middleware(array_merge($authNoStore, ['pro.feature']));
+    ->middleware(array_merge($authNoStore, ['pro.feature:employee_portal']));
 
 Route::put('/leave/{id}', [LeaveRequestController::class, 'update'])
     ->name('leave.update')
-    ->middleware(array_merge($authNoStore, ['pro.feature']))
+    ->middleware(array_merge($authNoStore, ['pro.feature:employee_portal']))
     ->whereNumber('id');
 
 Route::get('/leave/status', [LeaveRequestController::class, 'status'])
@@ -141,16 +141,16 @@ Route::get('/leave/status', [LeaveRequestController::class, 'status'])
 // DOCUMENT
 Route::get('/document/{record}/stream', [DocumentController::class, 'stream'])
     ->name('document.stream')
-    ->middleware($authNoStoreThrottle);
+    ->middleware(array_merge($authNoStoreThrottle, ['pro.feature:documents']));
 
 // SOP PRINT ROUTES
 Route::get('/sops/{id}/print', [SopPrintController::class, 'show'])
     ->name('sop.print')
-    ->middleware($authNoStore)
+    ->middleware(array_merge($authNoStore, ['pro.feature:documents']))
     ->whereNumber('id');
 Route::get('/sops/{id}/pdf', [SopPrintController::class, 'pdf'])
     ->name('sop.pdf')
-    ->middleware($authNoStoreThrottle)
+    ->middleware(array_merge($authNoStoreThrottle, ['pro.feature:documents']))
     ->whereNumber('id');
 
 // FRONTEND FEATURES
@@ -167,16 +167,31 @@ Route::get('/fitur/{slug}', [FiturDetailController::class, 'show'])
     ->name('fitur.show')
     ->where('slug', 'proyek-wedding|keuangan|rekonsiliasi|nota-dinas|absensi|cuti-payroll|portal-karyawan|dokumen-sop|hak-akses');
 Route::view('/harga', 'front.harga')->name('harga');
+Route::view('/keamanan', 'front.keamanan')->name('keamanan');
+Route::view('/tentang-kami', 'front.tentang')->name('tentang');
+Route::get('/solusi/{slug}', [\App\Http\Controllers\Front\SolusiController::class, 'show'])
+    ->name('solusi.show')
+    ->where('slug', 'owner|finance|hrd|operasional');
 
 Route::get('/product', [ProductCatalogController::class, 'index'])->name('product');
 
 Route::get('/pendaftaran', [RegistrationController::class, 'pendaftaran'])->name('pendaftaran');
 
-// CONTACT
+// CONTACT — halaman bisa dilihat guest (dengan pemberitahuan login);
+// kirim form tetap wajib login
 Route::view('/kontak', 'front.kontak')->name('kontak');
+Route::get('/kontak/lanjut-login', function () {
+    $intended = route('kontak', array_filter([
+        'paket' => request('paket'),
+    ]));
+    session(['url.intended' => $intended]);
+
+    return redirect()->route('front.login');
+})->name('kontak.require-login')->middleware('guest');
+
 Route::post('/kontak', [ContactController::class, 'store'])
     ->name('kontak.store')
-    ->middleware('throttle:10,1');
+    ->middleware([...$frontAuthVerified, 'throttle:10,1']);
 
 // BLOG
 Route::get('/blog', [BlogController::class, 'index'])->name('blog');
@@ -203,12 +218,6 @@ Route::middleware($authNoStore)->group(function () {
         ->middleware('throttle:60,1');
     Route::get('/bank-statements/{bankStatement}/reconciliation/download', [BankStatementFileController::class, 'downloadReconciliation'])
         ->name('bank-statements.reconciliation.download')
-        ->middleware('throttle:60,1');
-
-    Route::get('/journal/pdf/preview', [JournalPdfController::class, 'preview'])
-        ->name('journal.pdf.preview');
-    Route::get('/journal/pdf/download', [JournalPdfController::class, 'download'])
-        ->name('journal.pdf.download')
         ->middleware('throttle:60,1');
 
     Route::get('/absensi/laporan/excel', [AbsensiLaporanController::class, 'excel'])
@@ -286,7 +295,7 @@ Route::get('/laporan/expense/pdf', [ReportController::class, 'generateExpensePdf
 // Route untuk Laporan Net Cash Flow PDF Stream
 Route::get('/laporan/net-cash-flow/pdf/stream', [ReportController::class, 'streamNetCashFlowPdf'])
     ->name('reports.net-cash-flow.pdf.stream')
-    ->middleware($authNoStoreThrottle);
+    ->middleware(array_merge($authNoStoreThrottle, ['pro.feature:advanced_reports']));
 
 // RUTE DATA PRIBADI
 // Route untuk menampilkan form tambah data pribadi
@@ -328,16 +337,18 @@ Route::middleware(['guest', 'no-store'])->group(function () {
 
 });
 
-// PROFILE ROUTES — auth only (tanpa role masih boleh akses)
+// EMAIL VERIFICATION (register manual) — auth saja, tanpa verified
 Route::middleware($frontAuthNoStore)->group(function () {
-    Route::get('/akun-belum-aktif', function () {
-        $user = Auth::user();
-        if ($user?->hasAssignedRole()) {
-            return redirect()->route('profile');
-        }
+    Route::get('/email/verify', [AuthController::class, 'showVerificationNotice'])
+        ->name('verification.notice');
 
-        return view('front.account-pending');
-    })->name('account.pending');
+    Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
+
+    Route::post('/email/verification-notification', [AuthController::class, 'resendVerificationEmail'])
+        ->middleware('throttle:6,1')
+        ->name('verification.send');
 
     Route::post('/logout', function () {
         Auth::logout();
@@ -348,7 +359,30 @@ Route::middleware($frontAuthNoStore)->group(function () {
     })->name('logout')->middleware('throttle:10,1');
 });
 
-Route::middleware(array_merge($frontAuthNoStore, ['role.required']))->group(function () {
+// PROFILE ROUTES — auth + email terverifikasi (tanpa role masih boleh akses pending)
+Route::middleware($frontAuthVerified)->group(function () {
+    Route::get('/akun-belum-aktif', function () {
+        $user = Auth::user();
+        if ($user?->hasAssignedRole()) {
+            return redirect()->route('profile');
+        }
+
+        $prospect = \App\Models\ProspectApp::query()
+            ->with('industry')
+            ->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                    ->orWhere('email', $user->email);
+            })
+            ->latest('id')
+            ->first();
+
+        return view('front.account-pending', [
+            'prospect' => $prospect,
+        ]);
+    })->name('account.pending');
+});
+
+Route::middleware(array_merge($frontAuthVerified, ['role.required']))->group(function () {
     Route::get('/profile', [ProfileController::class, 'overview'])->name('profile');
     Route::get('/profile/show', [ProfileController::class, 'overview'])->name('profile.show');
     Route::get('/profile/overview', [ProfileController::class, 'overview'])->name('profile.overview');
@@ -357,22 +391,22 @@ Route::middleware(array_merge($frontAuthNoStore, ['role.required']))->group(func
         ->middleware('absensi.headers');
     Route::post('/profile/absensi/masuk', [ProfileAbsensiController::class, 'masuk'])
         ->name('profile.absensi.masuk')
-        ->middleware(['pro.feature', 'absensi.headers', 'throttle:20,1']);
+        ->middleware(['pro.feature:employee_portal', 'absensi.headers', 'throttle:20,1']);
     Route::post('/profile/absensi/pulang', [ProfileAbsensiController::class, 'pulang'])
         ->name('profile.absensi.pulang')
-        ->middleware(['pro.feature', 'absensi.headers', 'throttle:20,1']);
+        ->middleware(['pro.feature:employee_portal', 'absensi.headers', 'throttle:20,1']);
     Route::post('/profile/absensi/koreksi', [ProfileAbsensiController::class, 'koreksi'])
         ->name('profile.absensi.koreksi')
-        ->middleware(['pro.feature', 'absensi.headers', 'throttle:10,1']);
+        ->middleware(['pro.feature:employee_portal', 'absensi.headers', 'throttle:10,1']);
     Route::post('/profile/absensi/lembur', [ProfileAbsensiController::class, 'lembur'])
         ->name('profile.absensi.lembur')
-        ->middleware(['pro.feature', 'absensi.headers', 'throttle:10,1']);
+        ->middleware(['pro.feature:employee_portal', 'absensi.headers', 'throttle:10,1']);
     Route::get('/profile/absensi/laporan/excel', [ProfileAbsensiController::class, 'laporanExcel'])
         ->name('profile.absensi.laporan.excel')
-        ->middleware(['pro.feature', 'throttle:20,1']);
+        ->middleware(['pro.feature:employee_portal', 'throttle:20,1']);
     Route::get('/profile/absensi/laporan/pdf', [ProfileAbsensiController::class, 'laporanPdf'])
         ->name('profile.absensi.laporan.pdf')
-        ->middleware(['pro.feature', 'throttle:20,1']);
+        ->middleware(['pro.feature:employee_portal', 'throttle:20,1']);
     Route::get('/profile/compensation', [ProfileController::class, 'compensation'])->name('profile.compensation');
     Route::get('/profile/schedule', [ProfileController::class, 'schedule'])->name('profile.schedule');
     Route::get('/profile/laporan-keuangan', [ProfileController::class, 'financialReport'])
@@ -388,7 +422,7 @@ Route::middleware(array_merge($frontAuthNoStore, ['role.required']))->group(func
     Route::get('/profile/events', [ProfileController::class, 'getEvents'])->name('profile.events');
     Route::get('/profile/benefits', [ProfileController::class, 'getBenefits'])->name('profile.benefits');
 
-    Route::prefix('profile/admin-tools')->middleware('super-admin')->group(function () {
+    Route::prefix('profile/admin-tools')->middleware('admin-tools.access')->group(function () {
         Route::get('/', [AdminToolsController::class, 'index'])->name('profile.admin-tools');
         Route::get('/users', [AdminToolsController::class, 'users'])->name('profile.admin-tools.users');
         Route::get('/roles', [AdminToolsController::class, 'roles'])->name('profile.admin-tools.roles');

@@ -4,8 +4,6 @@ namespace App\Filament\Resources\DataPembayarans\Tables;
 
 use App\Enums\OrderStatus;
 use App\Models\DataPembayaran;
-use App\Models\JournalBatch;
-use App\Services\OrderJournalService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
@@ -17,7 +15,6 @@ use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
-use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\Summarizers\Sum;
@@ -124,47 +121,20 @@ class DataPembayaransTable
                         ->color('danger')
                         ->requiresConfirmation()
                         ->modalHeading('Batalkan Pembayaran')
-                        ->modalDescription('Tindakan ini akan membuat jurnal reversal dan menghapus (soft delete) pembayaran agar angka operasional kembali benar.')
+                        ->modalDescription('Tindakan ini akan menghapus (soft delete) pembayaran agar angka operasional kembali benar.')
                         ->modalSubmitActionLabel('Ya, Batalkan')
-                        ->form([
-                            Textarea::make('reason')
-                                ->label('Alasan')
-                                ->required()
-                                ->maxLength(500),
-                        ])
-                        ->action(function (DataPembayaran $record, array $data): void {
+                        ->action(function (DataPembayaran $record): void {
                             Gate::authorize('update', $record);
-
-                            $ok = app(OrderJournalService::class)->reverseJournal('payment', $record->id, $data['reason']);
-
-                            if (! $ok) {
-                                Notification::make()
-                                    ->danger()
-                                    ->title('Pembatalan gagal')
-                                    ->body('Jurnal pembayaran tidak ditemukan atau tidak bisa dibatalkan.')
-                                    ->send();
-
-                                return;
-                            }
 
                             $record->delete();
 
                             Notification::make()
                                 ->success()
                                 ->title('Pembayaran dibatalkan')
-                                ->body('Jurnal reversal dibuat dan pembayaran dihapus (soft delete).')
+                                ->body('Pembayaran dihapus (soft delete).')
                                 ->send();
                         })
-                        ->visible(function (DataPembayaran $record): bool {
-                            if ($record->trashed() || ! $record->order_id) {
-                                return false;
-                            }
-
-                            return JournalBatch::where('reference_type', 'payment')
-                                ->where('reference_id', $record->id)
-                                ->where('status', 'posted')
-                                ->exists();
-                        }),
+                        ->visible(fn (DataPembayaran $record): bool => ! $record->trashed() && (bool) $record->order_id),
                     DeleteAction::make()
                         ->visible(fn (?DataPembayaran $record): bool => $record && ! $record->trashed() && ! $record->order_id)
                         ->requiresConfirmation(),

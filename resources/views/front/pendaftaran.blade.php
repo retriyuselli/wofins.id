@@ -3,10 +3,7 @@
 @section('title', 'Pendaftaran — WOFINS')
 
 @push('styles')
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
+<style>
         :root {
             --wf-navy: #0b1f3a;
             --wf-navy-deep: #071526;
@@ -164,12 +161,11 @@
 
 @section('content')
 @php
-    $plan = request('plan');
-    $planLabel = match ($plan) {
-        'hastana' => 'Paket Anggota Hastana',
-        'non-hastana' => 'Paket Non Hastana',
-        default => null,
-    };
+    use App\Support\PricingPlans;
+
+    $plan = PricingPlans::normalizeKey(request('plan') ?: request('paket'));
+    $planMeta = PricingPlans::find($plan);
+    $planLabel = $planMeta ? PricingPlans::shortLabel($plan) : null;
     $prospect = $prospect ?? null;
     $authUser = Auth::user();
     $userAlreadyActive = $authUser?->hasAssignedRole() ?? false;
@@ -183,19 +179,15 @@
     $defaultIndustryId = old('industry_id', $prospect?->industry_id);
     $defaultUserSize = old('user_size', $prospect?->user_size);
     $defaultPhone = old('phone', $prospect?->phone ?: $authUser?->phone_number);
-    $defaultService = old('service') ?? $prospect?->service ?? match ($plan) {
-        'hastana' => 'hastana',
-        'non-hastana' => 'non_hastana',
-        default => '',
-    };
+    $defaultService = old('service')
+        ?? (in_array($prospect?->service, PricingPlans::selectableKeys(), true) ? $prospect->service : null)
+        ?? $plan
+        ?? '';
     $defaultReason = old('reason_for_interest', $prospect?->reason_for_interest);
     $defaultTerms = old('terms', $prospect?->position === 'Decision Maker' ? '1' : null);
 
-    $serviceLabel = match ($prospect?->service) {
-        'hastana' => 'Paket Anggota Hastana',
-        'non_hastana' => 'Paket Non Hastana',
-        default => $prospect?->service ?: '—',
-    };
+    $serviceOptions = PricingPlans::selectOptions();
+    $serviceLabel = PricingPlans::optionLabel($prospect?->service);
 @endphp
 
 <div class="wf-page" x-data="{ termsOpen: false, privacyOpen: false, successOpen: {{ session('success') ? 'true' : 'false' }}, errorOpen: {{ ($errors->any() || session('error')) ? 'true' : 'false' }} }">
@@ -211,10 +203,8 @@
                     Pendaftaran Anda telah disetujui
                 @elseif ($isRejected)
                     Pendaftaran perlu ditinjau ulang
-                @elseif ($plan === 'hastana')
-                    Bergabung dengan Komunitas Hastana
-                @elseif ($plan === 'non-hastana')
-                    Mulai Perjalanan Bisnis Anda
+                @elseif ($planLabel)
+                    Daftar paket {{ $planMeta['name'] }}
                 @else
                     Diskusikan kebutuhan bisnis Anda dengan kami
                 @endif
@@ -332,9 +322,9 @@
                                 <select id="user_size" name="user_size" required
                                     class="wf-input @error('user_size') is-error @enderror">
                                     <option value="">Pilih jumlah karyawan</option>
-                                    @foreach (['1-10', '11-50', '51-200', '201-500', '501-1000', '1000+'] as $size)
+                                    @foreach (\App\Models\ProspectApp::userSizeOptions($defaultUserSize) as $size => $sizeLabel)
                                         <option value="{{ $size }}" @selected($defaultUserSize === $size)>
-                                            {{ $size === '1000+' ? 'Lebih dari 1000 karyawan' : $size.' karyawan' }}
+                                            {{ $sizeLabel }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -372,13 +362,16 @@
                             <select id="service" name="service" required
                                 class="wf-input @error('service') is-error @enderror">
                                 <option value="">Pilih paket layanan</option>
-                                <option value="hastana" @selected($defaultService === 'hastana')>
-                                    Paket Anggota Hastana — Rp 8.500.000 / 2 tahun
-                                </option>
-                                <option value="non_hastana" @selected($defaultService === 'non_hastana')>
-                                    Paket Non Hastana — Rp 10.000.000 / 2 tahun
-                                </option>
+                                @foreach ($serviceOptions as $value => $label)
+                                    <option value="{{ $value }}" @selected($defaultService === $value)>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
                             </select>
+                            <p class="mt-1.5 text-xs text-[var(--wf-muted)]">
+                                Paket sama dengan yang ditampilkan di
+                                <a href="{{ route('harga') }}" class="font-semibold text-[var(--wf-navy)] underline underline-offset-2 hover:text-[var(--wf-gold)]">halaman Harga</a>.
+                            </p>
                             @error('service')
                                 <p class="mt-1.5 text-sm text-red-600">{{ $message }}</p>
                             @enderror
@@ -396,7 +389,7 @@
 
                         <input type="hidden" name="position" value="Decision Maker">
                         <input type="hidden" name="notes"
-                            value="Form submitted via consultation page - interested in {{ $plan === 'hastana' ? 'Hastana Member Package' : ($plan === 'non-hastana' ? 'Non Hastana Package' : 'WOFINS') }}">
+                            value="Form submitted via consultation page - interested in {{ $planLabel ? PricingPlans::optionLabel($plan) : 'WOFINS' }}">
 
                         <label class="flex items-start gap-3 cursor-pointer">
                             <input id="terms" name="terms" type="checkbox" required value="1"
@@ -620,20 +613,27 @@
                     <i class="fa-solid fa-envelope-circle-check text-2xl"></i>
                 </span>
                 <h3 id="pendaftaran-success-title" class="mt-4 text-xl font-bold text-[var(--wf-navy)]">
-                    Pendaftaran berhasil dikirim
+                    Terima kasih atas pendaftaran Anda
                 </h3>
                 <p class="mt-3 text-sm text-[var(--wf-muted)] leading-relaxed">
-                    {{ session('success', 'Data Anda sudah kami terima. Tim admin WOFINS akan segera menghubungi Anda.') }}
+                    {{ session('success', 'Data Anda sudah kami terima. Tim admin akan meninjau pengajuan dan mengaktifkan akun setelah disetujui.') }}
                 </p>
                 <p class="mt-3 text-xs text-[var(--wf-muted)]">
-                    Kami juga mengirim konfirmasi ke email Anda.
+                    Kami juga mengirim konfirmasi ke email Anda. Pantau status di halaman akun.
                 </p>
             </div>
             <div class="px-6 py-5 flex flex-col sm:flex-row gap-2.5 justify-center">
-                <button type="button" @click="successOpen = false"
-                        class="wf-btn-navy inline-flex items-center justify-center px-6 py-3 text-sm">
-                    Mengerti
-                </button>
+                @auth
+                    <a href="{{ route('account.pending') }}"
+                       class="wf-btn-navy inline-flex items-center justify-center px-6 py-3 text-sm">
+                        Lihat status akun
+                    </a>
+                @else
+                    <button type="button" @click="successOpen = false"
+                            class="wf-btn-navy inline-flex items-center justify-center px-6 py-3 text-sm">
+                        Mengerti
+                    </button>
+                @endauth
                 <a href="{{ route('home') }}"
                    class="wf-btn-ghost inline-flex items-center justify-center px-6 py-3 text-sm">
                     Kembali ke beranda

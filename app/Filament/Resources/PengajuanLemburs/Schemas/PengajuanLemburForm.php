@@ -21,7 +21,11 @@ class PengajuanLemburForm
                     ->schema([
                         Select::make('user_id')
                             ->label('Karyawan')
-                            ->relationship('user', 'name')
+                            ->relationship(
+                                'user',
+                                'name',
+                                fn (\Illuminate\Database\Eloquent\Builder $query) => \App\Support\UserVisibility::constrainUsersQuery($query)
+                            )
                             ->searchable()
                             ->preload()
                             ->required()

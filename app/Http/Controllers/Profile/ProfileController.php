@@ -9,6 +9,8 @@ use App\Models\ExpenseOps;
 use App\Models\PendapatanLain;
 use App\Models\PengeluaranLain;
 use App\Models\User;
+use App\Support\CompanySubscription;
+use App\Support\PricingPlans;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -32,8 +34,59 @@ class ProfileController extends Controller
                 $this->upcomingEventsViewData($user),
                 $this->hrSalaryLeaveViewData($user),
             );
+
+            // Kuota paket: semua user login (hitungannya per tim; SA lihat agregat platform).
+            $viewData = array_merge($viewData, $this->subscriptionQuotaViewData($user));
         }
+
         return array_merge(compact('user'), $viewData);
+    }
+
+    /**
+     * Ringkasan paket & matriks kuota di dashboard profil.
+     *
+     * @return array<string, mixed>
+     */
+    private function subscriptionQuotaViewData(User $user): array
+    {
+        $quotaRows = CompanySubscription::quotaMatrix();
+        $isSuperAdmin = $user->hasRole('super_admin');
+
+        $featureDefs = [
+            PricingPlans::FEATURE_PROJECTS => 'Proyek wedding',
+            PricingPlans::FEATURE_BASIC_FINANCE => 'Keuangan dasar',
+            PricingPlans::FEATURE_NOTA_DINAS => 'Nota dinas',
+            PricingPlans::FEATURE_DOCUMENTS => 'Dokumen & SOP',
+            PricingPlans::FEATURE_RECONCILIATION => 'Rekonsiliasi',
+            PricingPlans::FEATURE_HRIS => 'HRIS / Absensi',
+            PricingPlans::FEATURE_PAYROLL => 'Payroll',
+            PricingPlans::FEATURE_ROLE_MANAGEMENT => 'Hak akses jabatan',
+            PricingPlans::FEATURE_EMPLOYEE_PORTAL => 'Portal karyawan',
+            PricingPlans::FEATURE_ADVANCED_REPORTS => 'Laporan lanjutan',
+            PricingPlans::FEATURE_MULTI_APPROVAL => 'Multi-approval',
+        ];
+
+        $featureMatrix = [];
+        foreach ($featureDefs as $feature => $label) {
+            $featureMatrix[] = [
+                'key' => $feature,
+                'label' => $label,
+                'allowed' => CompanySubscription::allows($feature),
+            ];
+        }
+
+        return [
+            'showSubscriptionQuota' => true,
+            'subscriptionIsSuperAdmin' => $isSuperAdmin,
+            'subscriptionConfigured' => CompanySubscription::hasConfiguredPlan(),
+            'subscriptionPlanKey' => CompanySubscription::hasConfiguredPlan()
+                ? CompanySubscription::planKey()
+                : null,
+            'subscriptionPlanLabel' => CompanySubscription::planLabel(),
+            'subscriptionQuotaRows' => $quotaRows,
+            'subscriptionFeatureMatrix' => $featureMatrix,
+            'subscriptionQuotasOverview' => CompanySubscription::quotasOverview(),
+        ];
     }
 
     private function upcomingEventsViewData(User $user): array

@@ -144,7 +144,11 @@ class SimulasiProduksTable
                     }),
                 SelectFilter::make('user_id')
                     ->label('Created By')
-                    ->relationship('user', 'name')
+                    ->relationship(
+                        'user',
+                        'name',
+                        fn (\Illuminate\Database\Eloquent\Builder $query) => \App\Support\UserVisibility::constrainUsersQuery($query)
+                    )
                     ->searchable()
                     ->preload(),
 

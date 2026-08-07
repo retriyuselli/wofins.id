@@ -3,9 +3,12 @@
 namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
+use App\Support\CompanySubscription;
+use App\Support\UserVisibility;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Validation\ValidationException;
 
 class EditUser extends EditRecord
 {
@@ -15,7 +18,6 @@ class EditUser extends EditRecord
     {
         parent::mount($record);
 
-        // Check if current user can edit this record
         if (! UserResource::isSuperAdmin() && UserResource::isTargetUserSuperAdmin($this->record)) {
             Notification::make()
                 ->title('Akses Ditolak')
@@ -29,17 +31,37 @@ class EditUser extends EditRecord
         }
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        $data['roles'] = UserVisibility::sanitizeAssignableRoleIds(
+            isset($data['roles']) ? (array) $data['roles'] : null
+        );
+
+        $hadRoles = $this->record->roles()->exists();
+        $willHaveRoles = ! empty($data['roles']);
+
+        if (! $hadRoles && $willHaveRoles && ! CompanySubscription::hasSeatAvailable()) {
+            throw ValidationException::withMessages([
+                'roles' => CompanySubscription::seatFullMessage(),
+            ]);
+        }
+
+        return $data;
+    }
+
     protected function getHeaderActions(): array
     {
         return [
             DeleteAction::make()
                 ->visible(function () {
-                    // Super admin can delete anyone
                     if (UserResource::isSuperAdmin()) {
                         return true;
                     }
 
-                    // Non-super admin cannot delete super admin users
                     return ! UserResource::isTargetUserSuperAdmin($this->record);
                 }),
         ];

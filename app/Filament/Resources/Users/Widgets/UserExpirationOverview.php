@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Users\Widgets;
 
 use App\Models\User;
+use App\Support\UserVisibility;
 use Carbon\Carbon;
 use Exception;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
@@ -10,35 +11,35 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class UserExpirationOverview extends BaseWidget
 {
-    // protected ?string $pollingInterval = '30s';
-
     protected function getStats(): array
     {
         try {
-            // Count expired users
-            $expiredUsers = User::whereNotNull('expire_date')
+            $base = UserVisibility::constrainUsersQuery(User::query());
+
+            $expiredUsers = (clone $base)->whereNotNull('expire_date')
                 ->where('expire_date', '<=', Carbon::now())
                 ->count();
 
-            // Count users expiring within 7 days
-            $expiringSoonUsers = User::whereNotNull('expire_date')
+            $expiringSoonUsers = (clone $base)->whereNotNull('expire_date')
                 ->whereBetween('expire_date', [
                     Carbon::now(),
                     Carbon::now()->addDays(7),
                 ])->count();
 
-            // Count active users (no expire date or expire date in future)
-            $activeUsers = User::where(function ($query) {
+            $activeUsers = (clone $base)->where(function ($query) {
                 $query->whereNull('expire_date')
                     ->orWhere('expire_date', '>', Carbon::now());
             })->count();
 
-            // Total users count
-            $totalUsers = User::count();
+            $totalUsers = (clone $base)->count();
+
+            $scopeLabel = UserVisibility::actorIsSuperAdmin()
+                ? 'Total semua pengguna'
+                : 'Total pengguna di tim Anda';
 
             return [
                 Stat::make('Total User', $totalUsers)
-                    ->description('Total semua pengguna')
+                    ->description($scopeLabel)
                     ->descriptionIcon('heroicon-m-users')
                     ->color('info'),
 
@@ -58,7 +59,6 @@ class UserExpirationOverview extends BaseWidget
                     ->color('danger'),
             ];
         } catch (Exception $e) {
-            // Fallback jika ada error
             return [
                 Stat::make('Error', 'Tidak dapat memuat data')
                     ->description('Error: '.$e->getMessage())

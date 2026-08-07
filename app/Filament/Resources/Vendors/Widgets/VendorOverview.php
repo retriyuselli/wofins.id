@@ -3,20 +3,28 @@
 namespace App\Filament\Resources\Vendors\Widgets;
 
 use App\Models\Vendor;
+use App\Support\UserVisibility;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Database\Eloquent\Builder;
 
 class VendorOverview extends BaseWidget
 {
     protected static ?int $sort = 1;
 
+    protected function scopedVendors(): Builder
+    {
+        return UserVisibility::constrainOwnedQuery(Vendor::query(), 'created_by');
+    }
+
     protected function getStats(): array
     {
         try {
-            $totalVendors = Vendor::count();
-            $regularVendors = Vendor::where('is_master', false)->count();
+            $base = $this->scopedVendors();
+            $totalVendors = (clone $base)->count();
+            $regularVendors = (clone $base)->where('is_master', false)->count();
 
-            $inUseVendors = Vendor::query()
+            $inUseVendors = (clone $base)
                 ->where(function ($query) {
                     $query->whereHas('productVendors')
                         ->orWhereHas('expenses')
@@ -25,7 +33,7 @@ class VendorOverview extends BaseWidget
                 })
                 ->count();
 
-            $availableVendors = Vendor::query()
+            $availableVendors = (clone $base)
                 ->whereDoesntHave('productVendors')
                 ->whereDoesntHave('expenses')
                 ->whereDoesntHave('notaDinasDetails')
@@ -37,7 +45,7 @@ class VendorOverview extends BaseWidget
                     ->icon('heroicon-o-users')
                     ->color('primary'),
 
-                Stat::make('Profit Rp 0', Vendor::where('profit_amount', 0)->where('status', 'product')->count())
+                Stat::make('Profit Rp 0', (clone $base)->where('profit_amount', 0)->where('status', 'product')->count())
                     ->icon('heroicon-o-banknotes')
                     ->color('danger')
                     ->description('Vendor (Product) dengan keuntungan Rp 0'),
@@ -57,7 +65,7 @@ class VendorOverview extends BaseWidget
                     ->color('success')
                     ->description('Belum dipakai di mana pun'),
 
-                Stat::make('Status Master', Vendor::where('is_master', true)->count())
+                Stat::make('Status Master', (clone $base)->where('is_master', true)->count())
                     ->icon('heroicon-o-check-badge')
                     ->color('info')
                     ->description('Vendor dengan status Master'),

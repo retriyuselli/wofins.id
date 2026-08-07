@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Piutangs\Widgets;
 
 use App\Enums\StatusPiutang;
 use App\Models\Piutang;
+use App\Support\UserVisibility;
 use Filament\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -21,7 +22,7 @@ class PiutangJatuhTempoWidget extends BaseWidget
     {
         return $table
             ->query(
-                Piutang::query()
+                UserVisibility::constrainOwnedQuery(Piutang::query(), 'dibuat_oleh')
                     ->whereIn('status', [
                         StatusPiutang::AKTIF,
                         StatusPiutang::DIBAYAR_SEBAGIAN,

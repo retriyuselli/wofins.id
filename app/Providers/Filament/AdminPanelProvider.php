@@ -5,6 +5,8 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\ProjectDashboard;
 use App\Http\Middleware\RedirectUnauthenticatedToAppUrl;
 use App\Models\Company;
+use App\Support\PricingPlans;
+use App\Support\ProFeatures;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use CmsMulti\FilamentClearCache\FilamentClearCachePlugin;
 use Filament\Enums\GlobalSearchPosition;
@@ -103,8 +105,14 @@ class AdminPanelProvider extends PanelProvider
                 FilamentShieldPlugin::make()
                     ->navigationLabel('Role')
                     ->navigationGroup('SDM')
-                    ->globallySearchable(false),
+                    ->globallySearchable(false)
+                    // Menu Role: digating role_management (saat ini tidak di paket standar)
+                    ->registerNavigation(fn (): bool => ProFeatures::allows(PricingPlans::FEATURE_ROLE_MANAGEMENT)),
                 FilamentClearCachePlugin::make(),
-            ]);
+            ])
+            ->renderHook(
+                'panels::topbar.end',
+                fn (): string => view('filament.hooks.subscription-plan-badge')->render(),
+            );
     }
 }

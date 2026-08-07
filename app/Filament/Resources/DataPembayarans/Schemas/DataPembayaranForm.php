@@ -17,7 +17,11 @@ class DataPembayaranForm
         return $schema
             ->components([
                 Select::make('order_id')
-                    ->relationship('order', 'name')
+                    ->relationship(
+                        'order',
+                        'name',
+                        fn ($query) => \App\Support\UserVisibility::constrainOrdersQuery($query)
+                    )
                     ->searchable()
                     ->disabled()
                     ->preload()

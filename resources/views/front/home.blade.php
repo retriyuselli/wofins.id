@@ -3,10 +3,7 @@
 @section('title', 'WOFINS — Wedding Organizer Financial Information System')
 
 @push('styles')
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
+<style>
         :root {
             --wf-navy: #0b1f3a;
             --wf-navy-deep: #071526;
@@ -977,10 +974,10 @@
                             “Dengan WOFINS, proyek dan keuangan kami jauh lebih rapi. Absensi dan payroll juga tidak lagi dikelola terpisah-pisah.”
                         </p>
                         <footer class="mt-6 flex items-center gap-3">
-                            <img src="{{ asset('images/placeholder_avatar.png') }}" alt="Nila Anggraini" class="w-12 h-12 rounded-full object-cover border-2 border-[var(--wf-gold)]">
+                            <img src="{{ asset('images/placeholder_avatar.png') }}" alt="Rama Dhona Utama" class="w-12 h-12 rounded-full object-cover border-2 border-[var(--wf-gold)]" width="48" height="48" loading="lazy" decoding="async">
                             <div>
-                                <p class="font-bold text-white">Nila Anggraini</p>
-                                <p class="text-sm text-white/70">Owner Wedding Organizer</p>
+                                <p class="font-bold text-white">Rama Dhona Utama</p>
+                                <p class="text-sm text-white/70">Makna Wedding & Event Planner</p>
                             </div>
                         </footer>
                     </blockquote>

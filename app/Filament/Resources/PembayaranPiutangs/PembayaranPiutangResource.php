@@ -10,7 +10,7 @@ use App\Filament\Resources\PembayaranPiutangs\Schemas\PembayaranPiutangForm;
 use App\Filament\Resources\PembayaranPiutangs\Tables\PembayaranPiutangsTable;
 use App\Models\PembayaranPiutang;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -18,7 +18,7 @@ use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Cache;
 
-class PembayaranPiutangResource extends Resource
+class PembayaranPiutangResource extends BaseResource
 {
     protected static ?string $model = PembayaranPiutang::class;
 
@@ -46,12 +46,14 @@ class PembayaranPiutangResource extends Resource
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        return parent::getEloquentQuery()
+        $query = parent::getEloquentQuery()
             ->with([
                 'piutang:id,nomor_piutang,nama_debitur,total_piutang,sudah_dibayar,sisa_piutang',
                 'paymentMethod:id,name',
                 'dikonfirmasiOleh:id,name',
             ]);
+
+        return \App\Support\UserVisibility::constrainViaTeamPiutangs($query);
     }
 
     public static function infolist(Schema $schema): Schema
@@ -187,12 +189,12 @@ class PembayaranPiutangResource extends Resource
 
     private static function getCachedNavigationBadgeCount(): int
     {
-        $modelClass = static::getModel();
+        $scope = \App\Support\UserVisibility::cacheScopeKey();
 
         return Cache::remember(
-            'nav:pembayaran_piutangs:pending_count',
+            "nav:pembayaran_piutangs:pending_count:{$scope}",
             60,
-            fn (): int => (int) $modelClass::where('status', 'pending')->count()
+            fn (): int => (int) static::getEloquentQuery()->where('status', 'pending')->count()
         );
     }
 

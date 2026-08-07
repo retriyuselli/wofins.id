@@ -16,6 +16,7 @@ class Product extends Model
     use HasFactory, SoftDeletes, LogsActivity;
 
     protected $fillable = [
+        'created_by',
         'name',
         'slug',
         'category_id',
@@ -103,6 +104,11 @@ class Product extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function lastEditedBy()

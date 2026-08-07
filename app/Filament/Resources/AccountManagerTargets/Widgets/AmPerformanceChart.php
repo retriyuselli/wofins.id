@@ -4,6 +4,7 @@ namespace App\Filament\Resources\AccountManagerTargets\Widgets;
 
 use App\Models\AccountManagerTarget;
 use App\Models\User;
+use App\Support\UserVisibility;
 use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\Auth;
@@ -48,7 +49,7 @@ class AmPerformanceChart extends ChartWidget
             $selectedUserId = $user->id;
         }
 
-        $query = AccountManagerTarget::query()
+        $query = UserVisibility::constrainOwnedQuery(AccountManagerTarget::query(), 'user_id')
             ->where('year', $selectedYear);
 
         $name = 'All Account Managers';
@@ -94,7 +95,7 @@ class AmPerformanceChart extends ChartWidget
 
         // If specific user is selected, show Target vs Achievement for that user
         if ($selectedUserId !== 'all') {
-            $query = AccountManagerTarget::query()
+            $query = UserVisibility::constrainOwnedQuery(AccountManagerTarget::query(), 'user_id')
                 ->where('year', $selectedYear)
                 ->where('user_id', $selectedUserId);
 
@@ -138,7 +139,7 @@ class AmPerformanceChart extends ChartWidget
         // Logic for ALL users: Show Total Target + Individual AM Achievements
 
         // 1. Get Total Target (Sum of all active AMs)
-        $targetQuery = AccountManagerTarget::query()
+        $targetQuery = UserVisibility::constrainOwnedQuery(AccountManagerTarget::query(), 'user_id')
             ->where('year', $selectedYear)
             ->whereHas('user', function ($q) {
                 $q->whereNull('last_working_date')
@@ -169,7 +170,8 @@ class AmPerformanceChart extends ChartWidget
         ];
 
         // 2. Get Achievement per User
-        $userAchievements = AccountManagerTarget::with('user')
+        $userAchievements = UserVisibility::constrainOwnedQuery(AccountManagerTarget::query(), 'user_id')
+            ->with('user')
             ->where('year', $selectedYear)
             ->whereHas('user', function ($q) {
                 $q->whereNull('last_working_date')

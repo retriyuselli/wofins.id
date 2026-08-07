@@ -3,6 +3,9 @@
 namespace App\Filament\Resources\ProspectApps\Schemas;
 
 use App\Enums\ProspectAppStatus;
+use App\Models\ProspectApp;
+use App\Models\User;
+use App\Support\PricingPlans;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\RichEditor;
@@ -22,9 +25,25 @@ class ProspectAppForm
         return $schema
             ->components([
                 Section::make('Informasi Kontak')
-                    ->description('Masukkan detail kontak pelamar')
+                    ->description('Detail kontak calon pelanggan')
                     ->icon('heroicon-o-user')
                     ->schema([
+                        Select::make('user_id')
+                            ->label('Akun User')
+                            ->relationship(
+                            'user',
+                            'email',
+                            fn (\Illuminate\Database\Eloquent\Builder $query) => \App\Support\UserVisibility::constrainUsersQuery($query)
+                        )
+                            ->getOptionLabelFromRecordUsing(
+                                fn (User $record): string => "{$record->name} ({$record->email})"
+                            )
+                            ->searchable(['name', 'email'])
+                            ->preload()
+                            ->nullable()
+                            ->helperText('Opsional — tautkan ke akun login. Aktivasi role tetap lewat Users → Approve.')
+                            ->columnSpanFull(),
+
                         TextInput::make('full_name')
                             ->label('Nama Lengkap')
                             ->required()
@@ -45,8 +64,7 @@ class ProspectAppForm
                             ->tel()
                             ->required()
                             ->maxLength(20)
-                            ->placeholder('contoh: +6281234567890')
-                            ->prefix('+62'),
+                            ->placeholder('contoh: 081234567890'),
 
                         TextInput::make('position')
                             ->label('Posisi Pekerjaan')
@@ -56,7 +74,7 @@ class ProspectAppForm
                     ->columns(2),
 
                 Section::make('Informasi Perusahaan')
-                    ->description('Masukkan detail perusahaan pelamar')
+                    ->description('Data perusahaan calon (tersimpan di prospect_apps, bukan Company sistem)')
                     ->icon('heroicon-o-building-office-2')
                     ->schema([
                         TextInput::make('company_name')
@@ -66,12 +84,12 @@ class ProspectAppForm
                             ->placeholder('contoh: Acme Corp'),
 
                         Select::make('industry_id')
-                            ->label('Industri')
+                            ->label('Departemen')
                             ->relationship('industry', 'industry_name')
                             ->required()
                             ->searchable()
                             ->preload()
-                            ->placeholder('Pilih industri'),
+                            ->placeholder('Pilih departemen'),
 
                         TextInput::make('name_of_website')
                             ->label('Website/Domain')
@@ -79,53 +97,45 @@ class ProspectAppForm
                             ->placeholder('contoh: www.example.com'),
 
                         Select::make('user_size')
-                            ->label('Ukuran Perusahaan')
-                            ->options([
-                                '1-10' => '1-10 karyawan',
-                                '11-50' => '11-50 karyawan',
-                                '50+' => '50+ karyawan',
-                            ])
-                            ->placeholder('Pilih ukuran perusahaan'),
+                            ->label('Jumlah Karyawan')
+                            ->options(fn (Get $get): array => ProspectApp::userSizeOptions($get('user_size')))
+                            ->required()
+                            ->placeholder('Pilih jumlah karyawan'),
                     ])
                     ->columns(2),
 
-                Section::make('Detail Aplikasi')
-                    ->description('Detail aplikasi dan layanan yang diinginkan')
+                Section::make('Detail Pendaftaran')
+                    ->description('Minat paket & status lead — tidak mengubah paket langganan Company')
                     ->icon('heroicon-o-clipboard-document-list')
                     ->schema([
                         Textarea::make('reason_for_interest')
-                            ->label('Alasan Ketertarikan')
+                            ->label('Kebutuhan & Tantangan Bisnis')
                             ->rows(3)
+                            ->required()
                             ->maxLength(1000)
-                            ->placeholder('Jelaskan alasan Anda tertarik pada layanan kami'),
+                            ->placeholder('Jelaskan kebutuhan atau tantangan bisnis calon'),
 
                         Select::make('status')
                             ->label('Status Aplikasi')
                             ->options(ProspectAppStatus::class)
                             ->default(ProspectAppStatus::Pending)
-                            ->required(),
+                            ->required()
+                            ->helperText('Status lead saja. Menandai Disetujui di sini tidak mengaktifkan akun — gunakan Users → Approve.'),
 
                         Select::make('service')
-                            ->label('Paket Layanan')
-                            ->options([
-                                'hastana'     => 'Paket Anggota Hastana - Rp 8.500.000 / 2 Tahun',
-                                'non_hastana' => 'Paket Non Hastana - Rp 10.000.000 / 2 Tahun',
-                                'lain_lain'   => 'Lain-lain (Custom)',
-                            ])
-                            ->reactive()
-                            ->live(onBlur: true)
+                            ->label('Minat Paket Layanan')
+                            ->options(fn (Get $get): array => PricingPlans::filamentOptions($get('service')))
+                            ->required()
+                            ->live()
                             ->afterStateUpdated(function (?string $state, Set $set) {
-                                $mapping = [
-                                    'hastana'     => 8500000,
-                                    'non_hastana' => 10000000,
-                                ];
-                                $set('harga', $mapping[$state] ?? null);
-                                $set('sisa_bayar', $mapping[$state] ?? null);
+                                $amount = PricingPlans::annualAmount($state);
+                                $set('harga', $amount);
+                                $set('sisa_bayar', $amount);
                                 $set('bayar', null);
                             })
                             ->helperText(fn (Get $get): string => $get('service') === 'lain_lain'
-                                ? 'Paket custom — isi anggaran secara manual'
-                                : 'Pilih paket layanan untuk mengisi anggaran otomatis'),
+                                ? 'Custom — isi anggaran manual. Ini minat sales, bukan paket aktif di Company.'
+                                : 'Sama dengan halaman Harga. Minat calon saja — paket aktif diatur di Admin → Company.'),
                     ])
                     ->columns(1),
 
@@ -137,18 +147,21 @@ class ProspectAppForm
                             ->mask(RawJs::make('$money($input)'))
                             ->stripCharacters(',')
                             ->dehydrateStateUsing(fn ($state) => (int) preg_replace('/[^\d]/', '', (string) $state))
-                            ->readOnly(fn (Get $get): bool => $get('service') !== 'lain_lain')
+                            ->readOnly(fn (Get $get): bool => $get('service') !== 'lain_lain'
+                                && PricingPlans::annualAmount($get('service')) !== null)
                             ->live(onBlur: true)
                             ->afterStateUpdated(function ($state, $get, Set $set) {
-                                if ($get('service') === 'lain_lain') {
+                                if ($get('service') === 'lain_lain'
+                                    || PricingPlans::annualAmount($get('service')) === null) {
                                     $harga = (int) preg_replace('/[^\d]/', '', (string) $state);
                                     $bayar = (int) preg_replace('/[^\d]/', '', (string) $get('bayar'));
                                     $set('sisa_bayar', max(0, $harga - $bayar));
                                 }
                             })
                             ->helperText(fn (Get $get): string => $get('service') === 'lain_lain'
+                                || PricingPlans::annualAmount($get('service')) === null
                                 ? 'Masukkan anggaran secara manual'
-                                : 'Anggaran otomatis terisi saat memilih paket'),
+                                : 'Anggaran tahunan otomatis dari paket Harga'),
 
                         DatePicker::make('tgl_bayar')
                             ->label('Tanggal Pembayaran')
@@ -164,17 +177,11 @@ class ProspectAppForm
                             ->helperText('Jika ada pembayaran, isi nominalnya')
                             ->live(onBlur: true)
                             ->afterStateUpdated(function ($state, $get, $set) {
-                                // Get harga from service mapping first to ensure accuracy
                                 $service = $get('service');
-                                $mapping = [
-                                    'hastana' => 8500000,
-                                    'non_hastana' => 10000000,
-                                ];
-                                
-                                // Use mapped price if available, otherwise fallback to harga field
-                                $harga = $mapping[$service] ?? (int) preg_replace('/[^\d]/', '', (string) $get('harga'));
+                                $harga = PricingPlans::annualAmount($service)
+                                    ?? (int) preg_replace('/[^\d]/', '', (string) $get('harga'));
                                 $bayar = (int) preg_replace('/[^\d]/', '', (string) $state);
-                                
+
                                 $set('sisa_bayar', max(0, $harga - $bayar));
                             }),
 

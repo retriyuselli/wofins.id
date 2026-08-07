@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Users\Widgets;
 
 use App\Models\User;
+use App\Support\UserVisibility;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Facades\Storage;
@@ -18,10 +19,7 @@ class AccountManagerStats extends BaseWidget
 
     protected function getStats(): array
     {
-        // Ambil semua pengguna yang memiliki peran 'Account Manager'
-        // Pastikan Anda memiliki peran 'Account Manager' di database Anda
-        // dan pengguna telah di-assign ke peran tersebut.
-        $accountManagers = User::role('Account Manager')
+        $accountManagers = UserVisibility::constrainUsersQuery(User::role('Account Manager'))
             ->where(function ($query) {
                 // Kondisi untuk menyertakan AM yang masih aktif:
                 // 1. Tidak memiliki record employee (diasumsikan aktif)

@@ -5,31 +5,35 @@ namespace App\Filament\Resources\Piutangs\Widgets;
 use App\Enums\StatusPiutang;
 use App\Models\PembayaranPiutang;
 use App\Models\Piutang;
+use App\Support\UserVisibility;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Number;
 
 class PiutangOverviewWidget extends BaseWidget
 {
+    protected static ?int $sort = 1;
+
     protected function getStats(): array
     {
-        // Total Piutang
-        $totalPiutang = Piutang::sum('total_piutang');
-        $totalSudahDibayar = Piutang::sum('sudah_dibayar');
-        $totalSisaPiutang = Piutang::sum('sisa_piutang');
+        $base = UserVisibility::constrainOwnedQuery(Piutang::query(), 'dibuat_oleh');
 
-        // Jumlah Piutang per Status
-        $piutangAktif = Piutang::where('status', StatusPiutang::AKTIF)->count();
-        $piutangLunas = Piutang::where('status', StatusPiutang::LUNAS)->count();
-        $piutangJatuhTempo = Piutang::where('status', StatusPiutang::JATUH_TEMPO)->count();
+        $totalPiutang = (clone $base)->sum('total_piutang');
+        $totalSudahDibayar = (clone $base)->sum('sudah_dibayar');
+        $totalSisaPiutang = (clone $base)->sum('sisa_piutang');
 
-        // Piutang Bulan Ini
-        $piutangBulanIni = Piutang::whereMonth('created_at', now()->month)
+        $piutangAktif = (clone $base)->where('status', StatusPiutang::AKTIF)->count();
+        $piutangLunas = (clone $base)->where('status', StatusPiutang::LUNAS)->count();
+        $piutangJatuhTempo = (clone $base)->where('status', StatusPiutang::JATUH_TEMPO)->count();
+
+        $piutangBulanIni = (clone $base)->whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
             ->sum('total_piutang');
 
-        // Pembayaran Bulan Ini
-        $pembayaranBulanIni = PembayaranPiutang::whereMonth('tanggal_pembayaran', now()->month)
+        $piutangIds = (clone $base)->pluck('id');
+        $pembayaranBulanIni = PembayaranPiutang::query()
+            ->whereIn('piutang_id', $piutangIds)
+            ->whereMonth('tanggal_pembayaran', now()->month)
             ->whereYear('tanggal_pembayaran', now()->year)
             ->where('status', 'dikonfirmasi')
             ->sum('total_pembayaran');
@@ -40,38 +44,24 @@ class PiutangOverviewWidget extends BaseWidget
                 ->descriptionIcon('heroicon-m-currency-dollar')
                 ->color('info')
                 ->chart([
-                    Piutang::whereDate('created_at', '>=', now()->subDays(7))->sum('total_piutang'),
-                    Piutang::whereDate('created_at', '>=', now()->subDays(6))->sum('total_piutang'),
-                    Piutang::whereDate('created_at', '>=', now()->subDays(5))->sum('total_piutang'),
-                    Piutang::whereDate('created_at', '>=', now()->subDays(4))->sum('total_piutang'),
-                    Piutang::whereDate('created_at', '>=', now()->subDays(3))->sum('total_piutang'),
-                    Piutang::whereDate('created_at', '>=', now()->subDays(2))->sum('total_piutang'),
-                    Piutang::whereDate('created_at', '>=', now()->subDays(1))->sum('total_piutang'),
+                    (clone $base)->whereDate('created_at', '>=', now()->subDays(7))->sum('total_piutang'),
+                    (clone $base)->whereDate('created_at', '>=', now()->subDays(6))->sum('total_piutang'),
+                    (clone $base)->whereDate('created_at', '>=', now()->subDays(5))->sum('total_piutang'),
+                    (clone $base)->whereDate('created_at', '>=', now()->subDays(4))->sum('total_piutang'),
+                    (clone $base)->whereDate('created_at', '>=', now()->subDays(3))->sum('total_piutang'),
+                    (clone $base)->whereDate('created_at', '>=', now()->subDays(2))->sum('total_piutang'),
+                    (clone $base)->whereDate('created_at', '>=', now()->subDays(1))->sum('total_piutang'),
                 ]),
 
             Stat::make('Sisa Piutang', ''.Number::format($totalSisaPiutang, 0))
                 ->description('Yang belum dibayar')
                 ->descriptionIcon('heroicon-m-exclamation-triangle')
-                ->color('warning')
-                ->chart([
-                    $totalSisaPiutang - ($totalSisaPiutang * 0.1),
-                    $totalSisaPiutang - ($totalSisaPiutang * 0.08),
-                    $totalSisaPiutang - ($totalSisaPiutang * 0.05),
-                    $totalSisaPiutang - ($totalSisaPiutang * 0.03),
-                    $totalSisaPiutang,
-                ]),
+                ->color('warning'),
 
             Stat::make('Sudah Dibayar', ''.Number::format($totalSudahDibayar, 0))
                 ->description('Total pembayaran diterima')
                 ->descriptionIcon('heroicon-m-check-circle')
-                ->color('success')
-                ->chart([
-                    $totalSudahDibayar * 0.7,
-                    $totalSudahDibayar * 0.8,
-                    $totalSudahDibayar * 0.85,
-                    $totalSudahDibayar * 0.9,
-                    $totalSudahDibayar,
-                ]),
+                ->color('success'),
 
             Stat::make('Piutang Aktif', $piutangAktif)
                 ->description('Masih dalam periode')
@@ -101,6 +91,4 @@ class PiutangOverviewWidget extends BaseWidget
                 ->color($totalPiutang > 0 && ($totalSudahDibayar / $totalPiutang) > 0.8 ? 'success' : 'warning'),
         ];
     }
-
-    protected static ?int $sort = 1;
 }

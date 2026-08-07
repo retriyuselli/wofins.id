@@ -8,6 +8,7 @@ use App\Models\ExpenseOps;
 use App\Models\PaymentMethod;
 use App\Models\PendapatanLain;
 use App\Models\PengeluaranLain;
+use App\Support\UserVisibility;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
@@ -143,13 +144,14 @@ class PaymentMethodStatsWidget extends BaseWidget
         $month = $this->pageFilters['month'];
         $showDetails = $this->pageFilters['show_details'];
 
-        $paymentMethods = PaymentMethod::with([
-            'payments' => fn ($q) => $q->whereNull('deleted_at'),
-            'pendapatanLains' => fn ($q) => $q->whereNull('deleted_at'),
-            'expenses' => fn ($q) => $q->whereNull('deleted_at'),
-            'expenseOps' => fn ($q) => $q->whereNull('deleted_at'),
-            'pengeluaranLains' => fn ($q) => $q->whereNull('deleted_at'),
-        ])->get();
+        $paymentMethods = UserVisibility::constrainPlatformOnlyQuery(PaymentMethod::query())
+            ->with([
+                'payments' => fn ($q) => $q->whereNull('deleted_at'),
+                'pendapatanLains' => fn ($q) => $q->whereNull('deleted_at'),
+                'expenses' => fn ($q) => $q->whereNull('deleted_at'),
+                'expenseOps' => fn ($q) => $q->whereNull('deleted_at'),
+                'pengeluaranLains' => fn ($q) => $q->whereNull('deleted_at'),
+            ])->get();
 
         // Pre-calculate all saldos to prevent repeated calculations
         $paymentMethods->each(function ($method) {
@@ -163,31 +165,36 @@ class PaymentMethodStatsWidget extends BaseWidget
             return [$method->id => $method->saldo];
         });
 
-        // Perhitungan summary langsung dari seluruh tabel
+        // Summary: pembayaran/expense lewat order tim; ops & lain-lain = platform-only
         $totalMasukSemua = (
-            DataPembayaran::whereYear('tgl_bayar', $year)
+            UserVisibility::constrainViaTeamOrders(DataPembayaran::query())
+                ->whereYear('tgl_bayar', $year)
                 ->whereMonth('tgl_bayar', $month)
                 ->whereNull('deleted_at')
                 ->sum('nominal')
         ) + (
-            PendapatanLain::whereYear('tgl_bayar', $year)
+            UserVisibility::constrainPlatformOnlyQuery(PendapatanLain::query())
+                ->whereYear('tgl_bayar', $year)
                 ->whereMonth('tgl_bayar', $month)
                 ->whereNull('deleted_at')
                 ->sum('nominal')
         );
 
         $totalKeluarSemua = (
-            Expense::whereYear('date_expense', $year)
+            UserVisibility::constrainViaTeamOrders(Expense::query())
+                ->whereYear('date_expense', $year)
                 ->whereMonth('date_expense', $month)
                 ->whereNull('deleted_at')
                 ->sum('amount')
         ) + (
-            ExpenseOps::whereYear('date_expense', $year)
+            UserVisibility::constrainExpenseOpsQuery(ExpenseOps::query())
+                ->whereYear('date_expense', $year)
                 ->whereMonth('date_expense', $month)
                 ->whereNull('deleted_at')
                 ->sum('amount')
         ) + (
-            PengeluaranLain::whereYear('date_expense', $year)
+            UserVisibility::constrainPlatformOnlyQuery(PengeluaranLain::query())
+                ->whereYear('date_expense', $year)
                 ->whereMonth('date_expense', $month)
                 ->whereNull('deleted_at')
                 ->sum('amount')

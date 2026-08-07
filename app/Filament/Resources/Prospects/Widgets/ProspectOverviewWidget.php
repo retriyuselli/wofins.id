@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Prospects\Widgets;
 
 use App\Filament\Resources\Prospects\ProspectResource;
 use App\Models\Prospect;
+use App\Support\UserVisibility;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -14,7 +15,7 @@ class ProspectOverviewWidget extends BaseWidget
 
     protected function getStats(): array
     {
-        $baseQuery = Prospect::query()->withTrashed();
+        $baseQuery = UserVisibility::constrainOwnedQuery(Prospect::query()->withTrashed(), 'user_id');
 
         $monthProspects = (clone $baseQuery)->whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)

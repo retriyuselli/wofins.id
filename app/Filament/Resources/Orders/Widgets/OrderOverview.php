@@ -9,6 +9,7 @@ use App\Models\Expense;
 use App\Models\ExpenseOps;
 use App\Models\Order;
 use App\Support\Rupiah;
+use App\Support\UserVisibility;
 use BackedEnum;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
@@ -46,44 +47,43 @@ class OrderOverview extends BaseWidget
     public function refreshMetrics(): void
     {
         $currentMonth = Carbon::now();
+        $orders = UserVisibility::constrainOrdersQuery(Order::query());
 
         // Query tunggal untuk mendapatkan semua metrik bulanan
-        $monthlyData = Order::whereMonth('closing_date', $currentMonth->month)
+        $monthlyData = (clone $orders)->whereMonth('closing_date', $currentMonth->month)
             ->whereYear('closing_date', $currentMonth->year)
             ->select(
                 DB::raw('COUNT(*) as total_projects'),
                 DB::raw('SUM(grand_total) as monthly_revenue'),
-                DB::raw('COUNT(CASE WHEN status = "'.OrderStatus::Processing->value.'" THEN 1 END) as processing_count') // Ini menghitung order dengan status "processing"
+                DB::raw('COUNT(CASE WHEN status = "'.OrderStatus::Processing->value.'" THEN 1 END) as processing_count')
             )
             ->first();
 
         $this->metrics['projects'] = $monthlyData->total_projects ?? 0;
         $this->metrics['revenue'] = $monthlyData->monthly_revenue ?? 0;
-        $this->metrics['processing'] = $monthlyData->processing_count ?? 0; // Menyimpan hasil hitungan
-        $this->metrics['documents'] = Order::whereNotNull('doc_kontrak')->count();
-        $this->metrics['pending_documents'] = Order::whereNull('doc_kontrak')->count();
-        $this->metrics['agreement_uploaded'] = Order::whereNotNull('agreement_product')->count();
-        $this->metrics['agreement_pending'] = Order::whereNull('agreement_product')->count();
+        $this->metrics['processing'] = $monthlyData->processing_count ?? 0;
+        $this->metrics['documents'] = (clone $orders)->whereNotNull('doc_kontrak')->count();
+        $this->metrics['pending_documents'] = (clone $orders)->whereNull('doc_kontrak')->count();
+        $this->metrics['agreement_uploaded'] = (clone $orders)->whereNotNull('agreement_product')->count();
+        $this->metrics['agreement_pending'] = (clone $orders)->whereNull('agreement_product')->count();
 
-        // Dapatkan pembayaran untuk order dengan status "processing"
-        $this->metrics['payments'] = DataPembayaran::whereIn('order_id', function ($query) {
-            $query->select('id')
-                ->from('orders')
-                ->where('status', OrderStatus::Processing->value);
-        })->sum('nominal');
+        $processingOrderIds = (clone $orders)
+            ->where('status', OrderStatus::Processing->value)
+            ->pluck('id');
 
-        // Hitung total pendapatan untuk tahun ini
-        $this->metrics['total_revenue'] = Order::whereYear('closing_date', $currentMonth->year)
+        $this->metrics['payments'] = DataPembayaran::query()
+            ->whereIn('order_id', $processingOrderIds)
+            ->sum('nominal');
+
+        $this->metrics['total_revenue'] = (clone $orders)->whereYear('closing_date', $currentMonth->year)
             ->sum('grand_total');
 
-        $this->metrics['total_expenseOps'] = ExpenseOps::sum('amount');
+        $this->metrics['total_expenseOps'] = UserVisibility::constrainExpenseOpsQuery(ExpenseOps::query())
+            ->sum('amount');
 
-        // Dapatkan pengeluaran untuk order dengan status "processing"
-        $this->metrics['total_expense'] = Expense::whereIn('order_id', function ($query) {
-            $query->select('id')
-                ->from('orders')
-                ->where('status', OrderStatus::Processing->value);
-        })->sum('amount');
+        $this->metrics['total_expense'] = Expense::query()
+            ->whereIn('order_id', $processingOrderIds)
+            ->sum('amount');
     }
 
     /**
@@ -106,8 +106,10 @@ class OrderOverview extends BaseWidget
             $dateKeys[] = $startDate->copy()->addDays($i)->toDateString();
         }
 
+        $orders = UserVisibility::constrainOrdersQuery(Order::query());
+
         if ($metric === 'projects') {
-            $rows = Order::where('created_at', '>=', $startDate)
+            $rows = (clone $orders)->where('created_at', '>=', $startDate)
                 ->selectRaw('DATE(created_at) as d, COUNT(*) as c')
                 ->groupBy('d')
                 ->orderBy('d', 'asc')
@@ -119,7 +121,7 @@ class OrderOverview extends BaseWidget
         }
 
         if ($metric === 'revenue') {
-            $rows = Order::where('created_at', '>=', $startDate)
+            $rows = (clone $orders)->where('created_at', '>=', $startDate)
                 ->selectRaw('DATE(created_at) as d, SUM(grand_total) as s')
                 ->groupBy('d')
                 ->orderBy('d', 'asc')
@@ -139,7 +141,9 @@ class OrderOverview extends BaseWidget
         $projectTrend = $this->calculateTrend('projects');
         $revenueTrend = $this->calculateTrend('revenue');
         $statusTarget = OrderStatus::Processing; // Ganti dengan OrderStatus::DONE jika ingin status 'done'
-        $targetOrderIds = Order::where('status', $statusTarget)->pluck('id');
+        $targetOrderIds = UserVisibility::constrainOrdersQuery(Order::query())
+            ->where('status', $statusTarget)
+            ->pluck('id');
         $totalPembayaranUntukTargetOrder = DataPembayaran::whereIn('order_id', $targetOrderIds)
             ->sum('nominal');
         $totalPengeluaranUntukTargetOrder = Expense::whereIn('order_id', $targetOrderIds)
@@ -208,9 +212,13 @@ class OrderOverview extends BaseWidget
                 ''.Number::format($sumUangDiterimaUntukTargetOrder, precision: 0, locale: 'id')
             )
                 ->description($descriptionText)
-                ->descriptionIcon('heroicon-m-banknotes') // Ganti ikon jika perlu
-                ->color('primary') // Ganti warna jika perlu (success, warning, danger, etc.)
-                ->url(NetCashFlowReport::getUrl(['status' => $statusTarget instanceof BackedEnum ? $statusTarget->value : $statusTarget])),
+                ->descriptionIcon('heroicon-m-banknotes')
+                ->color('primary')
+                ->url(
+                    \App\Support\ProFeatures::allows(\App\Support\PricingPlans::FEATURE_ADVANCED_REPORTS)
+                        ? NetCashFlowReport::getUrl(['status' => $statusTarget instanceof BackedEnum ? $statusTarget->value : $statusTarget])
+                        : null
+                ),
         ];
     }
 }

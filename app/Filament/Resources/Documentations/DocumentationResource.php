@@ -6,13 +6,13 @@ use App\Filament\Resources\Documentations\Pages;
 use App\Filament\Resources\Documentations\Schemas\DocumentationForm;
 use App\Filament\Resources\Documentations\Tables\DocumentationsTable;
 use App\Models\Documentation;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use UnitEnum;
 use BackedEnum;
 
-class DocumentationResource extends Resource
+class DocumentationResource extends BaseResource
 {
     protected static ?string $model = Documentation::class;
 

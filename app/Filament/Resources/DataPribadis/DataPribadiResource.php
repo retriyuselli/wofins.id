@@ -8,13 +8,13 @@ use App\Filament\Resources\DataPribadis\Pages\ListDataPribadis;
 use App\Filament\Resources\DataPribadis\Schemas\DataPribadiForm;
 use App\Filament\Resources\DataPribadis\Tables\DataPribadisTable;
 use App\Models\DataPribadi;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class DataPribadiResource extends Resource
+class DataPribadiResource extends BaseResource
 {
     protected static ?string $model = DataPribadi::class;
 
@@ -56,15 +56,26 @@ class DataPribadiResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
+        $query = parent::getEloquentQuery()
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+
+        // Tabel tidak punya user_id — non–super_admin tidak melihat data tim orang lain.
+        if (! \App\Support\UserVisibility::actorIsSuperAdmin()) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query;
     }
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::count();
+        if (! \App\Support\UserVisibility::actorIsSuperAdmin()) {
+            return null;
+        }
+
+        return (string) static::getEloquentQuery()->count();
     }
 
     public static function getNavigationBadgeColor(): string|array|null

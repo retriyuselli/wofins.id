@@ -30,6 +30,10 @@ class AccountManagerWidget extends BaseWidget
 
     public static function canView(): bool
     {
+        if (! \App\Support\UserVisibility::actorIsSuperAdmin()) {
+            return false;
+        }
+
         if (static::canViewShield()) {
             return true;
         }
@@ -45,13 +49,14 @@ class AccountManagerWidget extends BaseWidget
         return $table
             // Start with the base query - only get active account managers
             ->query(
-                User::query()
-                    ->withCount(['orders as am_count']) // Menghitung jumlah order dan menamakannya am_count
-                    ->role('Account Manager')
-                    // Add a condition to ensure they have an active employee record
-                    ->whereHas('employees', function (Builder $query) { // Ensure they have an employee record
-                        $query->whereDate('date_of_join', '<=', now()); // And have joined on or before today
-                    })
+                \App\Support\UserVisibility::constrainUsersQuery(
+                    User::query()
+                        ->withCount(['orders as am_count'])
+                        ->role('Account Manager')
+                        ->whereHas('employees', function (Builder $query) {
+                            $query->whereDate('date_of_join', '<=', now());
+                        })
+                )
             )
             // Define what information we want to show
             ->columns([

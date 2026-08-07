@@ -38,7 +38,11 @@ class NotaDinasDetailForm
                             ->schema([
                                 Select::make('nota_dinas_id')
                                     ->label('Nota Dinas')
-                                    ->relationship('notaDinas', 'no_nd', fn ($query) => $query->latest())
+                                    ->relationship(
+                                        'notaDinas',
+                                        'no_nd',
+                                        fn ($query) => \App\Support\UserVisibility::constrainNotaDinasQuery($query->latest())
+                                    )
                                     ->searchable()
                                     ->preload()
                                     ->required(),
@@ -179,7 +183,15 @@ class NotaDinasDetailForm
                         Grid::make(2)->schema([
                             Select::make('order_id')
                                 ->label('Event (Order)')
-                                ->relationship('order', 'name', fn ($query) => $query->whereIn('status', [OrderStatus::Processing, OrderStatus::Done]))
+                                ->relationship(
+                                    'order',
+                                    'name',
+                                    function ($query) {
+                                        \App\Support\UserVisibility::constrainOrdersQuery($query);
+
+                                        return $query->whereIn('status', [OrderStatus::Processing, OrderStatus::Done]);
+                                    }
+                                )
                                 ->searchable()
                                 ->preload()
                                 ->columnSpan('full')

@@ -12,14 +12,14 @@ use App\Filament\Resources\BankStatements\Schemas\BankStatementForm;
 use App\Filament\Resources\BankStatements\Tables\BankStatementsTable;
 use App\Filament\Resources\BankStatements\Widgets\BankStatementOverview;
 use App\Models\BankStatement;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 
-class BankStatementResource extends Resource
+class BankStatementResource extends BaseResource
 {
     protected static ?string $model = BankStatement::class;
 
@@ -95,6 +95,12 @@ class BankStatementResource extends Resource
         $user = Auth::user();
 
         if (! $user) {
+            return false;
+        }
+
+        // Plan gate via BaseResource::canViewAny (canAccess default = canViewAny).
+        // Di sini tetap cek permission eksplisit.
+        if (! static::canViewAny()) {
             return false;
         }
 

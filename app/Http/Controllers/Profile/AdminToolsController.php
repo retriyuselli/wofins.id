@@ -16,6 +16,7 @@ use App\Models\NotaDinasDetail;
 use App\Models\Order;
 use App\Models\Sop;
 use App\Models\User;
+use App\Support\UserVisibility;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 
@@ -23,9 +24,11 @@ class AdminToolsController extends Controller
 {
     public function index()
     {
+        $usersQuery = UserVisibility::constrainUsersQuery(User::query());
+
         return view('profile.admin-tools.index', [
-            'usersCount' => User::query()->count(),
-            'rolesCount' => Role::query()->count(),
+            'usersCount' => $usersQuery->count(),
+            'rolesCount' => UserVisibility::actorIsSuperAdmin() ? Role::query()->count() : 0,
             'companiesCount' => Company::query()->count(),
             'logosCount' => CompanyLogo::query()->count(),
             'sopsCount' => Sop::query()->count(),
@@ -42,9 +45,9 @@ class AdminToolsController extends Controller
     {
         $q = trim((string) $request->get('q', ''));
 
-        $usersQuery = User::query()
-            ->with('roles')
-            ->orderBy('name');
+        $usersQuery = UserVisibility::constrainUsersQuery(
+            User::query()->with('roles')->orderBy('name')
+        );
 
         if ($q !== '') {
             $usersQuery->where(function ($sub) use ($q) {

@@ -11,12 +11,12 @@ use App\Filament\Resources\LeaveRequests\Widgets\LeaveRequestChart;
 use App\Filament\Resources\LeaveRequests\Widgets\LeaveRequestOverview;
 use App\Filament\Resources\LeaveRequests\Widgets\LeaveTypeStats;
 use App\Models\LeaveRequest;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Cache;
 
-class LeaveRequestResource extends Resource
+class LeaveRequestResource extends BaseResource
 {
     protected static ?string $model = LeaveRequest::class;
 
@@ -88,12 +88,14 @@ class LeaveRequestResource extends Resource
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        return parent::getEloquentQuery()
-            ->with([
-                'user:id,name',
-                'leaveType:id,name',
-                'replacementEmployee:id,name',
-                'approver:id,name',
-            ]);
+        return \App\Support\UserVisibility::constrainOwnedQuery(
+            parent::getEloquentQuery()
+                ->with([
+                    'user:id,name',
+                    'leaveType:id,name',
+                    'replacementEmployee:id,name',
+                    'approver:id,name',
+                ])
+        );
     }
 }

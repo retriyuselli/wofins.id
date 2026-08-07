@@ -1,7 +1,9 @@
 @php
     $canManageLeaveRequests = $profileUser?->hasRole(['super_admin', 'admin', 'finance']) ?? false;
     $isSuperAdmin = $profileUser?->hasRole('super_admin') ?? false;
+    $isPengunjung = $profileUser?->hasRole('pengunjung') ?? false;
     $canAccessAdmin = $profileUser?->canAccessAdmin() ?? false;
+    $canSeeAdminTools = $isSuperAdmin || $isPengunjung;
     $avatarBg = '0b1f3a';
 @endphp
 
@@ -23,6 +25,9 @@
             <div class="min-w-0">
                 <div class="text-sm font-semibold text-white truncate">{{ $profileUser->name }}</div>
                 <div class="text-xs text-white/65 truncate">{{ $profileUser->email }}</div>
+                <div class="mt-1.5 text-[10px] font-semibold tracking-wide uppercase text-[var(--wf-gold-soft)] truncate">
+                    {{ $subscriptionPlanLabel ?? \App\Support\CompanySubscription::planLabel() }}
+                </div>
             </div>
         </div>
     </div>
@@ -38,7 +43,6 @@
             $scheduleActive = request()->routeIs('profile.schedule');
             $financialReportActive = request()->routeIs('profile.financial-report*');
             $editActive = request()->routeIs('profile.edit');
-            $showProBadge = $proFeatureLocked ?? \App\Support\ProFeatures::locked();
         @endphp
 
         <a href="{{ route('profile') }}"
@@ -50,39 +54,27 @@
         </a>
 
         <a href="{{ route('profile.absensi') }}"
-            class="wf-profile-nav-link {{ $absensiActive ? 'is-active' : '' }}"
-            title="{{ $showProBadge ? 'Pratinjau paket Pro' : '' }}">
+            class="wf-profile-nav-link {{ $absensiActive ? 'is-active' : '' }}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span>Absensi</span>
-            @if ($showProBadge)
-                <span class="wf-pro-badge">Pro</span>
-            @endif
         </a>
 
         <a href="{{ route('profile.compensation') }}"
-            class="wf-profile-nav-link {{ $compensationActive ? 'is-active' : '' }}"
-            title="{{ $showProBadge ? 'Pratinjau paket Pro' : '' }}">
+            class="wf-profile-nav-link {{ $compensationActive ? 'is-active' : '' }}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l-2 1m12 12V6l-2 1M5 6h14" />
             </svg>
             <span>Kompensasi & Cuti</span>
-            @if ($showProBadge)
-                <span class="wf-pro-badge">Pro</span>
-            @endif
         </a>
 
         <a href="{{ route('profile.schedule') }}"
-            class="wf-profile-nav-link {{ $scheduleActive ? 'is-active' : '' }}"
-            title="{{ $showProBadge ? 'Pratinjau paket Pro' : '' }}">
+            class="wf-profile-nav-link {{ $scheduleActive ? 'is-active' : '' }}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             <span>Jadwal & Riwayat</span>
-            @if ($showProBadge)
-                <span class="wf-pro-badge">Pro</span>
-            @endif
         </a>
 
         @if($isSuperAdmin)
@@ -126,7 +118,7 @@
         @endif
     </nav>
 
-    @if($isSuperAdmin)
+    @if($canSeeAdminTools)
         <div class="px-3 pb-3">
             <div class="my-3 border-t border-[var(--wf-line)]"></div>
             <div class="px-3 py-2 text-[10px] font-bold tracking-[0.14em] uppercase text-[var(--wf-gold)]">Admin Tools</div>

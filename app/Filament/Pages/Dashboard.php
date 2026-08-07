@@ -21,6 +21,9 @@ class Dashboard extends BaseDashboard
 
     protected ?string $heading = 'Welcome to WOFINS!';
 
+    /** Duplikat ProjectDashboard — sembunyikan dari menu. */
+    protected static bool $shouldRegisterNavigation = false;
+
     public function getWidgets(): array
     {
         return [

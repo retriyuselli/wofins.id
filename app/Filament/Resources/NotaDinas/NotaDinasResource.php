@@ -9,13 +9,13 @@ use App\Filament\Resources\NotaDinas\Pages\ViewNd;
 use App\Filament\Resources\NotaDinas\Schemas\NotaDinasForm;
 use App\Filament\Resources\NotaDinas\Tables\NotaDinasTable;
 use App\Models\NotaDinas;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class NotaDinasResource extends Resource
+class NotaDinasResource extends BaseResource
 {
     protected static ?string $model = NotaDinas::class;
 
@@ -41,7 +41,7 @@ class NotaDinasResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
+        $query = parent::getEloquentQuery()
             ->with([
                 'pengirim:id,name',
                 'penerima:id,name',
@@ -51,6 +51,8 @@ class NotaDinasResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+
+        return \App\Support\UserVisibility::constrainNotaDinasQuery($query);
     }
 
     public static function getRelations(): array
@@ -72,7 +74,7 @@ class NotaDinasResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return (string) static::getModel()::count();
+        return (string) static::getEloquentQuery()->count();
     }
 
     public static function getNavigationBadgeTooltip(): ?string

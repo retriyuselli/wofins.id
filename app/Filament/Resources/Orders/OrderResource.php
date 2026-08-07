@@ -11,15 +11,16 @@ use App\Filament\Resources\Orders\RelationManagers\ExpensesRelationManager;
 use App\Filament\Resources\Orders\Schemas\OrderForm;
 use App\Filament\Resources\Orders\Tables\OrdersTable;
 use App\Filament\Resources\Products\ProductResource;
+use App\Filament\Resources\BaseResource;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
+use App\Support\UserVisibility;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Filament\Resources\Resource;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
@@ -30,9 +31,8 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 
-class OrderResource extends Resource
+class OrderResource extends BaseResource
 {
     protected static ?string $model = Order::class;
 
@@ -48,13 +48,17 @@ class OrderResource extends Resource
 
     private static function getCachedNavigationBadgeCount(): int
     {
-        /** @var class-string<\Illuminate\Database\Eloquent\Model> $modelClass */
-        $modelClass = static::$model;
+        $scope = UserVisibility::cacheScopeKey();
 
         return Cache::remember(
-            'nav:orders:processing_count',
+            "nav:orders:processing_count:{$scope}",
             60,
-            fn (): int => (int) $modelClass::where('status', \App\Enums\OrderStatus::Processing->value)->count()
+            function (): int {
+                $query = static::getEloquentQuery()
+                    ->where('status', \App\Enums\OrderStatus::Processing->value);
+
+                return (int) $query->count();
+            }
         );
     }
 
@@ -100,39 +104,30 @@ class OrderResource extends Resource
     }
 
     /**
-     * Override the base query to include soft-deleted records.
-     * This allows the TrashedFilter to work correctly.
+     * Soft-delete + isolasi tim: order milik AM dalam tim paket.
+     * Super admin / Finance / admin_am (staf platform) melihat semua.
      */
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery()
-            ->withoutGlobalScopes([SoftDeletingScope::class]);
+            ->withoutGlobalScopes([SoftDeletingScope::class])
+            ->with([
+                'prospect:id,name_event,date_lamaran,date_akad,date_resepsi',
+                'employee:id,name',
+                'user:id,name',
+                'items.product:id,name',
+            ]);
 
-        $query->with([
-            'prospect:id,name_event,date_lamaran,date_akad,date_resepsi',
-            'employee:id,name',
-            'user:id,name',
-            'items.product:id,name',
-        ]);
+        $user = Auth::user();
 
-        if (Auth::check()) {
-            $uid = Auth::id();
-            if ($uid) {
-                $isPrivileged = DB::table('model_has_roles')
-                    ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
-                    ->where('model_has_roles.model_type', User::class)
-                    ->where('model_has_roles.model_id', $uid)
-                    ->whereIn('roles.name', ['super_admin', 'Finance', 'admin_am'])
-                    ->exists();
-
-                if ($isPrivileged) {
-                    return $query;
-                }
-            }
+        if (
+            UserVisibility::actorIsSuperAdmin()
+            || ($user instanceof User && $user->hasAnyRole(['Finance', 'admin_am']))
+        ) {
+            return $query;
         }
 
-        // Other users can only access their own orders (as Account Manager)
-        return $query->where('user_id', Auth::user()->id);
+        return UserVisibility::constrainOwnedQuery($query, 'user_id');
     }
 
     public static function getItemsRepeater(): Repeater
@@ -142,7 +137,12 @@ class OrderResource extends Resource
             ->schema([
                 Select::make('product_id')
                     ->label('Product')
-                    ->options(Product::query()->where('stock', '>', 1)->pluck('name', 'id'))
+                    ->options(function () {
+                        $query = Product::query()->where('stock', '>', 1);
+                        UserVisibility::constrainOwnedQuery($query, 'created_by');
+
+                        return $query->pluck('name', 'id');
+                    })
                     ->required()
                     ->reactive()
                     ->live() // Anda bisa menambahkan live() jika ingin update instan saat produk dipilih

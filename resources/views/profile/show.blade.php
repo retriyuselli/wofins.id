@@ -13,4 +13,6 @@
         </div>
     </div>
 </div>
+
+@include('profile.sections.subscription-quota')
 @endsection

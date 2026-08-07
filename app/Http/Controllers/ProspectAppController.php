@@ -6,6 +6,7 @@ use App\Enums\ProspectAppStatus;
 use App\Models\Industry;
 use App\Models\ProspectApp;
 use App\Models\User;
+use App\Support\PricingPlans;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 use Illuminate\Http\Request;
@@ -73,8 +74,15 @@ class ProspectAppController extends Controller
             || ($authUser && $authUser->hasAssignedRole())
         ) {
             return redirect()
-                ->route('pendaftaran')
+                ->route($authUser?->hasAssignedRole() ? 'profile' : 'pendaftaran')
                 ->with('error', 'Pendaftaran Anda sudah disetujui. Silakan gunakan Dashboard.');
+        }
+
+        // Sudah pending: jangan kirim ulang / update — arahkan ke status akun
+        if ($existingProspect && $existingProspect->status === ProspectAppStatus::Pending) {
+            return redirect()
+                ->route($authUser ? 'account.pending' : 'pendaftaran')
+                ->with('info', 'Pendaftaran Anda sudah terkirim dan sedang ditinjau. Mohon menunggu aktivasi dari admin.');
         }
 
         $existingProspectId = $existingProspect?->id;
@@ -92,8 +100,8 @@ class ProspectAppController extends Controller
             'company_name' => 'required|string|max:255',
             'industry_id' => 'required|exists:industries,id',
             'name_of_website' => 'nullable|string|max:255',
-            'user_size' => 'required|in:1-10,11-50,51-200,201-500,501-1000,1000+',
-            'service' => 'required|in:hastana,non_hastana',
+            'user_size' => ['required', Rule::in(ProspectApp::userSizeKeys())],
+            'service' => ['required', Rule::in(PricingPlans::selectableKeys())],
             'reason_for_interest' => 'required|string|max:1000',
             'notes' => 'nullable|string|max:2000',
             'terms' => 'accepted',
@@ -133,6 +141,7 @@ class ProspectAppController extends Controller
                 }
 
                 // Field bisnis / pendaftaran → ProspectApp
+                $service = $request->service;
                 $prospectData = [
                     'user_id' => $authUser?->id,
                     'full_name' => $request->full_name,
@@ -143,7 +152,8 @@ class ProspectAppController extends Controller
                     'industry_id' => $request->industry_id,
                     'name_of_website' => $request->name_of_website,
                     'user_size' => $request->user_size,
-                    'service' => $request->service,
+                    'service' => $service,
+                    'harga' => PricingPlans::annualAmount($service),
                     'reason_for_interest' => $request->reason_for_interest,
                     'notes' => $request->notes,
                     'status' => 'pending',
@@ -167,8 +177,12 @@ class ProspectAppController extends Controller
             }
 
             return redirect()
-                ->route('pendaftaran', array_filter(['plan' => $request->input('plan') ?: $request->query('plan')]))
-                ->with('success', 'Pendaftaran Anda berhasil dikirim. Tim admin WOFINS akan segera menghubungi Anda.');
+                ->route($authUser ? 'account.pending' : 'pendaftaran', $authUser ? [] : array_filter([
+                    'plan' => PricingPlans::normalizeKey($request->input('plan'))
+                        ?: PricingPlans::normalizeKey($request->input('service')),
+                ]))
+                ->with('success', 'Terima kasih. Pendaftaran Anda sudah kami terima. Tim admin akan meninjau data dan mengaktifkan akun Anda setelah disetujui.')
+                ->with('registration_submitted', true);
         } catch (Exception $e) {
             Log::error('Failed to create prospect application: '.$e->getMessage());
 

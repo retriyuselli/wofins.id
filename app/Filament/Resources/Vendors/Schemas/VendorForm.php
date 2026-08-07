@@ -75,15 +75,17 @@ class VendorForm
                                             ->placeholder('— (Vendor Induk)')
                                             ->helperText('Kosongkan jika ini vendor induk.')
                                             ->options(function (?Vendor $record) {
-                                                return Vendor::query()
+                                                $query = Vendor::query()
                                                     ->whereNull('parent_id')
                                                     ->whereIn('status', ['vendor', 'master'])
                                                     ->when(
                                                         $record?->exists,
-                                                        fn ($query) => $query->whereKeyNot($record->getKey())
+                                                        fn ($q) => $q->whereKeyNot($record->getKey())
                                                     )
-                                                    ->orderBy('name')
-                                                    ->pluck('name', 'id');
+                                                    ->orderBy('name');
+                                                \App\Support\UserVisibility::constrainOwnedQuery($query, 'created_by');
+
+                                                return $query->pluck('name', 'id');
                                             })
                                             ->searchable()
                                             ->preload()

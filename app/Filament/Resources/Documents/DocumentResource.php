@@ -10,14 +10,14 @@ use App\Filament\Resources\Documents\Schemas\DocumentForm;
 use App\Filament\Resources\Documents\Tables\DocumentsTable;
 use App\Models\Document;
 use BackedEnum;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class DocumentResource extends Resource
+class DocumentResource extends BaseResource
 {
     protected static ?string $model = Document::class;
 
@@ -66,7 +66,28 @@ class DocumentResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
+        $query = parent::getEloquentQuery()
             ->with(['category:id,name']);
+
+        if (\App\Support\UserVisibility::actorIsSuperAdmin()) {
+            return $query;
+        }
+
+        $teamIds = \App\Support\UserVisibility::teamUserIds();
+        $actorId = \App\Support\UserVisibility::actorId();
+
+        if ($teamIds === [] && $actorId === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        // Dokumen dibuat anggota tim, atau actor adalah penerima
+        return $query->where(function (Builder $q) use ($teamIds, $actorId) {
+            if ($teamIds !== []) {
+                $q->whereIn('created_by', $teamIds);
+            }
+            if ($actorId !== null) {
+                $q->orWhereHas('recipientsList', fn (Builder $r) => $r->where('users.id', $actorId));
+            }
+        });
     }
 }

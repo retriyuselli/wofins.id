@@ -8,11 +8,13 @@ use App\Filament\Resources\Categories\Pages\ListCategories;
 use App\Filament\Resources\Categories\Schemas\CategoryForm;
 use App\Filament\Resources\Categories\Tables\CategoriesTable;
 use App\Models\Category;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
+use App\Support\UserVisibility;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Cache;
 
-class CategoryResource extends Resource
+class CategoryResource extends BaseResource
 {
     protected static ?string $model = Category::class;
 
@@ -50,6 +52,13 @@ class CategoryResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::count();
+        // Kategori masih master platform (tanpa pemilik tim); badge = isi list.
+        $scope = UserVisibility::cacheScopeKey();
+
+        return (string) Cache::remember(
+            "nav:categories:count:{$scope}",
+            60,
+            fn (): int => (int) static::getModel()::count()
+        );
     }
 }

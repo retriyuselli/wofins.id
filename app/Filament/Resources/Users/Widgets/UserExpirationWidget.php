@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Users\Widgets;
 
 use App\Models\User;
+use App\Support\UserVisibility;
 use Carbon\Carbon;
 use Exception;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
@@ -15,19 +16,18 @@ class UserExpirationWidget extends BaseWidget
     protected function getStats(): array
     {
         try {
-            // Count expired users
-            $expiredUsers = User::where('expire_date', '<=', Carbon::now())
+            $base = UserVisibility::constrainUsersQuery(User::query());
+
+            $expiredUsers = (clone $base)->where('expire_date', '<=', Carbon::now())
                 ->whereNotNull('expire_date')
                 ->count();
 
-            // Count users expiring within 7 days
-            $expiringSoonUsers = User::whereBetween('expire_date', [
+            $expiringSoonUsers = (clone $base)->whereBetween('expire_date', [
                 Carbon::now(),
                 Carbon::now()->addDays(7),
             ])->count();
 
-            // Count active users (no expire date or expire date in future)
-            $activeUsers = User::where(function ($query) {
+            $activeUsers = (clone $base)->where(function ($query) {
                 $query->whereNull('expire_date')
                     ->orWhere('expire_date', '>', Carbon::now());
             })->count();

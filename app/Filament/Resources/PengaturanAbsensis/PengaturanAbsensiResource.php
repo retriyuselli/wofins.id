@@ -9,11 +9,11 @@ use App\Filament\Resources\PengaturanAbsensis\Pages\ListPengaturanAbsensis;
 use App\Filament\Resources\PengaturanAbsensis\Schemas\PengaturanAbsensiForm;
 use App\Filament\Resources\PengaturanAbsensis\Tables\PengaturanAbsensisTable;
 use App\Models\PengaturanAbsensi;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 
-class PengaturanAbsensiResource extends Resource
+class PengaturanAbsensiResource extends BaseResource
 {
     use RestrictsToSuperAdmin;
     protected static ?string $model = PengaturanAbsensi::class;

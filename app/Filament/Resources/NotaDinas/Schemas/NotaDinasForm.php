@@ -61,7 +61,11 @@ class NotaDinasForm
                         Grid::make(2)->schema([
                             Select::make('pengirim_id')
                                 ->label('Pengirim')
-                                ->relationship('pengirim', 'name')
+                                ->relationship(
+                                    'pengirim',
+                                    'name',
+                                    fn ($query) => \App\Support\UserVisibility::constrainUsersQuery($query)
+                                )
                                 ->default(Auth::id())
                                 ->disabled(function (): bool {
                                     $uid = Auth::id();
@@ -83,7 +87,11 @@ class NotaDinasForm
 
                             Select::make('penerima_id')
                                 ->label('Penerima')
-                                ->relationship('penerima', 'name')
+                                ->relationship(
+                                    'penerima',
+                                    'name',
+                                    fn ($query) => \App\Support\UserVisibility::constrainUsersQuery($query)
+                                )
                                 ->searchable()
                                 ->preload(),
 

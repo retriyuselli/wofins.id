@@ -14,13 +14,21 @@ use Illuminate\Support\Facades\DB;
 
 class AccountManagerMonthlyRevenueChart extends ChartWidget
 {
-    use HasWidgetShield;
+    use HasWidgetShield {
+        canView as canViewShield;
+    }
 
     protected static ?int $sort = 23;
 
     public ?string $selectedAccountId = null;
 
     public ?string $selectedMonth = null;
+
+    public static function canView(): bool
+    {
+        return \App\Support\UserVisibility::actorIsSuperAdmin()
+            && static::canViewShield();
+    }
 
     public function getHeading(): string
     {
@@ -44,7 +52,9 @@ class AccountManagerMonthlyRevenueChart extends ChartWidget
 
     protected function getFormSchema(): array
     {
-        $accountManagers = User::role('Account Manager')->pluck('name', 'id')->toArray();
+        $accountManagers = \App\Support\UserVisibility::constrainUsersQuery(
+            User::role('Account Manager')
+        )->pluck('name', 'id')->toArray();
         $options = ['all' => 'Semua Account Manager'] + $accountManagers;
 
         $months = [];
@@ -88,7 +98,7 @@ class AccountManagerMonthlyRevenueChart extends ChartWidget
             $endDate = Carbon::create($currentYear, $month, 1)->endOfMonth();
         }
 
-        $query = Order::query()
+        $query = \App\Support\UserVisibility::constrainOrdersQuery(Order::query())
             ->whereNotNull('closing_date') // Pastikan tanggal closing ada
             ->whereBetween('closing_date', [$startDate, $endDate]) // Filter berdasarkan rentang tanggal
             ->whereHas('user', function (Builder $query) {

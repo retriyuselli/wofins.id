@@ -95,7 +95,7 @@
             'radius_meter' => (int) $lokasi->radius_meter,
         ])->values();
         $defaultTab = $errors->any() ? 'hari-ini' : 'hari-ini';
-        $proLocked = $proFeatureLocked ?? \App\Support\ProFeatures::locked();
+        $proLocked = $proFeatureLocked ?? \App\Support\ProFeatures::locked(\App\Support\PricingPlans::FEATURE_EMPLOYEE_PORTAL);
         if ($proLocked) {
             $canMasuk = false;
             $canPulang = false;

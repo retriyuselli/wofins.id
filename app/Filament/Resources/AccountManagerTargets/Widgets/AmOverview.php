@@ -4,20 +4,18 @@ namespace App\Filament\Resources\AccountManagerTargets\Widgets;
 
 use App\Models\AccountManagerTarget;
 use App\Models\User;
+use App\Support\UserVisibility;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-use Illuminate\Support\Facades\Auth;
 
 class AmOverview extends BaseWidget
 {
     protected function getStats(): array
     {
-        $user = Auth::user();
         $currentYear = now()->year;
         $currentMonth = now()->month;
 
-        // Query base untuk data target (hanya dari Account Manager aktif)
-        $query = AccountManagerTarget::query()
+        $query = UserVisibility::constrainOwnedQuery(AccountManagerTarget::query(), 'user_id')
             ->where('year', $currentYear)
             ->whereHas('user', function ($q) {
                 $q->whereHas('roles', function ($subQ) {
@@ -25,10 +23,6 @@ class AmOverview extends BaseWidget
                 })
                     ->where('status', 'active');
             });
-
-        // Untuk saat ini tampilkan semua data dari Account Manager aktif
-        // Uncomment baris di bawah jika ingin filter berdasarkan user tertentu
-        // $query->where('user_id', $user?->id ?? 0);
 
         // Target Bulan Ini
         $currentMonthTarget = (clone $query)
@@ -56,10 +50,10 @@ class AmOverview extends BaseWidget
             ? round(($yearlyAchievement / $yearlyTarget) * 100, 1)
             : 0;
 
-        // Jumlah Account Manager aktif (role Account Manager + status aktif)
-        $activeAccountManagers = User::whereHas('roles', function ($q) {
-            $q->where('name', 'Account Manager');
-        })
+        $activeAccountManagers = UserVisibility::constrainUsersQuery(User::query())
+            ->whereHas('roles', function ($q) {
+                $q->where('name', 'Account Manager');
+            })
             ->where('status', 'active')
             ->count();
 

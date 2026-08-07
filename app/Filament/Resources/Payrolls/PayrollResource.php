@@ -10,12 +10,12 @@ use App\Filament\Resources\Payrolls\Schemas\PayrollForm;
 use App\Filament\Resources\Payrolls\Tables\PayrollsTable;
 use App\Models\Payroll;
 use BackedEnum;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 
-class PayrollResource extends Resource
+class PayrollResource extends BaseResource
 {
     protected static ?string $model = Payroll::class;
 
@@ -67,10 +67,12 @@ class PayrollResource extends Resource
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        return parent::getEloquentQuery()
-            ->with([
-                'user:id,name,email,department',
-                'user.status:id,status_name',
-            ]);
+        return \App\Support\UserVisibility::constrainOwnedQuery(
+            parent::getEloquentQuery()
+                ->with([
+                    'user:id,name,email,department',
+                    'user.status:id,status_name',
+                ])
+        );
     }
 }

@@ -12,11 +12,19 @@ use Illuminate\Support\Facades\DB; // Pastikan DB facade di-import
 
 class UserRolesChartWidget extends ChartWidget
 {
-    use HasWidgetShield;
+    use HasWidgetShield {
+        canView as canViewShield;
+    }
 
     protected static ?int $sort = 22; // Sesuaikan urutan widget di dashboard
 
     public ?string $selectedAccountId = null;
+
+    public static function canView(): bool
+    {
+        return \App\Support\UserVisibility::actorIsSuperAdmin()
+            && static::canViewShield();
+    }
 
     public function getHeading(): string
     {
@@ -31,7 +39,9 @@ class UserRolesChartWidget extends ChartWidget
 
     protected function getFormSchema(): array
     {
-        $accountManagers = User::role('Account Manager')->pluck('name', 'id')->toArray();
+        $accountManagers = \App\Support\UserVisibility::constrainUsersQuery(
+            User::role('Account Manager')
+        )->pluck('name', 'id')->toArray();
         // Tambahkan opsi "Semua Account Manager" di awal array
         $options = ['all' => 'Semua Account Manager'] + $accountManagers;
 
@@ -53,7 +63,9 @@ class UserRolesChartWidget extends ChartWidget
             $queryAccountManagerIds = [$this->selectedAccountId];
         } else {
             // Jika 'Semua Account Manager' dipilih atau filter kosong, ambil semua ID Account Manager
-            $queryAccountManagerIds = User::role('Account Manager')->pluck('id')->all();
+            $queryAccountManagerIds = \App\Support\UserVisibility::constrainUsersQuery(
+                User::role('Account Manager')
+            )->pluck('id')->all();
         }
 
         if (empty($queryAccountManagerIds)) {

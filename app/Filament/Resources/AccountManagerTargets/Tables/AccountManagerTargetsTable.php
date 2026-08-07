@@ -136,21 +136,11 @@ class AccountManagerTargetsTable
 
                 SelectFilter::make('user_id')
                     ->relationship('user', 'name', function (Builder $query) {
-                        $query->whereHas('roles', function ($q) {
-                            $q->where('name', 'Account Manager');
-                        });
-
-                        $user = Auth::user();
-                        if ($user) {
-                            $isAccountManager = $user->roles->where('name', 'Account Manager')->count() > 0;
-                            $isSuperAdmin = $user->roles->where('name', 'super_admin')->count() > 0;
-
-                            if ($isAccountManager && ! $isSuperAdmin) {
-                                $query->where('id', $user->id);
-                            }
-                        }
-
-                        return $query;
+                        return \App\Support\UserVisibility::constrainUsersQuery(
+                            $query->whereHas('roles', function ($q) {
+                                $q->where('name', 'Account Manager');
+                            })
+                        );
                     })
                     ->label('Account Manager')
                     ->searchable()

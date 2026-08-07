@@ -104,7 +104,9 @@ class SimulasiProdukForm
                                         ->columnSpanFull(),
                                     Select::make('user_id')
                                         ->label('Account Manager')
-                                        ->options(fn () => User::role('Account Manager')->pluck('name', 'id')->toArray())
+                                        ->options(fn () => \App\Support\UserVisibility::constrainUsersQuery(
+                                            User::role('Account Manager')
+                                        )->pluck('name', 'id')->toArray())
                                         ->required()
                                         ->searchable()
                                         ->preload()

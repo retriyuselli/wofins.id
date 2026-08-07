@@ -2,8 +2,11 @@
 
 namespace App\Filament\Resources\Vendors\Pages;
 
+use App\Filament\Concerns\EnforcesSubscriptionQuota;
 use App\Filament\Resources\Vendors\VendorResource;
 use App\Models\Vendor;
+use App\Support\CompanySubscription;
+use App\Support\UserVisibility;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
@@ -13,7 +16,25 @@ use Illuminate\Validation\ValidationException;
 
 class CreateVendor extends CreateRecord
 {
+    use EnforcesSubscriptionQuota;
+
     protected static string $resource = VendorResource::class;
+
+    protected function subscriptionResource(): string
+    {
+        return CompanySubscription::RESOURCE_VENDORS;
+    }
+
+    public function mount(): void
+    {
+        parent::mount();
+
+        Notification::make()
+            ->title(CompanySubscription::planLabel())
+            ->body(CompanySubscription::summary(CompanySubscription::RESOURCE_VENDORS))
+            ->info()
+            ->send();
+    }
 
     protected function getHeaderActions(): array
     {
@@ -31,9 +52,16 @@ class CreateVendor extends CreateRecord
         ];
     }
 
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        return UserVisibility::stampTeamOwner($data, 'created_by');
+    }
+
     protected function handleRecordCreation(array $data): Vendor
     {
         try {
+            $data = UserVisibility::stampTeamOwner($data, 'created_by');
+
             if (empty($data['slug']) && ! empty($data['name'])) {
                 $data['slug'] = Str::slug((string) $data['name']);
             }

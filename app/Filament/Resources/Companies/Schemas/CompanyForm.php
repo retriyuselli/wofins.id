@@ -74,6 +74,57 @@ class CompanyForm
                                                     ->placeholder('Jumlah karyawan'),
                                             ]),
                                     ]),
+                                Section::make('Paket Langganan')
+                                    ->description('Bukan role Spatie — menentukan kuota pengguna/vendor/produk/proyek/prospek/simulasi dan fitur yang aktif.')
+                                    ->schema([
+                                        Grid::make()
+                                            ->columns(2)
+                                            ->schema([
+                                                Select::make('subscription_plan')
+                                                    ->label('Paket')
+                                                    ->options(\App\Support\PricingPlans::companyPlanOptions())
+                                                    ->placeholder('Pilih paket')
+                                                    ->helperText(fn () => 'Hanya diubah di sini (Approve user tidak mengubah paket). '
+                                                        .\App\Support\CompanySubscription::quotasOverview()
+                                                        .' · Kursi user tidak menghitung akun super_admin.')
+                                                    ->columnSpanFull(),
+                                                TextInput::make('seat_limit_override')
+                                                    ->label('Override kuota pengguna')
+                                                    ->numeric()
+                                                    ->minValue(1)
+                                                    ->placeholder('Kosongkan = ikut paket'),
+                                                TextInput::make('vendor_limit_override')
+                                                    ->label('Override kuota vendor')
+                                                    ->numeric()
+                                                    ->minValue(1)
+                                                    ->placeholder('Kosongkan = ikut paket'),
+                                                TextInput::make('product_limit_override')
+                                                    ->label('Override kuota produk')
+                                                    ->numeric()
+                                                    ->minValue(1)
+                                                    ->placeholder('Kosongkan = ikut paket'),
+                                                TextInput::make('order_limit_override')
+                                                    ->label('Override kuota proyek wedding')
+                                                    ->numeric()
+                                                    ->minValue(1)
+                                                    ->placeholder('Kosongkan = ikut paket'),
+                                                TextInput::make('prospect_limit_override')
+                                                    ->label('Override kuota prospek')
+                                                    ->numeric()
+                                                    ->minValue(1)
+                                                    ->placeholder('Kosongkan = ikut paket'),
+                                                TextInput::make('simulasi_limit_override')
+                                                    ->label('Override kuota simulasi')
+                                                    ->numeric()
+                                                    ->minValue(1)
+                                                    ->placeholder('Kosongkan = ikut paket'),
+                                                DatePicker::make('subscription_expires_at')
+                                                    ->label('Berlaku sampai')
+                                                    ->displayFormat('d M Y')
+                                                    ->native(false)
+                                                    ->helperText('Opsional — untuk pengingat masa aktif.'),
+                                            ]),
+                                    ]),
                                 Section::make('Informasi Rekening')
                                     ->schema([
                                         Select::make('payment_method_id')

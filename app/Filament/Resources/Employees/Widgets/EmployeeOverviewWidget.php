@@ -3,70 +3,54 @@
 namespace App\Filament\Resources\Employees\Widgets;
 
 use App\Models\Employee;
+use App\Support\UserVisibility;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 class EmployeeOverviewWidget extends BaseWidget
 {
+    protected function activeEmployeesQuery(): Builder
+    {
+        return UserVisibility::constrainOwnedQuery(Employee::query(), 'user_id')
+            ->where('date_of_join', '<=', now())
+            ->where(function ($query) {
+                $query->whereNull('date_of_out')
+                    ->orWhere('date_of_out', '>=', now());
+            });
+    }
+
     protected function getStats(): array
     {
-        // Get active employees count
-        $activeEmployees = Employee::query()
-            ->where('date_of_join', '<=', now())
-            ->where(function ($query) {
-                $query->whereNull('date_of_out')
-                    ->orWhere('date_of_out', '>=', now());
-            })
-            ->count();
+        $activeBase = $this->activeEmployeesQuery();
 
-        // Get employees by role
-        $employeesByRole = Employee::query()
-            ->where('date_of_join', '<=', now())
-            ->where(function ($query) {
-                $query->whereNull('date_of_out')
-                    ->orWhere('date_of_out', '>=', now());
-            })
+        $activeEmployees = (clone $activeBase)->count();
+
+        $employeesByRole = (clone $activeBase)
             ->select('position', DB::raw('COUNT(*) as count'))
             ->groupBy('position')
             ->get()
             ->pluck('count', 'position')
             ->toArray();
 
-        // Get upcoming birthdays (next 30 days)
-        $upcomingBirthdays = Employee::query()
-            ->where('date_of_join', '<=', now())
-            ->where(function ($query) {
-                $query->whereNull('date_of_out')
-                    ->orWhere('date_of_out', '>=', now());
-            })
+        $upcomingBirthdays = (clone $activeBase)
             ->whereRaw('DATE_FORMAT(date_of_birth, "%m-%d") BETWEEN DATE_FORMAT(NOW(), "%m-%d") AND DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 30 DAY), "%m-%d")')
             ->orderByRaw('DATE_FORMAT(date_of_birth, "%m-%d")')
             ->get();
 
-        // Calculate top 5 event managers by project count
-        $topEventManagers = Employee::query()
+        $topEventManagers = (clone $activeBase)
             ->where('position', 'Event Manager')
-            ->where('date_of_join', '<=', now())
-            ->where(function ($query) {
-                $query->whereNull('date_of_out')
-                    ->orWhere('date_of_out', '>=', now());
-            })
             ->withCount(['orders' => function ($query) {
                 $query->where('closing_date', '>=', now()->subYear());
+                UserVisibility::constrainOrdersQuery($query);
             }])
             ->orderByDesc('orders_count')
             ->limit(5)
             ->get();
 
-        // Get anniversary milestones this month (work anniversaries)
-        $workAnniversaries = Employee::query()
-            ->where('date_of_join', '<=', now())
-            ->where(function ($query) {
-                $query->whereNull('date_of_out')
-                    ->orWhere('date_of_out', '>=', now());
-            })
+        $workAnniversaries = (clone $activeBase)
             ->whereRaw('MONTH(date_of_join) = MONTH(NOW())')
             ->whereRaw('DAY(date_of_join) >= DAY(NOW())')
             ->whereRaw('DATEDIFF(NOW(), date_of_join) >= 365')

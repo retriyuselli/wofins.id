@@ -19,6 +19,12 @@ class ListPengajuanLemburs extends ListRecords
                 ->using(function (array $data, PengajuanLemburService $service): Model {
                     $user = \App\Models\User::query()->findOrFail($data['user_id']);
 
+                    if (! \App\Support\UserVisibility::canAccessUser($user)) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'user_id' => 'Anda tidak berwenang mengajukan lembur untuk user lain.',
+                        ]);
+                    }
+
                     return $service->ajukan($user, $data);
                 }),
         ];

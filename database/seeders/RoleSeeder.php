@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Support\PackageRolePermissions;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -94,10 +95,12 @@ class RoleSeeder extends Seeder
             'view_products',
         ]);
 
-        // Role pengunjung: akses portal dasar setelah disetujui admin
-        $pengunjung->syncPermissions([
-            'view_products',
-        ]);
+        // Role pengunjung: menu & CRUD fitur Starter + kelola tim (kuota paket).
+        // Modul Pro/Business (HRIS, payroll, rekonsiliasi, Role) tetap digating PlanResourceGate.
+        foreach (PackageRolePermissions::forStarter() as $permission) {
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
+        }
+        $pengunjung->syncPermissions(PackageRolePermissions::forStarter());
 
         $this->command->info('✅ Roles and permissions created successfully!');
         $this->command->newLine();

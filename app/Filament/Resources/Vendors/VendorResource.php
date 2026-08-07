@@ -9,14 +9,14 @@ use App\Filament\Resources\Vendors\Pages\ViewVendor;
 use App\Filament\Resources\Vendors\Schemas\VendorForm;
 use App\Filament\Resources\Vendors\Tables\VendorsTable;
 use App\Models\Vendor;
-use Filament\Resources\Resource;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Cache;
 
-class VendorResource extends Resource
+class VendorResource extends BaseResource
 {
     protected static ?string $model = Vendor::class;
 
@@ -30,12 +30,12 @@ class VendorResource extends Resource
 
     private static function getCachedNavigationBadgeCount(): int
     {
-        $modelClass = static::getModel();
+        $scope = \App\Support\UserVisibility::cacheScopeKey();
 
         return Cache::remember(
-            'nav:vendors:count',
+            "nav:vendors:count:{$scope}",
             60,
-            fn (): int => (int) $modelClass::count()
+            fn (): int => (int) static::getEloquentQuery()->count()
         );
     }
 
@@ -81,11 +81,13 @@ class VendorResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
+        $query = parent::getEloquentQuery()
             ->with(['category', 'parent'])
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+
+        return \App\Support\UserVisibility::constrainOwnedQuery($query, 'created_by');
     }
 
     public static function getNavigationBadgeTooltip(): ?string

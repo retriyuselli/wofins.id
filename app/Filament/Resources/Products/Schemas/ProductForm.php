@@ -299,7 +299,11 @@ class ProductForm
                 Grid::make(4)
                     ->schema([
                         Select::make('vendor_id')
-                            ->relationship('vendor', 'name')
+                            ->relationship(
+                                'vendor',
+                                'name',
+                                fn ($query) => \App\Support\UserVisibility::constrainOwnedQuery($query, 'created_by')
+                            )
                             ->searchable()
                             ->preload()
                             ->placeholder('Select a vendor')
@@ -498,7 +502,11 @@ class ProductForm
                 Grid::make(4)
                     ->schema([
                         Select::make('vendor_id')
-                            ->relationship('vendor', 'name')
+                            ->relationship(
+                                'vendor',
+                                'name',
+                                fn ($query) => \App\Support\UserVisibility::constrainOwnedQuery($query, 'created_by')
+                            )
                             ->searchable()
                             ->preload()
                             ->placeholder('Select a vendor')

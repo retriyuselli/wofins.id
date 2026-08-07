@@ -30,8 +30,6 @@ return new class extends Migration
             $table->string('invoice_number')->nullable();
             $table->date('warranty_expiry')->nullable();
             $table->text('notes')->nullable();
-            $table->foreignId('chart_of_account_id')->constrained('chart_of_accounts');
-            $table->foreignId('depreciation_account_id')->constrained('chart_of_accounts');
             $table->boolean('is_active')->default(true);
             $table->timestamps();
             $table->softDeletes();

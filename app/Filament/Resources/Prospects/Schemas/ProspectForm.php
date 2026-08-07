@@ -123,7 +123,11 @@ class ProspectForm
 
                                 Select::make('user_id')
                                     ->label('Manajer Akun')
-                                    ->relationship('user', 'name')
+                                    ->relationship(
+                                'user',
+                                'name',
+                                fn (\Illuminate\Database\Eloquent\Builder $query) => \App\Support\UserVisibility::constrainUsersQuery($query)
+                            )
                                     ->searchable()
                                     ->preload()
                                     ->default(Auth::user()->id)

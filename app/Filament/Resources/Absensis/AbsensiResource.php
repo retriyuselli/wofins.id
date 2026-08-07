@@ -8,11 +8,13 @@ use App\Filament\Resources\Absensis\Pages\ListAbsensis;
 use App\Filament\Resources\Absensis\Schemas\AbsensiForm;
 use App\Filament\Resources\Absensis\Tables\AbsensisTable;
 use App\Models\Absensi;
-use Filament\Resources\Resource;
+use App\Support\UserVisibility;
+use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
-class AbsensiResource extends Resource
+class AbsensiResource extends BaseResource
 {
     protected static ?string $model = Absensi::class;
 
@@ -27,6 +29,11 @@ class AbsensiResource extends Resource
     protected static string|\UnitEnum|null $navigationGroup = 'Absensi';
 
     protected static ?int $navigationSort = 1;
+
+    public static function getEloquentQuery(): Builder
+    {
+        return UserVisibility::constrainOwnedQuery(parent::getEloquentQuery());
+    }
 
     public static function form(Schema $schema): Schema
     {

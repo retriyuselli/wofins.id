@@ -23,9 +23,7 @@ return new class extends Migration
             $table->unsignedBigInteger('accumulated_depreciation_before');
             $table->unsignedBigInteger('accumulated_depreciation_after');
             $table->unsignedBigInteger('book_value_before');
-            $table->unsignedBigInteger('book_value_after');
-            $table->unsignedBigInteger('journal_batch_id')->nullable();
-            $table->text('notes')->nullable();
+            $table->unsignedBigInteger('book_value_after');            $table->text('notes')->nullable();
             $table->boolean('is_adjustment')->default(false);
             $table->timestamps();
             $table->softDeletes();

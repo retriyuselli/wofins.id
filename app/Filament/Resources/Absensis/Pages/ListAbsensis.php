@@ -95,7 +95,9 @@ class ListAbsensis extends ListRecords
         return [
             Select::make('user_id')
                 ->label('Karyawan')
-                ->options(fn () => User::query()->orderBy('name')->pluck('name', 'id'))
+                ->options(fn () => \App\Support\UserVisibility::constrainUsersQuery(
+                    User::query()
+                )->orderBy('name')->pluck('name', 'id'))
                 ->searchable()
                 ->preload()
                 ->nullable(),

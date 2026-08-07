@@ -34,18 +34,11 @@ class ListAccountManagerTargets extends ListRecords
                     Select::make('user_id')
                         ->label('Account Manager')
                         ->options(function () {
-                            $user = Auth::user();
-                            $isSuperAdmin = $user && $user->roles->where('name', 'super_admin')->count() > 0;
-
-                            if ($isSuperAdmin) {
-                                // Super admin bisa pilih semua Account Manager
-                                return User::whereHas('roles', function ($query) {
+                            return \App\Support\UserVisibility::constrainUsersQuery(
+                                User::whereHas('roles', function ($query) {
                                     $query->where('name', 'Account Manager');
-                                })->pluck('name', 'id');
-                            } else {
-                                // User biasa hanya bisa pilih diri sendiri
-                                return [$user->id => $user->name];
-                            }
+                                })
+                            )->pluck('name', 'id');
                         })
                         ->required()
                         ->searchable()
