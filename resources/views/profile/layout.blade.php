@@ -77,6 +77,7 @@
         }
 
         .wf-profile-card {
+            position: relative;
             background: #fff;
             border: 1px solid var(--wf-line);
             border-radius: 1.25rem;
@@ -90,6 +91,216 @@
             border-radius: 1.25rem;
             overflow: hidden;
             box-shadow: 0 18px 40px -28px rgba(11, 31, 58, 0.28);
+        }
+
+        /* Soft corner accents on every portal card/sidebar */
+        .wf-profile-card::before,
+        .wf-profile-sidebar::before {
+            content: '';
+            position: absolute;
+            width: 9rem;
+            height: 9rem;
+            top: -3.5rem;
+            right: -3rem;
+            border-radius: 40% 60% 55% 45% / 50% 40% 60% 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(201, 162, 39, 0.22), rgba(201, 162, 39, 0.02) 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .wf-profile-card::after,
+        .wf-profile-sidebar::after {
+            content: '';
+            position: absolute;
+            width: 4.25rem;
+            height: 4.25rem;
+            bottom: 1.25rem;
+            left: -1.25rem;
+            border-radius: 999px;
+            border: 2px solid rgba(201, 162, 39, 0.2);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.7;
+        }
+
+        .wf-profile-card > *:not([aria-hidden="true"]):not(.wf-deco),
+        .wf-profile-sidebar > *:not([aria-hidden="true"]):not(.wf-deco) {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Inner content tiles (absensi stats, forms, etc.) */
+        .wf-portal-tile {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wf-portal-tile::before {
+            content: '';
+            position: absolute;
+            width: 4.5rem;
+            height: 4.5rem;
+            top: -1.5rem;
+            right: -1.25rem;
+            border-radius: 40% 60% 55% 45% / 50% 40% 60% 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(201, 162, 39, 0.16), transparent 72%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .wf-portal-tile > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Page-level decorative shapes */
+        .wf-portal-shell {
+            position: relative;
+        }
+
+        .wf-portal-shell > .wf-portal-shell-inner {
+            position: relative;
+            z-index: 1;
+        }
+
+        .wf-portal-shell > .wf-deco {
+            position: absolute;
+            inset: -1rem 0 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .wf-deco__blob,
+        .wf-deco__ring,
+        .wf-deco__dot,
+        .wf-deco__sq,
+        .wf-deco__tri {
+            position: absolute;
+            display: block;
+        }
+
+        .wf-deco__blob {
+            border-radius: 40% 60% 55% 45% / 50% 40% 60% 50%;
+            filter: blur(2px);
+            opacity: 0.5;
+            animation: wf-portal-deco-float 9s ease-in-out infinite;
+        }
+
+        .wf-deco__blob--a {
+            width: 18rem;
+            height: 18rem;
+            top: -4rem;
+            right: -3rem;
+            background: radial-gradient(circle at 30% 30%, rgba(201, 162, 39, 0.32), rgba(201, 162, 39, 0.04) 70%);
+        }
+
+        .wf-deco__blob--b {
+            width: 14rem;
+            height: 14rem;
+            bottom: 8%;
+            left: -4rem;
+            background: radial-gradient(circle at 60% 40%, rgba(11, 31, 58, 0.12), rgba(11, 31, 58, 0.02) 70%);
+            animation-delay: -3s;
+        }
+
+        .wf-deco__ring {
+            border-radius: 999px;
+            border: 2px solid rgba(201, 162, 39, 0.26);
+            animation: wf-portal-deco-spin 22s linear infinite;
+        }
+
+        .wf-deco__ring--a {
+            width: 8.5rem;
+            height: 8.5rem;
+            top: 18%;
+            left: 4%;
+            opacity: 0.65;
+        }
+
+        .wf-deco__ring--b {
+            width: 5.5rem;
+            height: 5.5rem;
+            top: 55%;
+            right: 6%;
+            border-color: rgba(11, 31, 58, 0.12);
+            animation-direction: reverse;
+            animation-duration: 16s;
+        }
+
+        .wf-deco__dot {
+            width: 0.6rem;
+            height: 0.6rem;
+            border-radius: 999px;
+            background: var(--wf-gold);
+            opacity: 0.5;
+            animation: wf-portal-deco-float 6s ease-in-out infinite;
+        }
+
+        .wf-deco__dot--a { top: 12%; right: 22%; }
+        .wf-deco__dot--b {
+            top: 42%;
+            left: 18%;
+            width: 0.4rem;
+            height: 0.4rem;
+            background: var(--wf-navy);
+            opacity: 0.22;
+            animation-delay: -2s;
+        }
+
+        .wf-deco__sq {
+            width: 2rem;
+            height: 2rem;
+            border: 2px solid rgba(201, 162, 39, 0.32);
+            border-radius: 0.4rem;
+            transform: rotate(18deg);
+            animation: wf-portal-deco-float 7s ease-in-out infinite;
+        }
+
+        .wf-deco__sq--a { top: 28%; right: 10%; }
+        .wf-deco__sq--b {
+            bottom: 22%;
+            left: 12%;
+            width: 1.4rem;
+            height: 1.4rem;
+            border-color: rgba(11, 31, 58, 0.14);
+            animation-delay: -1.5s;
+        }
+
+        .wf-deco__tri {
+            width: 0;
+            height: 0;
+            border-left: 0.75rem solid transparent;
+            border-right: 0.75rem solid transparent;
+            border-bottom: 1.3rem solid rgba(201, 162, 39, 0.26);
+            top: 68%;
+            right: 18%;
+            animation: wf-portal-deco-float-alt 8s ease-in-out infinite;
+        }
+
+        @keyframes wf-portal-deco-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes wf-portal-deco-float-alt {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(8px) rotate(8deg); }
+        }
+
+        @keyframes wf-portal-deco-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 640px) {
+            .wf-deco__blob--a { width: 11rem; height: 11rem; }
+            .wf-deco__blob--b { width: 9rem; height: 9rem; }
+            .wf-deco__ring--a { width: 5.5rem; height: 5.5rem; left: 2%; }
+            .wf-deco__sq--a,
+            .wf-deco__tri { opacity: 0.5; }
+            .wf-profile-card::after,
+            .wf-profile-sidebar::after { opacity: 0.45; }
         }
 
         .wf-profile-sidebar-head {
@@ -305,9 +516,12 @@
 }">
     @include('front.partials.wf-nav')
 
-    <div class="py-8 lg:py-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="mb-8">
+    <div class="py-8 lg:py-10 wf-portal-shell">
+        @include('front.partials.wf-deco-shapes')
+        <div class="wf-portal-shell-inner max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="mb-8 relative">
+                <span class="absolute -left-3 top-1 w-2 h-2 rounded-full bg-[var(--wf-gold)]/70 pointer-events-none" aria-hidden="true"></span>
+                <span class="absolute right-4 -top-2 w-8 h-8 rounded-full border border-[var(--wf-gold)]/30 pointer-events-none hidden sm:block" aria-hidden="true"></span>
                 <p class="text-xs font-bold tracking-[0.18em] uppercase text-[var(--wf-gold)] mb-2">Portal Karyawan</p>
                 <h1 class="text-3xl font-bold text-[var(--wf-navy)]">@yield('profile-page-title', 'Dashboard Profil')</h1>
                 <p class="text-[var(--wf-muted)] mt-2">@yield('profile-page-subtitle', 'Kelola informasi akun dan data HR Anda')</p>

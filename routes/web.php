@@ -409,6 +409,14 @@ Route::middleware(array_merge($frontAuthVerified, ['role.required']))->group(fun
         ->middleware(['pro.feature:employee_portal', 'throttle:20,1']);
     Route::get('/profile/compensation', [ProfileController::class, 'compensation'])->name('profile.compensation');
     Route::get('/profile/schedule', [ProfileController::class, 'schedule'])->name('profile.schedule');
+    Route::get('/profile/kelola-cuti', [\App\Http\Controllers\Profile\ProfileLeaveManageController::class, 'index'])
+        ->name('profile.leave-manage');
+    Route::post('/profile/kelola-cuti/{leaveRequest}/approve', [\App\Http\Controllers\Profile\ProfileLeaveManageController::class, 'approve'])
+        ->name('profile.leave-manage.approve')
+        ->middleware('throttle:30,1');
+    Route::post('/profile/kelola-cuti/{leaveRequest}/reject', [\App\Http\Controllers\Profile\ProfileLeaveManageController::class, 'reject'])
+        ->name('profile.leave-manage.reject')
+        ->middleware('throttle:30,1');
     Route::get('/profile/laporan-keuangan', [ProfileController::class, 'financialReport'])
         ->name('profile.financial-report')
         ->middleware('super-admin');
@@ -427,7 +435,6 @@ Route::middleware(array_merge($frontAuthVerified, ['role.required']))->group(fun
         Route::get('/users', [AdminToolsController::class, 'users'])->name('profile.admin-tools.users');
         Route::get('/roles', [AdminToolsController::class, 'roles'])->name('profile.admin-tools.roles');
         Route::get('/company', [AdminToolsController::class, 'company'])->name('profile.admin-tools.company');
-        Route::get('/branding', [AdminToolsController::class, 'branding'])->name('profile.admin-tools.branding');
         Route::get('/sops', [AdminToolsController::class, 'sops'])->name('profile.admin-tools.sops');
         Route::get('/documentations', [AdminToolsController::class, 'documentations'])->name('profile.admin-tools.documentations');
         Route::get('/document-categories', [AdminToolsController::class, 'documentCategories'])->name('profile.admin-tools.document-categories');

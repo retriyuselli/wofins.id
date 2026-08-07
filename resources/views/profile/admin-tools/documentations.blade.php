@@ -3,42 +3,52 @@
 @section('profile-page-title', 'Dokumentasi')
 @section('profile-page-subtitle', 'Daftar artikel dokumentasi (khusus super admin)')
 
+@include('profile.admin-tools.partials.wf-admin-styles')
+
 @section('profile-content')
-<div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden p-6">
-    <form method="GET" class="flex items-center gap-3 mb-4">
-        <input type="text" name="q" value="{{ $q }}" placeholder="Cari judul / keyword"
-            class="w-full border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200">
-        <button type="submit" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold">Cari</button>
-    </form>
+<div class="wf-profile-card overflow-hidden">
+    @include('profile.admin-tools.partials.wf-admin-header', [
+        'eyebrow' => 'Dokumen',
+        'title' => 'Dokumentasi',
+        'subtitle' => 'Kelola artikel panduan dan catatan operasional.',
+    ])
 
-    <div class="overflow-x-auto">
-        <table class="min-w-full text-sm">
-            <thead>
-                <tr class="text-left text-xs uppercase tracking-wide text-gray-500 border-b">
-                    <th class="py-3 pr-4">Judul</th>
-                    <th class="py-3 pr-4">Kategori</th>
-                    <th class="py-3 pr-4">Publikasi</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y">
-                @foreach($docs as $doc)
-                    <tr class="text-gray-800">
-                        <td class="py-3 pr-4 font-medium">{{ $doc->title }}</td>
-                        <td class="py-3 pr-4 text-xs text-gray-700">{{ $doc->category?->name ?? '-' }}</td>
-                        <td class="py-3 pr-4">
-                            <span class="px-2 py-1 rounded-full text-xs {{ $doc->is_published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700' }}">
-                                {{ $doc->is_published ? 'Published' : 'Draft' }}
-                            </span>
-                        </td>
+    <div class="p-6 space-y-5">
+        <form method="GET" class="flex flex-col sm:flex-row sm:items-center gap-3">
+            <input type="text" name="q" value="{{ $q }}" placeholder="Cari judul / keyword" class="wf-admin-input">
+            <button type="submit" class="wf-btn-navy inline-flex items-center justify-center px-5 py-2.5 text-sm shrink-0">Cari</button>
+        </form>
+
+        <div class="wf-admin-table-wrap">
+            <table class="wf-admin-table min-w-full text-sm">
+                <thead>
+                    <tr>
+                        <th>Judul</th>
+                        <th>Kategori</th>
+                        <th>Publikasi</th>
                     </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
+                </thead>
+                <tbody class="divide-y divide-[var(--wf-line)]">
+                    @forelse($docs as $doc)
+                        <tr>
+                            <td class="font-bold text-[var(--wf-navy)]">{{ $doc->title }}</td>
+                            <td class="text-xs text-[var(--wf-muted)]">{{ $doc->category?->name ?? '-' }}</td>
+                            <td>
+                                <span class="wf-admin-badge {{ $doc->is_published ? 'wf-admin-badge--ok' : 'wf-admin-badge--muted' }}">
+                                    {{ $doc->is_published ? 'Published' : 'Draft' }}
+                                </span>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="3" class="py-8 text-center text-sm text-[var(--wf-muted)]">Tidak ada dokumentasi.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
 
-    <div class="mt-4">
-        {{ $docs->links() }}
+        <div>{{ $docs->links() }}</div>
     </div>
 </div>
 @endsection
-

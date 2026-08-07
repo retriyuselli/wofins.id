@@ -7,7 +7,7 @@
     $avatarBg = '0b1f3a';
 @endphp
 
-<div class="wf-profile-sidebar lg:sticky lg:top-24">
+<div class="wf-profile-sidebar relative lg:sticky lg:top-24">
     <div class="wf-profile-sidebar-head">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-full bg-white/15 overflow-hidden flex items-center justify-center ring-2 ring-[var(--wf-gold)]/40">
@@ -41,6 +41,7 @@
                 || request()->routeIs('leave.create')
                 || request()->routeIs('leave.status');
             $scheduleActive = request()->routeIs('profile.schedule');
+            $leaveManageActive = request()->routeIs('profile.leave-manage*');
             $financialReportActive = request()->routeIs('profile.financial-report*');
             $editActive = request()->routeIs('profile.edit');
         @endphp
@@ -108,8 +109,8 @@
         @endif
 
         @if($canManageLeaveRequests)
-            <a href="/admin/leave-requests"
-                class="wf-profile-nav-link">
+            <a href="{{ route('profile.leave-manage') }}"
+                class="wf-profile-nav-link {{ $leaveManageActive ? 'is-active' : '' }}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m2 8H7a2 2 0 01-2-2V6a2 2 0 012-2h6l4 4v12a2 2 0 01-2 2z" />
                 </svg>
@@ -128,7 +129,6 @@
                 $isAdminUsers = request()->routeIs('profile.admin-tools.users');
                 $isAdminRoles = request()->routeIs('profile.admin-tools.roles');
                 $isAdminCompany = request()->routeIs('profile.admin-tools.company');
-                $isAdminBranding = request()->routeIs('profile.admin-tools.branding');
                 $isAdminSops = request()->routeIs('profile.admin-tools.sops');
                 $isAdminDocumentations = request()->routeIs('profile.admin-tools.documentations');
                 $isAdminDocumentCategories = request()->routeIs('profile.admin-tools.document-categories');
@@ -154,10 +154,6 @@
                 <a href="{{ route('profile.admin-tools.company') }}" class="wf-profile-nav-link {{ $isAdminCompany ? 'is-active' : '' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21h18M4 21V7a2 2 0 012-2h3V3h6v2h3a2 2 0 012 2v14M9 21v-6h6v6" /></svg>
                     <span>Pengaturan Perusahaan</span>
-                </a>
-                <a href="{{ route('profile.admin-tools.branding') }}" class="wf-profile-nav-link {{ $isAdminBranding ? 'is-active' : '' }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4-4a3 3 0 014 0l1 1a3 3 0 004 0l3-3M4 6h16v12H4V6z" /></svg>
-                    <span>Logo & Branding</span>
                 </a>
                 <a href="{{ route('profile.admin-tools.sops') }}" class="wf-profile-nav-link {{ $isAdminSops ? 'is-active' : '' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m2 8H7a2 2 0 01-2-2V6a2 2 0 012-2h6l4 4v12a2 2 0 01-2 2z" /></svg>

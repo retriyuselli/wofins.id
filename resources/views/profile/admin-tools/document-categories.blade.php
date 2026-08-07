@@ -3,40 +3,51 @@
 @section('profile-page-title', 'Kategori Dokumen')
 @section('profile-page-subtitle', 'Daftar kategori dokumen (khusus super admin)')
 
-@section('profile-content')
-<div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden p-6">
-    <div class="overflow-x-auto">
-        <table class="min-w-full text-sm">
-            <thead>
-                <tr class="text-left text-xs uppercase tracking-wide text-gray-500 border-b">
-                    <th class="py-3 pr-4">Nama</th>
-                    <th class="py-3 pr-4">Kode</th>
-                    <th class="py-3 pr-4">Tipe</th>
-                    <th class="py-3 pr-4">Parent</th>
-                    <th class="py-3 pr-4">Approval</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y">
-                @foreach($categories as $cat)
-                    <tr class="text-gray-800">
-                        <td class="py-3 pr-4 font-medium">{{ $cat->name }}</td>
-                        <td class="py-3 pr-4 text-xs text-gray-700">{{ $cat->code ?? '-' }}</td>
-                        <td class="py-3 pr-4 text-xs text-gray-700">{{ $cat->type ?? '-' }}</td>
-                        <td class="py-3 pr-4 text-xs text-gray-700">{{ $cat->parent?->name ?? '-' }}</td>
-                        <td class="py-3 pr-4">
-                            <span class="px-2 py-1 rounded-full text-xs {{ $cat->is_approval_required ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700' }}">
-                                {{ $cat->is_approval_required ? 'Ya' : 'Tidak' }}
-                            </span>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
+@include('profile.admin-tools.partials.wf-admin-styles')
 
-    <div class="mt-4">
-        {{ $categories->links() }}
+@section('profile-content')
+<div class="wf-profile-card overflow-hidden">
+    @include('profile.admin-tools.partials.wf-admin-header', [
+        'eyebrow' => 'Dokumen',
+        'title' => 'Kategori Dokumen',
+        'subtitle' => 'Struktur kategori dan aturan approval dokumen.',
+    ])
+
+    <div class="p-6 space-y-5">
+        <div class="wf-admin-table-wrap">
+            <table class="wf-admin-table min-w-full text-sm">
+                <thead>
+                    <tr>
+                        <th>Nama</th>
+                        <th>Kode</th>
+                        <th>Tipe</th>
+                        <th>Parent</th>
+                        <th>Approval</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-[var(--wf-line)]">
+                    @forelse($categories as $cat)
+                        <tr>
+                            <td class="font-bold text-[var(--wf-navy)]">{{ $cat->name }}</td>
+                            <td class="text-xs text-[var(--wf-muted)]">{{ $cat->code ?? '-' }}</td>
+                            <td class="text-xs text-[var(--wf-ink)]">{{ $cat->type ?? '-' }}</td>
+                            <td class="text-xs text-[var(--wf-muted)]">{{ $cat->parent?->name ?? '-' }}</td>
+                            <td>
+                                <span class="wf-admin-badge {{ $cat->is_approval_required ? 'wf-admin-badge--warn' : 'wf-admin-badge--muted' }}">
+                                    {{ $cat->is_approval_required ? 'Ya' : 'Tidak' }}
+                                </span>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="py-8 text-center text-sm text-[var(--wf-muted)]">Belum ada kategori.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <div>{{ $categories->links() }}</div>
     </div>
 </div>
 @endsection
-

@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Profile;
 
 use App\Http\Controllers\Controller;
 use App\Models\Company;
-use App\Models\CompanyLogo;
 use App\Models\BankReconciliationItem;
 use App\Models\BankStatement;
 use App\Models\BankTransaction;
@@ -30,7 +29,6 @@ class AdminToolsController extends Controller
             'usersCount' => $usersQuery->count(),
             'rolesCount' => UserVisibility::actorIsSuperAdmin() ? Role::query()->count() : 0,
             'companiesCount' => Company::query()->count(),
-            'logosCount' => CompanyLogo::query()->count(),
             'sopsCount' => Sop::query()->count(),
             'documentationsCount' => Documentation::query()->count(),
             'documentCategoriesCount' => DocumentCategory::query()->count(),
@@ -73,13 +71,6 @@ class AdminToolsController extends Controller
     {
         return view('profile.admin-tools.company', [
             'company' => Company::query()->latest('id')->first(),
-        ]);
-    }
-
-    public function branding()
-    {
-        return view('profile.admin-tools.branding', [
-            'logos' => CompanyLogo::query()->ordered()->paginate(20),
         ]);
     }
 

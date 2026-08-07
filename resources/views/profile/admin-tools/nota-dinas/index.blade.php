@@ -3,93 +3,92 @@
 @section('profile-page-title', 'Nota Dinas')
 @section('profile-page-subtitle', 'Monitoring Nota Dinas dan status pembayarannya (khusus super admin)')
 
+@include('profile.admin-tools.partials.wf-admin-styles')
+
 @section('profile-content')
-<div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden p-6 space-y-6">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="border border-gray-200 rounded-xl p-4">
-            <div class="text-xs text-gray-500">Total Nota Dinas</div>
-            <div class="mt-1 text-lg font-semibold text-gray-900">{{ number_format($notaDinasCount) }}</div>
-        </div>
-        <div class="border border-gray-200 rounded-xl p-4">
-            <div class="text-xs text-gray-500">Total Detail</div>
-            <div class="mt-1 text-lg font-semibold text-gray-900">{{ number_format($detailsCount) }}</div>
-            <div class="mt-1 text-xs text-gray-600">{{ number_format($detailsPaidCount) }} sudah dibayar</div>
-        </div>
-        <div class="border border-gray-200 rounded-xl p-4">
-            <div class="text-xs text-gray-500">Total Jumlah Transfer (Detail)</div>
-            <div class="mt-1 text-lg font-semibold text-gray-900">Rp {{ number_format((float) $detailsSum, 0, ',', '.') }}</div>
-        </div>
-    </div>
+<div class="wf-profile-card overflow-hidden">
+    @include('profile.admin-tools.partials.wf-admin-header', [
+        'eyebrow' => 'Keuangan',
+        'title' => 'Nota Dinas',
+        'subtitle' => 'Monitoring nota dinas dan status pembayarannya.',
+    ])
 
-    <div class="flex flex-wrap gap-2">
-        @foreach($statusSummary as $s => $c)
-            <span class="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs">
-                {{ $s ?? '-' }}: {{ number_format((int) $c) }}
-            </span>
-        @endforeach
-    </div>
+    <div class="p-6 space-y-5">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="wf-admin-stat">
+                <div class="wf-admin-stat__label">Total Nota Dinas</div>
+                <div class="wf-admin-stat__value">{{ number_format($notaDinasCount) }}</div>
+            </div>
+            <div class="wf-admin-stat">
+                <div class="wf-admin-stat__label">Total Detail</div>
+                <div class="wf-admin-stat__value">{{ number_format($detailsCount) }}</div>
+                <div class="mt-1 text-xs font-medium text-[var(--wf-muted)]">{{ number_format($detailsPaidCount) }} sudah dibayar</div>
+            </div>
+            <div class="wf-admin-stat">
+                <div class="wf-admin-stat__label">Total Jumlah Transfer</div>
+                <div class="wf-admin-stat__value">Rp {{ number_format((float) $detailsSum, 0, ',', '.') }}</div>
+            </div>
+        </div>
 
-    <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-3">
-        <input type="text" name="q" value="{{ $q }}" placeholder="Cari no_nd / hal / catatan" class="text-xs border border-gray-200 w-full rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200">
-
-        <select name="status" class="w-full border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200">
-            <option value="">Semua Status</option>
-            @foreach(['draft','diajukan','disetujui','dibayar','ditolak'] as $opt)
-                <option value="{{ $opt }}" @selected($status === $opt)>{{ ucfirst($opt) }}</option>
+        <div class="flex flex-wrap gap-2">
+            @foreach($statusSummary as $s => $c)
+                <span class="wf-admin-badge wf-admin-badge--muted">
+                    {{ $s ?? '-' }}: {{ number_format((int) $c) }}
+                </span>
             @endforeach
-        </select>
+        </div>
 
-        <input type="month" name="month" value="{{ $month }}"
-            class="w-full border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200">
+        <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <input type="text" name="q" value="{{ $q }}" placeholder="Cari no_nd / hal / catatan" class="wf-admin-input">
+            <select name="status" class="wf-admin-select">
+                <option value="">Semua Status</option>
+                @foreach(['draft','diajukan','disetujui','dibayar','ditolak'] as $opt)
+                    <option value="{{ $opt }}" @selected($status === $opt)>{{ ucfirst($opt) }}</option>
+                @endforeach
+            </select>
+            <input type="month" name="month" value="{{ $month }}" class="wf-admin-input">
+            <button type="submit" class="wf-btn-gold inline-flex items-center justify-center px-4 py-2.5 text-sm">Terapkan</button>
+        </form>
 
-        <button type="submit" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold">Terapkan</button>
-    </form>
-
-    <div class="overflow-x-auto">
-        <table class="min-w-full text-sm">
-            <thead>
-                <tr class="text-left text-xs uppercase tracking-wide text-gray-500 border-b">
-                    <th class="py-3 pr-4">Tanggal</th>
-                    <th class="py-3 pr-4">No ND</th>
-                    <th class="py-3 pr-4">Hal</th>
-                    <th class="py-3 pr-4">Status</th>
-                    <th class="py-3 pr-4">Detail</th>
-                    <th class="py-3 pr-4">Total Detail</th>
-                    <th class="py-3 pr-4"></th>
-                </tr>
-            </thead>
-            <tbody class="divide-y">
-                @forelse($notaDinas as $nd)
-                    <tr class="text-gray-800">
-                        <td class="py-3 pr-4 text-xs text-gray-600">{{ optional($nd->tanggal)->format('d-m-Y') ?? '-' }}</td>
-                        <td class="py-3 pr-4 text-xs">{{ $nd->no_nd }}</td>
-                        <td class="py-3 pr-4 text-xs">{{ $nd->hal }}</td>
-                        <td class="py-3 pr-4">
-                            <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700 text-xs">{{ $nd->status ?? '-' }}</span>
-                        </td>
-                        <td class="py-3 pr-4 text-xs text-gray-700">{{ number_format((int) ($nd->details_paid_count ?? 0)) }}</td>
-                        <td class="py-3 pr-4">
-                            <div class="text-xs text-gray-700">{{ number_format((int) ($nd->details_count ?? 0)) }} item</div>
-                            <div class="text-xs text-gray-500">{{ number_format((float) ($nd->details_sum ?? 0), 0, ',', '.') }}</div>
-                        </td>
-                        <td class="py-3 pr-4">
-                            <a href="{{ route('profile.admin-tools.nota-dinas.show', $nd) }}"
-                                class="inline-flex items-center px-3 py-1.5 rounded-lg bg-gray-900 text-white text-xs font-semibold hover:bg-gray-800 transition">
-                                Detail
-                            </a>
-                        </td>
-                    </tr>
-                @empty
+        <div class="wf-admin-table-wrap">
+            <table class="wf-admin-table min-w-full text-sm">
+                <thead>
                     <tr>
-                        <td colspan="7" class="py-6 text-center text-sm text-gray-500">Tidak ada data.</td>
+                        <th>Tanggal</th>
+                        <th>No ND</th>
+                        <th>Hal</th>
+                        <th>Status</th>
+                        <th>Detail</th>
+                        <th>Total Detail</th>
+                        <th></th>
                     </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+                </thead>
+                <tbody class="divide-y divide-[var(--wf-line)]">
+                    @forelse($notaDinas as $nd)
+                        <tr>
+                            <td class="text-xs text-[var(--wf-muted)]">{{ optional($nd->tanggal)->format('d-m-Y') ?? '-' }}</td>
+                            <td class="text-xs font-semibold text-[var(--wf-navy)]">{{ $nd->no_nd }}</td>
+                            <td class="text-xs text-[var(--wf-ink)]">{{ $nd->hal }}</td>
+                            <td><span class="wf-admin-badge">{{ $nd->status ?? '-' }}</span></td>
+                            <td class="text-xs text-[var(--wf-ink)]">{{ number_format((int) ($nd->details_paid_count ?? 0)) }}</td>
+                            <td>
+                                <div class="text-xs font-semibold text-[var(--wf-ink)]">{{ number_format((int) ($nd->details_count ?? 0)) }} item</div>
+                                <div class="text-xs text-[var(--wf-muted)] tabular-nums">{{ number_format((float) ($nd->details_sum ?? 0), 0, ',', '.') }}</div>
+                            </td>
+                            <td class="text-right">
+                                <a href="{{ route('profile.admin-tools.nota-dinas.show', $nd) }}" class="wf-admin-link-chip">Detail</a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="py-8 text-center text-sm text-[var(--wf-muted)]">Tidak ada data.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
 
-    <div>
-        {{ $notaDinas->links() }}
+        <div>{{ $notaDinas->links() }}</div>
     </div>
 </div>
 @endsection

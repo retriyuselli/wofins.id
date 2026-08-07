@@ -169,7 +169,7 @@
 
                 <div class="p-6 space-y-5">
                     <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
-                        <div class="rounded-2xl border border-[var(--wf-line)] bg-[var(--wf-cream)] p-4">
+                        <div class="wf-portal-tile rounded-2xl border border-[var(--wf-line)] bg-[var(--wf-cream)] p-4">
                             <div class="text-[10px] font-bold uppercase tracking-wide text-[var(--wf-muted)]">Jam Masuk</div>
                             <div class="mt-2 text-2xl font-bold text-[var(--wf-navy)] tracking-tight">{{ $jamMasuk }}</div>
                             @if (($absensiHariIni?->menit_terlambat ?? 0) > 0)
@@ -178,7 +178,7 @@
                                 </div>
                             @endif
                         </div>
-                        <div class="rounded-2xl border border-[var(--wf-line)] bg-white p-4">
+                        <div class="wf-portal-tile rounded-2xl border border-[var(--wf-line)] bg-white p-4">
                             <div class="text-[10px] font-bold uppercase tracking-wide text-[var(--wf-muted)]">Jam Pulang</div>
                             <div class="mt-2 text-2xl font-bold text-[var(--wf-navy)] tracking-tight">{{ $jamPulang }}</div>
                             @if (($absensiHariIni?->menit_pulang_cepat ?? 0) > 0)
@@ -187,7 +187,7 @@
                                 </div>
                             @endif
                         </div>
-                        <div class="rounded-2xl border border-[var(--wf-line)] bg-[linear-gradient(145deg,var(--wf-navy)_0%,#14335a_100%)] p-4">
+                        <div class="wf-portal-tile rounded-2xl border border-[var(--wf-line)] bg-[linear-gradient(145deg,var(--wf-navy)_0%,#14335a_100%)] p-4">
                             <div class="text-[10px] font-bold uppercase tracking-wide text-white/55">Durasi Kerja</div>
                             <div class="mt-2 text-2xl font-bold text-[var(--wf-gold-soft)] tracking-tight">{{ $totalJamKerja }}</div>
                             <div class="mt-1 text-xs text-white/55">
@@ -209,7 +209,7 @@
                         <input type="hidden" name="akurasi_meter" id="absensi-akurasi" value="{{ old('akurasi_meter') }}">
                         <input type="hidden" name="nama_perangkat" id="absensi-perangkat" value="{{ old('nama_perangkat') }}">
 
-                        <div class="rounded-2xl border border-[var(--wf-line)] bg-[var(--wf-cream)] p-4">
+                        <div class="wf-portal-tile rounded-2xl border border-[var(--wf-line)] bg-[var(--wf-cream)] p-4">
                             <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                                 <div>
                                     <div class="text-sm font-bold text-[var(--wf-navy)]">Status lokasi perangkat</div>
@@ -232,7 +232,7 @@
                         </div>
 
                         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <div class="rounded-2xl border border-[var(--wf-line)] bg-white p-4">
+                            <div class="wf-portal-tile rounded-2xl border border-[var(--wf-line)] bg-white p-4">
                                 <label for="foto" class="text-sm font-bold text-[var(--wf-navy)]">Foto Absensi</label>
                                 <p class="mt-1 text-xs text-[var(--wf-muted)]">
                                     {{ $wajibFoto ? 'Wajib diunggah sesuai pengaturan absensi.' : 'Opsional, namun disarankan untuk dokumentasi.' }}
@@ -268,7 +268,7 @@
                                     @if ($wajibFoto) required @endif>
                             </div>
 
-                            <div class="rounded-2xl border border-[var(--wf-line)] bg-[var(--wf-cream)]/60 p-4">
+                            <div class="wf-portal-tile rounded-2xl border border-[var(--wf-line)] bg-[var(--wf-cream)]/60 p-4">
                                 <div class="text-sm font-bold text-[var(--wf-navy)]">Aturan Aktif</div>
                                 @if ($pengaturan)
                                     <ul class="mt-3 space-y-2.5 text-sm">
@@ -360,7 +360,7 @@
                 <h3 class="text-lg font-bold text-[var(--wf-navy)]">Lokasi Absensi Aktif</h3>
                 <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
                     @forelse ($lokasiAktif as $lokasi)
-                        <div class="rounded-2xl border border-[var(--wf-line)] bg-[var(--wf-cream)]/40 p-4">
+                        <div class="wf-portal-tile rounded-2xl border border-[var(--wf-line)] bg-[var(--wf-cream)]/40 p-4">
                             <div class="font-bold text-[var(--wf-navy)]">{{ $lokasi->nama }}</div>
                             <div class="mt-1 text-sm text-[var(--wf-muted)]">{{ $lokasi->alamat ?: 'Alamat belum diisi.' }}</div>
                             <div class="mt-2 text-xs font-medium text-[var(--wf-navy)]/70">
@@ -466,33 +466,33 @@
                     </div>
                 </div>
                 <div class="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-3">
-                    <div class="rounded-2xl border border-[var(--wf-line)] bg-[var(--wf-cream)] p-4">
+                    <div class="wf-portal-tile rounded-2xl border border-[var(--wf-line)] bg-[var(--wf-cream)] p-4">
                         <div class="text-[10px] font-bold uppercase tracking-wide text-[var(--wf-muted)]">Hadir</div>
                         <div class="mt-2 text-2xl font-bold text-[var(--wf-navy)]">{{ $ringkasan['hadir'] }}</div>
                     </div>
-                    <div class="rounded-2xl border border-[var(--wf-gold)]/30 bg-[var(--wf-gold)]/10 p-4">
+                    <div class="wf-portal-tile rounded-2xl border border-[var(--wf-gold)]/30 bg-[var(--wf-gold)]/10 p-4">
                         <div class="text-[10px] font-bold uppercase tracking-wide text-[var(--wf-gold)]">Terlambat</div>
                         <div class="mt-2 text-2xl font-bold text-[var(--wf-navy)]">{{ $ringkasan['terlambat'] }}</div>
                     </div>
-                    <div class="rounded-2xl border border-[var(--wf-line)] bg-white p-4">
+                    <div class="wf-portal-tile rounded-2xl border border-[var(--wf-line)] bg-white p-4">
                         <div class="text-[10px] font-bold uppercase tracking-wide text-[var(--wf-muted)]">Cuti</div>
                         <div class="mt-2 text-2xl font-bold text-[var(--wf-navy)]">{{ $ringkasan['cuti'] }}</div>
                     </div>
-                    <div class="rounded-2xl border border-[var(--wf-line)] bg-white p-4">
+                    <div class="wf-portal-tile rounded-2xl border border-[var(--wf-line)] bg-white p-4">
                         <div class="text-[10px] font-bold uppercase tracking-wide text-[var(--wf-muted)]">Libur</div>
                         <div class="mt-2 text-2xl font-bold text-[var(--wf-navy)]">{{ $ringkasan['libur'] ?? 0 }}</div>
                     </div>
-                    <div class="rounded-2xl border border-[var(--wf-line)] bg-white p-4">
+                    <div class="wf-portal-tile rounded-2xl border border-[var(--wf-line)] bg-white p-4">
                         <div class="text-[10px] font-bold uppercase tracking-wide text-[var(--wf-muted)]">Alfa</div>
                         <div class="mt-2 text-2xl font-bold text-[var(--wf-muted)]">{{ $ringkasan['alfa'] ?? 0 }}</div>
                     </div>
-                    <div class="rounded-2xl border border-[var(--wf-line)] bg-[linear-gradient(145deg,var(--wf-navy)_0%,#14335a_100%)] p-4">
+                    <div class="wf-portal-tile rounded-2xl border border-[var(--wf-line)] bg-[linear-gradient(145deg,var(--wf-navy)_0%,#14335a_100%)] p-4">
                         <div class="text-[10px] font-bold uppercase tracking-wide text-white/55">Total Kerja</div>
                         <div class="mt-2 text-lg font-bold text-[var(--wf-gold-soft)]">
                             {{ floor($ringkasan['total_menit_kerja'] / 60) }}j {{ $ringkasan['total_menit_kerja'] % 60 }}m
                         </div>
                     </div>
-                    <div class="rounded-2xl border border-[var(--wf-line)] bg-[var(--wf-cream)] p-4 lg:col-span-3 sm:col-span-2">
+                    <div class="wf-portal-tile rounded-2xl border border-[var(--wf-line)] bg-[var(--wf-cream)] p-4 lg:col-span-3 sm:col-span-2">
                         <div class="text-[10px] font-bold uppercase tracking-wide text-[var(--wf-muted)]">Lembur Disetujui</div>
                         <div class="mt-2 text-lg font-bold text-[var(--wf-navy)]">
                             {{ floor(($ringkasan['total_menit_lembur'] ?? 0) / 60) }}j {{ ($ringkasan['total_menit_lembur'] ?? 0) % 60 }}m

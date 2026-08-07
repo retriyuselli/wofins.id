@@ -169,7 +169,7 @@
         </div>
     </div>
 
-    <div class="space-y-3">
+        <div class="space-y-3">
         <a href="/leave/show"
             class="wf-btn-gold w-full inline-flex items-center justify-center py-3.5 px-6 text-sm group">
             <svg class="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-200" fill="none"
@@ -180,24 +180,31 @@
             Ajukan Cuti Baru
         </a>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <a href="/admin/leave-requests"
-                class="rounded-2xl border border-[var(--wf-line)] bg-white hover:bg-[var(--wf-cream)] text-[var(--wf-navy)] font-semibold py-3.5 px-4 transition flex items-center justify-center text-sm">
-                <svg class="w-4 h-4 mr-2 text-[var(--wf-gold)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2m2-6v6a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2m-2 6V9a2 2 0 012-2h2"></path>
-                </svg>
-                Lihat Semua Permintaan
+        @if(auth()->user()?->hasRole(['super_admin', 'admin', 'finance']))
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <a href="{{ route('profile.leave-manage') }}"
+                    class="rounded-2xl border border-[var(--wf-line)] bg-white hover:bg-[var(--wf-cream)] text-[var(--wf-navy)] font-semibold py-3.5 px-4 transition flex items-center justify-center text-sm">
+                    <svg class="w-4 h-4 mr-2 text-[var(--wf-gold)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2m2-6v6a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2m-2 6V9a2 2 0 012-2h2"></path>
+                    </svg>
+                    Lihat Semua Permintaan
+                </a>
+                <a href="{{ route('profile.leave-manage', ['status' => 'pending']) }}"
+                    class="rounded-2xl border border-[var(--wf-gold)]/35 bg-[var(--wf-gold)]/10 hover:bg-[var(--wf-gold)]/20 text-[var(--wf-navy)] font-semibold py-3.5 px-4 transition flex items-center justify-center text-sm">
+                    <svg class="w-4 h-4 mr-2 text-[var(--wf-gold)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Menunggu Peninjauan
+                </a>
+            </div>
+        @else
+            <a href="{{ route('leave.status') }}"
+                class="rounded-2xl border border-[var(--wf-line)] bg-white hover:bg-[var(--wf-cream)] text-[var(--wf-navy)] font-semibold py-3.5 px-4 transition flex items-center justify-center text-sm w-full">
+                Lihat Status Pengajuan
             </a>
-            <a href="/admin/leave-requests?tableFilters[status][value]=pending"
-                class="rounded-2xl border border-[var(--wf-gold)]/35 bg-[var(--wf-gold)]/10 hover:bg-[var(--wf-gold)]/20 text-[var(--wf-navy)] font-semibold py-3.5 px-4 transition flex items-center justify-center text-sm">
-                <svg class="w-4 h-4 mr-2 text-[var(--wf-gold)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                Menunggu Peninjauan
-            </a>
-        </div>
+        @endif
     </div>
 
     <div class="wf-profile-card p-5 sm:p-6">
