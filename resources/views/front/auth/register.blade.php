@@ -3,27 +3,26 @@
 @section('title', 'Daftar — WOFINS')
 
 @push('styles')
+@include('front.partials.wf-front-base-styles')
 <style>
-        :root {
-            --wf-navy: #0b1f3a;
-            --wf-navy-deep: #071526;
-            --wf-gold: #c9a227;
-            --wf-cream: #f7f4ee;
-            --wf-ink: #1a2332;
-            --wf-muted: #5c6675;
-            --wf-line: #e6e2d9;
-        }
-
         .wf-auth {
             font-family: 'Poppins', system-ui, sans-serif;
             color: var(--wf-ink);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            position: relative;
+            overflow: hidden;
             background:
                 radial-gradient(ellipse 80% 50% at 10% 20%, rgba(201, 162, 39, 0.12), transparent 55%),
                 radial-gradient(ellipse 60% 40% at 90% 80%, rgba(11, 31, 58, 0.08), transparent 50%),
                 linear-gradient(180deg, #fff 0%, var(--wf-cream) 100%);
+        }
+
+        .wf-auth > header,
+        .wf-auth > .wf-auth-main {
+            position: relative;
+            z-index: 1;
         }
 
         .wf-auth-main {
@@ -41,6 +40,30 @@
             }
         }
 
+        .wf-auth-panel {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wf-auth-panel .wf-deco__blob--a {
+            opacity: 0.55;
+            background: radial-gradient(circle at 30% 30%, rgba(201, 162, 39, 0.5), transparent 70%);
+        }
+
+        .wf-auth-panel .wf-deco__ring--a,
+        .wf-auth-panel .wf-deco__ring--b {
+            border-color: rgba(255, 255, 255, 0.18);
+        }
+
+        .wf-auth-panel .wf-deco__sq--a {
+            border-color: rgba(201, 162, 39, 0.45);
+        }
+
+        .wf-auth-panel .wf-deco__dot--a {
+            background: var(--wf-gold-soft);
+            opacity: 0.7;
+        }
+
         .wf-auth-input {
             width: 100%;
             border: 1px solid var(--wf-line);
@@ -56,32 +79,6 @@
         .wf-auth-input:focus {
             border-color: rgba(201, 162, 39, 0.7);
             box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.15);
-        }
-
-        .wf-btn-navy {
-            background: var(--wf-navy);
-            color: #fff;
-            border-radius: 999px;
-            font-weight: 700;
-            transition: background .2s ease, transform .2s ease;
-        }
-
-        .wf-btn-navy:hover {
-            background: var(--wf-navy-deep);
-            transform: translateY(-1px);
-        }
-
-        .wf-btn-ghost {
-            border: 1.5px solid var(--wf-navy);
-            color: var(--wf-navy);
-            border-radius: 999px;
-            font-weight: 700;
-            background: #fff;
-            transition: background .2s ease;
-        }
-
-        .wf-btn-ghost:hover {
-            background: var(--wf-cream);
         }
 
         .wf-btn-google {
@@ -117,13 +114,13 @@
             height: 1px;
             background: var(--wf-line);
         }
-
-        [x-cloak] { display: none !important; }
     </style>
 @endpush
 
 @section('content')
     <div class="wf-auth">
+        @include('front.partials.wf-deco-shapes')
+
         <header class="shrink-0 border-b border-[var(--wf-line)]/70 bg-white/70 backdrop-blur-sm">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center">
                 <a href="{{ route('home') }}" class="inline-flex items-center gap-2 text-2xl font-bold text-[var(--wf-navy)] tracking-wide">
@@ -135,10 +132,9 @@
         <div class="wf-auth-main">
         <div class="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid lg:grid-cols-2 rounded-3xl overflow-hidden border border-[var(--wf-line)] bg-white shadow-[0_24px_60px_-28px_rgba(11,31,58,0.35)]">
-                <div class="relative min-h-[220px] lg:min-h-[620px] text-white overflow-hidden order-1 lg:order-none"
+                <div class="wf-auth-panel relative min-h-[220px] lg:min-h-[620px] text-white order-1 lg:order-none"
                      style="background: linear-gradient(145deg, #071526 0%, #0b1f3a 55%, #14335a 100%);">
-                    <span class="absolute w-40 h-40 rounded-full -right-10 -top-12 bg-[rgba(201,162,39,0.18)]" aria-hidden="true"></span>
-                    <span class="absolute w-24 h-24 rounded-full left-10 bottom-24 bg-[rgba(201,162,39,0.12)]" aria-hidden="true"></span>
+                    @include('front.partials.wf-deco-shapes')
                     <div class="relative z-10 h-full flex flex-col justify-end p-8 sm:p-10">
                         <p class="text-xs font-bold tracking-[0.2em] uppercase text-[var(--wf-gold)]">Mulai gratis</p>
                         <h2 class="mt-3 text-2xl sm:text-3xl font-bold leading-tight">

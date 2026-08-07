@@ -10,8 +10,9 @@
     <div class="wf-page">
         @include('front.partials.wf-nav')
 
-        <section class="pt-14 pb-10 bg-gradient-to-b from-white to-[var(--wf-cream)]">
-            <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <section class="wf-hero pt-14 pb-12 bg-gradient-to-b from-white to-[var(--wf-cream)]">
+            @include('front.partials.wf-deco-shapes')
+            <div class="wf-hero-inner max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                 <p class="text-xs font-bold tracking-[0.2em] uppercase text-[var(--wf-gold)] mb-3">Tentang Kami</p>
                 <h1 class="text-3xl sm:text-4xl font-bold text-[var(--wf-navy)] leading-tight">
                     WOFINS
@@ -25,8 +26,14 @@
             </div>
         </section>
 
-        <section class="py-14 bg-white">
-            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+        <section class="wf-section-deco py-14 bg-white">
+            <div class="wf-deco" aria-hidden="true">
+                <span class="wf-deco__blob wf-deco__blob--b" style="top: auto; bottom: 10%; left: auto; right: -3rem;"></span>
+                <span class="wf-deco__ring wf-deco__ring--a"></span>
+                <span class="wf-deco__tri"></span>
+                <span class="wf-deco__sq wf-deco__sq--a"></span>
+            </div>
+            <div class="wf-section-inner max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
                 <div class="max-w-3xl">
                     <h2 class="text-2xl font-bold text-[var(--wf-navy)]">Siapa di balik WOFINS</h2>
                     <p class="mt-3 text-[var(--wf-muted)] leading-relaxed">
@@ -51,12 +58,16 @@
                     @endforeach
                 </div>
 
-                <div class="rounded-2xl border border-[var(--wf-line)] bg-[var(--wf-cream)]/60 px-6 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
-                    <div>
+                <div class="relative overflow-hidden rounded-2xl border border-[var(--wf-line)] bg-[var(--wf-cream)]/60 px-6 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+                    <div class="wf-deco" aria-hidden="true">
+                        <span class="wf-deco__dot wf-deco__dot--a" style="top: 1.25rem; right: 1.5rem;"></span>
+                        <span class="wf-deco__sq wf-deco__sq--b" style="bottom: 1rem; left: 1rem;"></span>
+                    </div>
+                    <div class="relative z-[1]">
                         <p class="font-bold text-[var(--wf-navy)] text-lg">Makna Wedding & Event Planner</p>
                         <p class="mt-1 text-sm text-[var(--wf-muted)]">Palembang, Indonesia · support@wofins.id</p>
                     </div>
-                    <div class="flex flex-wrap gap-3">
+                    <div class="relative z-[1] flex flex-wrap gap-3">
                         <a href="{{ route('kontak') }}" class="wf-btn-navy px-5 py-2.5 text-sm">Kontak Kami</a>
                         <a href="{{ route('harga') }}" class="wf-btn-ghost px-5 py-2.5 text-sm">Lihat Harga</a>
                     </div>

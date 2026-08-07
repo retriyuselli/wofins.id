@@ -10,8 +10,9 @@
     <div class="wf-page">
         @include('front.partials.wf-nav')
 
-        <section class="pt-14 pb-10 bg-gradient-to-b from-white to-[var(--wf-cream)]">
-            <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <section class="wf-hero pt-14 pb-12 bg-gradient-to-b from-white to-[var(--wf-cream)]">
+            @include('front.partials.wf-deco-shapes')
+            <div class="wf-hero-inner max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                 <p class="text-xs font-bold tracking-[0.2em] uppercase text-[var(--wf-gold)] mb-3">{{ $solution['eyebrow'] }}</p>
                 <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[rgba(201,162,39,0.14)] text-[var(--wf-gold)] text-xl mb-4">
                     <i class="fa-solid {{ $solution['icon'] }}"></i>
@@ -25,8 +26,15 @@
             </div>
         </section>
 
-        <section class="py-14 bg-white">
-            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section class="wf-section-deco py-14 bg-white">
+            <div class="wf-deco" aria-hidden="true">
+                <span class="wf-deco__blob wf-deco__blob--a" style="top: -6rem; right: -5rem; opacity: 0.35;"></span>
+                <span class="wf-deco__ring wf-deco__ring--a"></span>
+                <span class="wf-deco__dot wf-deco__dot--b"></span>
+                <span class="wf-deco__sq wf-deco__sq--a"></span>
+                <span class="wf-deco__tri"></span>
+            </div>
+            <div class="wf-section-inner max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="grid md:grid-cols-2 gap-5">
                     @foreach ($solution['points'] as $point)
                         <div class="wf-info-card">
@@ -53,7 +61,8 @@
                     </div>
                 </div>
 
-                <div class="mt-12 rounded-2xl bg-[var(--wf-navy)] px-6 py-8 text-center">
+                <div class="wf-cta-panel mt-12">
+                    @include('front.partials.wf-deco-shapes')
                     <p class="text-white font-semibold text-lg">{{ $solution['cta'] }}</p>
                     <div class="mt-5 flex flex-wrap justify-center gap-3">
                         <a href="{{ route('kontak') }}?paket=professional" class="wf-btn-gold px-6 py-3 text-sm">Hubungi Sales</a>
