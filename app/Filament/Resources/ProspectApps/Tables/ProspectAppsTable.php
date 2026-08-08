@@ -77,7 +77,7 @@ class ProspectAppsTable
                     ->badge()
                     ->color('primary')
                     ->formatStateUsing(fn (?string $state): string => PricingPlans::shortLabel($state))
-                    ->tooltip('Minat calon (sales) — bukan paket aktif di Company.'),
+                    ->tooltip('Minat calon — jadi subscription_plan Company saat Approve.'),
 
                 TextColumn::make('harga')
                     ->label('Anggaran')

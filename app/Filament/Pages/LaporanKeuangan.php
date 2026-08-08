@@ -29,7 +29,7 @@ class LaporanKeuangan extends Page
 
     protected string $view = 'filament.pages.laporan-keuangan';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Finance';
+    protected static string|\UnitEnum|null $navigationGroup = 'Keuangan';
 
     public $transaksi = [];
 

@@ -9,10 +9,13 @@ use App\Filament\Resources\FixedAssets\Pages\ListFixedAssets;
 use App\Filament\Resources\FixedAssets\Pages\ViewFixedAsset;
 use App\Filament\Resources\FixedAssets\Schemas\FixedAssetForm;
 use App\Filament\Resources\FixedAssets\Tables\FixedAssetsTable;
-use App\Models\FixedAsset;
 use App\Filament\Resources\BaseResource;
+use App\Models\FixedAsset;
+use App\Support\CompanySubscription;
+use App\Support\UserVisibility;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class FixedAssetResource extends BaseResource
 {
@@ -54,13 +57,23 @@ class FixedAssetResource extends BaseResource
         ];
     }
 
+    public static function getEloquentQuery(): Builder
+    {
+        return UserVisibility::constrainCompanyQuery(parent::getEloquentQuery());
+    }
+
     public static function getNavigationBadge(): ?string
     {
-        return (string) static::getModel()::count();
+        return CompanySubscription::navigationBadge(CompanySubscription::RESOURCE_FIXED_ASSETS);
     }
 
     public static function getNavigationBadgeTooltip(): ?string
     {
-        return 'Total aset tetap terdaftar';
+        return CompanySubscription::summary(CompanySubscription::RESOURCE_FIXED_ASSETS);
+    }
+
+    public static function getNavigationBadgeColor(): string|array|null
+    {
+        return CompanySubscription::canCreate(CompanySubscription::RESOURCE_FIXED_ASSETS) ? 'primary' : 'warning';
     }
 }

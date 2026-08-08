@@ -105,7 +105,7 @@ class ProspectAppForm
                     ->columns(2),
 
                 Section::make('Detail Pendaftaran')
-                    ->description('Minat paket & status lead — tidak mengubah paket langganan Company')
+                    ->description('Minat paket calon. Saat Users → Approve, sistem membuat Company + mengisi subscription_plan dari minat ini.')
                     ->icon('heroicon-o-clipboard-document-list')
                     ->schema([
                         Textarea::make('reason_for_interest')
@@ -134,8 +134,8 @@ class ProspectAppForm
                                 $set('bayar', null);
                             })
                             ->helperText(fn (Get $get): string => $get('service') === 'lain_lain'
-                                ? 'Custom — isi anggaran manual. Ini minat sales, bukan paket aktif di Company.'
-                                : 'Sama dengan halaman Harga. Minat calon saja — paket aktif diatur di Admin → Company.'),
+                                ? 'Custom — isi anggaran manual. Saat Approve, paket default Starter jika tidak bisa dipetakan.'
+                                : 'Saat Approve, minat ini menjadi subscription_plan di Company WO yang dibuat.'),
                     ])
                     ->columns(1),
 

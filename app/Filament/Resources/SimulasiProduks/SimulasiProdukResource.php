@@ -8,16 +8,16 @@ use App\Filament\Resources\SimulasiProduks\Pages\ListSimulasiProduks;
 use App\Filament\Resources\SimulasiProduks\Pages\ViewSimulasiInvoice;
 use App\Filament\Resources\SimulasiProduks\Schemas\SimulasiProdukForm;
 use App\Filament\Resources\SimulasiProduks\Tables\SimulasiProduksTable;
-use App\Models\SimulasiProduk;
-use App\Support\Rupiah;
 use App\Filament\Resources\BaseResource;
+use App\Models\SimulasiProduk;
+use App\Support\CompanySubscription;
+use App\Support\Rupiah;
 use App\Support\UserVisibility;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Cache;
 
 class SimulasiProdukResource extends BaseResource
 {
@@ -88,19 +88,18 @@ class SimulasiProdukResource extends BaseResource
         );
     }
 
-    public static function getNavigationBadgeTooltip(): ?string
-    {
-        return 'Total simulasi yang sedang diproses';
-    }
-
     public static function getNavigationBadge(): ?string
     {
-        $scope = UserVisibility::cacheScopeKey();
+        return CompanySubscription::navigationBadge(CompanySubscription::RESOURCE_SIMULASI);
+    }
 
-        return (string) Cache::remember(
-            "nav:simulasi:count:{$scope}",
-            60,
-            fn (): int => (int) static::getEloquentQuery()->count()
-        );
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return CompanySubscription::summary(CompanySubscription::RESOURCE_SIMULASI);
+    }
+
+    public static function getNavigationBadgeColor(): string|array|null
+    {
+        return CompanySubscription::canCreate(CompanySubscription::RESOURCE_SIMULASI) ? 'primary' : 'warning';
     }
 }

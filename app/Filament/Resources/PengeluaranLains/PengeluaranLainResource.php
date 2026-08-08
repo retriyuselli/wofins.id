@@ -8,11 +8,11 @@ use App\Filament\Resources\PengeluaranLains\Pages\ListPengeluaranLains;
 use App\Filament\Resources\PengeluaranLains\Schemas\PengeluaranLainForm;
 use App\Filament\Resources\PengeluaranLains\Tables\PengeluaranLainsTable;
 use App\Filament\Resources\PengeluaranLains\Widgets\PengeluaranOverviewWidgets;
-use App\Models\PengeluaranLain;
 use App\Filament\Resources\BaseResource;
+use App\Models\PengeluaranLain;
+use App\Support\CompanySubscription;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Cache;
 
 class PengeluaranLainResource extends BaseResource
 {
@@ -20,7 +20,9 @@ class PengeluaranLainResource extends BaseResource
 
     protected static ?string $navigationLabel = 'Pengeluaran Lain';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Finance';
+    protected static string|\UnitEnum|null $navigationGroup = 'Kas Operasional';
+
+    protected static ?int $navigationSort = 3;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-arrow-trending-down';
 
@@ -78,7 +80,7 @@ class PengeluaranLainResource extends BaseResource
 
     public static function getNavigationGroup(): ?string
     {
-        return 'Finance';
+        return 'Kas Operasional';
     }
 
     public static function getPages(): array
@@ -92,36 +94,17 @@ class PengeluaranLainResource extends BaseResource
 
     public static function getNavigationBadge(): ?string
     {
-        return (string) static::getCachedNavigationBadgeCount();
+        return CompanySubscription::navigationBadge(CompanySubscription::RESOURCE_PENGELUARAN_LAINS);
     }
 
     public static function getNavigationBadgeColor(): string|array|null
     {
-        $count = static::getCachedNavigationBadgeCount();
-
-        return match (true) {
-            $count > 100 => 'danger',
-            $count > 50 => 'warning',
-            $count > 0 => 'success',
-            default => 'gray'
-        };
-    }
-
-    private static function getCachedNavigationBadgeCount(): int
-    {
-        $modelClass = static::getModel();
-        $year = 2025;
-
-        return Cache::remember(
-            "nav:pengeluaran_lains:count:{$year}",
-            60,
-            fn (): int => (int) $modelClass::whereYear('date_expense', $year)->count()
-        );
+        return CompanySubscription::canCreate(CompanySubscription::RESOURCE_PENGELUARAN_LAINS) ? 'primary' : 'warning';
     }
 
     public static function getNavigationBadgeTooltip(): ?string
     {
-        return 'Total pengeluaran lain tahun 2025 (di luar operasional harian)';
+        return CompanySubscription::summary(CompanySubscription::RESOURCE_PENGELUARAN_LAINS);
     }
 
     public static function getWidgets(): array

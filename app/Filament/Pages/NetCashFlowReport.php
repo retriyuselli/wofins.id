@@ -20,7 +20,7 @@ class NetCashFlowReport extends Page
 
     protected string $view = 'filament.pages.net-cash-flow-report';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Finance';
+    protected static string|\UnitEnum|null $navigationGroup = 'Keuangan';
 
     protected static ?string $title = 'Laporan Arus Kas Bersih (Net Cash Flow)';
 

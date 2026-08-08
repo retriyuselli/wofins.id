@@ -10,8 +10,11 @@ use App\Filament\Resources\PaymentMethods\Tables\PaymentMethodsTable;
 use App\Filament\Resources\PaymentMethods\Widgets\PaymentMethodStatsWidget;
 use App\Models\PaymentMethod;
 use App\Filament\Resources\BaseResource;
+use App\Support\CompanySubscription;
+use App\Support\UserVisibility;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 
@@ -74,13 +77,23 @@ class PaymentMethodResource extends BaseResource
         return Gate::allows('ViewAny:PaymentMethod');
     }
 
+    public static function getEloquentQuery(): Builder
+    {
+        return UserVisibility::constrainCompanyQuery(parent::getEloquentQuery());
+    }
+
     public static function getNavigationBadge(): ?string
     {
-        return (string) static::getModel()::count();
+        return CompanySubscription::navigationBadge(CompanySubscription::RESOURCE_PAYMENT_METHODS);
     }
 
     public static function getNavigationBadgeTooltip(): ?string
     {
-        return 'Total rekening bank & kas';
+        return CompanySubscription::summary(CompanySubscription::RESOURCE_PAYMENT_METHODS);
+    }
+
+    public static function getNavigationBadgeColor(): string|array|null
+    {
+        return CompanySubscription::canCreate(CompanySubscription::RESOURCE_PAYMENT_METHODS) ? 'primary' : 'warning';
     }
 }

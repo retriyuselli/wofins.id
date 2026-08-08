@@ -7,11 +7,11 @@ use App\Filament\Resources\Expenses\Pages\ListExpenses;
 use App\Filament\Resources\Expenses\Schemas\ExpenseForm;
 use App\Filament\Resources\Expenses\Tables\ExpensesTable;
 use App\Filament\Resources\Expenses\Widgets\ExpenseOverview;
-use App\Models\Expense;
 use App\Filament\Resources\BaseResource;
+use App\Models\Expense;
+use App\Support\CompanySubscription;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Cache;
 
 class ExpenseResource extends BaseResource
 {
@@ -21,7 +21,9 @@ class ExpenseResource extends BaseResource
 
     protected static ?string $navigationLabel = 'Pengeluaran Wedding';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Keuangan';
+    protected static string|\UnitEnum|null $navigationGroup = 'Kas Proyek';
+
+    protected static ?int $navigationSort = 2;
 
     public static function form(Schema $schema): Schema
     {
@@ -57,35 +59,22 @@ class ExpenseResource extends BaseResource
 
     public static function getNavigationGroup(): ?string
     {
-        return 'Finance';
-    }
-
-    private static function getCachedNavigationBadgeCount(): int
-    {
-        $scope = \App\Support\UserVisibility::cacheScopeKey();
-
-        return Cache::remember(
-            "nav:expenses:count:{$scope}",
-            60,
-            fn (): int => (int) static::getEloquentQuery()->count()
-        );
+        return 'Kas Proyek';
     }
 
     public static function getNavigationBadge(): ?string
     {
-        return (string) static::getCachedNavigationBadgeCount();
+        return CompanySubscription::navigationBadge(CompanySubscription::RESOURCE_EXPENSES);
     }
 
     public static function getNavigationBadgeColor(): string|array|null
     {
-        // Memberikan warna pada badge untuk visibilitas yang lebih baik
-        // Pilihan lain: 'primary', 'success', 'danger', 'info'
-        return 'warning';
+        return CompanySubscription::canCreate(CompanySubscription::RESOURCE_EXPENSES) ? 'primary' : 'warning';
     }
 
     public static function getNavigationBadgeTooltip(): ?string
     {
-        return 'Pengeluaran wedding yang dikeluarkan untuk berbagai keperluan proyek, termasuk pembayaran vendor dan biaya lainnya';
+        return CompanySubscription::summary(CompanySubscription::RESOURCE_EXPENSES);
     }
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder

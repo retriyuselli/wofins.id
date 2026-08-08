@@ -8,13 +8,13 @@ use App\Filament\Resources\ExpenseOps\Pages\ListExpenseOps;
 use App\Filament\Resources\ExpenseOps\Schemas\ExpenseOpForm;
 use App\Filament\Resources\ExpenseOps\Tables\ExpenseOpsTable;
 use App\Filament\Resources\ExpenseOps\Widgets\ExpenseOpsOverview;
-use App\Models\ExpenseOps;
 use App\Filament\Resources\BaseResource;
+use App\Models\ExpenseOps;
+use App\Support\CompanySubscription;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\Facades\Cache;
 
 class ExpenseOpsResource extends BaseResource
 {
@@ -24,7 +24,9 @@ class ExpenseOpsResource extends BaseResource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-cog-8-tooth';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Keuangan';
+    protected static string|\UnitEnum|null $navigationGroup = 'Kas Operasional';
+
+    protected static ?int $navigationSort = 1;
 
     /**
      * Safely convert any value to float for calculations
@@ -94,7 +96,7 @@ class ExpenseOpsResource extends BaseResource
 
     public static function getNavigationGroup(): ?string
     {
-        return 'Finance';
+        return 'Kas Operasional';
     }
 
     public static function getEloquentQuery(): Builder
@@ -110,31 +112,18 @@ class ExpenseOpsResource extends BaseResource
             ]);
     }
 
-    private static function getCachedNavigationBadgeCount(): int
-    {
-        $modelClass = static::getModel();
-
-        return Cache::remember(
-            'nav:expense_ops:count',
-            60,
-            fn (): int => (int) $modelClass::count()
-        );
-    }
-
     public static function getNavigationBadge(): ?string
     {
-        return (string) static::getCachedNavigationBadgeCount();
+        return CompanySubscription::navigationBadge(CompanySubscription::RESOURCE_EXPENSE_OPS);
     }
 
     public static function getNavigationBadgeColor(): string|array|null
     {
-        // Memberikan warna pada badge untuk visibilitas yang lebih baik
-        // Pilihan lain: 'primary', 'success', 'danger', 'info'
-        return 'warning';
+        return CompanySubscription::canCreate(CompanySubscription::RESOURCE_EXPENSE_OPS) ? 'primary' : 'warning';
     }
 
     public static function getNavigationBadgeTooltip(): ?string
     {
-        return 'Pengeluaran operasional harian kantor';
+        return CompanySubscription::summary(CompanySubscription::RESOURCE_EXPENSE_OPS);
     }
 }

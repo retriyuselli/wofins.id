@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Companies\Schemas;
 
 use App\Models\User;
+use App\Support\CompanySubscription;
+use App\Support\ProFeatures;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -18,6 +20,8 @@ class CompanyForm
 {
     public static function configure(Schema $schema): Schema
     {
+        $isSuperAdmin = ProFeatures::actorIsSuperAdmin();
+
         return $schema
             ->components([
                 Tabs::make('Company')
@@ -37,9 +41,9 @@ class CompanyForm
                                                     ->unique(ignoreRecord: true)
                                                     ->placeholder('Nama perusahaan'),
                                                 TextInput::make('business_license')
-                                                    ->required()
                                                     ->maxLength(255)
-                                                    ->placeholder('Nomor izin usaha'),
+                                                    ->placeholder('Nomor izin usaha (opsional)')
+                                                    ->helperText('Boleh dilengkapi kemudian'),
                                                 TextInput::make('owner_name')
                                                     ->required()
                                                     ->minLength(3)
@@ -68,14 +72,16 @@ class CompanyForm
                                                     ->numeric()
                                                     ->minValue(0)
                                                     ->maxValue(100000)
-                                                    ->default(fn () => User::count())
-                                                    ->formatStateUsing(fn ($state) => User::count())
+                                                    ->formatStateUsing(fn ($state) => CompanySubscription::seatsUsed())
                                                     ->disabled()
+                                                    ->dehydrated(false)
                                                     ->placeholder('Jumlah karyawan'),
                                             ]),
                                     ]),
                                 Section::make('Paket Langganan')
-                                    ->description('Bukan role Spatie — menentukan kuota pengguna/vendor/produk/proyek/prospek/simulasi dan fitur yang aktif.')
+                                    ->description($isSuperAdmin
+                                        ? 'Bukan role Spatie — menentukan kuota dan fitur yang aktif.'
+                                        : 'Paket diatur saat Approve / oleh admin platform. Hubungi support untuk upgrade.')
                                     ->schema([
                                         Grid::make()
                                             ->columns(2)
@@ -84,56 +90,165 @@ class CompanyForm
                                                     ->label('Paket')
                                                     ->options(\App\Support\PricingPlans::companyPlanOptions())
                                                     ->placeholder('Pilih paket')
-                                                    ->helperText(fn () => 'Hanya diubah di sini (Approve user tidak mengubah paket). '
-                                                        .\App\Support\CompanySubscription::quotasOverview()
-                                                        .' · Kursi user tidak menghitung akun super_admin.')
+                                                    ->disabled(! $isSuperAdmin)
+                                                    ->dehydrated($isSuperAdmin)
+                                                    ->helperText(fn () => $isSuperAdmin
+                                                        ? ('1 WO = 1 Company. '.CompanySubscription::quotasOverview()
+                                                            .' · Kursi user tidak menghitung akun super_admin.')
+                                                        : ('Paket aktif: '.CompanySubscription::planLabel()
+                                                            .' · '.CompanySubscription::seatSummary()))
                                                     ->columnSpanFull(),
                                                 TextInput::make('seat_limit_override')
                                                     ->label('Override kuota pengguna')
                                                     ->numeric()
                                                     ->minValue(1)
-                                                    ->placeholder('Kosongkan = ikut paket'),
+                                                    ->placeholder('Kosongkan = ikut paket')
+                                                    ->visible($isSuperAdmin)
+                                                    ->disabled(! $isSuperAdmin)
+                                                    ->dehydrated($isSuperAdmin),
                                                 TextInput::make('vendor_limit_override')
                                                     ->label('Override kuota vendor')
                                                     ->numeric()
                                                     ->minValue(1)
-                                                    ->placeholder('Kosongkan = ikut paket'),
+                                                    ->placeholder('Kosongkan = ikut paket')
+                                                    ->visible($isSuperAdmin)
+                                                    ->disabled(! $isSuperAdmin)
+                                                    ->dehydrated($isSuperAdmin),
                                                 TextInput::make('product_limit_override')
                                                     ->label('Override kuota produk')
                                                     ->numeric()
                                                     ->minValue(1)
-                                                    ->placeholder('Kosongkan = ikut paket'),
+                                                    ->placeholder('Kosongkan = ikut paket')
+                                                    ->visible($isSuperAdmin)
+                                                    ->disabled(! $isSuperAdmin)
+                                                    ->dehydrated($isSuperAdmin),
                                                 TextInput::make('order_limit_override')
                                                     ->label('Override kuota proyek wedding')
                                                     ->numeric()
                                                     ->minValue(1)
-                                                    ->placeholder('Kosongkan = ikut paket'),
+                                                    ->placeholder('Kosongkan = ikut paket')
+                                                    ->visible($isSuperAdmin)
+                                                    ->disabled(! $isSuperAdmin)
+                                                    ->dehydrated($isSuperAdmin),
                                                 TextInput::make('prospect_limit_override')
                                                     ->label('Override kuota prospek')
                                                     ->numeric()
                                                     ->minValue(1)
-                                                    ->placeholder('Kosongkan = ikut paket'),
+                                                    ->placeholder('Kosongkan = ikut paket')
+                                                    ->visible($isSuperAdmin)
+                                                    ->disabled(! $isSuperAdmin)
+                                                    ->dehydrated($isSuperAdmin),
                                                 TextInput::make('simulasi_limit_override')
                                                     ->label('Override kuota simulasi')
                                                     ->numeric()
                                                     ->minValue(1)
-                                                    ->placeholder('Kosongkan = ikut paket'),
+                                                    ->placeholder('Kosongkan = ikut paket')
+                                                    ->visible($isSuperAdmin)
+                                                    ->disabled(! $isSuperAdmin)
+                                                    ->dehydrated($isSuperAdmin),
+                                                TextInput::make('payment_method_limit_override')
+                                                    ->label('Override kuota rekening')
+                                                    ->numeric()
+                                                    ->minValue(1)
+                                                    ->placeholder('Kosongkan = ikut paket')
+                                                    ->visible($isSuperAdmin)
+                                                    ->disabled(! $isSuperAdmin)
+                                                    ->dehydrated($isSuperAdmin),
+                                                TextInput::make('fixed_asset_limit_override')
+                                                    ->label('Override kuota aset tetap')
+                                                    ->numeric()
+                                                    ->minValue(1)
+                                                    ->placeholder('Kosongkan = ikut paket')
+                                                    ->visible($isSuperAdmin)
+                                                    ->disabled(! $isSuperAdmin)
+                                                    ->dehydrated($isSuperAdmin),
+                                                TextInput::make('piutang_limit_override')
+                                                    ->label('Override kuota piutang')
+                                                    ->numeric()
+                                                    ->minValue(1)
+                                                    ->placeholder('Kosongkan = ikut paket')
+                                                    ->visible($isSuperAdmin)
+                                                    ->disabled(! $isSuperAdmin)
+                                                    ->dehydrated($isSuperAdmin),
+                                                TextInput::make('pembayaran_piutang_limit_override')
+                                                    ->label('Override kuota bayar piutang')
+                                                    ->numeric()
+                                                    ->minValue(1)
+                                                    ->placeholder('Kosongkan = ikut paket')
+                                                    ->visible($isSuperAdmin)
+                                                    ->disabled(! $isSuperAdmin)
+                                                    ->dehydrated($isSuperAdmin),
+                                                TextInput::make('category_limit_override')
+                                                    ->label('Override kuota kategori')
+                                                    ->numeric()
+                                                    ->minValue(1)
+                                                    ->placeholder('Kosongkan = ikut paket')
+                                                    ->visible($isSuperAdmin)
+                                                    ->disabled(! $isSuperAdmin)
+                                                    ->dehydrated($isSuperAdmin),
+                                                TextInput::make('data_pembayaran_limit_override')
+                                                    ->label('Override kuota pendapatan wedding')
+                                                    ->numeric()
+                                                    ->minValue(1)
+                                                    ->placeholder('Kosongkan = ikut paket')
+                                                    ->visible($isSuperAdmin)
+                                                    ->disabled(! $isSuperAdmin)
+                                                    ->dehydrated($isSuperAdmin),
+                                                TextInput::make('expense_limit_override')
+                                                    ->label('Override kuota pengeluaran wedding')
+                                                    ->numeric()
+                                                    ->minValue(1)
+                                                    ->placeholder('Kosongkan = ikut paket')
+                                                    ->visible($isSuperAdmin)
+                                                    ->disabled(! $isSuperAdmin)
+                                                    ->dehydrated($isSuperAdmin),
+                                                TextInput::make('expense_ops_limit_override')
+                                                    ->label('Override kuota pengeluaran ops')
+                                                    ->numeric()
+                                                    ->minValue(1)
+                                                    ->placeholder('Kosongkan = ikut paket')
+                                                    ->visible($isSuperAdmin)
+                                                    ->disabled(! $isSuperAdmin)
+                                                    ->dehydrated($isSuperAdmin),
+                                                TextInput::make('pendapatan_lain_limit_override')
+                                                    ->label('Override kuota pendapatan lain')
+                                                    ->numeric()
+                                                    ->minValue(1)
+                                                    ->placeholder('Kosongkan = ikut paket')
+                                                    ->visible($isSuperAdmin)
+                                                    ->disabled(! $isSuperAdmin)
+                                                    ->dehydrated($isSuperAdmin),
+                                                TextInput::make('pengeluaran_lain_limit_override')
+                                                    ->label('Override kuota pengeluaran lain')
+                                                    ->numeric()
+                                                    ->minValue(1)
+                                                    ->placeholder('Kosongkan = ikut paket')
+                                                    ->visible($isSuperAdmin)
+                                                    ->disabled(! $isSuperAdmin)
+                                                    ->dehydrated($isSuperAdmin),
                                                 DatePicker::make('subscription_expires_at')
                                                     ->label('Berlaku sampai')
                                                     ->displayFormat('d M Y')
                                                     ->native(false)
-                                                    ->helperText('Opsional — untuk pengingat masa aktif.'),
+                                                    ->helperText('Opsional — untuk pengingat masa aktif.')
+                                                    ->visible($isSuperAdmin)
+                                                    ->disabled(! $isSuperAdmin)
+                                                    ->dehydrated($isSuperAdmin),
                                             ]),
                                     ]),
                                 Section::make('Informasi Rekening')
                                     ->schema([
                                         Select::make('payment_method_id')
                                             ->label('Rekening Bank Utama')
-                                            ->relationship('paymentMethod', 'bank_name')
+                                            ->relationship(
+                                                'paymentMethod',
+                                                'bank_name',
+                                                fn ($query) => \App\Support\UserVisibility::constrainCompanyQuery($query)
+                                            )
                                             ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->bank_name} - {$record->no_rekening} ({$record->name})")
                                             ->searchable()
                                             ->preload()
-                                            ->placeholder('Pilih rekening bank utama'),
+                                            ->placeholder('Pilih rekening bank utama (milik perusahaan Anda)'),
                                     ]),
                             ]),
                         Tabs\Tab::make('Kontak & Alamat')
@@ -150,7 +265,10 @@ class CompanyForm
                                                     ->required()
                                                     ->unique(ignoreRecord: true)
                                                     ->maxLength(255)
-                                                    ->placeholder('contoh@perusahaan.com'),
+                                                    ->placeholder('contoh@perusahaan.com')
+                                                    ->disabled()
+                                                    ->dehydrated(false)
+                                                    ->helperText('Email dari pendaftaran — tidak dapat diubah.'),
                                                 TextInput::make('phone')
                                                     ->tel()
                                                     ->required()
@@ -160,7 +278,6 @@ class CompanyForm
                                                     ->placeholder('+62 812 xxxx xxxx'),
                                             ]),
                                         Textarea::make('address')
-                                            ->required()
                                             ->maxLength(1000)
                                             ->columnSpanFull()
                                             ->placeholder('Alamat lengkap perusahaan'),
@@ -168,15 +285,12 @@ class CompanyForm
                                             ->columns(3)
                                             ->schema([
                                                 TextInput::make('city')
-                                                    ->required()
                                                     ->maxLength(100)
                                                     ->placeholder('Kota/Kabupaten'),
                                                 TextInput::make('province')
-                                                    ->required()
                                                     ->maxLength(100)
                                                     ->placeholder('Provinsi'),
                                                 TextInput::make('postal_code')
-                                                    ->required()
                                                     ->minLength(4)
                                                     ->maxLength(10)
                                                     ->regex('/^[0-9]+$/')

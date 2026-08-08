@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\PaymentMethods\Schemas;
 
+use App\Support\ProFeatures;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
@@ -15,6 +17,18 @@ class PaymentMethodForm
     {
         return $schema
             ->components([
+                Section::make('Perusahaan')
+                    ->description('Rekening hanya terlihat oleh pengguna dalam company yang sama.')
+                    ->schema([
+                        Select::make('company_id')
+                            ->label('Company')
+                            ->relationship('company', 'company_name')
+                            ->searchable()
+                            ->preload()
+                            ->nullable()
+                            ->helperText('Pilih company tenant. Kosong = katalog platform (hanya super admin).'),
+                    ])
+                    ->visible(fn () => ProFeatures::actorIsSuperAdmin()),
                 Section::make('Detail Rekening')
                     ->schema([
                         TextInput::make('name')

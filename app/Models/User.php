@@ -45,6 +45,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
         'email_verified_at',
         'password', // Required field, tapi akan di-hash otomatis
         'created_by',
+        'company_id',
 
         // Personal Info - Perlu validation ketat
         'phone_number',
@@ -291,6 +292,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(self::class, 'created_by');
+    }
+
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
     }
 
     public function teamMembers(): HasMany

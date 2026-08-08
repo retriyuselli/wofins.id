@@ -28,7 +28,9 @@ class AdminToolsController extends Controller
         return view('profile.admin-tools.index', [
             'usersCount' => $usersQuery->count(),
             'rolesCount' => UserVisibility::actorIsSuperAdmin() ? Role::query()->count() : 0,
-            'companiesCount' => Company::query()->count(),
+            'companiesCount' => UserVisibility::actorIsSuperAdmin()
+                ? Company::query()->count()
+                : (auth()->user()?->company_id ? 1 : 0),
             'sopsCount' => Sop::query()->count(),
             'documentationsCount' => Documentation::query()->count(),
             'documentCategoriesCount' => DocumentCategory::query()->count(),
@@ -69,8 +71,27 @@ class AdminToolsController extends Controller
 
     public function company()
     {
+        $user = auth()->user();
+        $company = UserVisibility::actorIsSuperAdmin()
+            ? Company::query()->latest('id')->first()
+            : ($user?->company ?? \App\Support\CompanySubscription::company());
+
+        $filamentEditUrl = null;
+        if ($company && $user?->can('Update:Company')) {
+            $filamentEditUrl = \App\Filament\Resources\Companies\CompanyResource::getUrl('edit', [
+                'record' => $company,
+            ]);
+        }
+
         return view('profile.admin-tools.company', [
-            'company' => Company::query()->latest('id')->first(),
+            'company' => $company,
+            'filamentEditUrl' => $filamentEditUrl,
+            'planLabel' => $company
+                ? (\App\Support\PricingPlans::find($company->subscription_plan)
+                    ? \App\Support\PricingPlans::shortLabel($company->subscription_plan)
+                    : 'Paket belum diatur')
+                : null,
+            'seatSummary' => \App\Support\CompanySubscription::seatSummary(),
         ]);
     }
 

@@ -2,8 +2,13 @@
 
 namespace App\Models;
 
+use App\Support\ProFeatures;
+use App\Support\UserVisibility;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Schema;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -12,6 +17,7 @@ class PaymentMethod extends Model
     use LogsActivity;
 
     protected $fillable = [
+        'company_id',
         'name',
         'bank_name',
         'no_rekening',
@@ -26,13 +32,44 @@ class PaymentMethod extends Model
         'opening_balance_date' => 'date',
     ];
 
+    protected static function booted(): void
+    {
+        static::addGlobalScope('tenant_company', function (Builder $builder) {
+            if (! Schema::hasColumn('payment_methods', 'company_id')) {
+                return;
+            }
+
+            if (! auth()->check()) {
+                return;
+            }
+
+            if (ProFeatures::actorIsSuperAdmin()) {
+                return;
+            }
+
+            $companyId = UserVisibility::companyId();
+
+            if ($companyId === null) {
+                $builder->whereRaw('1 = 0');
+
+                return;
+            }
+
+            $builder->where('company_id', $companyId);
+        });
+    }
 
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'bank_name', 'no_rekening', 'is_cash'])
+            ->logOnly(['name', 'bank_name', 'no_rekening', 'is_cash', 'company_id'])
             ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}")
             ->useLogName('payment_method');
+    }
+
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
     }
 
     public function orders(): HasMany

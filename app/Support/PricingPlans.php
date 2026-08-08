@@ -52,6 +52,16 @@ class PricingPlans
                 'order_limit' => 10,
                 'prospect_limit' => 30,
                 'simulasi_limit' => 20,
+                'payment_method_limit' => 2,
+                'fixed_asset_limit' => 5,
+                'piutang_limit' => 20,
+                'pembayaran_piutang_limit' => 50,
+                'category_limit' => 10,
+                'data_pembayaran_limit' => 100,
+                'expense_limit' => 100,
+                'expense_ops_limit' => 50,
+                'pendapatan_lain_limit' => 30,
+                'pengeluaran_lain_limit' => 30,
                 'popular' => false,
                 'cta' => 'Pilih Paket Starter',
                 'cta_class' => 'wf-btn-ghost',
@@ -62,24 +72,28 @@ class PricingPlans
                         'tip' => 'Maksimal 3 akun tim aktif (selain super admin platform). Cocok untuk owner + AM + finance.',
                     ],
                     [
-                        'label' => 'Hingga 10 vendor',
-                        'tip' => 'Batas master vendor per tim. Setelah penuh, tambah vendor baru dikunci sampai upgrade.',
+                        'label' => 'Hingga 10 kategori · 10 vendor · 10 produk',
+                        'tip' => 'Kuota katalog: 10 kategori, 10 vendor, dan 10 produk/paket wedding per perusahaan.',
                     ],
                     [
-                        'label' => 'Hingga 10 produk',
-                        'tip' => 'Batas katalog produk/paket wedding yang bisa dikelola di sistem.',
+                        'label' => 'Hingga 10 proyek · 30 prospek · 20 simulasi',
+                        'tip' => 'Kuota penjualan: 10 proyek wedding, 30 prospek, dan 20 simulasi paket.',
                     ],
                     [
-                        'label' => 'Hingga 10 proyek wedding',
-                        'tip' => 'Batas order/proyek wedding aktif yang bisa dibuat dalam paket ini.',
+                        'label' => 'Hingga 2 rekening · 5 aset tetap',
+                        'tip' => '2 rekening bank/kas dan 5 aset tetap per perusahaan.',
                     ],
                     [
-                        'label' => 'Hingga 30 prospek',
-                        'tip' => 'Batas data prospek/lead yang bisa disimpan untuk pipeline penjualan.',
+                        'label' => 'Hingga 20 piutang · 50 pembayaran piutang',
+                        'tip' => 'Kuota catatan piutang dan transaksi pembayaran piutang dalam paket Starter.',
                     ],
                     [
-                        'label' => 'Hingga 20 simulasi',
-                        'tip' => 'Batas simulasi paket yang bisa dibuat untuk penawaran ke calon klien.',
+                        'label' => 'Hingga 100 pendapatan & 100 pengeluaran wedding',
+                        'tip' => 'Kuota transaksi kas proyek (pembayaran klien & biaya vendor) per perusahaan.',
+                    ],
+                    [
+                        'label' => 'Hingga 50 ops · 30 pendapatan/pengeluaran lain',
+                        'tip' => 'Kuota kas operasional dan transaksi non-proyek.',
                     ],
                     [
                         'label' => 'Manajemen proyek wedding',
@@ -87,7 +101,7 @@ class PricingPlans
                     ],
                     [
                         'label' => 'Keuangan dasar',
-                        'tip' => 'Pendapatan & pengeluaran wedding, piutang, aset tetap, dan daftar rekening — tanpa rekonsiliasi bank.',
+                        'tip' => 'Kas proyek & operasional, piutang, aset tetap, dan daftar rekening — tanpa rekonsiliasi bank.',
                     ],
                 ],
                 'feature_keys' => [
@@ -110,6 +124,16 @@ class PricingPlans
                 'order_limit' => 50,
                 'prospect_limit' => 150,
                 'simulasi_limit' => 100,
+                'payment_method_limit' => 5,
+                'fixed_asset_limit' => 25,
+                'piutang_limit' => 100,
+                'pembayaran_piutang_limit' => 300,
+                'category_limit' => 40,
+                'data_pembayaran_limit' => 500,
+                'expense_limit' => 500,
+                'expense_ops_limit' => 300,
+                'pendapatan_lain_limit' => 150,
+                'pengeluaran_lain_limit' => 150,
                 'popular' => true,
                 'cta' => 'Pilih Paket Professional',
                 'cta_class' => 'wf-btn-gold',
@@ -120,16 +144,28 @@ class PricingPlans
                         'tip' => 'Maksimal 10 akun tim aktif — ruang untuk owner, AM, finance, dan staf operasional.',
                     ],
                     [
-                        'label' => 'Hingga 50 vendor',
-                        'tip' => 'Kuota vendor lebih besar untuk WO dengan banyak mitra vendor per proyek.',
-                    ],
-                    [
-                        'label' => 'Hingga 50 produk',
-                        'tip' => 'Katalog produk/paket hingga 50 item per tim.',
+                        'label' => 'Hingga 40 kategori · 50 vendor · 50 produk',
+                        'tip' => 'Kuota katalog lebih besar: 40 kategori, 50 vendor, dan 50 produk/paket per perusahaan.',
                     ],
                     [
                         'label' => 'Hingga 50 proyek · 150 prospek · 100 simulasi',
                         'tip' => 'Kuota penjualan: 50 proyek wedding, 150 prospek, dan 100 simulasi paket.',
+                    ],
+                    [
+                        'label' => 'Hingga 5 rekening · 25 aset tetap',
+                        'tip' => '5 rekening bank/kas dan 25 aset tetap — cocok multi-bank atau kas terpisah.',
+                    ],
+                    [
+                        'label' => 'Hingga 100 piutang · 300 pembayaran piutang',
+                        'tip' => 'Kuota piutang dan pembayaran piutang lebih longgar untuk volume transaksi harian.',
+                    ],
+                    [
+                        'label' => 'Hingga 500 pendapatan & 500 pengeluaran wedding',
+                        'tip' => 'Kuota transaksi kas proyek untuk volume pembayaran & biaya vendor yang lebih tinggi.',
+                    ],
+                    [
+                        'label' => 'Hingga 300 ops · 150 pendapatan/pengeluaran lain',
+                        'tip' => 'Kuota kas operasional dan transaksi non-proyek paket Professional.',
                     ],
                     [
                         'label' => 'Semua fitur Starter',
@@ -175,6 +211,16 @@ class PricingPlans
                 'order_limit' => 200,
                 'prospect_limit' => 500,
                 'simulasi_limit' => 400,
+                'payment_method_limit' => 15,
+                'fixed_asset_limit' => 100,
+                'piutang_limit' => 500,
+                'pembayaran_piutang_limit' => 2000,
+                'category_limit' => 100,
+                'data_pembayaran_limit' => 2000,
+                'expense_limit' => 2000,
+                'expense_ops_limit' => 1000,
+                'pendapatan_lain_limit' => 500,
+                'pengeluaran_lain_limit' => 500,
                 'popular' => false,
                 'cta' => 'Pilih Paket Business',
                 'cta_class' => 'wf-btn-ghost',
@@ -185,16 +231,28 @@ class PricingPlans
                         'tip' => 'Maksimal 25 akun tim — cocok untuk finance, HRD, AM, dan staf lintas fungsi.',
                     ],
                     [
-                        'label' => 'Hingga 200 vendor',
-                        'tip' => 'Kuota vendor besar untuk WO dengan volume proyek tinggi.',
-                    ],
-                    [
-                        'label' => 'Hingga 200 produk',
-                        'tip' => 'Katalog produk/paket hingga 200 item per tim.',
+                        'label' => 'Hingga 100 kategori · 200 vendor · 200 produk',
+                        'tip' => 'Kuota katalog besar: 100 kategori, 200 vendor, dan 200 produk/paket per perusahaan.',
                     ],
                     [
                         'label' => 'Hingga 200 proyek · 500 prospek · 400 simulasi',
                         'tip' => 'Kuota penjualan: 200 proyek wedding, 500 prospek, dan 400 simulasi paket.',
+                    ],
+                    [
+                        'label' => 'Hingga 15 rekening · 100 aset tetap',
+                        'tip' => '15 rekening bank/kas dan 100 aset tetap untuk WO dengan banyak unit kas.',
+                    ],
+                    [
+                        'label' => 'Hingga 500 piutang · 2.000 pembayaran piutang',
+                        'tip' => 'Kuota piutang dan pembayaran piutang untuk volume transaksi tinggi.',
+                    ],
+                    [
+                        'label' => 'Hingga 2.000 pendapatan & 2.000 pengeluaran wedding',
+                        'tip' => 'Kuota transaksi kas proyek untuk WO dengan volume tinggi.',
+                    ],
+                    [
+                        'label' => 'Hingga 1.000 ops · 500 pendapatan/pengeluaran lain',
+                        'tip' => 'Kuota kas operasional dan transaksi non-proyek paket Business.',
                     ],
                     [
                         'label' => 'Semua fitur Professional',
@@ -225,6 +283,10 @@ class PricingPlans
                         'tip' => 'Alur persetujuan bertingkat untuk nota dinas, dokumen, atau permintaan staf.',
                     ],
                     [
+                        'label' => 'Manajemen role & permission',
+                        'tip' => 'Kelola role Spatie/Filament Shield untuk membagi akses tim secara detail.',
+                    ],
+                    [
                         'label' => 'Onboarding & training tim',
                         'tip' => 'Dampingan go-live dan training agar seluruh tim siap memakai sistem.',
                     ],
@@ -244,6 +306,7 @@ class PricingPlans
                     self::FEATURE_EMPLOYEE_PORTAL,
                     self::FEATURE_ADVANCED_REPORTS,
                     self::FEATURE_MULTI_APPROVAL,
+                    self::FEATURE_ROLE_MANAGEMENT,
                 ],
                 'selectable' => true,
             ],
@@ -364,6 +427,16 @@ class PricingPlans
                 'order_limit' => 'proyek',
                 'prospect_limit' => 'prospek',
                 'simulasi_limit' => 'simulasi',
+                'payment_method_limit' => 'rekening',
+                'fixed_asset_limit' => 'aset',
+                'piutang_limit' => 'piutang',
+                'pembayaran_piutang_limit' => 'bayar piutang',
+                'category_limit' => 'kategori',
+                'data_pembayaran_limit' => 'pendapatan wedding',
+                'expense_limit' => 'pengeluaran wedding',
+                'expense_ops_limit' => 'ops',
+                'pendapatan_lain_limit' => 'pendapatan lain',
+                'pengeluaran_lain_limit' => 'pengeluaran lain',
             ] as $key => $label) {
                 $limit = $plan[$key] ?? null;
                 $parts[] = $limit === null ? "{$label} ∞" : "{$limit} {$label}";
@@ -461,7 +534,8 @@ class PricingPlans
     }
 
     /**
-     * Batas kuota resource: users | vendors | products | orders | prospects | simulasi.
+     * Batas kuota resource: users | vendors | products | orders | prospects | simulasi |
+     * categories | payment_methods | fixed_assets | piutangs | pembayaran_piutangs.
      * null = tak terbatas.
      */
     public static function limit(?string $planKey, string $resource): ?int
@@ -474,6 +548,16 @@ class PricingPlans
             'orders' => 'order_limit',
             'prospects' => 'prospect_limit',
             'simulasi', 'simulations' => 'simulasi_limit',
+            'payment_methods', 'rekening' => 'payment_method_limit',
+            'fixed_assets', 'aset' => 'fixed_asset_limit',
+            'piutangs', 'piutang' => 'piutang_limit',
+            'pembayaran_piutangs', 'pembayaran_piutang' => 'pembayaran_piutang_limit',
+            'categories', 'kategori' => 'category_limit',
+            'data_pembayarans', 'pendapatan_wedding' => 'data_pembayaran_limit',
+            'expenses', 'pengeluaran_wedding' => 'expense_limit',
+            'expense_ops', 'pengeluaran_ops' => 'expense_ops_limit',
+            'pendapatan_lains', 'pendapatan_lain' => 'pendapatan_lain_limit',
+            'pengeluaran_lains', 'pengeluaran_lain' => 'pengeluaran_lain_limit',
             default => null,
         };
 

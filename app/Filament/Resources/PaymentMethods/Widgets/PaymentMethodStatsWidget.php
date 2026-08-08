@@ -144,7 +144,7 @@ class PaymentMethodStatsWidget extends BaseWidget
         $month = $this->pageFilters['month'];
         $showDetails = $this->pageFilters['show_details'];
 
-        $paymentMethods = UserVisibility::constrainPlatformOnlyQuery(PaymentMethod::query())
+        $paymentMethods = UserVisibility::constrainCompanyQuery(PaymentMethod::query())
             ->with([
                 'payments' => fn ($q) => $q->whereNull('deleted_at'),
                 'pendapatanLains' => fn ($q) => $q->whereNull('deleted_at'),

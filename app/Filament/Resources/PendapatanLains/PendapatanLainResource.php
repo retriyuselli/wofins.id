@@ -8,13 +8,13 @@ use App\Filament\Resources\PendapatanLains\Pages\ListPendapatanLains;
 use App\Filament\Resources\PendapatanLains\Schemas\PendapatanLainForm;
 use App\Filament\Resources\PendapatanLains\Tables\PendapatanLainsTable;
 use App\Filament\Resources\PendapatanLains\Widgets\PendapatanLainOverviewWidget;
-use App\Models\PendapatanLain;
 use App\Filament\Resources\BaseResource;
+use App\Models\PendapatanLain;
+use App\Support\CompanySubscription;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\Facades\Cache;
 
 class PendapatanLainResource extends BaseResource
 {
@@ -28,7 +28,9 @@ class PendapatanLainResource extends BaseResource
 
     protected static ?string $navigationLabel = 'Pendapatan Lain';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Finance';
+    protected static string|\UnitEnum|null $navigationGroup = 'Kas Operasional';
+
+    protected static ?int $navigationSort = 2;
 
     public static function form(Schema $schema): Schema
     {
@@ -42,7 +44,7 @@ class PendapatanLainResource extends BaseResource
 
     public static function getNavigationGroup(): ?string
     {
-        return 'Finance';
+        return 'Kas Operasional';
     }
 
     public static function getRelations(): array
@@ -73,44 +75,19 @@ class PendapatanLainResource extends BaseResource
             ]);
     }
 
-    private static function getCachedNavigationBadgeStats(): array
-    {
-        $modelClass = static::getModel();
-
-        return Cache::remember(
-            'nav:pendapatan_lains:stats',
-            60,
-            fn (): array => [
-                'count' => (int) $modelClass::whereNull('deleted_at')->count(),
-                'total' => (float) $modelClass::whereNull('deleted_at')->sum('nominal'),
-            ],
-        );
-    }
-
     public static function getNavigationBadge(): ?string
     {
-        return (string) (static::getCachedNavigationBadgeStats()['count'] ?? 0);
+        return CompanySubscription::navigationBadge(CompanySubscription::RESOURCE_PENDAPATAN_LAINS);
     }
 
     public static function getNavigationBadgeColor(): string|array|null
     {
-        $count = (int) (static::getCachedNavigationBadgeStats()['count'] ?? 0);
-
-        if ($count > 50) {
-            return 'success';
-        } elseif ($count > 20) {
-            return 'warning';
-        } else {
-            return 'primary';
-        }
+        return CompanySubscription::canCreate(CompanySubscription::RESOURCE_PENDAPATAN_LAINS) ? 'primary' : 'warning';
     }
 
     public static function getNavigationBadgeTooltip(): ?string
     {
-        $totalRevenue = (float) (static::getCachedNavigationBadgeStats()['total'] ?? 0);
-        $formattedRevenue = 'IDR '.number_format($totalRevenue, 0, ',', '.');
-
-        return "Pendapatan lain perusahaan.\nTotal: {$formattedRevenue}";
+        return CompanySubscription::summary(CompanySubscription::RESOURCE_PENDAPATAN_LAINS);
     }
 
     public static function getNavigationSort(): ?int

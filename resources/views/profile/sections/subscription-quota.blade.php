@@ -17,7 +17,7 @@
                     <p class="mt-1 text-sm text-white/65">
                         {{ $subscriptionPlanLabel ?? 'Paket belum diatur' }}
                         @if (! ($subscriptionConfigured ?? false))
-                            <span class="text-[var(--wf-gold-soft)]">· set paket di Admin → Company</span>
+                            <span class="text-[var(--wf-gold-soft)]">· lihat Admin → Perusahaan</span>
                         @endif
                     </p>
                 </div>

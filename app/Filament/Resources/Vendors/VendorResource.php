@@ -8,13 +8,13 @@ use App\Filament\Resources\Vendors\Pages\ListVendors;
 use App\Filament\Resources\Vendors\Pages\ViewVendor;
 use App\Filament\Resources\Vendors\Schemas\VendorForm;
 use App\Filament\Resources\Vendors\Tables\VendorsTable;
-use App\Models\Vendor;
 use App\Filament\Resources\BaseResource;
+use App\Models\Vendor;
+use App\Support\CompanySubscription;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\Facades\Cache;
 
 class VendorResource extends BaseResource
 {
@@ -28,20 +28,19 @@ class VendorResource extends BaseResource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Penjualan';
 
-    private static function getCachedNavigationBadgeCount(): int
-    {
-        $scope = \App\Support\UserVisibility::cacheScopeKey();
-
-        return Cache::remember(
-            "nav:vendors:count:{$scope}",
-            60,
-            fn (): int => (int) static::getEloquentQuery()->count()
-        );
-    }
-
     public static function getNavigationBadge(): ?string
     {
-        return (string) static::getCachedNavigationBadgeCount();
+        return CompanySubscription::navigationBadge(CompanySubscription::RESOURCE_VENDORS);
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return CompanySubscription::summary(CompanySubscription::RESOURCE_VENDORS);
+    }
+
+    public static function getNavigationBadgeColor(): string|array|null
+    {
+        return CompanySubscription::canCreate(CompanySubscription::RESOURCE_VENDORS) ? 'primary' : 'warning';
     }
 
     public static function form(Schema $schema): Schema
@@ -88,11 +87,6 @@ class VendorResource extends BaseResource
             ]);
 
         return \App\Support\UserVisibility::constrainOwnedQuery($query, 'created_by');
-    }
-
-    public static function getNavigationBadgeTooltip(): ?string
-    {
-        return 'Data vendor yang telah dibuat dan dikelola';
     }
 
     public static function getGloballySearchableAttributes(): array

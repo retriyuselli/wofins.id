@@ -703,34 +703,41 @@ class UsersTable
                         ->requiresConfirmation()
                         ->modalHeading('Approve User')
                         ->modalDescription(function (User $record) {
-                            $seat = CompanySubscription::seatSummary();
-                            $plan = CompanySubscription::planLabel();
+                            $onboarding = app(\App\Services\TenantOnboardingService::class);
+                            $prospect = $onboarding->findProspectFor($record);
+                            $planKey = \App\Support\PricingPlans::normalizeKey($prospect?->service) ?? 'starter';
+                            $planLabel = \App\Support\PricingPlans::shortLabel($planKey);
+                            $companyName = $prospect?->company_name ?: $record->name;
 
-                            if (! CompanySubscription::hasSeatAvailable()) {
-                                return CompanySubscription::seatFullMessage()
-                                    ."\n\nKuota saat ini: {$seat}.";
-                            }
-
-                            return "Aktifkan {$record->name} dan berikan role pengunjung?\n"
-                                ."Paket perusahaan: {$plan} ({$seat}).\n"
+                            return "Aktifkan {$record->name} sebagai pemilik paket?\n"
+                                ."WO: {$companyName}\n"
+                                ."Paket: {$planLabel} (dari minat pendaftaran)\n"
+                                ."Role: pengunjung · 1 Company baru dibuat bila belum ada.\n"
                                 .'User akan menerima email pemberitahuan.';
                         })
                         ->modalSubmitActionLabel('Approve & Aktifkan')
-                        ->disabled(fn () => ! CompanySubscription::hasSeatAvailable())
                         ->action(function (User $record): void {
-                            if (! CompanySubscription::hasSeatAvailable()) {
-                                Notification::make()
-                                    ->title('Kuota pengguna penuh')
-                                    ->body(CompanySubscription::seatFullMessage())
-                                    ->warning()
-                                    ->persistent()
-                                    ->send();
-
-                                return;
-                            }
-
                             try {
                                 DB::transaction(function () use ($record) {
+                                    $onboarding = app(\App\Services\TenantOnboardingService::class);
+                                    $prospect = $onboarding->findProspectFor($record);
+                                    $company = $onboarding->provisionOwnerCompany($record, $prospect);
+
+                                    $seatLimit = \App\Support\PricingPlans::limit(
+                                        \App\Support\PricingPlans::normalizeKey($company->subscription_plan) ?? 'starter',
+                                        CompanySubscription::RESOURCE_USERS
+                                    );
+                                    $seatsUsed = CompanySubscription::seatsUsed($company);
+                                    $willOccupySeat = ! $record->roles()
+                                        ->where('name', '!=', 'super_admin')
+                                        ->exists();
+
+                                    if ($seatLimit !== null && $willOccupySeat && $seatsUsed >= $seatLimit) {
+                                        throw new \RuntimeException(
+                                            'Kuota pengguna paket penuh ('.$seatsUsed.'/'.$seatLimit.').'
+                                        );
+                                    }
+
                                     $role = Role::findOrCreate('pengunjung', 'web');
 
                                     if (! $record->hasRole('pengunjung')) {
@@ -740,6 +747,8 @@ class UsersTable
                                     $record->forceFill([
                                         'status' => 'active',
                                         'email_verified_at' => $record->email_verified_at ?? now(),
+                                        'company_id' => $company->id,
+                                        'created_by' => null,
                                     ])->save();
 
                                     ProspectApp::query()
@@ -751,12 +760,11 @@ class UsersTable
                                         ->update([
                                             'status' => ProspectAppStatus::Approved->value,
                                             'user_id' => $record->id,
+                                            'company_id' => $company->id,
                                         ]);
-
-                                    // Paket langganan hanya di-set di Filament → Company (bukan dari Approve).
                                 });
 
-                                $record->refresh();
+                                $record->refresh()->load('company');
                                 $dashboardUrl = route('profile');
 
                                 try {
@@ -774,9 +782,13 @@ class UsersTable
                                     ]);
                                 }
 
+                                $plan = $record->company?->subscription_plan
+                                    ? \App\Support\PricingPlans::shortLabel($record->company->subscription_plan)
+                                    : '—';
+
                                 Notification::make()
                                     ->title("{$record->name} berhasil di-approve")
-                                    ->body('Role pengunjung diberikan. '.CompanySubscription::seatSummary().'.')
+                                    ->body("Role pengunjung · Company: {$record->company?->company_name} · Paket: {$plan}.")
                                     ->success()
                                     ->send();
                             } catch (Throwable $e) {
@@ -787,14 +799,12 @@ class UsersTable
 
                                 Notification::make()
                                     ->title('Gagal approve user')
-                                    ->body('Terjadi kesalahan saat mengaktifkan user. Silakan coba lagi.')
+                                    ->body($e->getMessage() ?: 'Terjadi kesalahan saat mengaktifkan user. Silakan coba lagi.')
                                     ->danger()
                                     ->send();
                             }
                         })
-                        ->tooltip(fn () => CompanySubscription::hasSeatAvailable()
-                            ? 'Aktifkan user dan berikan role pengunjung'
-                            : CompanySubscription::seatFullMessage())
+                        ->tooltip('Aktifkan user, buat Company WO, berikan role pengunjung')
                         ->visible(function (?User $record) {
                             if (! $record || $record->status === 'terminated') {
                                 return false;
@@ -811,6 +821,43 @@ class UsersTable
                             $user = Auth::user();
 
                             return $user && $user->roles->contains(fn ($role) => in_array($role->name, ['admin', 'hr_manager'], true));
+                        }),
+
+                    Action::make('provision_company')
+                        ->label('Buat Company')
+                        ->icon('heroicon-o-building-office-2')
+                        ->color('warning')
+                        ->requiresConfirmation()
+                        ->modalHeading('Buat Company untuk user')
+                        ->modalDescription(fn (User $record) => "Buat/tautkan Company WO untuk {$record->name} dari data Prospect App (perbaikan user yang sudah di-approve sebelum multi-tenant).")
+                        ->action(function (User $record): void {
+                            try {
+                                $company = app(\App\Services\TenantOnboardingService::class)
+                                    ->provisionOwnerCompany($record);
+
+                                Notification::make()
+                                    ->title('Company siap')
+                                    ->body("{$company->company_name} · Paket: ".\App\Support\PricingPlans::shortLabel($company->subscription_plan))
+                                    ->success()
+                                    ->send();
+                            } catch (Throwable $e) {
+                                Notification::make()
+                                    ->title('Gagal membuat Company')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
+                        })
+                        ->visible(function (?User $record) {
+                            if (! $record || $record->company_id || ! $record->hasAssignedRole()) {
+                                return false;
+                            }
+
+                            if ($record->hasRole('super_admin') && $record->roles->count() === 1) {
+                                return false;
+                            }
+
+                            return static::isSuperAdmin();
                         }),
 
                     Action::make('reset_password')

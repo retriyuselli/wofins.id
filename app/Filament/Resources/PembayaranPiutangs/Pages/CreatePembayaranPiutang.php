@@ -2,17 +2,37 @@
 
 namespace App\Filament\Resources\PembayaranPiutangs\Pages;
 
+use App\Filament\Concerns\EnforcesSubscriptionQuota;
 use App\Filament\Resources\PembayaranPiutangs\PembayaranPiutangResource;
+use App\Support\CompanySubscription;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreatePembayaranPiutang extends CreateRecord
 {
+    use EnforcesSubscriptionQuota;
+
     protected static string $resource = PembayaranPiutangResource::class;
+
+    protected function subscriptionResource(): string
+    {
+        return CompanySubscription::RESOURCE_PEMBAYARAN_PIUTANGS;
+    }
 
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('index');
+    }
+
+    public function mount(): void
+    {
+        parent::mount();
+
+        Notification::make()
+            ->title(CompanySubscription::planLabel())
+            ->body(CompanySubscription::summary(CompanySubscription::RESOURCE_PEMBAYARAN_PIUTANGS))
+            ->info()
+            ->send();
     }
 
     protected function getCreatedNotification(): ?Notification

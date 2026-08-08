@@ -66,7 +66,8 @@ class CategoriesTable
                     ->label('Create Category')
                     ->url(CategoryResource::getUrl('create'))
                     ->icon('heroicon-o-plus')
-                    ->button(),
+                    ->button()
+                    ->visible(fn (): bool => CategoryResource::canCreate()),
             ]);
     }
 }

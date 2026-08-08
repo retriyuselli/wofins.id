@@ -5,21 +5,250 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Laporan Pembayaran</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --wf-navy: #0b1f3a;
+            --wf-navy-deep: #071526;
+            --wf-gold: #c9a227;
+            --wf-gold-soft: #e8d48b;
+            --wf-cream: #f7f4ee;
+            --wf-ink: #1a2332;
+            --wf-muted: #5c6675;
+            --wf-line: #e6e2d9;
+            --wf-white: #ffffff;
+        }
+
         body {
-            font-family: 'Poppins', sans-serif;
-            margin: 20px;
-            background-color: #f4f7f6;
-            color: #333;
+            font-family: 'Poppins', system-ui, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            background-color: var(--wf-cream);
+            color: var(--wf-ink);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .report-page {
+            position: relative;
+            z-index: 1;
+            padding: 20px;
+        }
+
+        .report-edge-shapes {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .report-edge-shapes .shape {
+            position: absolute;
+        }
+
+        .report-edge-shapes .blob {
+            border-radius: 999px;
+            filter: blur(1px);
+        }
+
+        .report-edge-shapes .ring {
+            border-radius: 999px;
+            border: 2px solid rgba(201, 162, 39, 0.35);
+            background: transparent;
+        }
+
+        .report-edge-shapes .square {
+            border-radius: 0.7rem;
+            border: 2px solid rgba(11, 31, 58, 0.18);
+            background: rgba(201, 162, 39, 0.08);
+        }
+
+        .report-edge-shapes .dot {
+            border-radius: 999px;
+            background: var(--wf-gold);
+        }
+
+        .report-edge-shapes .tri {
+            width: 0;
+            height: 0;
+            border-left: 14px solid transparent;
+            border-right: 14px solid transparent;
+            border-bottom: 24px solid rgba(11, 31, 58, 0.12);
+        }
+
+        /* Left edge */
+        .s-l1 {
+            width: 180px;
+            height: 180px;
+            left: -70px;
+            top: 8%;
+            background: radial-gradient(circle at 35% 35%, rgba(201, 162, 39, 0.35), rgba(201, 162, 39, 0.05) 70%);
+            animation: wf-float 7s ease-in-out infinite;
+        }
+
+        .s-l2 {
+            width: 56px;
+            height: 56px;
+            left: 28px;
+            top: 28%;
+            animation: wf-orbit 14s linear infinite;
+        }
+
+        .s-l3 {
+            width: 42px;
+            height: 42px;
+            left: 18px;
+            top: 52%;
+            animation: wf-tilt-float 6.5s ease-in-out 0.8s infinite;
+        }
+
+        .s-l4 {
+            width: 10px;
+            height: 10px;
+            left: 64px;
+            top: 68%;
+            opacity: 0.7;
+            animation: wf-pulse 3.2s ease-in-out infinite;
+        }
+
+        .s-l5 {
+            left: 36px;
+            bottom: 12%;
+            animation: wf-float-alt 6s ease-in-out 0.3s infinite;
+        }
+
+        /* Right edge */
+        .s-r1 {
+            width: 220px;
+            height: 220px;
+            right: -90px;
+            top: 18%;
+            background: radial-gradient(circle at 60% 40%, rgba(11, 31, 58, 0.18), rgba(11, 31, 58, 0.03) 72%);
+            animation: wf-float-alt 8s ease-in-out infinite;
+        }
+
+        .s-r2 {
+            width: 64px;
+            height: 64px;
+            right: 36px;
+            top: 42%;
+            border-color: rgba(11, 31, 58, 0.2);
+            animation: wf-orbit-rev 16s linear infinite;
+        }
+
+        .s-r3 {
+            width: 36px;
+            height: 36px;
+            right: 22px;
+            top: 62%;
+            background: rgba(11, 31, 58, 0.06);
+            border-color: rgba(201, 162, 39, 0.4);
+            animation: wf-tilt-float-alt 5.8s ease-in-out 0.5s infinite;
+        }
+
+        .s-r4 {
+            width: 12px;
+            height: 12px;
+            right: 72px;
+            bottom: 22%;
+            opacity: 0.65;
+            animation: wf-pulse 2.8s ease-in-out 0.4s infinite;
+        }
+
+        .s-r5 {
+            width: 90px;
+            height: 90px;
+            right: -30px;
+            bottom: 8%;
+            background: radial-gradient(circle, rgba(201, 162, 39, 0.22), transparent 70%);
+            animation: wf-float 7.5s ease-in-out 0.6s infinite;
+        }
+
+        /* Soft top/bottom accents */
+        .s-t1 {
+            width: 120px;
+            height: 120px;
+            left: 42%;
+            top: -48px;
+            background: radial-gradient(circle, rgba(201, 162, 39, 0.16), transparent 70%);
+            animation: wf-pulse 5s ease-in-out infinite;
+        }
+
+        .s-b1 {
+            width: 160px;
+            height: 160px;
+            left: 55%;
+            bottom: -70px;
+            background: radial-gradient(circle, rgba(11, 31, 58, 0.1), transparent 70%);
+            animation: wf-float 9s ease-in-out infinite;
+        }
+
+        @keyframes wf-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-14px); }
+        }
+
+        @keyframes wf-float-alt {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(12px); }
+        }
+
+        @keyframes wf-orbit {
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(180deg); }
+            100% { transform: translateY(0) rotate(360deg); }
+        }
+
+        @keyframes wf-orbit-rev {
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(10px) rotate(-180deg); }
+            100% { transform: translateY(0) rotate(-360deg); }
+        }
+
+        @keyframes wf-tilt-float {
+            0%, 100% { transform: translateY(0) rotate(18deg); }
+            50% { transform: translateY(-12px) rotate(28deg); }
+        }
+
+        @keyframes wf-tilt-float-alt {
+            0%, 100% { transform: translateY(0) rotate(-12deg); }
+            50% { transform: translateY(10px) rotate(-4deg); }
+        }
+
+        @keyframes wf-pulse {
+            0%, 100% { opacity: 0.45; transform: scale(1); }
+            50% { opacity: 0.9; transform: scale(1.25); }
+        }
+
+        @media (max-width: 900px) {
+            .report-edge-shapes .shape {
+                opacity: 0.55;
+            }
+
+            .s-l2, .s-l3, .s-l5, .s-r2, .s-r3 {
+                display: none;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .report-edge-shapes .shape {
+                animation: none !important;
+            }
         }
 
         .container {
             max-width: 1000px;
             margin: 0 auto;
-            background-color: #fff;
+            background-color: var(--wf-white);
             padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            border: 1px solid var(--wf-line);
+            box-shadow: 0 12px 32px -20px rgba(11, 31, 58, 0.25);
+            position: relative;
+            z-index: 1;
         }
 
         table {
@@ -31,127 +260,124 @@
 
         .filter-form {
             margin-bottom: 25px;
-            padding: 15px;
-            background-color: #eef3f7;
-            /* Slightly different background for the filter */
-            border-radius: 6px;
+            padding: 16px 18px;
+            background:
+                linear-gradient(135deg, rgba(201, 162, 39, 0.08), transparent 55%),
+                #f3f0e9;
+            border: 1px solid var(--wf-line);
+            border-radius: 10px;
             display: flex;
             gap: 15px;
-            /* Spacing between filter elements */
-            align-items: center;
+            align-items: flex-end;
             flex-wrap: wrap;
-            /* Allow wrapping on smaller screens */
         }
 
         .filter-form label {
-            font-weight: 500;
+            font-weight: 600;
             margin-right: 5px;
-            color: #333;
+            margin-bottom: 6px;
+            display: block;
+            color: var(--wf-navy);
+            font-size: 0.8em;
         }
 
         .filter-form select,
+        .filter-form input,
         .filter-form button {
             padding: 8px 12px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            font-family: 'Poppins', sans-serif;
+            border: 1px solid var(--wf-line);
+            border-radius: 8px;
+            font-family: 'Poppins', system-ui, sans-serif;
             font-size: 0.9em;
+            color: var(--wf-ink);
+            background: var(--wf-white);
+        }
+
+        .filter-form select:focus,
+        .filter-form input:focus {
+            outline: none;
+            border-color: var(--wf-gold);
+            box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.2);
         }
 
         .filter-form button {
-            background-color: #3498db;
+            background: var(--wf-navy);
             color: white;
             cursor: pointer;
-            border-color: #3498db;
-            transition: background-color 0.2s ease-in-out;
+            border-color: var(--wf-navy);
+            font-weight: 600;
+            transition: background 0.2s ease, transform 0.2s ease;
         }
 
         .filter-form button:hover {
-            background-color: #2980b9;
+            background: var(--wf-navy-deep);
+            transform: translateY(-1px);
         }
 
         .report-title-header {
             text-align: center;
             margin-bottom: 1.5rem;
-            /* mb-6 */
             padding-bottom: 1rem;
-            /* pb-4 */
-            border-bottom: 1px solid #e5e7eb;
-            /* border-gray-200 */
-        }
-
-        .report-company-name {
-            /* Ini akan digantikan oleh logo dan detail perusahaan di bawahnya */
-            /* font-size: 1.1em;
-            font-weight: 500;
-            color: #4A5568;
-            margin-bottom: 8px; */
+            border-bottom: 1px solid var(--wf-line);
         }
 
         .company-logo {
             max-height: 2.5rem;
-            /* max-h-10 */
             margin-left: auto;
             margin-right: auto;
             margin-bottom: 1rem;
-            /* mb-4 */
         }
 
         h1.report-main-title {
-            /* Ganti nama kelas agar lebih spesifik */
             font-size: 1.25rem;
-            /* text-xl */
             font-weight: 700;
-            /* font-bold */
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            /* tracking-wide */
-            color: #1f2937;
-            /* text-gray-800 */
+            letter-spacing: 0.04em;
+            color: var(--wf-navy);
             text-align: center;
             margin-top: 0;
             margin-bottom: 0;
-            /* Dihapus karena border sudah ada di .report-title-header */
             border-bottom: none;
-            /* Dihapus karena border sudah ada di .report-title-header */
             padding-bottom: 0;
-            /* Dihapus */
+        }
+
+        h1.report-main-title small {
+            color: var(--wf-muted) !important;
         }
 
         .company-address {
             font-size: 0.75rem;
-            /* text-xs */
-            color: #4b5563;
-            /* text-gray-600 */
+            color: var(--wf-muted);
             margin-top: 0.25rem;
-            /* mt-1 atau mt-0 */
         }
 
         th,
         td {
-            border: 1px solid #ddd;
+            border: 1px solid var(--wf-line);
             padding: 10px 12px;
             text-align: left;
         }
 
         th {
-            background-color: #3498db;
+            background-color: var(--wf-navy);
             color: white;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            font-weight: 600;
+            font-size: 0.78em;
         }
 
         tr:nth-child(even) {
-            background-color: #f9f9f9;
+            background-color: rgba(247, 244, 238, 0.65);
         }
 
         tr:hover {
-            background-color: #e8f4f8;
+            background-color: rgba(201, 162, 39, 0.1);
         }
 
         .no-data {
             text-align: center;
-            color: #7f8c8d;
+            color: var(--wf-muted);
             padding: 20px;
             font-style: italic;
         }
@@ -159,24 +385,87 @@
         .footer {
             text-align: center;
             margin-top: 30px;
-            font-size: 0.9em;
-            color: #7f8c8d;
+            font-size: 0.85em;
+            color: var(--wf-muted);
         }
 
         .total-row td {
-            font-weight: bold;
-            background-color: #eaf2f8;
+            font-weight: 700;
+            background-color: rgba(11, 31, 58, 0.06);
+            color: var(--wf-navy);
+            border-top: 2px solid var(--wf-gold);
         }
 
-        /* Tambahkan styling lain sesuai kebutuhan Anda */
+        a {
+            color: var(--wf-navy);
+        }
+
+        a:hover {
+            color: var(--wf-gold);
+        }
+
+        .report-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 1.25rem;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--wf-line);
+            background: var(--wf-white);
+            color: var(--wf-navy);
+            font-family: 'Poppins', system-ui, sans-serif;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .btn-back:hover {
+            background: #f3f0e9;
+            border-color: var(--wf-gold);
+            color: var(--wf-navy);
+            transform: translateY(-1px);
+        }
     </style>
 </head>
 
 <body>
+    <div class="report-edge-shapes" aria-hidden="true">
+        <span class="shape blob s-l1"></span>
+        <span class="shape ring s-l2"></span>
+        <span class="shape square s-l3"></span>
+        <span class="shape dot s-l4"></span>
+        <span class="shape tri s-l5"></span>
+
+        <span class="shape blob s-r1"></span>
+        <span class="shape ring s-r2"></span>
+        <span class="shape square s-r3"></span>
+        <span class="shape dot s-r4"></span>
+        <span class="shape blob s-r5"></span>
+
+        <span class="shape blob s-t1"></span>
+        <span class="shape blob s-b1"></span>
+    </div>
+
+    <div class="report-page">
     <div class="container">
-        {{-- Untuk debugging data yang diterima view --}}
-        {{-- @dump($dataPembayarans) --}}
-        {{-- @if ($dataPembayarans->isNotEmpty()) @dump($dataPembayarans->first()) @endif --}}
+        <div class="report-toolbar">
+            <a href="{{ route('filament.admin.resources.data-pembayarans.index') }}" class="btn-back" aria-label="Kembali ke daftar pembayaran">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M15 18l-6-6 6-6" />
+                </svg>
+                Kembali
+            </a>
+        </div>
 
         <div class="report-title-header">
             @php
@@ -358,6 +647,7 @@
         <div class="footer">
             Laporan ini dihasilkan pada: {{ \Carbon\Carbon::now()->locale('id')->isoFormat('D MMMM YYYY, HH:mm:ss') }}
         </div>
+    </div>
     </div>
 </body>
 

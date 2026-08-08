@@ -2,14 +2,25 @@
 
 namespace App\Support;
 
+use App\Models\Category;
 use App\Models\Company;
+use App\Models\DataPembayaran;
+use App\Models\Expense;
+use App\Models\ExpenseOps;
+use App\Models\FixedAsset;
 use App\Models\Order;
+use App\Models\PaymentMethod;
+use App\Models\PembayaranPiutang;
+use App\Models\PendapatanLain;
+use App\Models\PengeluaranLain;
+use App\Models\Piutang;
 use App\Models\Product;
 use App\Models\Prospect;
 use App\Models\SimulasiProduk;
 use App\Models\User;
 use App\Models\Vendor;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 
@@ -29,6 +40,26 @@ class CompanySubscription
 
     public const RESOURCE_SIMULASI = 'simulasi';
 
+    public const RESOURCE_PAYMENT_METHODS = 'payment_methods';
+
+    public const RESOURCE_FIXED_ASSETS = 'fixed_assets';
+
+    public const RESOURCE_PIUTANGS = 'piutangs';
+
+    public const RESOURCE_PEMBAYARAN_PIUTANGS = 'pembayaran_piutangs';
+
+    public const RESOURCE_CATEGORIES = 'categories';
+
+    public const RESOURCE_DATA_PEMBAYARANS = 'data_pembayarans';
+
+    public const RESOURCE_EXPENSES = 'expenses';
+
+    public const RESOURCE_EXPENSE_OPS = 'expense_ops';
+
+    public const RESOURCE_PENDAPATAN_LAINS = 'pendapatan_lains';
+
+    public const RESOURCE_PENGELUARAN_LAINS = 'pengeluaran_lains';
+
     /**
      * @return list<string>
      */
@@ -41,22 +72,48 @@ class CompanySubscription
             self::RESOURCE_ORDERS,
             self::RESOURCE_PROSPECTS,
             self::RESOURCE_SIMULASI,
+            self::RESOURCE_CATEGORIES,
+            self::RESOURCE_PAYMENT_METHODS,
+            self::RESOURCE_FIXED_ASSETS,
+            self::RESOURCE_PIUTANGS,
+            self::RESOURCE_PEMBAYARAN_PIUTANGS,
+            self::RESOURCE_DATA_PEMBAYARANS,
+            self::RESOURCE_EXPENSES,
+            self::RESOURCE_EXPENSE_OPS,
+            self::RESOURCE_PENDAPATAN_LAINS,
+            self::RESOURCE_PENGELUARAN_LAINS,
         ];
     }
 
-    public static function company(): ?Company
+    /**
+     * Company aktif untuk kuota/fitur: milik user login (1 WO = 1 Company).
+     * Super admin tanpa company_id → null (bypass via ProFeatures).
+     */
+    public static function company(?User $actor = null): ?Company
     {
         if (! Schema::hasTable('companies')) {
             return null;
         }
 
-        return Cache::remember('wofins.company.subscription', 60, function () {
-            return Company::query()->latest('id')->first();
-        });
+        $actor ??= Auth::user();
+
+        if ($actor instanceof User && Schema::hasColumn('users', 'company_id') && $actor->company_id) {
+            $companyId = (int) $actor->company_id;
+
+            return Cache::remember('wofins.company.subscription.'.$companyId, 60, function () use ($companyId) {
+                return Company::query()->find($companyId);
+            });
+        }
+
+        return null;
     }
 
-    public static function forgetCache(): void
+    public static function forgetCache(?int $companyId = null): void
     {
+        if ($companyId) {
+            Cache::forget('wofins.company.subscription.'.$companyId);
+        }
+
         Cache::forget('wofins.company.subscription');
     }
 
@@ -123,6 +180,16 @@ class CompanySubscription
             self::RESOURCE_ORDERS => $company?->order_limit_override,
             self::RESOURCE_PROSPECTS => $company?->prospect_limit_override,
             self::RESOURCE_SIMULASI, 'simulations' => $company?->simulasi_limit_override,
+            self::RESOURCE_PAYMENT_METHODS, 'rekening' => $company?->payment_method_limit_override,
+            self::RESOURCE_FIXED_ASSETS, 'aset' => $company?->fixed_asset_limit_override,
+            self::RESOURCE_PIUTANGS, 'piutang' => $company?->piutang_limit_override,
+            self::RESOURCE_PEMBAYARAN_PIUTANGS, 'pembayaran_piutang' => $company?->pembayaran_piutang_limit_override,
+            self::RESOURCE_CATEGORIES, 'kategori' => $company?->category_limit_override,
+            self::RESOURCE_DATA_PEMBAYARANS, 'pendapatan_wedding' => $company?->data_pembayaran_limit_override,
+            self::RESOURCE_EXPENSES, 'pengeluaran_wedding' => $company?->expense_limit_override,
+            self::RESOURCE_EXPENSE_OPS, 'pengeluaran_ops' => $company?->expense_ops_limit_override,
+            self::RESOURCE_PENDAPATAN_LAINS, 'pendapatan_lain' => $company?->pendapatan_lain_limit_override,
+            self::RESOURCE_PENGELUARAN_LAINS, 'pengeluaran_lain' => $company?->pengeluaran_lain_limit_override,
             default => null,
         };
 
@@ -133,6 +200,16 @@ class CompanySubscription
         $normalized = match ($resource) {
             'seats' => self::RESOURCE_USERS,
             'simulations' => self::RESOURCE_SIMULASI,
+            'rekening' => self::RESOURCE_PAYMENT_METHODS,
+            'aset' => self::RESOURCE_FIXED_ASSETS,
+            'piutang' => self::RESOURCE_PIUTANGS,
+            'pembayaran_piutang' => self::RESOURCE_PEMBAYARAN_PIUTANGS,
+            'kategori' => self::RESOURCE_CATEGORIES,
+            'pendapatan_wedding' => self::RESOURCE_DATA_PEMBAYARANS,
+            'pengeluaran_wedding' => self::RESOURCE_EXPENSES,
+            'pengeluaran_ops' => self::RESOURCE_EXPENSE_OPS,
+            'pendapatan_lain' => self::RESOURCE_PENDAPATAN_LAINS,
+            'pengeluaran_lain' => self::RESOURCE_PENGELUARAN_LAINS,
             default => $resource,
         };
 
@@ -148,6 +225,16 @@ class CompanySubscription
             self::RESOURCE_ORDERS => static::ordersUsed(),
             self::RESOURCE_PROSPECTS => static::prospectsUsed(),
             self::RESOURCE_SIMULASI, 'simulations' => static::simulasiUsed(),
+            self::RESOURCE_PAYMENT_METHODS, 'rekening' => static::paymentMethodsUsed(),
+            self::RESOURCE_FIXED_ASSETS, 'aset' => static::fixedAssetsUsed(),
+            self::RESOURCE_PIUTANGS, 'piutang' => static::piutangsUsed(),
+            self::RESOURCE_PEMBAYARAN_PIUTANGS, 'pembayaran_piutang' => static::pembayaranPiutangsUsed(),
+            self::RESOURCE_CATEGORIES, 'kategori' => static::categoriesUsed(),
+            self::RESOURCE_DATA_PEMBAYARANS, 'pendapatan_wedding' => static::dataPembayaransUsed(),
+            self::RESOURCE_EXPENSES, 'pengeluaran_wedding' => static::expensesUsed(),
+            self::RESOURCE_EXPENSE_OPS, 'pengeluaran_ops' => static::expenseOpsUsed(),
+            self::RESOURCE_PENDAPATAN_LAINS, 'pendapatan_lain' => static::pendapatanLainsUsed(),
+            self::RESOURCE_PENGELUARAN_LAINS, 'pengeluaran_lain' => static::pengeluaranLainsUsed(),
             default => 0,
         };
     }
@@ -184,6 +271,16 @@ class CompanySubscription
             self::RESOURCE_ORDERS => 'proyek wedding',
             self::RESOURCE_PROSPECTS => 'prospek',
             self::RESOURCE_SIMULASI, 'simulations' => 'simulasi',
+            self::RESOURCE_PAYMENT_METHODS, 'rekening' => 'rekening',
+            self::RESOURCE_FIXED_ASSETS, 'aset' => 'aset tetap',
+            self::RESOURCE_PIUTANGS, 'piutang' => 'piutang',
+            self::RESOURCE_PEMBAYARAN_PIUTANGS, 'pembayaran_piutang' => 'pembayaran piutang',
+            self::RESOURCE_CATEGORIES, 'kategori' => 'kategori',
+            self::RESOURCE_DATA_PEMBAYARANS, 'pendapatan_wedding' => 'pendapatan wedding',
+            self::RESOURCE_EXPENSES, 'pengeluaran_wedding' => 'pengeluaran wedding',
+            self::RESOURCE_EXPENSE_OPS, 'pengeluaran_ops' => 'pengeluaran operasional',
+            self::RESOURCE_PENDAPATAN_LAINS, 'pendapatan_lain' => 'pendapatan lain',
+            self::RESOURCE_PENGELUARAN_LAINS, 'pengeluaran_lain' => 'pengeluaran lain',
             default => $resource,
         };
     }
@@ -236,6 +333,16 @@ class CompanySubscription
             self::RESOURCE_ORDERS => 'Proyek Wedding',
             self::RESOURCE_PROSPECTS => 'Prospek',
             self::RESOURCE_SIMULASI => 'Simulasi',
+            self::RESOURCE_PAYMENT_METHODS => 'Rekening',
+            self::RESOURCE_FIXED_ASSETS => 'Aset Tetap',
+            self::RESOURCE_PIUTANGS => 'Piutang',
+            self::RESOURCE_PEMBAYARAN_PIUTANGS => 'Pembayaran Piutang',
+            self::RESOURCE_CATEGORIES => 'Kategori',
+            self::RESOURCE_DATA_PEMBAYARANS => 'Pendapatan Wedding',
+            self::RESOURCE_EXPENSES => 'Pengeluaran Wedding',
+            self::RESOURCE_EXPENSE_OPS => 'Pengeluaran Operasional',
+            self::RESOURCE_PENDAPATAN_LAINS => 'Pendapatan Lain',
+            self::RESOURCE_PENGELUARAN_LAINS => 'Pengeluaran Lain',
         ];
 
         $rows = [];
@@ -269,15 +376,16 @@ class CompanySubscription
     }
 
     /**
-     * Kursi terpakai.
-     * - super_admin / agregat platform: semua user ber-role jabatan (exclude pure platform logic)
-     * - pemilik paket: hanya tim (root + created_by = root)
+     * Kursi terpakai dalam Company actor (exclude super_admin & terminated).
+     * Super admin tanpa konteks company: 0 (kuota dicek per-tenant saat provision).
      */
-    public static function seatsUsed(): int
+    public static function seatsUsed(?Company $company = null): int
     {
         if (! Schema::hasTable('users')) {
             return 0;
         }
+
+        $company ??= static::company();
 
         $query = User::query()
             ->where(function ($q) {
@@ -288,8 +396,12 @@ class CompanySubscription
                 $q->where('name', '!=', 'super_admin');
             });
 
-        if (! ProFeatures::actorIsSuperAdmin()) {
+        if ($company && Schema::hasColumn('users', 'company_id')) {
+            $query->where('company_id', $company->id);
+        } elseif (! ProFeatures::actorIsSuperAdmin()) {
             UserVisibility::constrainUsersQuery($query);
+        } else {
+            return 0;
         }
 
         return $query->count();
@@ -355,6 +467,214 @@ class CompanySubscription
         return $query->count();
     }
 
+    public static function paymentMethodsUsed(?Company $company = null): int
+    {
+        if (! Schema::hasTable('payment_methods')) {
+            return 0;
+        }
+
+        $company ??= static::company();
+        $query = PaymentMethod::query()->withoutGlobalScopes();
+
+        if ($company && Schema::hasColumn('payment_methods', 'company_id')) {
+            $query->where('company_id', $company->id);
+        } elseif (! ProFeatures::actorIsSuperAdmin()) {
+            UserVisibility::constrainCompanyQuery($query);
+        } else {
+            return 0;
+        }
+
+        return $query->count();
+    }
+
+    public static function fixedAssetsUsed(?Company $company = null): int
+    {
+        if (! Schema::hasTable('fixed_assets')) {
+            return 0;
+        }
+
+        $company ??= static::company();
+        $query = FixedAsset::query()->withoutGlobalScopes();
+
+        if ($company && Schema::hasColumn('fixed_assets', 'company_id')) {
+            $query->where('company_id', $company->id);
+        } elseif (! ProFeatures::actorIsSuperAdmin()) {
+            UserVisibility::constrainCompanyQuery($query);
+        } else {
+            return 0;
+        }
+
+        return $query->count();
+    }
+
+    public static function categoriesUsed(?Company $company = null): int
+    {
+        if (! Schema::hasTable('categories')) {
+            return 0;
+        }
+
+        $company ??= static::company();
+        $query = Category::query()->withoutGlobalScopes();
+
+        if ($company && Schema::hasColumn('categories', 'company_id')) {
+            $query->where('company_id', $company->id);
+        } elseif (! ProFeatures::actorIsSuperAdmin()) {
+            UserVisibility::constrainCompanyQuery($query);
+        } else {
+            return 0;
+        }
+
+        return $query->count();
+    }
+
+    public static function dataPembayaransUsed(?Company $company = null): int
+    {
+        if (! Schema::hasTable('data_pembayarans')) {
+            return 0;
+        }
+
+        return static::countViaCompanyOrders(DataPembayaran::query(), $company);
+    }
+
+    public static function expensesUsed(?Company $company = null): int
+    {
+        if (! Schema::hasTable('expenses')) {
+            return 0;
+        }
+
+        return static::countViaCompanyOrders(Expense::query(), $company);
+    }
+
+    public static function expenseOpsUsed(?Company $company = null): int
+    {
+        if (! Schema::hasTable('expense_ops')) {
+            return 0;
+        }
+
+        return static::countViaCompanyPaymentMethods(ExpenseOps::query(), $company);
+    }
+
+    public static function pendapatanLainsUsed(?Company $company = null): int
+    {
+        if (! Schema::hasTable('pendapatan_lains')) {
+            return 0;
+        }
+
+        return static::countViaCompanyPaymentMethods(PendapatanLain::query(), $company);
+    }
+
+    public static function pengeluaranLainsUsed(?Company $company = null): int
+    {
+        if (! Schema::hasTable('pengeluaran_lains')) {
+            return 0;
+        }
+
+        return static::countViaCompanyPaymentMethods(PengeluaranLain::query(), $company);
+    }
+
+    /**
+     * @param  Builder<\Illuminate\Database\Eloquent\Model>  $query
+     */
+    private static function countViaCompanyOrders(Builder $query, ?Company $company = null): int
+    {
+        $company ??= static::company();
+        $userIds = [];
+
+        if ($company && Schema::hasColumn('users', 'company_id')) {
+            $userIds = User::query()->where('company_id', $company->id)->pluck('id')->all();
+        } elseif (! ProFeatures::actorIsSuperAdmin()) {
+            $userIds = UserVisibility::teamUserIds();
+        } else {
+            return 0;
+        }
+
+        if ($userIds === []) {
+            return 0;
+        }
+
+        return $query->whereIn('order_id', function ($q) use ($userIds) {
+            $q->select('id')->from('orders')->whereIn('user_id', $userIds);
+        })->count();
+    }
+
+    /**
+     * @param  Builder<\Illuminate\Database\Eloquent\Model>  $query
+     */
+    private static function countViaCompanyPaymentMethods(Builder $query, ?Company $company = null): int
+    {
+        $company ??= static::company();
+
+        if ($company && Schema::hasColumn('payment_methods', 'company_id')) {
+            return $query->whereIn('payment_method_id', function ($q) use ($company) {
+                $q->select('id')->from('payment_methods')->where('company_id', $company->id);
+            })->count();
+        }
+
+        if (ProFeatures::actorIsSuperAdmin()) {
+            return 0;
+        }
+
+        $companyId = UserVisibility::companyId();
+
+        if ($companyId === null) {
+            return 0;
+        }
+
+        return $query->whereIn('payment_method_id', function ($q) use ($companyId) {
+            $q->select('id')->from('payment_methods')->where('company_id', $companyId);
+        })->count();
+    }
+
+    public static function piutangsUsed(): int
+    {
+        if (! Schema::hasTable('piutangs')) {
+            return 0;
+        }
+
+        $query = Piutang::query();
+        static::applyTeamOwnerScope($query, 'dibuat_oleh');
+
+        return $query->count();
+    }
+
+    public static function pembayaranPiutangsUsed(): int
+    {
+        if (! Schema::hasTable('pembayaran_piutangs')) {
+            return 0;
+        }
+
+        $query = PembayaranPiutang::query();
+
+        if (! ProFeatures::actorIsSuperAdmin()) {
+            $teamIds = UserVisibility::teamUserIds();
+
+            if ($teamIds === []) {
+                return 0;
+            }
+
+            $query->whereIn('piutang_id', function ($q) use ($teamIds) {
+                $q->select('id')->from('piutangs')->whereIn('dibuat_oleh', $teamIds);
+            });
+        }
+
+        return $query->count();
+    }
+
+    /**
+     * Badge navigasi: "used/limit" atau hanya used jika tak terbatas.
+     */
+    public static function navigationBadge(string $resource): string
+    {
+        $used = static::used($resource);
+        $limit = static::limit($resource);
+
+        if ($limit === null) {
+            return (string) $used;
+        }
+
+        return "{$used}/{$limit}";
+    }
+
     /**
      * Kuota selalu dihitung per tim untuk non–super_admin
      * (bukan lewat actorSeesGlobalAggregates / finance).
@@ -404,15 +724,23 @@ class CompanySubscription
     }
 
     /**
-     * Paket di-set manual di Filament → Company.
-     * Method ini sengaja no-op agar Approve / prospect tidak menimpa paket.
-     * ProspectApp.service tetap disimpan sebagai minat pendaftar (sales note).
-     *
-     * @deprecated Gunakan Company form / update companies.subscription_plan.
+     * Map minat ProspectApp.service → subscription_plan (untuk onboarding).
      */
     public static function syncPlanFromService(?string $service, bool $overwrite = false): void
     {
-        // Manual-only policy: jangan sync otomatis dari service prospect.
+        $plan = PricingPlans::normalizeKey($service);
+        $company = static::company();
+
+        if (! $plan || ! $company) {
+            return;
+        }
+
+        if (! $overwrite && PricingPlans::find($company->subscription_plan)) {
+            return;
+        }
+
+        $company->forceFill(['subscription_plan' => $plan])->save();
+        static::forgetCache($company->id);
     }
 
     public static function upgradeMessage(string $feature = PricingPlans::FEATURE_HRIS): string

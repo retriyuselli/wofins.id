@@ -9,6 +9,7 @@ use App\Filament\Resources\Users\Pages\ViewUser;
 use App\Filament\Resources\Users\Schemas\UserForm;
 use App\Filament\Resources\Users\Tables\UsersTable;
 use App\Models\User;
+use App\Support\CompanySubscription;
 use App\Support\UserVisibility;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -121,11 +122,16 @@ class UserResource extends Resource
 
     public static function getNavigationBadgeTooltip(): ?string
     {
-        return 'Total user';
+        return CompanySubscription::summary(CompanySubscription::RESOURCE_USERS);
     }
 
     public static function getNavigationBadge(): ?string
     {
-        return (string) static::getEloquentQuery()->count();
+        return CompanySubscription::navigationBadge(CompanySubscription::RESOURCE_USERS);
+    }
+
+    public static function getNavigationBadgeColor(): string|array|null
+    {
+        return CompanySubscription::canCreate(CompanySubscription::RESOURCE_USERS) ? 'primary' : 'warning';
     }
 }

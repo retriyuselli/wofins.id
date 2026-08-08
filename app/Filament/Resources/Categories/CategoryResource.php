@@ -2,17 +2,18 @@
 
 namespace App\Filament\Resources\Categories;
 
+use App\Filament\Resources\BaseResource;
 use App\Filament\Resources\Categories\Pages\CreateCategory;
 use App\Filament\Resources\Categories\Pages\EditCategory;
 use App\Filament\Resources\Categories\Pages\ListCategories;
 use App\Filament\Resources\Categories\Schemas\CategoryForm;
 use App\Filament\Resources\Categories\Tables\CategoriesTable;
 use App\Models\Category;
-use App\Filament\Resources\BaseResource;
+use App\Support\CompanySubscription;
 use App\Support\UserVisibility;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Database\Eloquent\Builder;
 
 class CategoryResource extends BaseResource
 {
@@ -50,15 +51,23 @@ class CategoryResource extends BaseResource
         ];
     }
 
+    public static function getEloquentQuery(): Builder
+    {
+        return UserVisibility::constrainCompanyQuery(parent::getEloquentQuery());
+    }
+
     public static function getNavigationBadge(): ?string
     {
-        // Kategori masih master platform (tanpa pemilik tim); badge = isi list.
-        $scope = UserVisibility::cacheScopeKey();
+        return CompanySubscription::navigationBadge(CompanySubscription::RESOURCE_CATEGORIES);
+    }
 
-        return (string) Cache::remember(
-            "nav:categories:count:{$scope}",
-            60,
-            fn (): int => (int) static::getModel()::count()
-        );
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return CompanySubscription::summary(CompanySubscription::RESOURCE_CATEGORIES);
+    }
+
+    public static function getNavigationBadgeColor(): string|array|null
+    {
+        return CompanySubscription::canCreate(CompanySubscription::RESOURCE_CATEGORIES) ? 'primary' : 'warning';
     }
 }

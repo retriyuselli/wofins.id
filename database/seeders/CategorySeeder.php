@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Category;
+use App\Models\Company;
 use Illuminate\Database\Seeder;
 
 class CategorySeeder extends Seeder
@@ -12,6 +13,13 @@ class CategorySeeder extends Seeder
      */
     public function run(): void
     {
+        $companyId = Company::query()
+            ->whereNotNull('subscription_plan')
+            ->where('subscription_plan', '!=', '')
+            ->orderByDesc('id')
+            ->value('id')
+            ?? Company::query()->orderBy('id')->value('id');
+
         $categories = [
             [
                 'name' => 'Dekorasi & Pelaminan',
@@ -66,12 +74,16 @@ class CategorySeeder extends Seeder
         ];
 
         foreach ($categories as $categoryData) {
-            Category::firstOrCreate(
+            Category::withoutGlobalScopes()->updateOrCreate(
                 [
-                    'name' => $categoryData['name'],
+                    'company_id' => $companyId,
                     'slug' => $categoryData['slug'],
                 ],
-                $categoryData
+                [
+                    'name' => $categoryData['name'],
+                    'is_active' => $categoryData['is_active'],
+                    'company_id' => $companyId,
+                ]
             );
         }
 

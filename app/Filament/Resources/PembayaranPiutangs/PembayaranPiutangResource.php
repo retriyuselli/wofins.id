@@ -8,15 +8,15 @@ use App\Filament\Resources\PembayaranPiutangs\Pages\ListPembayaranPiutangs;
 use App\Filament\Resources\PembayaranPiutangs\Pages\ViewPembayaranPiutang;
 use App\Filament\Resources\PembayaranPiutangs\Schemas\PembayaranPiutangForm;
 use App\Filament\Resources\PembayaranPiutangs\Tables\PembayaranPiutangsTable;
-use App\Models\PembayaranPiutang;
-use Filament\Infolists\Components\TextEntry;
 use App\Filament\Resources\BaseResource;
+use App\Models\PembayaranPiutang;
+use App\Support\CompanySubscription;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Cache;
 
 class PembayaranPiutangResource extends BaseResource
 {
@@ -187,24 +187,18 @@ class PembayaranPiutangResource extends BaseResource
         ];
     }
 
-    private static function getCachedNavigationBadgeCount(): int
-    {
-        $scope = \App\Support\UserVisibility::cacheScopeKey();
-
-        return Cache::remember(
-            "nav:pembayaran_piutangs:pending_count:{$scope}",
-            60,
-            fn (): int => (int) static::getEloquentQuery()->where('status', 'pending')->count()
-        );
-    }
-
     public static function getNavigationBadge(): ?string
     {
-        return (string) static::getCachedNavigationBadgeCount();
+        return CompanySubscription::navigationBadge(CompanySubscription::RESOURCE_PEMBAYARAN_PIUTANGS);
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return CompanySubscription::summary(CompanySubscription::RESOURCE_PEMBAYARAN_PIUTANGS);
     }
 
     public static function getNavigationBadgeColor(): string|array|null
     {
-        return 'warning';
+        return CompanySubscription::canCreate(CompanySubscription::RESOURCE_PEMBAYARAN_PIUTANGS) ? 'primary' : 'warning';
     }
 }

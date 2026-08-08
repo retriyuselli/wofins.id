@@ -2,10 +2,15 @@
 
 namespace App\Models;
 
+use App\Support\ProFeatures;
+use App\Support\UserVisibility;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Schema;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -14,6 +19,7 @@ class FixedAsset extends Model
     use HasFactory, SoftDeletes, LogsActivity;
 
     protected $fillable = [
+        'company_id',
         'asset_code',
         'asset_name',
         'category',
@@ -72,14 +78,44 @@ class FixedAsset extends Model
         'DAMAGED' => 'Rusak',
     ];
 
-    // Relationships
+    protected static function booted(): void
+    {
+        static::addGlobalScope('tenant_company', function (Builder $builder) {
+            if (! Schema::hasColumn('fixed_assets', 'company_id')) {
+                return;
+            }
+
+            if (! auth()->check()) {
+                return;
+            }
+
+            if (ProFeatures::actorIsSuperAdmin()) {
+                return;
+            }
+
+            $companyId = UserVisibility::companyId();
+
+            if ($companyId === null) {
+                $builder->whereRaw('1 = 0');
+
+                return;
+            }
+
+            $builder->where('company_id', $companyId);
+        });
+    }
 
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'purchase_price', 'current_value', 'status'])
+            ->logOnly(['asset_name', 'purchase_price', 'current_book_value', 'company_id', 'is_active'])
             ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}")
             ->useLogName('fixed_asset');
+    }
+
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
     }
 
     public function depreciations(): HasMany

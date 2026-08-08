@@ -13,15 +13,15 @@ use App\Filament\Resources\Piutangs\Tables\PiutangsTable;
 use App\Filament\Resources\Piutangs\Widgets\PiutangJatuhTempoWidget;
 use App\Filament\Resources\Piutangs\Widgets\PiutangOverviewWidget;
 use App\Filament\Resources\Piutangs\Widgets\TopDebiturWidget;
-use App\Models\Piutang;
-use Filament\Infolists\Components\TextEntry;
 use App\Filament\Resources\BaseResource;
+use App\Models\Piutang;
+use App\Support\CompanySubscription;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Cache;
 
 class PiutangResource extends BaseResource
 {
@@ -38,17 +38,6 @@ class PiutangResource extends BaseResource
     protected static string|\UnitEnum|null $navigationGroup = 'Keuangan';
 
     protected static ?int $navigationSort = 3;
-
-    private static function getCachedNavigationBadgeCount(): int
-    {
-        $scope = \App\Support\UserVisibility::cacheScopeKey();
-
-        return Cache::remember(
-            "nav:piutangs:aktif_count:{$scope}",
-            60,
-            fn (): int => (int) static::getEloquentQuery()->where('status', 'aktif')->count()
-        );
-    }
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
@@ -184,12 +173,17 @@ class PiutangResource extends BaseResource
 
     public static function getNavigationBadge(): ?string
     {
-        return (string) static::getCachedNavigationBadgeCount();
+        return CompanySubscription::navigationBadge(CompanySubscription::RESOURCE_PIUTANGS);
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return CompanySubscription::summary(CompanySubscription::RESOURCE_PIUTANGS);
     }
 
     public static function getNavigationBadgeColor(): string|array|null
     {
-        return 'warning';
+        return CompanySubscription::canCreate(CompanySubscription::RESOURCE_PIUTANGS) ? 'primary' : 'warning';
     }
 
     public static function getWidgets(): array

@@ -10,7 +10,8 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Isolasi data user:
  * - super_admin: semua
- * - lainnya: tim paket (diri sendiri + user yang created_by = root tim)
+ * - lainnya: semua user dalam company_id yang sama (1 WO = 1 Company)
+ * - fallback legacy: root + created_by = root
  */
 class UserVisibility
 {
@@ -27,7 +28,7 @@ class UserVisibility
     }
 
     /**
-     * Root tim paket: pemilik akun (created_by null) atau induk created_by.
+     * Root pemilik paket: user dengan created_by null dalam company, atau induk created_by.
      */
     public static function teamRootId(?User $user = null): ?int
     {
@@ -37,11 +38,36 @@ class UserVisibility
             return null;
         }
 
+        if (Schema::hasColumn('users', 'company_id') && $user->company_id) {
+            $ownerId = User::query()
+                ->where('company_id', $user->company_id)
+                ->where(function (Builder $q) {
+                    $q->whereNull('created_by')->orWhere('created_by', 0);
+                })
+                ->orderBy('id')
+                ->value('id');
+
+            if ($ownerId) {
+                return (int) $ownerId;
+            }
+        }
+
         if (Schema::hasColumn('users', 'created_by') && $user->created_by) {
             return (int) $user->created_by;
         }
 
         return (int) $user->id;
+    }
+
+    public static function companyId(?User $user = null): ?int
+    {
+        $user ??= Auth::user();
+
+        if (! $user instanceof User || ! Schema::hasColumn('users', 'company_id')) {
+            return null;
+        }
+
+        return $user->company_id ? (int) $user->company_id : null;
     }
 
     /**
@@ -69,6 +95,12 @@ class UserVisibility
             return $query;
         }
 
+        $companyId = static::companyId();
+
+        if ($companyId !== null) {
+            return $query->where('company_id', $companyId);
+        }
+
         $root = static::teamRootId();
 
         if ($root === null) {
@@ -85,12 +117,23 @@ class UserVisibility
     }
 
     /**
-     * ID user dalam tim paket (root + anggota).
+     * ID user dalam Company (atau fallback tim created_by).
      *
      * @return list<int>
      */
     public static function teamUserIds(?User $actor = null): array
     {
+        $companyId = static::companyId($actor);
+
+        if ($companyId !== null) {
+            return User::query()
+                ->where('company_id', $companyId)
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->values()
+                ->all();
+        }
+
         $root = static::teamRootId($actor);
 
         if ($root === null) {
@@ -112,7 +155,7 @@ class UserVisibility
     }
 
     /**
-     * Stempel pemilik tim pada create (created_by / user_id).
+     * Stempel pemilik tim pada create (created_by / user_id) + company_id.
      * Super admin: biarkan nilai form (boleh null = katalog platform).
      *
      * @param  array<string, mixed>  $data
@@ -128,6 +171,12 @@ class UserVisibility
 
         if ($root !== null) {
             $data[$column] = $root;
+        }
+
+        $companyId = static::companyId();
+
+        if ($companyId !== null && Schema::hasColumn('users', 'company_id')) {
+            $data['company_id'] = $companyId;
         }
 
         return $data;
@@ -228,6 +277,51 @@ class UserVisibility
         }
 
         return $query->whereRaw('1 = 0');
+    }
+
+    /**
+     * Scope ke company actor (1 WO = 1 Company).
+     * Super admin: semua. Tanpa company_id: kosong.
+     *
+     * @template TModel of \Illuminate\Database\Eloquent\Model
+     *
+     * @param  Builder<TModel>  $query
+     * @return Builder<TModel>
+     */
+    public static function constrainCompanyQuery(Builder $query, string $column = 'company_id'): Builder
+    {
+        if (static::actorIsSuperAdmin()) {
+            return $query;
+        }
+
+        $companyId = static::companyId();
+
+        if ($companyId === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where($column, $companyId);
+    }
+
+    /**
+     * Stempel company_id pada create (rekening, dll.).
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    public static function stampCompanyId(array $data): array
+    {
+        if (static::actorIsSuperAdmin()) {
+            return $data;
+        }
+
+        $companyId = static::companyId();
+
+        if ($companyId !== null) {
+            $data['company_id'] = $companyId;
+        }
+
+        return $data;
     }
 
     /**

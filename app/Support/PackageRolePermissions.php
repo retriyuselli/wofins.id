@@ -75,6 +75,11 @@ class PackageRolePermissions
             }
         }
 
+        // Company milik sendiri: lihat & ubah profil; buat/hapus hanya super_admin.
+        foreach (['ViewAny', 'View', 'Update'] as $ability) {
+            $perms[] = "{$ability}:Company";
+        }
+
         return array_values(array_unique($perms));
     }
 }

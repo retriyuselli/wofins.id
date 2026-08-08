@@ -65,7 +65,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->font('Noto Sans')
+            ->font('Poppins')
             ->login()
             ->maxContentWidth(Width::Full)
             ->brandLogo($brandLogo)
@@ -73,6 +73,20 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('Makna Kreatif')
             ->favicon($favicon)
             ->sidebarCollapsibleOnDesktop(true)
+            ->navigationGroups([
+                'Penjualan',
+                'Kas Proyek',
+                'Kas Operasional',
+                'Keuangan',
+                'SDM',
+                'Absensi',
+                'Manajemen Cuti',
+                'Administrasi',
+                'Knowledge Base',
+                'Konten',
+                'WOFINS',
+                'Sistem',
+            ])
             ->colors([
                 'primary' => Color::Blue,
             ])

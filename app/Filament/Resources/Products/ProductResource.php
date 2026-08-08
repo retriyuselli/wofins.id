@@ -8,13 +8,13 @@ use App\Filament\Resources\Products\Pages\ListProducts;
 use App\Filament\Resources\Products\Pages\ViewProduct;
 use App\Filament\Resources\Products\Schemas\ProductForm;
 use App\Filament\Resources\Products\Tables\ProductsTable;
-use App\Models\Product;
 use App\Filament\Resources\BaseResource;
+use App\Models\Product;
+use App\Support\CompanySubscription;
 use App\Support\UserVisibility;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Cache;
 
 class ProductResource extends BaseResource
 {
@@ -36,13 +36,17 @@ class ProductResource extends BaseResource
 
     public static function getNavigationBadge(): ?string
     {
-        $scope = UserVisibility::cacheScopeKey();
+        return CompanySubscription::navigationBadge(CompanySubscription::RESOURCE_PRODUCTS);
+    }
 
-        return (string) Cache::remember(
-            "nav:products:count:{$scope}",
-            60,
-            fn (): int => (int) static::getEloquentQuery()->count()
-        );
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return CompanySubscription::summary(CompanySubscription::RESOURCE_PRODUCTS);
+    }
+
+    public static function getNavigationBadgeColor(): string|array|null
+    {
+        return CompanySubscription::canCreate(CompanySubscription::RESOURCE_PRODUCTS) ? 'primary' : 'warning';
     }
 
     public static function form(Schema $schema): Schema
@@ -61,11 +65,6 @@ class ProductResource extends BaseResource
         return [
             //
         ];
-    }
-
-    public static function getNavigationBadgeTooltip(): ?string
-    {
-        return 'Data Produk yang telah dibuat dan dikelola';
     }
 
     public static function getPages(): array

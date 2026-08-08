@@ -58,6 +58,10 @@ class CreateUser extends CreateRecord
 
         if (! UserVisibility::actorIsSuperAdmin()) {
             $data['created_by'] = UserVisibility::teamRootId();
+            $companyId = UserVisibility::companyId();
+            if ($companyId) {
+                $data['company_id'] = $companyId;
+            }
         } elseif (empty($data['created_by'])) {
             $data['created_by'] = null;
         }

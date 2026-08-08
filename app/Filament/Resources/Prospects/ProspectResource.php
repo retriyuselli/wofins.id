@@ -10,13 +10,13 @@ use App\Filament\Resources\Prospects\Pages\ProspectsThisWeek;
 use App\Filament\Resources\Prospects\Pages\ViewProspect;
 use App\Filament\Resources\Prospects\Schemas\ProspectForm;
 use App\Filament\Resources\Prospects\Tables\ProspectsTable;
-use App\Models\Prospect;
 use App\Filament\Resources\BaseResource;
+use App\Models\Prospect;
+use App\Support\CompanySubscription;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\Facades\Cache;
 
 class ProspectResource extends BaseResource
 {
@@ -70,24 +70,18 @@ class ProspectResource extends BaseResource
         );
     }
 
-    private static function getCachedNavigationBadgeCount(): int
-    {
-        $scope = \App\Support\UserVisibility::cacheScopeKey();
-
-        return Cache::remember(
-            "nav:prospects:without_orders:{$scope}",
-            60,
-            fn (): int => (int) static::getEloquentQuery()->whereDoesntHave('orders')->count()
-        );
-    }
-
     public static function getNavigationBadge(): ?string
     {
-        return (string) static::getCachedNavigationBadgeCount();
+        return CompanySubscription::navigationBadge(CompanySubscription::RESOURCE_PROSPECTS);
     }
 
     public static function getNavigationBadgeTooltip(): ?string
     {
-        return 'Calon client yang terdaftar';
+        return CompanySubscription::summary(CompanySubscription::RESOURCE_PROSPECTS);
+    }
+
+    public static function getNavigationBadgeColor(): string|array|null
+    {
+        return CompanySubscription::canCreate(CompanySubscription::RESOURCE_PROSPECTS) ? 'primary' : 'warning';
     }
 }

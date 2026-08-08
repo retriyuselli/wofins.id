@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
@@ -14,12 +15,12 @@ class Company extends Model
 
     protected static function booted(): void
     {
-        static::saved(function () {
-            \App\Support\CompanySubscription::forgetCache();
+        static::saved(function (Company $company) {
+            \App\Support\CompanySubscription::forgetCache($company->id);
         });
 
-        static::deleted(function () {
-            \App\Support\CompanySubscription::forgetCache();
+        static::deleted(function (Company $company) {
+            \App\Support\CompanySubscription::forgetCache($company->id);
         });
     }
 
@@ -64,6 +65,16 @@ class Company extends Model
         'order_limit_override',
         'prospect_limit_override',
         'simulasi_limit_override',
+        'payment_method_limit_override',
+        'fixed_asset_limit_override',
+        'piutang_limit_override',
+        'pembayaran_piutang_limit_override',
+        'category_limit_override',
+        'data_pembayaran_limit_override',
+        'expense_limit_override',
+        'expense_ops_limit_override',
+        'pendapatan_lain_limit_override',
+        'pengeluaran_lain_limit_override',
         'subscription_expires_at',
     ];
 
@@ -81,6 +92,16 @@ class Company extends Model
         'order_limit_override' => 'integer',
         'prospect_limit_override' => 'integer',
         'simulasi_limit_override' => 'integer',
+        'payment_method_limit_override' => 'integer',
+        'fixed_asset_limit_override' => 'integer',
+        'piutang_limit_override' => 'integer',
+        'pembayaran_piutang_limit_override' => 'integer',
+        'category_limit_override' => 'integer',
+        'data_pembayaran_limit_override' => 'integer',
+        'expense_limit_override' => 'integer',
+        'expense_ops_limit_override' => 'integer',
+        'pendapatan_lain_limit_override' => 'integer',
+        'pengeluaran_lain_limit_override' => 'integer',
         'subscription_expires_at' => 'datetime',
     ];
 
@@ -114,5 +135,20 @@ class Company extends Model
     public function paymentMethod(): BelongsTo
     {
         return $this->belongsTo(PaymentMethod::class);
+    }
+
+    public function paymentMethods(): HasMany
+    {
+        return $this->hasMany(PaymentMethod::class);
+    }
+
+    public function users(): HasMany
+    {
+        return $this->hasMany(User::class);
+    }
+
+    public function prospectApps(): HasMany
+    {
+        return $this->hasMany(ProspectApp::class);
     }
 }

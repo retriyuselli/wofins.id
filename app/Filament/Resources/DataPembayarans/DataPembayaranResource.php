@@ -8,9 +8,10 @@ use App\Filament\Resources\DataPembayarans\Schemas\DataPembayaranForm;
 use App\Filament\Resources\DataPembayarans\Tables\DataPembayaransTable;
 use App\Filament\Resources\DataPembayarans\Widgets\DataPembayaranStatsOverview;
 use App\Filament\Resources\DataPembayarans\Widgets\InvoiceStatsOverview;
-use App\Models\DataPembayaran;
-use Carbon\Carbon;
 use App\Filament\Resources\BaseResource;
+use App\Models\DataPembayaran;
+use App\Support\CompanySubscription;
+use Carbon\Carbon;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -75,7 +76,12 @@ class DataPembayaranResource extends BaseResource
 
     public static function getNavigationGroup(): ?string
     {
-        return 'Finance';
+        return 'Kas Proyek';
+    }
+
+    public static function getNavigationSort(): ?int
+    {
+        return 1;
     }
 
     public static function getEloquentQuery(): Builder
@@ -91,28 +97,16 @@ class DataPembayaranResource extends BaseResource
 
     public static function getNavigationBadge(): ?string
     {
-        $scope = \App\Support\UserVisibility::cacheScopeKey();
-
-        return (string) cache()->remember("data_pembayaran_count:{$scope}", now()->addMinutes(5), function () {
-            return static::getEloquentQuery()
-                ->whereNull('deleted_at')
-                ->count();
-        });
+        return CompanySubscription::navigationBadge(CompanySubscription::RESOURCE_DATA_PEMBAYARANS);
     }
 
     public static function getNavigationBadgeColor(): ?string
     {
-        $count = (int) (static::getNavigationBadge() ?? 0);
-
-        return match (true) {
-            $count > 10 => 'warning',
-            $count > 0 => 'primary',
-            default => 'secondary',
-        };
+        return CompanySubscription::canCreate(CompanySubscription::RESOURCE_DATA_PEMBAYARANS) ? 'primary' : 'warning';
     }
 
     public static function getNavigationBadgeTooltip(): ?string
     {
-        return 'Pembayaran dari konsumen ke perusahaan sebagai DP dan pembayaran lanjutan';
+        return CompanySubscription::summary(CompanySubscription::RESOURCE_DATA_PEMBAYARANS);
     }
 }

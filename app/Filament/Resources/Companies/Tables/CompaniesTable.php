@@ -117,13 +117,18 @@ class CompaniesTable
                     DeleteBulkAction::make(),
                 ]),
             ])
-            ->emptyStateDescription('Silakan buat perusahaan baru untuk memulai.')
+            ->emptyStateDescription(
+                \App\Support\ProFeatures::actorIsSuperAdmin()
+                    ? 'Silakan buat perusahaan baru untuk memulai.'
+                    : 'Company Anda belum tersedia. Hubungi admin jika akun sudah di-Approve.'
+            )
             ->emptyStateActions([
                 Action::make('create')
                     ->label('Buat Perusahaan Baru')
                     ->url(fn (): string => CompanyResource::getUrl('create'))
                     ->icon('heroicon-o-plus')
-                    ->button(),
+                    ->button()
+                    ->visible(fn () => \App\Support\ProFeatures::actorIsSuperAdmin()),
             ]);
     }
 }

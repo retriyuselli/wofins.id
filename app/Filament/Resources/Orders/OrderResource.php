@@ -15,6 +15,7 @@ use App\Filament\Resources\BaseResource;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
+use App\Support\CompanySubscription;
 use App\Support\UserVisibility;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Repeater;
@@ -30,7 +31,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 
 class OrderResource extends BaseResource
 {
@@ -45,22 +45,6 @@ class OrderResource extends BaseResource
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-s-shopping-cart';
 
     protected static ?int $navigationSort = 1;
-
-    private static function getCachedNavigationBadgeCount(): int
-    {
-        $scope = UserVisibility::cacheScopeKey();
-
-        return Cache::remember(
-            "nav:orders:processing_count:{$scope}",
-            60,
-            function (): int {
-                $query = static::getEloquentQuery()
-                    ->where('status', \App\Enums\OrderStatus::Processing->value);
-
-                return (int) $query->count();
-            }
-        );
-    }
 
     public static function form(Schema $schema): Schema
     {
@@ -81,7 +65,17 @@ class OrderResource extends BaseResource
 
     public static function getNavigationBadge(): ?string
     {
-        return (string) static::getCachedNavigationBadgeCount();
+        return CompanySubscription::navigationBadge(CompanySubscription::RESOURCE_ORDERS);
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return CompanySubscription::summary(CompanySubscription::RESOURCE_ORDERS);
+    }
+
+    public static function getNavigationBadgeColor(): string|array|null
+    {
+        return CompanySubscription::canCreate(CompanySubscription::RESOURCE_ORDERS) ? 'primary' : 'warning';
     }
 
     public static function getGloballySearchableAttributes(): array
@@ -384,10 +378,5 @@ class OrderResource extends BaseResource
         }
         // Jika tidak ada pembayaran, bisa di-set ke default atau dibiarkan (tergantung kebutuhan)
         // $set('closing_date', now()->format('Y-m-d')); // Atau biarkan saja jika tidak ada pembayaran
-    }
-
-    public static function getNavigationBadgeTooltip(): ?string
-    {
-        return 'Total proyek yang sedang diproses';
     }
 }
