@@ -10,15 +10,22 @@ use Spatie\Permission\Models\Role;
 class RoleSeeder extends Seeder
 {
     /**
-     * Run the database seeder.
+     * Role jabatan Spatie (bukan nama paket).
+     *
+     * - Paket (starter/professional/business) menempel di companies.subscription_plan.
+     - Role `pengunjung` = pemilik/tim paket; permission = PackageRolePermissions (CRUD Starter+).
+     - Menu modul Pro/Business digating PlanResourceGate (nota dinas, rekonsiliasi, dokumen, HRIS, dll).
+     - `role_management` tidak ada di paket mana pun; Role Filament hanya untuk super_admin (bypass).
+     - Permission Shield penuh (LeaveRequest, Role, BankStatement, …) dibuat via `shield:generate`,
+       bukan di seeder ini — setelah generate, sync ulang ke super_admin.
      */
     public function run(): void
     {
-        // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Create permissions (add more as needed)
-        $permissions = [
+        // Legacy snake_case (kompatibilitas lama / PackageRolePermissions).
+        // Akses Filament utama memakai format Shield: ViewAny:Order, Create:User, dll.
+        $legacyPermissions = [
             'view_prospects',
             'create_prospects',
             'edit_prospects',
@@ -36,23 +43,25 @@ class RoleSeeder extends Seeder
             'manage_roles',
         ];
 
-        foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission]);
+        foreach ($legacyPermissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
         }
 
-        // Create roles
-        $superAdmin = Role::firstOrCreate(['name' => 'super_admin']);
-        $accountManager = Role::firstOrCreate(['name' => 'Account Manager']);
-        $admin = Role::firstOrCreate(['name' => 'admin']);
-        $employee = Role::firstOrCreate(['name' => 'employee']);
-        $finance = Role::firstOrCreate(['name' => 'finance']);
-        $eventManager = Role::firstOrCreate(['name' => 'Event Manager']);
-        $pengunjung = Role::firstOrCreate(['name' => 'pengunjung']);
+        // Permission Shield untuk role pengunjung (tim paket).
+        foreach (PackageRolePermissions::forStarter() as $permission) {
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
+        }
 
-        // Assign permissions to roles
-        $superAdmin->givePermissionTo(Permission::all());
+        $superAdmin = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
+        $accountManager = Role::firstOrCreate(['name' => 'Account Manager', 'guard_name' => 'web']);
+        $admin = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        $employee = Role::firstOrCreate(['name' => 'employee', 'guard_name' => 'web']);
+        $finance = Role::firstOrCreate(['name' => 'finance', 'guard_name' => 'web']);
+        $eventManager = Role::firstOrCreate(['name' => 'Event Manager', 'guard_name' => 'web']);
+        $pengunjung = Role::firstOrCreate(['name' => 'pengunjung', 'guard_name' => 'web']);
 
-        $accountManager->givePermissionTo([
+        // Staf internal — masih legacy; akses panel penuh mengandalkan Shield + role policy.
+        $accountManager->syncPermissions([
             'view_prospects',
             'create_prospects',
             'edit_prospects',
@@ -63,7 +72,7 @@ class RoleSeeder extends Seeder
             'view_reports',
         ]);
 
-        $admin->givePermissionTo([
+        $admin->syncPermissions([
             'view_prospects',
             'create_prospects',
             'edit_prospects',
@@ -77,30 +86,30 @@ class RoleSeeder extends Seeder
             'view_reports',
         ]);
 
-        $employee->givePermissionTo([
+        $employee->syncPermissions([
             'view_prospects',
             'view_orders',
             'view_products',
         ]);
 
-        $finance->givePermissionTo([
+        $finance->syncPermissions([
             'view_orders',
             'view_products',
             'view_reports',
         ]);
 
-        $eventManager->givePermissionTo([
+        $eventManager->syncPermissions([
             'view_prospects',
             'view_orders',
             'view_products',
         ]);
 
-        // Role pengunjung: menu & CRUD fitur Starter + kelola tim (kuota paket).
-        // Modul Pro/Business (HRIS, payroll, rekonsiliasi, Role) tetap digating PlanResourceGate.
-        foreach (PackageRolePermissions::forStarter() as $permission) {
-            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
-        }
+        // Pemilik paket: CRUD fitur Starter (+ permission modul Pro/Business agar upgrade
+        // tidak perlu re-sync). Tampilan menu tetap digating PlanResourceGate.
         $pengunjung->syncPermissions(PackageRolePermissions::forStarter());
+
+        // Setelah semua permission ada: super_admin dapat semuanya.
+        $superAdmin->syncPermissions(Permission::all());
 
         $this->command->info('✅ Roles and permissions created successfully!');
         $this->command->newLine();

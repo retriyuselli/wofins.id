@@ -65,7 +65,9 @@ return [
     'super_admin' => [
         'enabled' => true,
         'name' => 'super_admin',
-        'define_via_gate' => false,
+        // Bypass semua permission check via Gate::before — hindari menu hilang
+        // bila permission resource baru belum di-generate.
+        'define_via_gate' => true,
         'intercept_gate' => 'before',
     ],
 

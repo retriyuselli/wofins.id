@@ -106,7 +106,7 @@ class AdminPanelProvider extends PanelProvider
                     ->navigationLabel('Role')
                     ->navigationGroup('SDM')
                     ->globallySearchable(false)
-                    // Menu Role: digating role_management (saat ini tidak di paket standar)
+                    // Tampil untuk super_admin, atau paket yang punya role_management
                     ->registerNavigation(fn (): bool => ProFeatures::allows(PricingPlans::FEATURE_ROLE_MANAGEMENT)),
                 FilamentClearCachePlugin::make(),
             ])

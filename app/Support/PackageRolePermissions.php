@@ -4,9 +4,12 @@ namespace App\Support;
 
 /**
  * Permission Shield untuk role pemilik paket (pengunjung).
- * Permission CRUD untuk role pengunjung (pemilik paket).
- * Modul Nota dinas digating Professional+; Dokumen / HRIS digating Business+.
- * Permission tetap ada agar upgrade tidak perlu re-sync role.
+ * CRUD diizinkan di permission; menu/aksi tetap digating PlanResourceGate:
+ * - Starter: proyek + keuangan dasar
+ * - Professional+: nota dinas, rekonsiliasi, payroll
+ * - Business+: dokumen/SOP, HRIS, portal karyawan, dll.
+ * Permission modul Pro/Business tetap di-seed agar upgrade tidak perlu re-sync role.
+ * Tidak termasuk Role / BankStatement / Leave* / Absensi* (bukan fitur paket pelanggan).
  */
 class PackageRolePermissions
 {
