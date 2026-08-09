@@ -1,86 +1,68 @@
-<x-filament-panels::page>
+{{-- Partial tab — tema WOFINS via .pm-wf parent --}}
+<link rel="stylesheet" href="{{ asset('assets/payment/paymentmethod.css') }}?v={{ @filemtime(public_path('assets/payment/paymentmethod.css')) }}">
 
-    {{-- Memuat file CSS khusus untuk halaman detail uang keluar --}}
-    <link rel="stylesheet" href="{{ asset('assets/payment/paymentmethod.css') }}">
+<div class="pm-panel">
+    <div class="pm-panel__header">
+        <div>
+            <h2 class="pm-panel__title">Detail Uang Keluar</h2>
+            <p class="pm-panel__sub">Rekening: {{ $record->name }}</p>
+        </div>
+        <div>
+            <p class="pm-panel__total is-out">
+                Rp {{ number_format($totalUangKeluar, 0, ',', '.') }}
+            </p>
+            <p class="pm-panel__meta">
+                {{ $expenses->count() + $expenseOps->count() + $pengeluaranLain->count() }} transaksi
+            </p>
+        </div>
+    </div>
 
-    <div class="bg-white shadow-m border border-gray-200 rounded-xl p-4 sm:p-6 lg:p-8 ring-gray-100">
-        <!-- Header -->
-        <div class="flex justify-between items-center border-b pb-4">
+    <div class="billing-info text-sm sm:text-base mt-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
             <div>
-                <h1 class="font-bold text-gray-800 text-sm sm:text-base">DETAIL UANG KELUAR</h1>
-                <p class="text-gray-600 text-sm sm:text-base">Rekening: {{ $record->name }}</p>
+                <h3 class="pm-section-title">Detail Rekening</h3>
+                <p class="pm-muted">Nama Rekening: <span class="pm-ink font-medium">{{ $record->name }}</span></p>
+                <p class="pm-muted">Total Pengeluaran: <span class="pm-ink font-medium">Rp {{ number_format($totalUangKeluar, 0, ',', '.') }}</span></p>
+                <p class="pm-muted">Jumlah Transaksi: <span class="pm-ink font-medium">{{ $expenses->count() + $expenseOps->count() + $pengeluaranLain->count() }}</span></p>
             </div>
             <div>
-                <div class="text-right">
-                    <p class="text-lg font-bold text-red-600">
+                <h3 class="pm-section-title">Distribusi Pengeluaran</h3>
+                <p class="pm-muted">Wedding: <span class="pm-ink font-medium">{{ $expenses->count() }} transaksi</span></p>
+                <p class="pm-muted">Operasional: <span class="pm-ink font-medium">{{ $expenseOps->count() }} transaksi</span></p>
+                <p class="pm-muted">Lainnya: <span class="pm-ink font-medium">{{ $pengeluaranLain->count() }} transaksi</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-8 mb-10 overflow-x-auto">
+        <table class="detail-tagihan-table w-full text-sm sm:text-base">
+            <thead>
+                <tr>
+                    <th colspan="2">Ringkasan Pengeluaran</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="px-4 py-2">Total Wedding Expense</td>
+                    <td class="text-right px-4 py-2">Rp {{ number_format($expenses->sum('amount'), 0, ',', '.') }}</td>
+                </tr>
+                <tr>
+                    <td class="px-4 py-2">Total Operational Expense</td>
+                    <td class="text-right px-4 py-2">Rp {{ number_format($expenseOps->sum('amount'), 0, ',', '.') }}</td>
+                </tr>
+                <tr>
+                    <td class="px-4 py-2">Total Pengeluaran Lain</td>
+                    <td class="text-right px-4 py-2">Rp {{ number_format($pengeluaranLain->sum('amount'), 0, ',', '.') }}</td>
+                </tr>
+                <tr class="total">
+                    <td class="font-semibold px-4 py-3">TOTAL UANG KELUAR</td>
+                    <td class="text-right font-semibold px-4 py-3">
                         Rp {{ number_format($totalUangKeluar, 0, ',', '.') }}
-                    </p>
-                    <p class="text-sm text-gray-500">
-                        {{ $expenses->count() + $expenseOps->count() + $pengeluaranLain->count() }} transaksi
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Ringkasan Informasi -->
-        <div class="billing-info text-sm sm:text-base mt-8 mb-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <h2 class="text-gray-700 font-bold mb-2">- Detail Rekening:</h2>
-                    <p class="text-gray-600">- Nama Rekening: {{ $record->name }}</p>
-                    <p class="text-gray-600">- Total Pengeluaran: Rp {{ number_format($totalUangKeluar, 0, ',', '.') }}
-                    </p>
-                    <p class="text-gray-600">- Jumlah Transaksi:
-                        {{ $expenses->count() + $expenseOps->count() + $pengeluaranLain->count() }}</p>
-                </div>
-                <div>
-                    <h2 class="text-sm font-semibold mb-2">Distribusi Pengeluaran:</h2>
-                    <p class="text-gray-600">- Wedding: {{ $expenses->count() }} transaksi</p>
-                    <p class="text-gray-600">- Operasional: {{ $expenseOps->count() }} transaksi</p>
-                    <p class="text-gray-600">- Lainnya: {{ $pengeluaranLain->count() }} transaksi</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tabel Ringkasan -->
-        <div class="mt-10 mb-12">
-            <div class="col-12 overflow-x-auto">
-                <table class="detail-tagihan-table w-full text-sm sm:text-base">
-                    <thead>
-                        <tr>
-                            <th colspan="2" class="bg-gray-100 text-left px-4 py-2 font-semibold text-gray-700">
-                                Ringkasan Pengeluaran</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="px-4 py-2 border-b border-gray-200">Total Wedding Expense</td>
-                            <td class="text-right px-4 py-2 border-b border-gray-200">Rp
-                                {{ number_format($expenses->sum('amount'), 0, ',', '.') }}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-2 border-b border-gray-200">Total Operational Expense</td>
-                            <td class="text-right px-4 py-2 border-b border-gray-200">Rp
-                                {{ number_format($expenseOps->sum('amount'), 0, ',', '.') }}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-2 border-b border-gray-200">Total Pengeluaran Lain</td>
-                            <td class="text-right px-4 py-2 border-b border-gray-200">Rp
-                                {{ number_format($pengeluaranLain->sum('amount'), 0, ',', '.') }}
-                            </td>
-                        </tr>
-                        <tr class="total">
-                            <td class="font-semibold px-4 py-2 border-b border-gray-200">TOTAL UANG KELUAR</td>
-                            <td class="text-right font-semibold px-4 py-2 border-b border-gray-200">
-                                <strong>Rp {{ number_format($totalUangKeluar, 0, ',', '.') }}</strong>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
         <!-- Detail Wedding Expense -->
         <div class="mt-12 pt-8 mb-12">
@@ -301,4 +283,3 @@
         </div>
     </div>
 
-</x-filament-panels::page>

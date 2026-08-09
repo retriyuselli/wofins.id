@@ -20,9 +20,13 @@ class DataPribadiResource extends BaseResource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-identification';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'SDM';
+    protected static string|\UnitEnum|null $navigationGroup = 'Penjualan';
 
-    protected static ?string $navigationLabel = 'Data Tim';
+    protected static ?string $navigationLabel = 'Crew Freelance';
+
+    protected static ?string $modelLabel = 'crew freelance';
+
+    protected static ?string $pluralModelLabel = 'crew freelance';
 
     protected static ?string $recordTitleAttribute = 'nama_lengkap';
 
@@ -59,22 +63,14 @@ class DataPribadiResource extends BaseResource
         $query = parent::getEloquentQuery()
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
-            ]);
+            ])
+            ->with(['company']);
 
-        // Tabel tidak punya user_id — non–super_admin tidak melihat data tim orang lain.
-        if (! \App\Support\UserVisibility::actorIsSuperAdmin()) {
-            return $query->whereRaw('1 = 0');
-        }
-
-        return $query;
+        return \App\Support\UserVisibility::constrainCompanyQuery($query);
     }
 
     public static function getNavigationBadge(): ?string
     {
-        if (! \App\Support\UserVisibility::actorIsSuperAdmin()) {
-            return null;
-        }
-
         return (string) static::getEloquentQuery()->count();
     }
 
@@ -85,7 +81,7 @@ class DataPribadiResource extends BaseResource
 
     public static function getNavigationBadgeTooltip(): ?string
     {
-        return 'Data crew freelance';
+        return 'Data crew freelance company (bukan data pribadi akun user)';
     }
 
     public static function getGloballySearchableAttributes(): array

@@ -45,7 +45,11 @@ class PricingPlans
                 'price' => '99',
                 'unit' => 'RB',
                 'price_monthly' => 99_000,
-                'price_annual' => 1_089_000, // 11 bulan (hemat 1 bulan)
+                'price_semiannual' => 544_500, // 6 bulan bayar 5,5 (hemat 0,5 bulan)
+                'price_annual' => 1_089_000, // 12 bulan bayar 11 (hemat 1 bulan)
+                'price_biennial' => 2_178_000, // 24 bulan bayar 22 (hemat 2 bulan)
+                'price_triennial' => 3_267_000, // 36 bulan bayar 33 (hemat 3 bulan)
+                'price_quadrennial' => 4_356_000, // 48 bulan bayar 44 (hemat 4 bulan)
                 'seat_limit' => 3,
                 'vendor_limit' => 10,
                 'product_limit' => 10,
@@ -72,8 +76,12 @@ class PricingPlans
                         'tip' => 'Maksimal 3 akun tim aktif (selain super admin platform). Cocok untuk owner + AM + finance.',
                     ],
                     [
-                        'label' => 'Hingga 10 kategori · 10 vendor · 10 produk',
-                        'tip' => 'Kuota katalog: 10 kategori, 10 vendor, dan 10 produk/paket wedding per perusahaan.',
+                        'label' => 'Hingga 10 vendor · 10 produk',
+                        'tip' => 'Kuota katalog: 10 vendor dan 10 produk/paket wedding per perusahaan. Kategori dikelola admin platform (tanpa kuota paket).',
+                    ],
+                    [
+                        'label' => 'Crew freelance + link undangan',
+                        'tip' => 'Kelola data crew freelance company dan bagikan link agar crew mengisi sendiri (tanpa makan kuota pengguna).',
                     ],
                     [
                         'label' => 'Hingga 10 proyek · 30 prospek · 20 simulasi',
@@ -97,7 +105,7 @@ class PricingPlans
                     ],
                     [
                         'label' => 'Manajemen proyek wedding',
-                        'tip' => 'Kelola order, prospek, simulasi, produk, vendor, dan kategori dalam satu alur kerja.',
+                        'tip' => 'Kelola order, prospek, simulasi, produk, vendor, dan crew freelance dalam satu alur kerja. Kategori dikelola admin platform.',
                     ],
                     [
                         'label' => 'Keuangan dasar',
@@ -117,7 +125,11 @@ class PricingPlans
                 'price' => '180',
                 'unit' => 'RB',
                 'price_monthly' => 180_000,
-                'price_annual' => 1_980_000, // 11 bulan (hemat 1 bulan)
+                'price_semiannual' => 990_000, // 6 bulan bayar 5,5
+                'price_annual' => 1_980_000, // 12 bulan bayar 11
+                'price_biennial' => 3_960_000, // 24 bulan bayar 22
+                'price_triennial' => 5_940_000, // 36 bulan bayar 33
+                'price_quadrennial' => 7_920_000, // 48 bulan bayar 44
                 'seat_limit' => 10,
                 'vendor_limit' => 50,
                 'product_limit' => 50,
@@ -144,8 +156,12 @@ class PricingPlans
                         'tip' => 'Maksimal 10 akun tim aktif — ruang untuk owner, AM, finance, dan staf operasional.',
                     ],
                     [
-                        'label' => 'Hingga 40 kategori · 50 vendor · 50 produk',
-                        'tip' => 'Kuota katalog lebih besar: 40 kategori, 50 vendor, dan 50 produk/paket per perusahaan.',
+                        'label' => 'Hingga 50 vendor · 50 produk',
+                        'tip' => 'Kuota katalog lebih besar: 50 vendor dan 50 produk/paket per perusahaan. Kategori dikelola admin platform (tanpa kuota paket).',
+                    ],
+                    [
+                        'label' => 'Crew freelance + link undangan',
+                        'tip' => 'Kelola data crew freelance company dan bagikan link agar crew mengisi sendiri (tanpa makan kuota pengguna).',
                     ],
                     [
                         'label' => 'Hingga 50 proyek · 150 prospek · 100 simulasi',
@@ -204,7 +220,11 @@ class PricingPlans
                 'price' => '295',
                 'unit' => 'RB',
                 'price_monthly' => 295_000,
-                'price_annual' => 3_245_000, // 11 bulan (hemat 1 bulan)
+                'price_semiannual' => 1_622_500, // 6 bulan bayar 5,5
+                'price_annual' => 3_245_000, // 12 bulan bayar 11
+                'price_biennial' => 6_490_000, // 24 bulan bayar 22
+                'price_triennial' => 9_735_000, // 36 bulan bayar 33
+                'price_quadrennial' => 12_980_000, // 48 bulan bayar 44
                 'seat_limit' => 25,
                 'vendor_limit' => 200,
                 'product_limit' => 200,
@@ -231,8 +251,12 @@ class PricingPlans
                         'tip' => 'Maksimal 25 akun tim — cocok untuk finance, HRD, AM, dan staf lintas fungsi.',
                     ],
                     [
-                        'label' => 'Hingga 100 kategori · 200 vendor · 200 produk',
-                        'tip' => 'Kuota katalog besar: 100 kategori, 200 vendor, dan 200 produk/paket per perusahaan.',
+                        'label' => 'Hingga 200 vendor · 200 produk',
+                        'tip' => 'Kuota katalog besar: 200 vendor dan 200 produk/paket per perusahaan. Kategori dikelola admin platform (tanpa kuota paket).',
+                    ],
+                    [
+                        'label' => 'Crew freelance + link undangan',
+                        'tip' => 'Kelola data crew freelance company dan bagikan link agar crew mengisi sendiri (tanpa makan kuota pengguna).',
                     ],
                     [
                         'label' => 'Hingga 200 proyek · 500 prospek · 400 simulasi',
@@ -268,7 +292,7 @@ class PricingPlans
                     ],
                     [
                         'label' => 'HRIS & absensi GPS',
-                        'tip' => 'Absensi GPS + foto + geofence, jadwal kerja, koreksi, lembur, cuti, dan data karyawan.',
+                        'tip' => 'Absensi GPS + foto + geofence, jadwal kerja, koreksi, lembur, cuti, data karyawan, dan master status karyawan.',
                     ],
                     [
                         'label' => 'Payroll & portal karyawan',
@@ -345,6 +369,93 @@ class PricingPlans
     }
 
     /**
+     * Durasi checkout keranjang.
+     *
+     * @return list<string>
+     */
+    public static function billingKeys(): array
+    {
+        return ['monthly', 'annual', 'biennial', 'quadrennial'];
+    }
+
+    public static function billingLabel(string $billing): string
+    {
+        return match ($billing) {
+            'semiannual' => '6 bulan',
+            'annual' => '12 bulan',
+            'biennial' => '24 bulan',
+            'triennial' => '36 bulan',
+            'quadrennial' => '48 bulan',
+            default => '1 bulan',
+        };
+    }
+
+    /**
+     * @param  array<string, mixed>  $plan
+     * @return array{amount: int, label: string, period: string, months: int, monthly_equiv: int, savings: int}
+     */
+    public static function resolveBillingPrice(array $plan, string $billing): array
+    {
+        $monthly = (int) ($plan['price_monthly'] ?? 0);
+        $semiannual = (int) ($plan['price_semiannual'] ?? (int) round($monthly * 5.5));
+        $annual = (int) ($plan['price_annual'] ?? 0);
+        $biennial = (int) ($plan['price_biennial'] ?? (int) round($monthly * 22));
+        $triennial = (int) ($plan['price_triennial'] ?? (int) round($monthly * 33));
+        $quadrennial = (int) ($plan['price_quadrennial'] ?? (int) round($monthly * 44));
+
+        return match ($billing) {
+            'semiannual' => [
+                'amount' => $semiannual,
+                'label' => '6 bulan',
+                'period' => '6 bulan (bayar 5,5 bulan)',
+                'months' => 6,
+                'monthly_equiv' => $semiannual > 0 ? (int) round($semiannual / 6) : $monthly,
+                'savings' => max(0, ($monthly * 6) - $semiannual),
+            ],
+            'annual' => [
+                'amount' => $annual,
+                'label' => '12 bulan',
+                'period' => '12 bulan (bayar 11 bulan)',
+                'months' => 12,
+                'monthly_equiv' => $annual > 0 ? (int) round($annual / 12) : $monthly,
+                'savings' => max(0, ($monthly * 12) - $annual),
+            ],
+            'biennial' => [
+                'amount' => $biennial,
+                'label' => '24 bulan',
+                'period' => '24 bulan (bayar 22 bulan)',
+                'months' => 24,
+                'monthly_equiv' => $biennial > 0 ? (int) round($biennial / 24) : $monthly,
+                'savings' => max(0, ($monthly * 24) - $biennial),
+            ],
+            'triennial' => [
+                'amount' => $triennial,
+                'label' => '36 bulan',
+                'period' => '36 bulan (bayar 33 bulan)',
+                'months' => 36,
+                'monthly_equiv' => $triennial > 0 ? (int) round($triennial / 36) : $monthly,
+                'savings' => max(0, ($monthly * 36) - $triennial),
+            ],
+            'quadrennial' => [
+                'amount' => $quadrennial,
+                'label' => '48 bulan',
+                'period' => '48 bulan (bayar 44 bulan)',
+                'months' => 48,
+                'monthly_equiv' => $quadrennial > 0 ? (int) round($quadrennial / 48) : $monthly,
+                'savings' => max(0, ($monthly * 48) - $quadrennial),
+            ],
+            default => [
+                'amount' => $monthly,
+                'label' => '1 bulan',
+                'period' => '1 bulan',
+                'months' => 1,
+                'monthly_equiv' => $monthly,
+                'savings' => 0,
+            ],
+        };
+    }
+
+    /**
      * @return array<string, string>
      */
     public static function selectOptions(): array
@@ -399,6 +510,69 @@ class PricingPlans
     }
 
     /**
+     * Matriks perbandingan untuk halaman Harga (sumber tunggal).
+     *
+     * @return list<list<string|bool>>
+     */
+    public static function compareRows(): array
+    {
+        $starter = static::find('starter') ?? [];
+        $pro = static::find('professional') ?? [];
+        $business = static::find('business') ?? [];
+
+        $fmt = static function (?int $limit): string {
+            if ($limit === null) {
+                return 'Unlimited';
+            }
+
+            return 'Hingga '.number_format($limit, 0, ',', '.');
+        };
+
+        $quota = static function (string $key) use ($starter, $pro, $business, $fmt): array {
+            return [
+                $fmt(isset($starter[$key]) ? (int) $starter[$key] : null),
+                $fmt(isset($pro[$key]) ? (int) $pro[$key] : null),
+                $fmt(isset($business[$key]) ? (int) $business[$key] : null),
+            ];
+        };
+
+        return [
+            array_merge(['Jumlah pengguna'], $quota('seat_limit')),
+            array_merge(['Vendor'], $quota('vendor_limit')),
+            array_merge(['Produk'], $quota('product_limit')),
+            ['Kategori', 'Dikelola admin', 'Dikelola admin', 'Dikelola admin'],
+            ['Crew freelance', true, true, true],
+            array_merge(['Proyek wedding'], $quota('order_limit')),
+            array_merge(['Prospek'], $quota('prospect_limit')),
+            array_merge(['Simulasi'], $quota('simulasi_limit')),
+            array_merge(['Rekening bank/kas'], $quota('payment_method_limit')),
+            array_merge(['Aset tetap'], $quota('fixed_asset_limit')),
+            array_merge(['Piutang'], $quota('piutang_limit')),
+            array_merge(['Pembayaran piutang'], $quota('pembayaran_piutang_limit')),
+            array_merge(['Pendapatan wedding'], $quota('data_pembayaran_limit')),
+            array_merge(['Pengeluaran wedding'], $quota('expense_limit')),
+            array_merge(['Pengeluaran operasional'], $quota('expense_ops_limit')),
+            array_merge(['Pendapatan lain'], $quota('pendapatan_lain_limit')),
+            array_merge(['Pengeluaran lain'], $quota('pengeluaran_lain_limit')),
+            ['Manajemen proyek', true, true, true],
+            ['Keuangan dasar', true, true, true],
+            ['Nota dinas digital', false, true, true],
+            ['Rekonsiliasi rekening', false, true, true],
+            ['Payroll', false, 'Dasar', 'Lengkap'],
+            ['Dokumen & SOP', false, false, true],
+            ['Domain', false, false, 'Gratis'],
+            ['HRIS & absensi GPS', false, false, true],
+            ['Status karyawan (master)', false, false, true],
+            ['Portal karyawan', false, false, 'Lengkap'],
+            ['Laporan lanjutan', false, false, true],
+            ['Multi-approval workflow', false, false, true],
+            ['Manajemen role', false, false, true],
+            ['Onboarding & training', false, false, true],
+            ['Support', 'Standar', 'Prioritas', 'WhatsApp'],
+        ];
+    }
+
+    /**
      * @return array<string, string>
      */
     public static function legacyServiceLabels(): array
@@ -431,7 +605,6 @@ class PricingPlans
                 'fixed_asset_limit' => 'aset',
                 'piutang_limit' => 'piutang',
                 'pembayaran_piutang_limit' => 'bayar piutang',
-                'category_limit' => 'kategori',
                 'data_pembayaran_limit' => 'pendapatan wedding',
                 'expense_limit' => 'pengeluaran wedding',
                 'expense_ops_limit' => 'ops',

@@ -2,17 +2,19 @@
 
 namespace App\Filament\Resources\Statuses;
 
+use App\Filament\Resources\BaseResource;
 use App\Filament\Resources\Statuses\Pages\CreateStatus;
 use App\Filament\Resources\Statuses\Pages\EditStatus;
 use App\Filament\Resources\Statuses\Pages\ListStatuses;
 use App\Filament\Resources\Statuses\Schemas\StatusForm;
 use App\Filament\Resources\Statuses\Tables\StatusesTable;
 use App\Models\Status;
-use Filament\Resources\Resource;
+use App\Support\ProFeatures;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
-class StatusResource extends Resource
+class StatusResource extends BaseResource
 {
     protected static ?string $model = Status::class;
 
@@ -30,6 +32,26 @@ class StatusResource extends Resource
     public static function table(Table $table): Table
     {
         return StatusesTable::configure($table);
+    }
+
+    public static function canCreate(): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::canCreate();
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::canEdit($record);
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::canDelete($record);
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::canDeleteAny();
     }
 
     public static function getRelations(): array

@@ -22,7 +22,9 @@ class PlanResourceGate
             \App\Filament\Resources\SimulasiProduks\SimulasiProdukResource::class => PricingPlans::FEATURE_PROJECTS,
             \App\Filament\Resources\Products\ProductResource::class => PricingPlans::FEATURE_PROJECTS,
             \App\Filament\Resources\Vendors\VendorResource::class => PricingPlans::FEATURE_PROJECTS,
-            \App\Filament\Resources\Categories\CategoryResource::class => PricingPlans::FEATURE_PROJECTS,
+            // Crew freelance company (bukan data pribadi akun user / HRIS karyawan)
+            \App\Filament\Resources\DataPribadis\DataPribadiResource::class => PricingPlans::FEATURE_PROJECTS,
+            // Kategori: tanpa gate paket / kuota — mutate hanya super_admin (CategoryResource + CategoryPolicy)
 
             // Keuangan dasar
             \App\Filament\Resources\Expenses\ExpenseResource::class => PricingPlans::FEATURE_BASIC_FINANCE,
@@ -64,7 +66,7 @@ class PlanResourceGate
             \App\Filament\Resources\LeaveBalances\LeaveBalanceResource::class => PricingPlans::FEATURE_HRIS,
             \App\Filament\Resources\LeaveTypes\LeaveTypeResource::class => PricingPlans::FEATURE_HRIS,
             \App\Filament\Resources\Employees\EmployeeResource::class => PricingPlans::FEATURE_HRIS,
-            \App\Filament\Resources\DataPribadis\DataPribadiResource::class => PricingPlans::FEATURE_HRIS,
+            \App\Filament\Resources\Statuses\StatusResource::class => PricingPlans::FEATURE_HRIS,
 
             // Payroll (Professional+)
             \App\Filament\Resources\Payrolls\PayrollResource::class => PricingPlans::FEATURE_PAYROLL,

@@ -86,11 +86,11 @@ class DataPribadisTable
             ->defaultPaginationPageOption(10)
             ->paginationPageOptions([10, 25, 50])
             ->emptyStateIcon('heroicon-o-user-group')
-            ->emptyStateHeading('Tidak ada data pribadi ditemukan')
-            ->emptyStateDescription('Silakan buat data pribadi baru untuk memulai.')
+            ->emptyStateHeading('Belum ada crew freelance')
+            ->emptyStateDescription('Tambah manual, atau salin link undangan agar crew mengisi sendiri.')
             ->emptyStateActions([
                 Action::make('create')
-                    ->label('Buat Data Pribadi Baru')
+                    ->label('Tambah crew')
                     ->url(fn () => route('filament.admin.resources.data-pribadis.create'))
                     ->icon('heroicon-o-plus')
                     ->button(),

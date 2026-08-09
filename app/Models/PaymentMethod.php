@@ -39,15 +39,14 @@ class PaymentMethod extends Model
                 return;
             }
 
-            if (! auth()->check()) {
-                return;
-            }
-
+            // Super admin: semua company. Lainnya: hanya rekening company sendiri.
+            // Tanpa auth / tanpa company → kosong (jangan return tanpa filter).
             if (ProFeatures::actorIsSuperAdmin()) {
                 return;
             }
 
             $companyId = UserVisibility::companyId();
+            $table = $builder->getModel()->getTable();
 
             if ($companyId === null) {
                 $builder->whereRaw('1 = 0');
@@ -55,7 +54,7 @@ class PaymentMethod extends Model
                 return;
             }
 
-            $builder->where('company_id', $companyId);
+            $builder->where("{$table}.company_id", $companyId);
         });
     }
 

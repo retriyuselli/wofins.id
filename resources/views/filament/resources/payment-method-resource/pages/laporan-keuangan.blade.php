@@ -1,9 +1,8 @@
     {{-- Memuat file CSS khusus untuk halaman laporan keuangan --}}
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('assets/payment/paymentmethod.css') }}">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('assets/payment/paymentmethod.css') }}?v={{ @filemtime(public_path('assets/payment/paymentmethod.css')) }}">
 
-    <div class="laporan-keuangan-container">
+    <div class="laporan-keuangan-container pm-panel">
         <!-- Financial Summary Cards -->
         <div class="financial-summary-cards">
             <!-- Saldo Awal -->
@@ -76,7 +75,7 @@
                 <div class="breakdown-content">
                     <div class="breakdown-item breakdown-pemasukan-item">
                         <div class="breakdown-item-info">
-                            <div class="breakdown-item-dot" style="background-color: #3b82f6;"></div>
+                            <div class="breakdown-item-dot" style="background-color: #0b1f3a;"></div>
                             <span class="breakdown-item-label">Pembayaran Wedding</span>
                         </div>
                         <span class="breakdown-item-amount">
@@ -85,7 +84,7 @@
                     </div>
                     <div class="breakdown-item breakdown-pemasukan-item">
                         <div class="breakdown-item-info">
-                            <div class="breakdown-item-dot" style="background-color: #22c55e;"></div>
+                            <div class="breakdown-item-dot" style="background-color: #c9a227;"></div>
                             <span class="breakdown-item-label">Pendapatan Lain</span>
                         </div>
                         <span class="breakdown-item-amount">
@@ -95,7 +94,7 @@
                     <div class="breakdown-total">
                         <div class="breakdown-total-content">
                             <span class="breakdown-total-label">Total Pemasukan</span>
-                            <span class="breakdown-total-amount" style="color: #16a34a;">
+                            <span class="breakdown-total-amount" style="color: #1f7a4d;">
                                 Rp {{ number_format($breakdown['uang_masuk']['total'], 0, ',', '.') }}
                             </span>
                         </div>
@@ -119,7 +118,7 @@
                 <div class="breakdown-content">
                     <div class="breakdown-item breakdown-pengeluaran-item">
                         <div class="breakdown-item-info">
-                            <div class="breakdown-item-dot" style="background-color: #ef4444;"></div>
+                            <div class="breakdown-item-dot" style="background-color: #b42318;"></div>
                             <span class="breakdown-item-label">Expense Wedding</span>
                         </div>
                         <span class="breakdown-item-amount">
@@ -128,7 +127,7 @@
                     </div>
                     <div class="breakdown-item breakdown-pengeluaran-item">
                         <div class="breakdown-item-info">
-                            <div class="breakdown-item-dot" style="background-color: #f97316;"></div>
+                            <div class="breakdown-item-dot" style="background-color: #9a7a12;"></div>
                             <span class="breakdown-item-label">Expense Operasional</span>
                         </div>
                         <span class="breakdown-item-amount">
@@ -137,7 +136,7 @@
                     </div>
                     <div class="breakdown-item breakdown-pengeluaran-item">
                         <div class="breakdown-item-info">
-                            <div class="breakdown-item-dot" style="background-color: #a855f7;"></div>
+                            <div class="breakdown-item-dot" style="background-color: #5c6675;"></div>
                             <span class="breakdown-item-label">Pengeluaran Lain</span>
                         </div>
                         <span class="breakdown-item-amount">
@@ -147,7 +146,7 @@
                     <div class="breakdown-total">
                         <div class="breakdown-total-content">
                             <span class="breakdown-total-label">Total Pengeluaran</span>
-                            <span class="breakdown-total-amount" style="color: #dc2626;">
+                            <span class="breakdown-total-amount" style="color: #b42318;">
                                 Rp {{ number_format($breakdown['uang_keluar']['total'], 0, ',', '.') }}
                             </span>
                         </div>
@@ -322,37 +321,37 @@
             <div class="status-keuangan-content">
                 <!-- Formula Perhitungan -->
                 <div class="formula-box">
-                    <h4 class="formula-title">📐 Formula Perhitungan Saldo:</h4>
-                    <div class="formula-calculation">
-                        <div class="formula-row">
-                            <span style="color: #6b7280;">Saldo Awal</span>
-                            <span style="font-weight: 700;">Rp
-                                {{ number_format($breakdown['saldo_awal'], 0, ',', '.') }}</span>
-                        </div>
-                        <div class="formula-operator plus">+</div>
-                        <div class="formula-row">
-                            <span style="color: #16a34a;">Total Uang Masuk</span>
-                            <span style="font-weight: 700; color: #16a34a;">Rp
-                                {{ number_format($breakdown['uang_masuk']['total'], 0, ',', '.') }}</span>
-                        </div>
-                        <div class="formula-operator minus">-</div>
-                        <div class="formula-row">
-                            <span style="color: #dc2626;">Total Uang Keluar</span>
-                            <span style="font-weight: 700; color: #dc2626;">Rp
-                                {{ number_format($breakdown['uang_keluar']['total'], 0, ',', '.') }}</span>
-                        </div>
-                        <div class="formula-result">
-                            <div class="formula-row">
-                                <span style="color: #1e40af;">Saldo Akhir</span>
-                                <span style="color: #1e40af;">Rp
-                                    {{ number_format($breakdown['saldo_akhir'], 0, ',', '.') }}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="formula-note">
-                        * Formula: Saldo Akhir = Saldo Awal + Total Uang Masuk - Total Uang Keluar
-                    </p>
-                </div>
+                                    <h4 class="formula-title">Formula Perhitungan Saldo</h4>
+                                    <div class="formula-calculation">
+                                        <div class="formula-row">
+                                            <span style="color: #5c6675;">Saldo Awal</span>
+                                            <span style="font-weight: 700; color: #0b1f3a;">Rp
+                                                {{ number_format($breakdown['saldo_awal'], 0, ',', '.') }}</span>
+                                        </div>
+                                        <div class="formula-operator plus">+</div>
+                                        <div class="formula-row">
+                                            <span style="color: #1f7a4d;">Total Uang Masuk</span>
+                                            <span style="font-weight: 700; color: #1f7a4d;">Rp
+                                                {{ number_format($breakdown['uang_masuk']['total'], 0, ',', '.') }}</span>
+                                        </div>
+                                        <div class="formula-operator minus">-</div>
+                                        <div class="formula-row">
+                                            <span style="color: #b42318;">Total Uang Keluar</span>
+                                            <span style="font-weight: 700; color: #b42318;">Rp
+                                                {{ number_format($breakdown['uang_keluar']['total'], 0, ',', '.') }}</span>
+                                        </div>
+                                        <div class="formula-result">
+                                            <div class="formula-row">
+                                                <span style="color: #0b1f3a;">Saldo Akhir</span>
+                                                <span style="color: #0b1f3a;">Rp
+                                                    {{ number_format($breakdown['saldo_akhir'], 0, ',', '.') }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p class="formula-note">
+                                        * Formula: Saldo Akhir = Saldo Awal + Total Uang Masuk - Total Uang Keluar
+                                    </p>
+                                </div>
 
                 <div class="status-grid">
                     <!-- Status Perubahan -->

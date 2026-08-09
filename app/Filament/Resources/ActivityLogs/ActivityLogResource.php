@@ -4,8 +4,10 @@ namespace App\Filament\Resources\ActivityLogs;
 
 use App\Filament\Resources\ActivityLogs\Pages\ListActivityLogs;
 use App\Filament\Resources\ActivityLogs\Tables\ActivityLogsTable;
+use App\Support\ProFeatures;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Models\Activity;
 
 class ActivityLogResource extends Resource
@@ -26,6 +28,16 @@ class ActivityLogResource extends Resource
 
     protected static bool $isGloballySearchable = false;
 
+    public static function canViewAny(): bool
+    {
+        return ProFeatures::actorIsSuperAdmin();
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return ProFeatures::actorIsSuperAdmin();
+    }
+
     public static function table(Table $table): Table
     {
         return ActivityLogsTable::configure($table);
@@ -43,12 +55,12 @@ class ActivityLogResource extends Resource
         return false;
     }
 
-    public static function canEdit($record): bool
+    public static function canEdit(Model $record): bool
     {
         return false;
     }
 
-    public static function canDelete($record): bool
+    public static function canDelete(Model $record): bool
     {
         return false;
     }

@@ -14,12 +14,6 @@ class CategoryPolicy
 {
     use HandlesAuthorization;
 
-    private function isPlatformAdmin(AuthUser $authUser): bool
-    {
-        return $authUser instanceof User
-            && $authUser->hasAnyRole(['super_admin', 'admin']);
-    }
-
     private function owns(AuthUser $authUser, Category $category): bool
     {
         if (ProFeatures::actorIsSuperAdmin()) {
@@ -45,25 +39,22 @@ class CategoryPolicy
 
     public function create(AuthUser $authUser): bool
     {
-        return $this->isPlatformAdmin($authUser) || $authUser->can('Create:Category');
+        return ProFeatures::actorIsSuperAdmin() && $authUser->can('Create:Category');
     }
 
     public function update(AuthUser $authUser, Category $category): bool
     {
-        return ($this->isPlatformAdmin($authUser) || $authUser->can('Update:Category'))
-            && $this->owns($authUser, $category);
+        return ProFeatures::actorIsSuperAdmin() && $authUser->can('Update:Category');
     }
 
     public function delete(AuthUser $authUser, Category $category): bool
     {
-        return ($this->isPlatformAdmin($authUser) || $authUser->can('Delete:Category'))
-            && $this->owns($authUser, $category);
+        return ProFeatures::actorIsSuperAdmin() && $authUser->can('Delete:Category');
     }
 
     public function restore(AuthUser $authUser, Category $category): bool
     {
-        return ($this->isPlatformAdmin($authUser) || $authUser->can('Restore:Category'))
-            && $this->owns($authUser, $category);
+        return ProFeatures::actorIsSuperAdmin() && $authUser->can('Restore:Category');
     }
 
     public function forceDelete(AuthUser $authUser, Category $category): bool
@@ -83,12 +74,11 @@ class CategoryPolicy
 
     public function replicate(AuthUser $authUser, Category $category): bool
     {
-        return ($this->isPlatformAdmin($authUser) || $authUser->can('Replicate:Category'))
-            && $this->owns($authUser, $category);
+        return ProFeatures::actorIsSuperAdmin() && $authUser->can('Replicate:Category');
     }
 
     public function reorder(AuthUser $authUser): bool
     {
-        return $this->isPlatformAdmin($authUser) || $authUser->can('Reorder:Category');
+        return ProFeatures::actorIsSuperAdmin() && $authUser->can('Reorder:Category');
     }
 }

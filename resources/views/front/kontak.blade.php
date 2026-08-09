@@ -156,11 +156,10 @@
 
     $paket = request('paket');
     $billing = request('billing');
-    $billingLabel = match ($billing) {
-        'monthly' => 'pembayaran bulanan',
-        'annual' => 'pembayaran tahunan (hemat 1 bulan)',
-        default => null,
-    };
+    $billingKey = is_string($billing) ? $billing : null;
+    $billingLabel = $billingKey && in_array($billingKey, \App\Support\PricingPlans::billingKeys(), true)
+        ? 'pembayaran '.\App\Support\PricingPlans::billingLabel($billingKey)
+        : null;
     $planMeta = \App\Support\PricingPlans::find($paket);
     $paketInfo = $planMeta
         ? [

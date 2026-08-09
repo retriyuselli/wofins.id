@@ -166,11 +166,6 @@ class UsersTable
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID')
-                    ->sortable()
-                    ->searchable(),
-
                 ImageColumn::make('avatar_url')
                     ->label('Foto Profil')
                     ->disk('public')

@@ -88,6 +88,8 @@ class PaymentMethod extends ViewRecord
     {
         parent::mount($record);
 
+        $this->record->loadMissing('company');
+
         Notification::make()
             ->title('Detail Rekening Dimuat')
             ->body('Gunakan tab di bawah untuk melihat detail Uang Masuk, Uang Keluar, dan Laporan Keuangan.')

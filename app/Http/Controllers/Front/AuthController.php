@@ -293,6 +293,13 @@ class AuthController extends Controller
                 ->with('info', 'Silakan verifikasi email Anda sebelum melanjutkan.');
         }
 
+        // Checkout paket: izinkan lanjut ke keranjang meskipun role belum di-Approve.
+        if ($checkoutUrl = $this->checkoutIntendedUrl()) {
+            session()->forget('url.intended');
+
+            return redirect()->to($checkoutUrl);
+        }
+
         if (! $user->hasAssignedRole()) {
             return redirect()
                 ->route('account.pending')
@@ -300,6 +307,42 @@ class AuthController extends Controller
         }
 
         return redirect()->intended(route('profile'));
+    }
+
+    /**
+     * Path (+ query) keranjang dari session intended, atau null.
+     * Pakai path relatif agar tidak gagal saat host intended ≠ APP_URL
+     * (mis. localhost vs 127.0.0.1).
+     */
+    protected function checkoutIntendedUrl(): ?string
+    {
+        $intended = session('url.intended');
+
+        if (! is_string($intended) || $intended === '') {
+            return null;
+        }
+
+        $path = parse_url($intended, PHP_URL_PATH);
+        $query = parse_url($intended, PHP_URL_QUERY);
+
+        if (! is_string($path) || $path === '') {
+            return null;
+        }
+
+        if ($path !== '/keranjang' && ! str_starts_with($path, '/keranjang/')
+            && $path !== '/pesanan-saya' && ! str_starts_with($path, '/pesanan-saya/')) {
+            return null;
+        }
+
+        return $path.(is_string($query) && $query !== '' ? '?'.$query : '');
+    }
+
+    /**
+     * @deprecated gunakan checkoutIntendedUrl()
+     */
+    protected function hasCheckoutIntendedUrl(): bool
+    {
+        return $this->checkoutIntendedUrl() !== null;
     }
 
     protected function googleRedirectUri(): string

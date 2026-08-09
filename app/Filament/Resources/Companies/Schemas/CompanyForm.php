@@ -178,14 +178,6 @@ class CompanyForm
                                                     ->visible($isSuperAdmin)
                                                     ->disabled(! $isSuperAdmin)
                                                     ->dehydrated($isSuperAdmin),
-                                                TextInput::make('category_limit_override')
-                                                    ->label('Override kuota kategori')
-                                                    ->numeric()
-                                                    ->minValue(1)
-                                                    ->placeholder('Kosongkan = ikut paket')
-                                                    ->visible($isSuperAdmin)
-                                                    ->disabled(! $isSuperAdmin)
-                                                    ->dehydrated($isSuperAdmin),
                                                 TextInput::make('data_pembayaran_limit_override')
                                                     ->label('Override kuota pendapatan wedding')
                                                     ->numeric()

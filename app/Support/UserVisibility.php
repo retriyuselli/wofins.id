@@ -295,12 +295,14 @@ class UserVisibility
         }
 
         $companyId = static::companyId();
+        $table = $query->getModel()->getTable();
+        $qualified = str_contains($column, '.') ? $column : "{$table}.{$column}";
 
         if ($companyId === null) {
             return $query->whereRaw('1 = 0');
         }
 
-        return $query->where($column, $companyId);
+        return $query->where($qualified, $companyId);
     }
 
     /**

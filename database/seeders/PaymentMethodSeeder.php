@@ -2,51 +2,17 @@
 
 namespace Database\Seeders;
 
-use App\Models\PaymentMethod;
-use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 
 class PaymentMethodSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Rekening bersifat per-company — jangan seed data demo global
+     * (nama seperti "Sarah Wijaya" membingungkan seolah milik user lain).
+     * Tenant membuat rekening sendiri dari menu Daftar Rekening.
      */
     public function run(): void
     {
-        $paymentMethods = [
-            [
-                'name' => 'Sarah Wijaya',
-                'bank_name' => 'Central Asia (BCA)',
-                'cabang' => 'Sudirman',
-                'no_rekening' => '1234567890',
-                'is_cash' => false,
-                'opening_balance' => 50000000, // Rp 50 juta
-                'opening_balance_date' => Carbon::parse('2026-01-01'),
-            ],
-            [
-                'name' => 'Michael Chen',
-                'bank_name' => 'Mandiri',
-                'cabang' => 'Gatot Subroto',
-                'no_rekening' => '9876543210',
-                'is_cash' => false,
-                'opening_balance' => 25000000, // Rp 25 juta
-                'opening_balance_date' => Carbon::parse('2026-01-01'),
-            ],
-            [
-                'name' => 'Makna Online Cash',
-                'bank_name' => 'Uang Tunai',
-                'cabang' => null,
-                'no_rekening' => '-',
-                'is_cash' => true,
-                'opening_balance' => 5000000, // Rp 5 juta
-                'opening_balance_date' => Carbon::parse('2026-01-01'),
-            ],
-        ];
-
-        foreach ($paymentMethods as $methodData) {
-            PaymentMethod::create($methodData);
-        }
-
-        $this->command->info('✅ PaymentMethodSeeder completed! Created '.count($paymentMethods).' payment methods.');
+        $this->command?->info('⏭ PaymentMethodSeeder dilewati (rekening dibuat per company, bukan demo global).');
     }
 }

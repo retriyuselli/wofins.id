@@ -30,6 +30,18 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectUsersTo(function () {
             $user = auth()->user();
 
+            $intended = session('url.intended');
+            if (is_string($intended) && $intended !== '') {
+                $path = parse_url($intended, PHP_URL_PATH);
+                $query = parse_url($intended, PHP_URL_QUERY);
+                if (is_string($path) && (
+                    $path === '/keranjang' || str_starts_with($path, '/keranjang/')
+                    || $path === '/pesanan-saya' || str_starts_with($path, '/pesanan-saya/')
+                )) {
+                    return $path.(is_string($query) && $query !== '' ? '?'.$query : '');
+                }
+            }
+
             if ($user && ! $user->hasVerifiedEmail()) {
                 return route('verification.notice');
             }

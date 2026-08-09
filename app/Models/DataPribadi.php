@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,15 +12,19 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
+use App\Support\ProFeatures;
+use App\Support\UserVisibility;
 
 class DataPribadi extends Model
 {
     use HasFactory, SoftDeletes, LogsActivity;
 
     protected $fillable = [
+        'company_id',
         'nama_lengkap',
         'email',
         'nomor_telepon',
@@ -75,12 +80,41 @@ class DataPribadi extends Model
      * Encrypt sensitive data mutator - GAJI
      */
 
+    protected static function booted(): void
+    {
+        static::addGlobalScope('tenant_company', function (Builder $builder) {
+            if (! Schema::hasColumn('data_pribadis', 'company_id')) {
+                return;
+            }
+
+            if (ProFeatures::actorIsSuperAdmin()) {
+                return;
+            }
+
+            $companyId = UserVisibility::companyId();
+            $table = $builder->getModel()->getTable();
+
+            if ($companyId === null) {
+                $builder->whereRaw('1 = 0');
+
+                return;
+            }
+
+            $builder->where("{$table}.company_id", $companyId);
+        });
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['nama_lengkap', 'email', 'nomor_telepon', 'tanggal_mulai_gabung'])
+            ->logOnly(['nama_lengkap', 'email', 'nomor_telepon', 'tanggal_mulai_gabung', 'company_id'])
             ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}")
             ->useLogName('data_pribadi');
+    }
+
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
     }
 
     public function setGajiAttribute($value)

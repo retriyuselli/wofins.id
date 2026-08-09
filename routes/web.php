@@ -19,7 +19,9 @@ use App\Http\Controllers\Front\LaporanFeatureController;
 use App\Http\Controllers\Front\PayrollFeatureController;
 use App\Http\Controllers\Front\ProductCatalogController;
 use App\Http\Controllers\Front\ContactController;
+use App\Http\Controllers\Front\CartController;
 use App\Http\Controllers\Front\RegistrationController;
+use App\Http\Controllers\PublicCrewInviteController;
 use App\Http\Controllers\FrontendDataPribadiController;
 use App\Http\Controllers\InvoiceOrderController;
 use App\Http\Controllers\LaporanKeuanganController;
@@ -167,8 +169,49 @@ Route::get('/fitur/{slug}', [FiturDetailController::class, 'show'])
     ->name('fitur.show')
     ->where('slug', 'proyek-wedding|keuangan|rekonsiliasi|nota-dinas|absensi|cuti-payroll|portal-karyawan|dokumen-sop|hak-akses');
 Route::view('/harga', 'front.harga')->name('harga');
+
+// Keranjang paket (wajib login — manual transfer + bukti bayar, belum Midtrans)
+Route::middleware($frontAuthNoStore)->group(function () {
+    Route::get('/keranjang', [CartController::class, 'show'])
+        ->name('keranjang')
+        ->middleware('throttle:60,1');
+    Route::post('/keranjang', [CartController::class, 'update'])
+        ->name('keranjang.update')
+        ->middleware('throttle:30,1');
+    Route::get('/keranjang/bayar', [CartController::class, 'paymentForm'])
+        ->name('keranjang.bayar')
+        ->middleware('throttle:60,1');
+    Route::post('/keranjang/checkout', [CartController::class, 'checkout'])
+        ->name('keranjang.checkout')
+        ->middleware('throttle:8,1');
+    Route::get('/keranjang/sukses/{code}', [CartController::class, 'success'])
+        ->name('keranjang.sukses')
+        ->middleware('throttle:60,1');
+    Route::get('/pesanan-saya', [CartController::class, 'myOrders'])
+        ->name('pesanan-saya')
+        ->middleware('throttle:60,1');
+    Route::get('/pesanan-saya/{code}', [CartController::class, 'myOrderShow'])
+        ->name('pesanan-saya.show')
+        ->middleware('throttle:60,1');
+});
+
 Route::view('/keamanan', 'front.keamanan')->name('keamanan');
 Route::view('/tentang-kami', 'front.tentang')->name('tentang');
+
+// Form undangan crew freelance (publik, tanpa akun) — token per company
+Route::get('/crew/{token}', [PublicCrewInviteController::class, 'show'])
+    ->name('crew.invite')
+    ->where('token', '[A-Za-z0-9]{32,64}')
+    ->middleware(['no-store', 'throttle:60,1']);
+Route::post('/crew/{token}', [PublicCrewInviteController::class, 'store'])
+    ->name('crew.invite.store')
+    ->where('token', '[A-Za-z0-9]{32,64}')
+    ->middleware(['no-store', 'throttle:8,1']);
+Route::get('/crew/{token}/sukses', [PublicCrewInviteController::class, 'success'])
+    ->name('crew.invite.success')
+    ->where('token', '[A-Za-z0-9]{32,64}')
+    ->middleware(['no-store', 'throttle:60,1']);
+
 Route::get('/solusi/{slug}', [\App\Http\Controllers\Front\SolusiController::class, 'show'])
     ->name('solusi.show')
     ->where('slug', 'owner|finance|hrd|operasional');
@@ -297,23 +340,20 @@ Route::get('/laporan/net-cash-flow/pdf/stream', [ReportController::class, 'strea
     ->name('reports.net-cash-flow.pdf.stream')
     ->middleware(array_merge($authNoStoreThrottle, ['pro.feature:advanced_reports']));
 
-// RUTE DATA PRIBADI
-// Route untuk menampilkan form tambah data pribadi
+// RUTE DATA CREW FREELANCE (URL legacy: /data-pribadi)
+// Bukan data pribadi akun user — katalog crew freelance milik company.
 Route::get('/data-pribadi/tambah', [FrontendDataPribadiController::class, 'create'])
     ->name('data-pribadi.create')
     ->middleware($authNoStore);
 
-// Route untuk menampilkan daftar data pribadi
 Route::get('/data-pribadi', [FrontendDataPribadiController::class, 'index'])
     ->name('data-pribadi.index')
     ->middleware($authNoStore);
 
-// Route untuk menyimpan data baru dari form
 Route::post('/data-pribadi', [FrontendDataPribadiController::class, 'store'])
     ->name('data-pribadi.store')
     ->middleware($authNoStore);
 
-// Route untuk halaman sukses setelah submit
 Route::get('/data-pribadi/success', [FrontendDataPribadiController::class, 'success'])
     ->name('data-pribadi.success')
     ->middleware($authNoStore);
@@ -376,8 +416,22 @@ Route::middleware($frontAuthVerified)->group(function () {
             ->latest('id')
             ->first();
 
+        $orders = \App\Models\SubscriptionOrder::query()
+            ->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                    ->orWhere('email', $user->email);
+            })
+            ->latest('submitted_at')
+            ->latest('id')
+            ->limit(5)
+            ->get();
+
+        $latestOrder = $orders->first();
+
         return view('front.account-pending', [
             'prospect' => $prospect,
+            'orders' => $orders,
+            'latestOrder' => $latestOrder,
         ]);
     })->name('account.pending');
 });

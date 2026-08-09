@@ -25,6 +25,20 @@ class EnsureProFeature
             ], 403);
         }
 
-        return back()->with('error', $message);
+        $previous = url()->previous();
+        $fallback = route('harga');
+        $home = rtrim((string) url('/'), '/');
+        $previousNorm = rtrim((string) $previous, '/');
+
+        $previousIsUseful = filled($previous)
+            && $previous !== $request->fullUrl()
+            && $previousNorm !== $home
+            && $previousNorm !== rtrim((string) config('app.url'), '/');
+
+        if (! $previousIsUseful) {
+            return redirect()->to($fallback)->with('error', $message);
+        }
+
+        return redirect()->to($previous)->with('error', $message);
     }
 }

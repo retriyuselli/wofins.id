@@ -5,7 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -76,6 +78,9 @@ class Company extends Model
         'pendapatan_lain_limit_override',
         'pengeluaran_lain_limit_override',
         'subscription_expires_at',
+        'crew_invite_token',
+        'crew_invite_enabled',
+        'crew_invite_rotated_at',
     ];
 
     protected $casts = [
@@ -103,6 +108,8 @@ class Company extends Model
         'pendapatan_lain_limit_override' => 'integer',
         'pengeluaran_lain_limit_override' => 'integer',
         'subscription_expires_at' => 'datetime',
+        'crew_invite_enabled' => 'boolean',
+        'crew_invite_rotated_at' => 'datetime',
     ];
 
 
@@ -150,5 +157,74 @@ class Company extends Model
     public function prospectApps(): HasMany
     {
         return $this->hasMany(ProspectApp::class);
+    }
+
+    public function dataPribadis(): HasMany
+    {
+        return $this->hasMany(DataPribadi::class);
+    }
+
+    public function isCrewInviteOpen(): bool
+    {
+        if (! Schema::hasColumn('companies', 'crew_invite_enabled')) {
+            return false;
+        }
+
+        return (bool) $this->crew_invite_enabled && filled($this->crew_invite_token);
+    }
+
+    public function ensureCrewInviteToken(): string
+    {
+        if (! Schema::hasColumn('companies', 'crew_invite_token')) {
+            return '';
+        }
+
+        if (filled($this->crew_invite_token)) {
+            return (string) $this->crew_invite_token;
+        }
+
+        return $this->regenerateCrewInviteToken();
+    }
+
+    public function regenerateCrewInviteToken(): string
+    {
+        if (! Schema::hasColumn('companies', 'crew_invite_token')) {
+            return '';
+        }
+
+        do {
+            $token = Str::random(48);
+        } while (static::query()->where('crew_invite_token', $token)->exists());
+
+        $this->forceFill([
+            'crew_invite_token' => $token,
+            'crew_invite_enabled' => true,
+            'crew_invite_rotated_at' => now(),
+        ])->save();
+
+        return $token;
+    }
+
+    public function crewInviteUrl(): ?string
+    {
+        $token = $this->ensureCrewInviteToken();
+
+        if ($token === '') {
+            return null;
+        }
+
+        return route('crew.invite', ['token' => $token]);
+    }
+
+    public static function findByCrewInviteToken(string $token): ?self
+    {
+        if ($token === '' || ! Schema::hasColumn('companies', 'crew_invite_token')) {
+            return null;
+        }
+
+        return static::query()
+            ->where('crew_invite_token', $token)
+            ->where('crew_invite_enabled', true)
+            ->first();
     }
 }

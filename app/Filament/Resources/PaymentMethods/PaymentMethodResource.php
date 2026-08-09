@@ -11,6 +11,7 @@ use App\Filament\Resources\PaymentMethods\Widgets\PaymentMethodStatsWidget;
 use App\Models\PaymentMethod;
 use App\Filament\Resources\BaseResource;
 use App\Support\CompanySubscription;
+use App\Support\ProFeatures;
 use App\Support\UserVisibility;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
@@ -79,7 +80,14 @@ class PaymentMethodResource extends BaseResource
 
     public static function getEloquentQuery(): Builder
     {
-        return UserVisibility::constrainCompanyQuery(parent::getEloquentQuery());
+        $query = parent::getEloquentQuery()->with(['company']);
+
+        // Super admin: semua. Tenant: hanya rekening milik company-nya.
+        if (ProFeatures::actorIsSuperAdmin()) {
+            return $query;
+        }
+
+        return UserVisibility::constrainCompanyQuery($query);
     }
 
     public static function getNavigationBadge(): ?string

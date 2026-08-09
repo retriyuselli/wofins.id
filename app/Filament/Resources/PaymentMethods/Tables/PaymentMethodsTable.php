@@ -5,6 +5,8 @@ namespace App\Filament\Resources\PaymentMethods\Tables;
 use App\Filament\Resources\PaymentMethods\PaymentMethodResource;
 use App\Imports\BankStatementImport;
 use App\Models\BankStatement;
+use App\Support\ProFeatures;
+use App\Support\UserVisibility;
 use Exception;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -15,6 +17,7 @@ use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
@@ -25,10 +28,21 @@ class PaymentMethodsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(function (Builder $query): Builder {
+                if (ProFeatures::actorIsSuperAdmin()) {
+                    return $query;
+                }
+
+                return UserVisibility::constrainCompanyQuery($query);
+            })
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID')
-                    ->sortable(),
+                TextColumn::make('company.company_name')
+                    ->label('Company')
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable()
+                    ->visible(fn (): bool => ProFeatures::actorIsSuperAdmin())
+                    ->placeholder('— platform —'),
                 IconColumn::make('is_cash')
                     ->label('Tunai')
                     ->boolean()
@@ -108,6 +122,12 @@ class PaymentMethodsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                SelectFilter::make('company_id')
+                    ->label('Company')
+                    ->relationship('company', 'company_name')
+                    ->searchable()
+                    ->preload()
+                    ->visible(fn (): bool => ProFeatures::actorIsSuperAdmin()),
                 Filter::make('is_cash')
                     ->label('Tampilkan Hanya Uang Tunai')
                     ->query(fn (Builder $query): Builder => $query->where('is_cash', true))

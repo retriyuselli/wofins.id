@@ -9,11 +9,12 @@ use App\Filament\Resources\Categories\Pages\ListCategories;
 use App\Filament\Resources\Categories\Schemas\CategoryForm;
 use App\Filament\Resources\Categories\Tables\CategoriesTable;
 use App\Models\Category;
-use App\Support\CompanySubscription;
+use App\Support\ProFeatures;
 use App\Support\UserVisibility;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 class CategoryResource extends BaseResource
 {
@@ -33,6 +34,26 @@ class CategoryResource extends BaseResource
     public static function table(Table $table): Table
     {
         return CategoriesTable::configure($table);
+    }
+
+    public static function canCreate(): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::canCreate();
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::canEdit($record);
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::canDelete($record);
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::canDeleteAny();
     }
 
     public static function getRelations(): array
@@ -58,16 +79,6 @@ class CategoryResource extends BaseResource
 
     public static function getNavigationBadge(): ?string
     {
-        return CompanySubscription::navigationBadge(CompanySubscription::RESOURCE_CATEGORIES);
-    }
-
-    public static function getNavigationBadgeTooltip(): ?string
-    {
-        return CompanySubscription::summary(CompanySubscription::RESOURCE_CATEGORIES);
-    }
-
-    public static function getNavigationBadgeColor(): string|array|null
-    {
-        return CompanySubscription::canCreate(CompanySubscription::RESOURCE_CATEGORIES) ? 'primary' : 'warning';
+        return (string) static::getEloquentQuery()->count();
     }
 }
