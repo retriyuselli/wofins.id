@@ -428,9 +428,10 @@
 
     $faqs = [
         ['Apakah ada biaya instalasi?', 'Tidak. Semua paket WOFINS tanpa biaya instalasi. Anda hanya membayar biaya berlangganan sesuai paket yang dipilih.'],
-        ['Apa yang termasuk domain gratis?', 'Paket Business sudah termasuk domain (.com / .id sesuai ketersediaan) selama masa berlangganan aktif. Detail setup dibantu tim kami saat onboarding.'],
+        ['Apa yang termasuk domain gratis?', 'Paket Business sudah termasuk domain (.com / .id sesuai ketersediaan) selama masa berlangganan aktif, dengan syarat berlangganan minimal 1 tahun. Detail setup dibantu tim kami saat onboarding.'],
         ['Bisakah saya upgrade paket nanti?', 'Bisa. Anda dapat upgrade kapan saja; selisih biaya akan disesuaikan dengan sisa masa aktif langganan.'],
-        ['Apakah ada paket Enterprise?', 'Paket Enterprise adalah solusi terpisah di luar aplikasi WOFINS standar ini. Hubungi tim sales jika kebutuhan Anda melebihi paket Business.'],
+        ['Apakah ada paket Custom?', 'Ya. Jika kebutuhan Anda di luar paket Starter, Professional, atau Business, pilih paket Custom dan hubungi pengembang untuk diskusi scope serta harga.'],
+        ['Apakah ada paket Enterprise?', 'Paket Enterprise adalah solusi terpisah di luar aplikasi WOFINS standar ini. Hubungi pengembang jika kebutuhan Anda melebihi paket Business.'],
         ['Bagaimana dengan kategori?', 'Master kategori dikelola admin platform (super admin), tanpa kuota per paket. Tim WO tetap bisa memakai kategori yang sudah disediakan.'],
         ['Apa itu crew freelance?', 'Data crew freelance milik company (bukan akun pengguna). Semua paket bisa menambah crew dan membagikan link undangan agar crew mengisi sendiri tanpa makan kuota pengguna.'],
         ['Apakah data saya aman?', 'Ya. Akses berbasis peran, riwayat aktivitas, approval, backup terpusat, dan audit trail membantu menjaga keamanan data bisnis Anda.'],
@@ -461,7 +462,7 @@
                     Pilih Paket yang Sesuai dengan Kebutuhan Wedding Organizer Anda
                 </h1>
                 <p class="mt-4 text-[var(--wf-muted)] max-w-2xl mx-auto">
-                    Paket WOFINS dirancang fleksibel — dari WO yang baru merapikan operasional hingga tim Business.
+                    Paket WOFINS dirancang fleksibel — dari WO yang baru merapikan operasional hingga tim Business, plus paket Custom sesuai kebutuhan.
                 </p>
                 <div class="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm font-semibold text-[var(--wf-navy)]">
                     @foreach (['Tanpa biaya instalasi', 'Update & support gratis', 'Aman & terpercaya'] as $benefit)
@@ -533,7 +534,7 @@
                     </div>
                 </div>
 
-                <div class="grid md:grid-cols-3 gap-5 pt-1 max-w-5xl mx-auto">
+                <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 pt-1 max-w-7xl mx-auto">
                     @foreach ($plans as $plan)
                         <div class="wf-price-card {{ $plan['popular'] ? 'is-popular' : '' }}">
                             @if ($plan['popular'])
@@ -594,8 +595,8 @@
                                         <span class="wf-save-pill">Hemat 4 bulan</span>
                                     </div>
                                 @else
-                                    <p class="text-3xl font-extrabold text-[var(--wf-navy)] leading-tight">Hubungi Kami</p>
-                                    <p class="mt-2 text-xs text-[var(--wf-muted)]">Harga & scope disesuaikan kebutuhan</p>
+                                    <p class="text-3xl font-extrabold text-[var(--wf-navy)] leading-tight">Custom</p>
+                                    <p class="mt-2 text-xs text-[var(--wf-muted)]">Harga & scope hubungi pengembang</p>
                                 @endif
                             </div>
 
@@ -621,12 +622,19 @@
                                 @endforeach
                             </ul>
 
-                            @if ($pendingOrder)
+                            @if ($pendingOrder && ($plan['selectable'] ?? true))
                                 <span class="{{ $plan['cta_class'] }} w-full inline-flex items-center justify-center px-4 py-3 text-sm text-center opacity-50 cursor-not-allowed pointer-events-none"
                                       aria-disabled="true"
                                       title="Selesaikan pesanan {{ $pendingOrder->order_code }} terlebih dahulu">
                                     Menunggu tinjauan pesanan
                                 </span>
+                            @elseif (! empty($plan['cta_url']) || ! ($plan['selectable'] ?? true))
+                                <a href="{{ $plan['cta_url'] ?? 'https://wa.me/6281373183794?text='.rawurlencode('Halo, saya ingin konsultasi paket Custom WOFINS.') }}"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   class="{{ $plan['cta_class'] }} w-full inline-flex items-center justify-center px-4 py-3 text-sm text-center">
+                                    {{ $plan['cta'] }}
+                                </a>
                             @else
                                 <a :href="'{{ route('keranjang') }}?paket={{ $plan['key'] }}&billing=' + billing"
                                    class="{{ $plan['cta_class'] }} w-full inline-flex items-center justify-center px-4 py-3 text-sm text-center">

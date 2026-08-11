@@ -287,8 +287,8 @@ class PricingPlans
                         'tip' => 'Simpan dokumen resmi, SOP perusahaan, dan knowledge base tim dalam satu tempat.',
                     ],
                     [
-                        'label' => 'Domain gratis',
-                        'tip' => 'Termasuk domain (.com / .id sesuai ketersediaan) selama masa berlangganan Business aktif.',
+                        'label' => 'Domain gratis (wajib minimal 1 tahun)',
+                        'tip' => 'Termasuk domain (.com / .id sesuai ketersediaan) selama masa berlangganan Business aktif. Syarat: berlangganan minimal 1 tahun.',
                     ],
                     [
                         'label' => 'HRIS & absensi GPS',
@@ -333,6 +333,60 @@ class PricingPlans
                     self::FEATURE_ROLE_MANAGEMENT,
                 ],
                 'selectable' => true,
+            ],
+            [
+                'key' => 'custom',
+                'name' => 'Custom',
+                'desc' => 'Solusi disesuaikan kebutuhan WO Anda — hubungi pengembang.',
+                'price' => null,
+                'unit' => null,
+                'price_monthly' => 0,
+                'price_semiannual' => null,
+                'price_annual' => null,
+                'price_biennial' => null,
+                'price_triennial' => null,
+                'price_quadrennial' => null,
+                'seat_limit' => null,
+                'vendor_limit' => null,
+                'product_limit' => null,
+                'order_limit' => null,
+                'prospect_limit' => null,
+                'simulasi_limit' => null,
+                'payment_method_limit' => null,
+                'fixed_asset_limit' => null,
+                'piutang_limit' => null,
+                'pembayaran_piutang_limit' => null,
+                'category_limit' => null,
+                'data_pembayaran_limit' => null,
+                'expense_limit' => null,
+                'expense_ops_limit' => null,
+                'pendapatan_lain_limit' => null,
+                'pengeluaran_lain_limit' => null,
+                'popular' => false,
+                'cta' => 'Hubungi Pengembang',
+                'cta_class' => 'wf-btn-ghost',
+                'cta_url' => 'https://wa.me/6281373183794?text='.rawurlencode('Halo, saya ingin konsultasi paket Custom WOFINS.'),
+                'check' => 'navy',
+                'features' => [
+                    [
+                        'label' => 'Kuota & modul sesuai kebutuhan',
+                        'tip' => 'Jumlah pengguna, proyek, dan modul disesuaikan setelah diskusi dengan pengembang.',
+                    ],
+                    [
+                        'label' => 'Integrasi & kustomisasi',
+                        'tip' => 'Penyesuaian alur kerja, laporan, atau integrasi khusus jika diperlukan.',
+                    ],
+                    [
+                        'label' => 'Onboarding & pendampingan',
+                        'tip' => 'Setup dan training disesuaikan dengan skala dan proses internal tim Anda.',
+                    ],
+                    [
+                        'label' => 'Support langsung pengembang',
+                        'tip' => 'Diskusi kebutuhan dan penawaran harga langsung dengan tim pengembang WOFINS.',
+                    ],
+                ],
+                'feature_keys' => [],
+                'selectable' => false,
             ],
             // Enterprise tidak ditawarkan di aplikasi ini — produk terpisah.
         ];
@@ -593,6 +647,10 @@ class PricingPlans
         $options = [];
 
         foreach (static::all() as $plan) {
+            if (! ($plan['selectable'] ?? false)) {
+                continue;
+            }
+
             $parts = [];
             foreach ([
                 'seat_limit' => 'user',
@@ -818,6 +876,7 @@ class PricingPlans
         return match ($key) {
             'hastana', 'non_hastana', 'nonhastana' => 'professional', // legacy → Professional
             'starter', 'professional', 'business' => $key,
+            'custom' => null, // hubungi pengembang — tidak dipilih via form/checkout
             'enterprise' => null, // produk terpisah — tidak ditawarkan di app ini
             'lain_lain' => null,
             default => static::find($key) ? $key : null,
