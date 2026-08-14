@@ -448,18 +448,49 @@ class UserVisibility
             return false;
         }
 
-        $root = static::teamRootId();
+        $actor = Auth::user();
 
-        if ($root === null) {
+        if (! $actor instanceof User) {
             return false;
         }
 
-        if ((int) $target->id === $root) {
+        // Profil sendiri
+        if ((int) $target->id === (int) $actor->id) {
             return true;
         }
 
+        if (method_exists($target, 'hasRole') && $target->hasRole('super_admin')) {
+            return false;
+        }
+
+        $root = static::teamRootId($actor);
+
+        // Hanya pemilik paket (root tim) yang boleh kelola anggota lain
+        if ($root === null || (int) $actor->id !== $root) {
+            return false;
+        }
+
+        // Anggota company yang sama
+        $companyId = static::companyId($actor);
+        if (
+            $companyId
+            && Schema::hasColumn('users', 'company_id')
+            && (int) $target->company_id === $companyId
+        ) {
+            return true;
+        }
+
+        // Fallback legacy: created_by = root
         return Schema::hasColumn('users', 'created_by')
             && (int) $target->created_by === $root;
+    }
+
+    /**
+     * Apakah actor boleh mengedit user target (tombol Edit / update).
+     */
+    public static function canEditUser(?User $target): bool
+    {
+        return static::canAccessUser($target);
     }
 
     /**
@@ -530,7 +561,7 @@ class UserVisibility
 
     /**
      * Filter ID role dari form.
-     * Non–super_admin: selalu samakan dengan role pemilik paket.
+     * Non–super_admin: hanya boleh role milik pemilik paket; kosong → pakai default pemilik.
      *
      * @param  list<int|string>|null  $roleIds
      * @return list<int>
@@ -546,16 +577,24 @@ class UserVisibility
                 ->all();
         }
 
-        // Anggota tim wajib role sama dengan pemilik paket
-        $ownerIds = static::packageOwnerRoleIds();
+        $allowedIds = static::packageOwnerRoleIds();
 
-        if ($ownerIds !== []) {
-            return $ownerIds;
+        if ($allowedIds === []) {
+            $default = \Spatie\Permission\Models\Role::findOrCreate('pengunjung', 'web');
+
+            return [(int) $default->id];
         }
 
-        $default = \Spatie\Permission\Models\Role::findOrCreate('pengunjung', 'web');
+        $selected = collect($roleIds ?? [])
+            ->filter(fn ($id) => filled($id))
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
 
-        return [(int) $default->id];
+        $filtered = array_values(array_intersect($selected, $allowedIds));
+
+        return $filtered !== [] ? $filtered : $allowedIds;
     }
 
     /**

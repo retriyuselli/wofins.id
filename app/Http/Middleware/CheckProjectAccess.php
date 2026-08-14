@@ -17,7 +17,7 @@ class CheckProjectAccess
     public function handle(Request $request, Closure $next): Response
     {
         if (! Auth::check()) {
-            return redirect()->route('filament.admin.auth.login');
+            return redirect()->guest(route('front.login'));
         }
 
         $user = Auth::user();

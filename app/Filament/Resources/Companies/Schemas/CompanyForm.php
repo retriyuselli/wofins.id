@@ -222,7 +222,7 @@ class CompanyForm
                                                     ->label('Berlaku sampai')
                                                     ->displayFormat('d M Y')
                                                     ->native(false)
-                                                    ->helperText('Opsional — untuk pengingat masa aktif.')
+                                                    ->helperText('Wajib untuk pembatasan akses. Setelah tanggal ini, user company tidak bisa masuk dashboard (kecuali super admin).')
                                                     ->visible($isSuperAdmin)
                                                     ->disabled(! $isSuperAdmin)
                                                     ->dehydrated($isSuperAdmin),

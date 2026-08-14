@@ -409,7 +409,10 @@
         $companyBankHolder = '{Isi dengan nama pemegang rekening bank perusahaan}';
 
         if (\Illuminate\Support\Facades\Schema::hasTable('companies')) {
-            $company = \App\Models\Company::with('paymentMethod')->first();
+            $company = $company ?? null;
+            if ($company) {
+                $company->loadMissing('paymentMethod');
+            }
 
             if ($company?->company_name) {
                 $companyName = $company->company_name;
@@ -471,8 +474,6 @@
                             \Illuminate\Support\Facades\Storage::disk('public')->exists($company->logo_url)
                         ) {
                             $logoPath = \Illuminate\Support\Facades\Storage::disk('public')->path($company->logo_url);
-                        } else {
-                            $logoPath = public_path('images/logomki.png');
                         }
 
                         if ($logoPath && file_exists($logoPath)) {

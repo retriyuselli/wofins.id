@@ -31,21 +31,43 @@ class SubscriptionQuotaWidget extends BaseWidget
             return [
                 'plan' => CompanySubscription::planLabel(),
                 'configured' => CompanySubscription::hasConfiguredPlan(),
+                'expires_label' => CompanySubscription::expiresAtLabel(),
+                'expired' => CompanySubscription::isExpired(),
+                'expiring_soon' => CompanySubscription::isExpiringSoon(),
+                'days_left' => CompanySubscription::daysUntilExpiry(),
                 'rows' => CompanySubscription::quotaMatrix(),
             ];
         });
 
         $plan = $payload['plan'];
         $configured = $payload['configured'];
+        $expiresLabel = $payload['expires_label'];
+        $expired = $payload['expired'];
+        $expiringSoon = $payload['expiring_soon'];
+        $daysLeft = $payload['days_left'];
         $rows = $payload['rows'];
+
+        $planDescription = ! $configured
+            ? 'Set paket di Admin → Company agar kuota aktif'
+            : ($expiresLabel
+                ? ($expired
+                    ? 'Berakhir pada '.$expiresLabel.' — akses ditangguhkan'
+                    : ($expiringSoon
+                        ? 'Aktif sampai '.$expiresLabel.($daysLeft !== null ? " ({$daysLeft} hari lagi)" : '')
+                        : 'Aktif sampai '.$expiresLabel))
+                : 'Kuota dihitung per tim paket Anda');
+
+        $planColor = ! $configured
+            ? 'warning'
+            : ($expired ? 'danger' : ($expiringSoon ? 'warning' : 'success'));
 
         $stats = [
             Stat::make('Paket aktif', $plan)
-                ->description($configured
-                    ? 'Kuota dihitung per tim paket Anda'
-                    : 'Set paket di Admin → Company agar kuota aktif')
-                ->descriptionIcon($configured ? 'heroicon-m-check-badge' : 'heroicon-m-exclamation-triangle')
-                ->color($configured ? 'success' : 'warning')
+                ->description($planDescription)
+                ->descriptionIcon($configured
+                    ? ($expired || $expiringSoon ? 'heroicon-m-clock' : 'heroicon-m-check-badge')
+                    : 'heroicon-m-exclamation-triangle')
+                ->color($planColor)
                 ->icon('heroicon-o-sparkles'),
         ];
 

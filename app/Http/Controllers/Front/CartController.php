@@ -75,7 +75,7 @@ class CartController extends Controller
             'billing' => ['required', Rule::in(PricingPlans::billingKeys())],
             'full_name' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:30'],
-            'company_name' => ['nullable', 'string', 'max:255'],
+            'company_name' => ['required', 'string', 'max:255'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'payment_proof' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf,webp', 'max:4096'],
         ]);

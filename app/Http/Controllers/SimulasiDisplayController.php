@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Company;
 use App\Models\SimulasiProduk;
+use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Carbon\Carbon; // Import View
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\View\View; // atau use PDF; jika Anda menambahkan alias
+use Illuminate\Support\Facades\Storage;
+use Illuminate\View\View;
 
 class SimulasiDisplayController extends Controller
 {
@@ -20,26 +22,21 @@ class SimulasiDisplayController extends Controller
 
         $items = collect();
         if ($record->product) {
-            // Eager load vendors for items to prevent N+1 queries in the view
             $items = $record->product->items()->with('vendor')->get();
         }
 
-        // The view 'simulasi.show' (likely resources/views/simulasi/invoice.blade.php)
-        // expects the SimulasiProduk object as 'simulasi' and items as 'items'.
-        // Financial details like subtotal, promo, grand_total can be accessed
-        // directly from the 'simulasi' object in the view (e.g., $simulasi->grand_total).
-        // The 'SimulasiProduk' model already has accessors for these if needed.
-
-        // Pass 'record' as 'simulasi' to match the view variable name
-        return view('simulasi.show', [
-            'simulasi' => $record,
-            'items' => $items,
-            'pengurangans' => $record->pengurangans,
-            'pdfMode' => false,
-        ]);
+        return view('simulasi.show', array_merge(
+            $this->companyViewData($record),
+            [
+                'simulasi' => $record,
+                'items' => $items,
+                'pengurangans' => $record->pengurangans,
+                'pdfMode' => false,
+            ],
+        ));
     }
 
-    public function downloadPdf(SimulasiProduk $record) // Menggunakan Route Model Binding
+    public function downloadPdf(SimulasiProduk $record)
     {
         Gate::authorize('view', $record);
 
@@ -47,31 +44,21 @@ class SimulasiDisplayController extends Controller
         @ini_set('max_execution_time', '180');
         @ini_set('memory_limit', '512M');
 
-        // Ambil item-item dari produk dasar jika ada
         $items = collect();
         if ($record->product) {
-            // Asumsi model Product memiliki relasi 'items' ke ProductVendor
-            // dan setiap ProductVendor memiliki relasi 'vendor'
-            // Eager load vendor untuk menghindari N+1 query di view
             $items = $record->product->items()->with('vendor')->get();
         }
 
-        // Data yang akan dilewatkan ke view
-        // Variabel total (subtotal, promo, dll.) sudah ada di $record
-        $data = [
-            'record' => $record,
-            'simulasi' => $record,
-            'items' => $items,
-            'pengurangans' => $record->pengurangans,
-            'pdfMode' => true,
-            // Anda bisa melewatkan variabel total secara eksplisit jika diperlukan,
-            // tapi karena $record sudah memilikinya, ini mungkin tidak perlu.
-            // 'subtotal' => $record->total_price,
-            // 'promo' => $record->promo,
-            // 'penambahan' => $record->penambahan,
-            // 'pengurangan' => $record->pengurangan,
-            // 'grand_total' => $record->grand_total,
-        ];
+        $data = array_merge(
+            $this->companyViewData($record),
+            [
+                'record' => $record,
+                'simulasi' => $record,
+                'items' => $items,
+                'pengurangans' => $record->pengurangans,
+                'pdfMode' => true,
+            ],
+        );
 
         $pdf = Pdf::loadView('pdf.draft_simulasi', $data);
         $pdf->setPaper('a4', 'portrait');
@@ -82,10 +69,6 @@ class SimulasiDisplayController extends Controller
             'isFontSubsettingEnabled' => true,
         ]);
 
-        // Atur ukuran kertas dan orientasi jika perlu (opsional)
-        // $pdf->setPaper('a4', 'portrait');
-
-        // Buat nama file PDF yang dinamis
         $fileName = 'simulasi_penawaran_'.$record->slug.'_'.now()->format('Ymd').'.pdf';
 
         return $pdf->download($fileName);
@@ -118,13 +101,19 @@ class SimulasiDisplayController extends Controller
         $bulanRomawi = $months[$currentMonth] ?? '';
         $tahun = $createdAt->year;
 
-        $sequence = SimulasiProduk::whereYear('created_at', $record->created_at->year)
-            ->where('id', '<=', $record->id)
-            ->count();
+        $company = $this->resolveCompany($record);
 
+        $sequenceQuery = SimulasiProduk::query()
+            ->whereYear('created_at', $record->created_at->year)
+            ->where('id', '<=', $record->id);
+
+        if ($company?->id) {
+            $sequenceQuery->whereHas('user', fn ($q) => $q->where('company_id', $company->id));
+        }
+
+        $sequence = $sequenceQuery->count();
         $sequenceFormatted = str_pad((string) $sequence, 3, '0', STR_PAD_LEFT);
 
-        $company = Company::first();
         $inisialWo = $company?->inisial_wo ?: 'MW';
         $inisialKontrak = $company?->inisial_kontak ?: 'KKP';
 
@@ -136,22 +125,26 @@ class SimulasiDisplayController extends Controller
             $nomorSurat = $baseNumber.'/'.$inisialWo.'/'.$inisialKontrak.'/'.$bulanRomawi.'/'.$tahun;
         }
 
-        // Find Finance User
-        $financeUser = \App\Models\User::role('Finance')->first();
+        $financeQuery = User::role('Finance');
+        if ($company?->id) {
+            $financeQuery->where('company_id', $company->id);
+        }
+        $financeUser = $financeQuery->first();
 
-        $data = [
-            'record' => $record,
-            'items' => $items,
-            'prospect' => $record->prospect,
-            'nomorSurat' => $nomorSurat,
-            'financeUser' => $financeUser,
-            'company' => $company,
-        ];
+        $data = array_merge(
+            $this->companyViewData($record, $company),
+            [
+                'record' => $record,
+                'items' => $items,
+                'prospect' => $record->prospect,
+                'nomorSurat' => $nomorSurat,
+                'financeUser' => $financeUser,
+            ],
+        );
 
         $pdf = Pdf::loadView('pdf.draft_kontrak', $data);
         $pdf->setPaper('a4', 'portrait');
 
-        // Configure DomPDF for better compatibility
         $pdf->setOptions([
             'isHtml5ParserEnabled' => true,
             'isRemoteEnabled' => true,
@@ -161,5 +154,59 @@ class SimulasiDisplayController extends Controller
         $fileName = 'Draft_Kontrak_'.$record->slug.'_'.now()->format('Ymd').'.pdf';
 
         return $pdf->stream($fileName);
+    }
+
+    /**
+     * Company pemilik simulasi (via Account Manager / user_id).
+     */
+    protected function resolveCompany(SimulasiProduk $record): ?Company
+    {
+        $record->loadMissing('user.company.paymentMethod');
+
+        $company = $record->user?->company;
+
+        if ($company) {
+            $company->loadMissing('paymentMethod');
+
+            return $company;
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array{
+     *     company: ?Company,
+     *     companyName: string,
+     *     companyAddress: ?string,
+     *     companyEmail: ?string,
+     *     companyPhone: ?string,
+     *     companyLogoUrl: string,
+     *     companyFaviconUrl: string
+     * }
+     */
+    protected function companyViewData(SimulasiProduk $record, ?Company $company = null): array
+    {
+        $company ??= $this->resolveCompany($record);
+
+        $logoUrl = null;
+        if ($company?->logo_url && Storage::disk('public')->exists($company->logo_url)) {
+            $logoUrl = asset('storage/'.ltrim($company->logo_url, '/'));
+        }
+
+        $faviconUrl = asset('images/favicon_makna.png');
+        if ($company?->favicon_url && Storage::disk('public')->exists($company->favicon_url)) {
+            $faviconUrl = asset('storage/'.ltrim($company->favicon_url, '/'));
+        }
+
+        return [
+            'company' => $company,
+            'companyName' => $company?->company_name ?? config('app.name'),
+            'companyAddress' => $company?->address,
+            'companyEmail' => $company?->email,
+            'companyPhone' => $company?->phone,
+            'companyLogoUrl' => $logoUrl,
+            'companyFaviconUrl' => $faviconUrl,
+        ];
     }
 }

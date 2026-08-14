@@ -95,4 +95,28 @@ class SubscriptionOrder extends Model
             ->latest('id')
             ->first();
     }
+
+    /**
+     * Pesanan siap untuk Approve user: sudah pilih paket + lampirkan bukti bayar.
+     */
+    public static function readyForUserApproval(?User $user): ?self
+    {
+        if (! $user) {
+            return null;
+        }
+
+        return static::query()
+            ->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                    ->orWhere('email', $user->email);
+            })
+            ->whereNotNull('plan_key')
+            ->where('plan_key', '!=', '')
+            ->whereNotNull('payment_proof_path')
+            ->where('payment_proof_path', '!=', '')
+            ->whereIn('status', ['pending_review', 'approved'])
+            ->latest('submitted_at')
+            ->latest('id')
+            ->first();
+    }
 }

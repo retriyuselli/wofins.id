@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\Prospect;
 use App\Models\SimulasiProduk;
 use App\Models\User;
+use App\Support\UserVisibility;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
@@ -104,13 +105,21 @@ class SimulasiProdukForm
                                         ->columnSpanFull(),
                                     Select::make('user_id')
                                         ->label('Account Manager')
-                                        ->options(fn () => \App\Support\UserVisibility::constrainUsersQuery(
-                                            User::role('Account Manager')
-                                        )->pluck('name', 'id')->toArray())
+                                        ->options(function () {
+                                            $query = User::query();
+                                            UserVisibility::constrainUsersQuery($query);
+
+                                            $amQuery = (clone $query)->role('Account Manager');
+                                            if ($amQuery->exists()) {
+                                                $query->role('Account Manager');
+                                            }
+
+                                            return $query->orderBy('name')->pluck('name', 'id')->toArray();
+                                        })
                                         ->required()
                                         ->searchable()
                                         ->preload()
-                                        ->default(fn () => optional(Auth::user())->roles?->contains('name', 'Account Manager') ? Auth::id() : null)
+                                        ->default(fn () => Auth::id())
                                         ->columnSpanFull(),
                                     TextInput::make('total_price')
                                         ->label('Base Total Price')

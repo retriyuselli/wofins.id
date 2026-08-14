@@ -18,10 +18,10 @@ class EditUser extends EditRecord
     {
         parent::mount($record);
 
-        if (! UserResource::isSuperAdmin() && UserResource::isTargetUserSuperAdmin($this->record)) {
+        if (! UserVisibility::canEditUser($this->record)) {
             Notification::make()
                 ->title('Akses Ditolak')
-                ->body('Anda tidak memiliki izin untuk mengedit user dengan role Super Admin.')
+                ->body('Anda tidak memiliki izin untuk mengedit user ini.')
                 ->danger()
                 ->send();
 
@@ -40,6 +40,24 @@ class EditUser extends EditRecord
         $data['roles'] = UserVisibility::sanitizeAssignableRoleIds(
             isset($data['roles']) ? (array) $data['roles'] : null
         );
+
+        // Pastikan anggota tim tertaut ke company / created_by pemilik paket
+        if (! UserVisibility::actorIsSuperAdmin()) {
+            $companyId = UserVisibility::companyId();
+            $rootId = UserVisibility::teamRootId();
+
+            if ($companyId && empty($this->record->company_id)) {
+                $data['company_id'] = $companyId;
+            }
+
+            if (
+                $rootId
+                && (int) $this->record->id !== $rootId
+                && empty($this->record->created_by)
+            ) {
+                $data['created_by'] = $rootId;
+            }
+        }
 
         $hadRoles = $this->record->roles()->exists();
         $willHaveRoles = ! empty($data['roles']);

@@ -66,7 +66,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->font('Poppins')
-            ->login()
+            // Login hanya lewat frontend (/login) — jangan sediakan /admin/login
             ->maxContentWidth(Width::Full)
             ->brandLogo($brandLogo)
             ->brandLogoHeight('2rem')
@@ -114,6 +114,7 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 RedirectUnauthenticatedToAppUrl::class,
                 Authenticate::class,
+                \App\Http\Middleware\EnsureCompanySubscriptionActive::class,
             ])
             ->plugins([
                 FilamentShieldPlugin::make()

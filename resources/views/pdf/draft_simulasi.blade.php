@@ -204,17 +204,14 @@
         <div class="footer-right">{{ now()->timezone('Asia/Jakarta')->format('d F Y H:i') }}</div>
     </div>
     @php
-        $company = $company ?? \App\Models\Company::first();
+        $company = $company ?? null;
 
         $logoSrc = '';
         if ($company && $company->logo_url && \Illuminate\Support\Facades\Storage::disk('public')->exists($company->logo_url)) {
             $logoPath = \Illuminate\Support\Facades\Storage::disk('public')->path($company->logo_url);
-        } else {
-            $logoPath = public_path('images/logomki.png');
-        }
-
-        if (is_string($logoPath) && file_exists($logoPath)) {
-            $logoSrc = 'data:' . mime_content_type($logoPath) . ';base64,' . base64_encode(file_get_contents($logoPath));
+            if (is_string($logoPath) && file_exists($logoPath)) {
+                $logoSrc = 'data:' . mime_content_type($logoPath) . ';base64,' . base64_encode(file_get_contents($logoPath));
+            }
         }
 
         $itemsCollection = collect($items ?? []);

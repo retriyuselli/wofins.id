@@ -110,9 +110,9 @@ class OrderForm
                                 name: 'user',
                                 titleAttribute: 'name',
                                 modifyQueryUsing: function (Builder $query) {
+                                    // Hanya user dalam company/tim yang sama
                                     UserVisibility::constrainUsersQuery($query);
 
-                                    // AM dalam tim; jika belum ada role AM, tampilkan anggota tim
                                     $amQuery = (clone $query)->role('Account Manager');
                                     if ($amQuery->exists()) {
                                         return $query->role('Account Manager');
@@ -123,14 +123,30 @@ class OrderForm
                             )
                             ->required()
                             ->searchable()
+                            ->preload()
                             ->default(fn () => Auth::id())
                             ->label('Account Manager'),
                         TextInput::make('slug')
                             ->readOnly()
                             ->maxLength(255),
                         Select::make('employee_id')
-                            ->relationship('employee', 'name')
+                            ->relationship(
+                                name: 'employee',
+                                titleAttribute: 'name',
+                                modifyQueryUsing: function (Builder $query) {
+                                    // Sama pola AM: user dalam company/tim yang sama
+                                    UserVisibility::constrainUsersQuery($query);
+
+                                    $emQuery = (clone $query)->role('Event Manager');
+                                    if ($emQuery->exists()) {
+                                        return $query->role('Event Manager');
+                                    }
+
+                                    return $query;
+                                },
+                            )
                             ->searchable()
+                            ->preload()
                             ->required()
                             ->label('Event Manager')
                             ->helperText('Jika belum ada isi dengan makna wedding'),

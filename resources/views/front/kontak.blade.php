@@ -388,7 +388,7 @@
                                         'Onboarding' => 'Onboarding / migrasi',
                                         'Lainnya' => 'Lainnya',
                                     ] as $value => $label)
-                                        <option value="{{ $value }}" @selected(old('need', $paketLabel ? 'Konsultasi paket' : '') === $value)>
+                                        <option value="{{ $value }}" @selected(old('need', request('need', $paketLabel ? 'Konsultasi paket' : '')) === $value)>
                                             {{ $label }}
                                         </option>
                                     @endforeach

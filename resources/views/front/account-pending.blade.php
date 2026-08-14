@@ -255,7 +255,7 @@
                         </h2>
                         <p class="mt-2 text-sm text-[var(--wf-muted)] leading-relaxed">
                             @if ($isRejected)
-                                Pengajuan formulir sebelumnya ditolak. Anda bisa mengisi ulang formulir, atau langsung checkout paket.
+                                Pengajuan sebelumnya ditolak. Anda bisa hubungi kami untuk demo/konsultasi, atau langsung checkout paket.
                             @else
                                 Akun <strong class="text-[var(--wf-navy)]">{{ $user?->email }}</strong> belum punya role.
                                 Pilih salah satu jalur di bawah — tidak perlu keduanya.
@@ -276,12 +276,12 @@
                         </div>
                         <div class="rounded-2xl border border-[var(--wf-line)] bg-white p-5 flex flex-col">
                             <p class="text-xs font-bold uppercase tracking-wide text-[var(--wf-muted)]">Jalur konsultasi</p>
-                            <h3 class="mt-1 text-base font-bold text-[var(--wf-navy)]">Formulir pendaftaran</h3>
+                            <h3 class="mt-1 text-base font-bold text-[var(--wf-navy)]">Jadwalkan demo</h3>
                             <p class="mt-2 text-sm text-[var(--wf-muted)] flex-1">
-                                Untuk demo / konsultasi dulu. Admin meninjau data lalu mengaktifkan akses.
+                                Untuk demo / konsultasi dulu — tanpa membahas harga di sini. Tim kami akan menghubungi Anda.
                             </p>
-                            <a href="{{ route('pendaftaran') }}" class="wf-btn-navy mt-4 inline-flex items-center justify-center px-4 py-2.5 text-sm">
-                                Isi formulir
+                            <a href="{{ route('kontak', ['need' => 'Demo gratis']) }}" class="wf-btn-navy mt-4 inline-flex items-center justify-center px-4 py-2.5 text-sm">
+                                Hubungi kami
                             </a>
                         </div>
                     </div>

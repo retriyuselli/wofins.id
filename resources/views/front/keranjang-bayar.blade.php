@@ -153,10 +153,14 @@
                                            placeholder="08xxxxxxxxxx">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-semibold text-[var(--wf-navy)]">Nama WO / perusahaan</label>
+                                    <label class="block text-sm font-semibold text-[var(--wf-navy)]">Nama WO / perusahaan <span class="text-rose-500">*</span></label>
                                     <input type="text" name="company_name" class="wf-field"
                                            value="{{ old('company_name') }}"
-                                           placeholder="Opsional">
+                                           placeholder="Contoh: Intimate Wedding Malang"
+                                           required>
+                                    @error('company_name')
+                                        <p class="mt-1.5 text-xs text-rose-600">{{ $message }}</p>
+                                    @enderror
                                 </div>
                             </div>
 

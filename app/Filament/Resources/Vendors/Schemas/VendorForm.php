@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Vendors\Schemas;
 
-use App\Models\Category;
 use App\Models\Vendor;
 use App\Models\User;
 use Filament\Forms\Components\DatePicker;
@@ -19,11 +18,9 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
-use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\RawJs;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 
 class VendorForm
 {
@@ -101,20 +98,7 @@ class VendorForm
                                             ->searchable()
                                             ->preload()
                                             ->required()
-                                            ->disabled(fn (?Vendor $record): bool => self::isLocked($record))
-                                            ->createOptionForm([
-                                                TextInput::make('name')
-                                                    ->required()
-                                                    ->maxLength(255)
-                                                    ->live(debounce: 500)
-                                                    ->afterStateUpdated(fn ($state, Set $set) => $set('slug', $state ? Str::slug($state) : '')),
-                                                TextInput::make('slug')
-                                                    ->disabled()
-                                                    ->dehydrated()
-                                                    ->unique(Category::class, 'slug', ignoreRecord: true),
-                                                Toggle::make('is_active')
-                                                    ->required(),
-                                            ]),
+                                            ->disabled(fn (?Vendor $record): bool => self::isLocked($record)),
                                         Toggle::make('is_master')
                                             ->label('Master')
                                             ->helperText('Tandai vendor ini sebagai data master')

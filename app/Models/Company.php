@@ -17,6 +17,10 @@ class Company extends Model
 
     protected static function booted(): void
     {
+        static::created(function (Company $company) {
+            \App\Support\DefaultCategories::ensureForCompany($company);
+        });
+
         static::saved(function (Company $company) {
             \App\Support\CompanySubscription::forgetCache($company->id);
         });

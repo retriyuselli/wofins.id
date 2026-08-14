@@ -101,13 +101,21 @@
             flex-direction: column;
             height: 100%;
             position: relative;
+            z-index: 1;
             overflow: visible;
             transition: transform .2s ease, box-shadow .2s ease;
         }
 
         .wf-price-card:hover {
+            z-index: 5;
             transform: translateY(-3px);
             box-shadow: 0 18px 40px -24px rgba(11, 31, 58, 0.35);
+        }
+
+        .wf-price-card:has(.wf-feature-tip:hover),
+        .wf-price-card:has(.wf-feature-tip:focus-visible),
+        .wf-price-card:has(.wf-feature-tip.is-open) {
+            z-index: 40;
         }
 
         .wf-price-card.is-popular {
@@ -272,7 +280,7 @@
             position: absolute;
             left: 0;
             top: calc(100% + 0.65rem);
-            z-index: 40;
+            z-index: 50;
             width: min(17.5rem, 70vw);
             padding: 0.75rem 0.9rem;
             border-radius: 0.65rem;
@@ -533,8 +541,11 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 pt-1 max-w-7xl mx-auto">
+            {{-- Kartu paket: terpusat seperti semula, sedikit lebih lebar --}}
+            <div class="w-full max-w-[92rem] mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 pt-1">
                     @foreach ($plans as $plan)
                         <div class="wf-price-card {{ $plan['popular'] ? 'is-popular' : '' }}">
                             @if ($plan['popular'])
@@ -644,7 +655,9 @@
                         </div>
                     @endforeach
                 </div>
+            </div>
 
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="mt-8 rounded-2xl bg-[#eef1f5] border border-[var(--wf-line)] px-5 py-4 flex flex-col sm:flex-row items-center justify-center gap-3 text-sm text-[var(--wf-navy)]">
                     <span class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white text-[var(--wf-gold)] shadow-sm">
                         <i class="fa-solid fa-shield-halved"></i>

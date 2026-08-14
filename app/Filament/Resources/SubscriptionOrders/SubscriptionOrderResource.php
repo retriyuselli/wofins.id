@@ -6,16 +6,20 @@ use App\Filament\Resources\SubscriptionOrders\Pages\EditSubscriptionOrder;
 use App\Filament\Resources\SubscriptionOrders\Pages\ListSubscriptionOrders;
 use App\Models\SubscriptionOrder;
 use App\Support\ProFeatures;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class SubscriptionOrderResource extends Resource
 {
@@ -58,7 +62,12 @@ class SubscriptionOrderResource extends Resource
         return $schema->components([
             TextInput::make('order_code')->label('Kode')->disabled(),
             TextInput::make('plan_name')->label('Paket')->disabled(),
-            TextInput::make('billing')->label('Durasi')->disabled(),
+            TextInput::make('billing')
+                ->label('Durasi')
+                ->formatStateUsing(fn (?string $state): string => $state
+                    ? \App\Support\PricingPlans::billingLabel($state)
+                    : '—')
+                ->disabled(),
             TextInput::make('amount')->label('Total transfer')->disabled()->prefix('Rp'),
             TextInput::make('unique_amount')->label('Kode unik')->disabled()->prefix('Rp'),
             TextInput::make('full_name')->label('Nama')->disabled(),
@@ -66,6 +75,19 @@ class SubscriptionOrderResource extends Resource
             TextInput::make('phone')->label('Telepon')->disabled(),
             TextInput::make('company_name')->label('Perusahaan')->disabled(),
             Textarea::make('notes')->label('Catatan')->disabled()->rows(2),
+            FileUpload::make('payment_proof_path')
+                ->label('Bukti pembayaran')
+                ->disk('public')
+                ->directory('subscription-orders')
+                ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'application/pdf'])
+                ->imagePreviewHeight('280')
+                ->openable()
+                ->downloadable()
+                ->previewable()
+                ->disabled()
+                ->dehydrated(false)
+                ->helperText('Diunggah pemesan saat checkout. Klik untuk membuka / unduh (JPG/PNG/PDF).')
+                ->columnSpanFull(),
             Select::make('status')
                 ->label('Status')
                 ->options([
@@ -96,6 +118,25 @@ class SubscriptionOrderResource extends Resource
                     ->toggleable(),
                 TextColumn::make('full_name')->label('Nama')->searchable(),
                 TextColumn::make('email')->label('Email')->searchable(),
+                ImageColumn::make('payment_proof_path')
+                    ->label('Bukti')
+                    ->disk('public')
+                    ->height(40)
+                    ->square()
+                    ->tooltip(fn (SubscriptionOrder $record): ?string => filled($record->payment_proof_path)
+                        ? 'Buka lewat aksi Bukti / Tinjau'
+                        : 'Belum ada bukti')
+                    ->toggleable(),
+                TextColumn::make('payment_proof_link')
+                    ->label('File bukti')
+                    ->state(fn (SubscriptionOrder $record): string => filled($record->payment_proof_path) ? 'Buka' : '—')
+                    ->url(fn (SubscriptionOrder $record): ?string => filled($record->payment_proof_path)
+                        ? Storage::disk('public')->url($record->payment_proof_path)
+                        : null)
+                    ->openUrlInNewTab()
+                    ->color(fn (SubscriptionOrder $record): string => filled($record->payment_proof_path) ? 'primary' : 'gray')
+                    ->icon(fn (SubscriptionOrder $record): ?string => filled($record->payment_proof_path) ? 'heroicon-m-arrow-top-right-on-square' : null)
+                    ->toggleable(),
                 TextColumn::make('status')
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
@@ -120,6 +161,14 @@ class SubscriptionOrderResource extends Resource
                 ]),
             ])
             ->recordActions([
+                Action::make('lihatBukti')
+                    ->label('Bukti')
+                    ->icon('heroicon-o-photo')
+                    ->url(fn (SubscriptionOrder $record): ?string => filled($record->payment_proof_path)
+                        ? Storage::disk('public')->url($record->payment_proof_path)
+                        : null)
+                    ->openUrlInNewTab()
+                    ->visible(fn (SubscriptionOrder $record): bool => filled($record->payment_proof_path)),
                 EditAction::make()->label('Tinjau'),
             ])
             ->defaultSort('created_at', 'desc');

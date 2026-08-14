@@ -77,7 +77,6 @@ class UserForm
                                                     ->preload()
                                                     ->searchable(fn () => UserVisibility::actorIsSuperAdmin())
                                                     ->required()
-                                                    ->disabled(fn () => ! UserVisibility::actorIsSuperAdmin())
                                                     ->dehydrated()
                                                     ->default(fn () => UserVisibility::actorIsSuperAdmin()
                                                         ? null
@@ -86,10 +85,10 @@ class UserForm
                                                     ->maxItems(fn () => UserVisibility::actorIsSuperAdmin() ? 5 : max(1, count(UserVisibility::packageOwnerRoleNames())))
                                                     ->helperText(fn () => UserVisibility::actorIsSuperAdmin()
                                                         ? 'Pilih satu atau lebih role (maksimal 5).'
-                                                        : 'Role anggota = role jabatan Anda saat ini ('
+                                                        : 'Pilih role anggota dari role jabatan yang Anda miliki ('
                                                             .implode(', ', UserVisibility::packageOwnerRoleNames())
                                                             .'). Nama paket (Starter/Pro/Business) bukan Spatie role. '
-                                                            .'Untuk menambah pilihan role, minta super_admin menambahkan role jabatan ke akun pemilik paket.')
+                                                            .'Tanpa role Spatie, anggota tidak bisa masuk dashboard.')
                                                     ->createOptionForm(fn () => UserVisibility::actorIsSuperAdmin()
                                                         ? [
                                                             TextInput::make('name')

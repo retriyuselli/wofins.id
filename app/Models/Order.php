@@ -98,9 +98,13 @@ class Order extends Model
         return $this->getBayarAttribute();
     }
 
+    /**
+     * Event Manager (user dalam company yang sama).
+     * Kolom employee_id menyimpan users.id (bukan employees.id).
+     */
     public function employee(): BelongsTo
     {
-        return $this->belongsTo(Employee::class);
+        return $this->belongsTo(User::class, 'employee_id');
     }
 
     public function expenses()

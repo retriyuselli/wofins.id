@@ -390,7 +390,8 @@ Invoice Area
 
                                                         <div style="text-align: left; border: none !important; min-width: 0; flex: 1 1 auto;">
                                                             @php
-                                                                $company = $company ?? \App\Models\Company::first();
+                                                                $company = $company ?? null;
+                                                                $logoSrc = '';
 
                                                                 if (
                                                                     $company &&
@@ -398,32 +399,26 @@ Invoice Area
                                                                     \Illuminate\Support\Facades\Storage::disk('public')->exists($company->logo_url)
                                                                 ) {
                                                                     $logoPath = \Illuminate\Support\Facades\Storage::disk('public')->path($company->logo_url);
-                                                                } else {
-                                                                    $logoPath = public_path('images/logomki.png');
+                                                                    if (file_exists($logoPath)) {
+                                                                        $logoSrc = 'data:' . mime_content_type($logoPath) . ';base64,' . base64_encode(file_get_contents($logoPath));
+                                                                    }
                                                                 }
-
-                                                                $logoSrc = file_exists($logoPath)
-                                                                    ? 'data:' . mime_content_type($logoPath) . ';base64,' . base64_encode(file_get_contents($logoPath))
-                                                                    : '';
                                                             @endphp
                                                             <b>Office Information :</b>
                                                             <address style="white-space: normal; overflow-wrap: anywhere; word-break: break-word;">
                                                                 {{ $company->company_name ?? ($companyName ?? config('app.name')) }}<br>
-                                                                {{ $company->address ?? 'Jl. Sintraman Jaya I No. 2148, 20 Ilir D II, Kecamatan Kemuning, Kota Palembang, Sumatera Selatan 30137' }}
+                                                                {{ $company->address ?? ($companyAddress ?? '-') }}
                                                                 |
-                                                                Phone: {{ $company->phone ?? '+62 822-9796-2600' }} <br>
+                                                                Phone: {{ $company->phone ?? ($companyPhone ?? '-') }} <br>
                                                             </address>
                                                         </div>
 
                                                         <div class="header-logo"
                                                             style="max-height: 100px; text-align: right; flex: 0 0 auto; margin-left: auto;">
                                                             @if ($logoSrc)
-                                                                <a href="{{ route('filament.admin.auth.login') }}"
-                                                                    class="cta-button">
-                                                                    <img src="{{ $logoSrc }}" alt="Logo Perusahaan"
-                                                                        class="company-logo"
-                                                                        style="display: block; max-height: 100px; width: 250px; margin-left: auto;">
-                                                                </a>
+                                                                <img src="{{ $logoSrc }}" alt="Logo {{ $company->company_name ?? 'Perusahaan' }}"
+                                                                    class="company-logo"
+                                                                    style="display: block; max-height: 100px; width: auto; max-width: 250px; margin-left: auto;">
                                                             @endif
                                                         </div>
 

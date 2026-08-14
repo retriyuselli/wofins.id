@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\Orders\Tables;
 
 use App\Enums\OrderStatus;
-use App\Models\Employee;
 use App\Models\Order;
 use App\Models\User;
+use App\Support\UserVisibility;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
@@ -314,7 +314,16 @@ class OrdersTable
                             ->relationship(
                                 name: 'employee',
                                 titleAttribute: 'name',
-                                modifyQueryUsing: fn (Builder $query) => $query->where('position', 'Event Manager'),
+                                modifyQueryUsing: function (Builder $query) {
+                                    UserVisibility::constrainUsersQuery($query);
+
+                                    $emQuery = (clone $query)->role('Event Manager');
+                                    if ($emQuery->exists()) {
+                                        return $query->role('Event Manager');
+                                    }
+
+                                    return $query;
+                                },
                             )
                             ->searchable()
                             ->preload(),
@@ -323,7 +332,16 @@ class OrdersTable
                             ->relationship(
                                 name: 'user',
                                 titleAttribute: 'name',
-                                modifyQueryUsing: fn (Builder $query) => $query->whereHas('statuses', fn (Builder $q) => $q->where('status_name', 'Account Manager')),
+                                modifyQueryUsing: function (Builder $query) {
+                                    UserVisibility::constrainUsersQuery($query);
+
+                                    $amQuery = (clone $query)->role('Account Manager');
+                                    if ($amQuery->exists()) {
+                                        return $query->role('Account Manager');
+                                    }
+
+                                    return $query;
+                                },
                             )
                             ->searchable()
                             ->preload(),
@@ -337,7 +355,7 @@ class OrdersTable
                         $indicators = [];
 
                         if ($data['employee_id'] ?? null) {
-                            $employee = Employee::find($data['employee_id']);
+                            $employee = User::find($data['employee_id']);
                             $indicators['em'] = 'EM: '.($employee?->name ?? 'Unknown');
                         }
                         if ($data['user_id'] ?? null) {

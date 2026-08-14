@@ -17,7 +17,7 @@ class ListCategories extends ListRecords
                 ->visible(fn (): bool => CategoryResource::canCreate())
                 ->tooltip(fn (): ?string => CategoryResource::canCreate()
                     ? null
-                    : 'Hanya super admin yang dapat menambah kategori'),
+                    : 'Hanya admin yang dapat menambah kategori'),
         ];
     }
 }

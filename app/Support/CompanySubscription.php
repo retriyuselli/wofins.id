@@ -765,4 +765,129 @@ class CompanySubscription
     {
         return static::fullMessage(self::RESOURCE_USERS);
     }
+
+    /**
+     * Tanggal akhir masa aktif paket perusahaan (null = tidak dibatasi).
+     */
+    public static function expiresAt(?User $actor = null): ?\Carbon\CarbonInterface
+    {
+        $company = static::company($actor);
+        $expires = $company?->subscription_expires_at;
+
+        return $expires instanceof \Carbon\CarbonInterface ? $expires : null;
+    }
+
+    public static function hasExpiry(?User $actor = null): bool
+    {
+        return static::expiresAt($actor) !== null;
+    }
+
+    /**
+     * Paket sudah lewat tanggal berlaku.
+     * Super admin / force unlock tidak dianggap expired di sini.
+     */
+    public static function isExpired(?User $actor = null): bool
+    {
+        $expires = static::expiresAt($actor);
+
+        if (! $expires) {
+            return false;
+        }
+
+        return now()->greaterThan($expires->copy()->endOfDay());
+    }
+
+    public static function isExpiringSoon(?User $actor = null, int $withinDays = 14): bool
+    {
+        $expires = static::expiresAt($actor);
+
+        if (! $expires || static::isExpired($actor)) {
+            return false;
+        }
+
+        return $expires->lessThanOrEqualTo(now()->addDays($withinDays)->endOfDay());
+    }
+
+    public static function daysUntilExpiry(?User $actor = null): ?int
+    {
+        $expires = static::expiresAt($actor);
+
+        if (! $expires) {
+            return null;
+        }
+
+        if (static::isExpired($actor)) {
+            return 0;
+        }
+
+        return (int) now()->startOfDay()->diffInDays($expires->copy()->startOfDay());
+    }
+
+    public static function expiresAtLabel(?User $actor = null): ?string
+    {
+        $expires = static::expiresAt($actor);
+
+        return $expires?->timezone(config('app.timezone'))->translatedFormat('d F Y');
+    }
+
+    /**
+     * Aktifkan / perpanjang paket perusahaan dari pesanan yang disetujui.
+     * Durasi mengikuti billing: 1 / 12 / 24 / 48 bulan.
+     */
+    public static function activateFromOrder(\App\Models\SubscriptionOrder $order): ?Company
+    {
+        $planKey = PricingPlans::normalizeKey($order->plan_key);
+
+        if (! $planKey) {
+            $found = PricingPlans::find($order->plan_key);
+            $planKey = $found['key'] ?? null;
+        }
+
+        if (! $planKey || ! PricingPlans::find($planKey)) {
+            return null;
+        }
+
+        $user = $order->user;
+        $company = null;
+
+        if ($user instanceof User && $user->company_id) {
+            $company = Company::query()->find($user->company_id);
+        }
+
+        if (! $company && filled($order->company_name)) {
+            $company = Company::query()
+                ->where('company_name', $order->company_name)
+                ->first();
+        }
+
+        if (! $company) {
+            return null;
+        }
+
+        $pricing = PricingPlans::resolveBillingPrice(
+            PricingPlans::find($planKey),
+            (string) $order->billing
+        );
+        $months = max(1, (int) ($pricing['months'] ?? 1));
+
+        $currentExpiry = $company->subscription_expires_at;
+        $base = now();
+
+        if ($currentExpiry instanceof \Carbon\CarbonInterface && $currentExpiry->greaterThan($base)) {
+            $base = $currentExpiry->copy();
+        }
+
+        $company->forceFill([
+            'subscription_plan' => $planKey,
+            'subscription_expires_at' => $base->copy()->addMonthsNoOverflow($months)->endOfDay(),
+        ])->save();
+
+        static::forgetCache($company->id);
+
+        if ($user instanceof User && ! $user->company_id) {
+            $user->forceFill(['company_id' => $company->id])->save();
+        }
+
+        return $company->fresh();
+    }
 }

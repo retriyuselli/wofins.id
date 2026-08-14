@@ -7,6 +7,7 @@ use App\Models\Status;
 use App\Models\ProspectApp;
 use App\Models\User;
 use App\Support\CompanySubscription;
+use App\Support\UserVisibility;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
@@ -683,12 +684,113 @@ class UsersTable
                         ->label('Edit')
                         ->color('warning')
                         ->visible(function ($record) {
-                            if (static::isSuperAdmin()) {
-                                return true;
-                            }
-                            $user = Auth::user();
+                            return UserVisibility::canEditUser($record instanceof User ? $record : null);
+                        }),
 
-                            return $user && $user->id === $record->id;
+                    Action::make('send_team_invite')
+                        ->label('Kirim undangan')
+                        ->icon('heroicon-o-envelope')
+                        ->color('info')
+                        ->modalHeading('Kirim undangan login')
+                        ->modalDescription(fn (User $record) => "Kirim email undangan ke {$record->email} berisi tautan login".(filled($record->name) ? " untuk {$record->name}." : '.'))
+                        ->modalSubmitActionLabel('Kirim email')
+                        ->form([
+                            TextInput::make('password')
+                                ->label('Password sementara (opsional)')
+                                ->password()
+                                ->revealable()
+                                ->minLength(8)
+                                ->maxLength(255)
+                                ->helperText('Isi untuk mengganti password dan menyertakannya di email. Kosongkan jika anggota sudah punya password sendiri.'),
+                        ])
+                        ->action(function (User $record, array $data): void {
+                            try {
+                                if (! UserVisibility::canEditUser($record)) {
+                                    throw new \RuntimeException('Anda tidak berhak mengirim undangan untuk user ini.');
+                                }
+
+                                if ($record->hasRole('super_admin')) {
+                                    throw new \RuntimeException('Tidak dapat mengirim undangan ke super admin.');
+                                }
+
+                                $plainPassword = filled($data['password'] ?? null)
+                                    ? (string) $data['password']
+                                    : null;
+
+                                $updates = [];
+
+                                if (! UserVisibility::actorIsSuperAdmin()) {
+                                    $companyId = UserVisibility::companyId();
+                                    $rootId = UserVisibility::teamRootId();
+
+                                    if ($companyId && ! $record->company_id) {
+                                        $updates['company_id'] = $companyId;
+                                    }
+
+                                    if (
+                                        $rootId
+                                        && (int) $record->id !== $rootId
+                                        && ! $record->created_by
+                                    ) {
+                                        $updates['created_by'] = $rootId;
+                                    }
+                                }
+
+                                if ($plainPassword !== null) {
+                                    $updates['password'] = $plainPassword;
+                                }
+
+                                if ($updates !== []) {
+                                    $record->forceFill($updates)->save();
+                                }
+
+                                // Pastikan punya role agar bisa masuk dashboard
+                                if (! $record->hasAssignedRole()) {
+                                    $roleIds = UserVisibility::sanitizeAssignableRoleIds(null);
+                                    if ($roleIds !== []) {
+                                        $record->roles()->sync($roleIds);
+                                    } else {
+                                        $record->assignRole(Role::findOrCreate('pengunjung', 'web'));
+                                    }
+                                    $record->refresh();
+                                }
+
+                                $inviter = Auth::user();
+
+                                Mail::send('emails.team-member-invited', [
+                                    'user' => $record,
+                                    'inviterName' => $inviter?->name ?? 'Pemilik paket',
+                                    'plainPassword' => $plainPassword,
+                                    'loginUrl' => route('front.login'),
+                                ], function ($message) use ($record) {
+                                    $message->to($record->email, $record->name)
+                                        ->subject('Undangan akun tim WOFINS — silakan login');
+                                });
+
+                                Notification::make()
+                                    ->title('Undangan terkirim')
+                                    ->body("Email undangan telah dikirim ke {$record->email}.")
+                                    ->success()
+                                    ->send();
+                            } catch (Throwable $e) {
+                                Log::warning('Failed to send team invite from Users table', [
+                                    'user_id' => $record->id,
+                                    'message' => $e->getMessage(),
+                                ]);
+
+                                Notification::make()
+                                    ->title('Gagal mengirim undangan')
+                                    ->body($e->getMessage() ?: 'Email gagal dikirim. Coba lagi atau bagikan login secara manual.')
+                                    ->danger()
+                                    ->send();
+                            }
+                        })
+                        ->visible(function (?User $record): bool {
+                            if (! $record || $record->hasRole('super_admin')) {
+                                return false;
+                            }
+
+                            return UserVisibility::canEditUser($record);
                         }),
 
                     Action::make('approve_user')
@@ -698,15 +800,28 @@ class UsersTable
                         ->requiresConfirmation()
                         ->modalHeading('Approve User')
                         ->modalDescription(function (User $record) {
+                            $order = \App\Models\SubscriptionOrder::readyForUserApproval($record);
                             $onboarding = app(\App\Services\TenantOnboardingService::class);
                             $prospect = $onboarding->findProspectFor($record);
-                            $planKey = \App\Support\PricingPlans::normalizeKey($prospect?->service) ?? 'starter';
-                            $planLabel = \App\Support\PricingPlans::shortLabel($planKey);
-                            $companyName = $prospect?->company_name ?: $record->name;
+
+                            $planKey = \App\Support\PricingPlans::normalizeKey($order?->plan_key);
+                            if (! $planKey && $order?->plan_key) {
+                                $found = \App\Support\PricingPlans::find($order->plan_key);
+                                $planKey = $found['key'] ?? null;
+                            }
+                            $planKey ??= \App\Support\PricingPlans::normalizeKey($prospect?->service);
+
+                            $planLabel = $planKey
+                                ? \App\Support\PricingPlans::shortLabel($planKey)
+                                : '—';
+                            $billing = $order?->billing_label ?? '—';
+                            $companyName = $order?->company_name
+                                ?: ($prospect?->company_name ?: $record->name);
 
                             return "Aktifkan {$record->name} sebagai pemilik paket?\n"
                                 ."WO: {$companyName}\n"
-                                ."Paket: {$planLabel} (dari minat pendaftaran)\n"
+                                ."Paket: {$planLabel} · {$billing}\n"
+                                ."Bukti bayar: sudah dilampirkan ({$order?->order_code})\n"
                                 ."Role: pengunjung · 1 Company baru dibuat bila belum ada.\n"
                                 .'User akan menerima email pemberitahuan.';
                         })
@@ -714,12 +829,39 @@ class UsersTable
                         ->action(function (User $record): void {
                             try {
                                 DB::transaction(function () use ($record) {
+                                    $order = \App\Models\SubscriptionOrder::readyForUserApproval($record);
+
+                                    if (! $order) {
+                                        throw new \RuntimeException(
+                                            'User belum memilih paket atau belum mengunggah bukti pembayaran. Minta user checkout paket dulu.'
+                                        );
+                                    }
+
                                     $onboarding = app(\App\Services\TenantOnboardingService::class);
                                     $prospect = $onboarding->findProspectFor($record);
                                     $company = $onboarding->provisionOwnerCompany($record, $prospect);
 
+                                    $planKey = \App\Support\PricingPlans::normalizeKey($order->plan_key);
+                                    if (! $planKey) {
+                                        $found = \App\Support\PricingPlans::find($order->plan_key);
+                                        $planKey = $found['key'] ?? null;
+                                    }
+
+                                    if (! $planKey) {
+                                        throw new \RuntimeException('Paket pada pesanan tidak valid.');
+                                    }
+
+                                    // Jangan default Starter dari prospect — pakai paket yang dibayar
+                                    $company->forceFill(['subscription_plan' => $planKey])->save();
+                                    CompanySubscription::forgetCache($company->id);
+
+                                    if ($order->status === 'approved') {
+                                        CompanySubscription::activateFromOrder($order);
+                                        $company->refresh();
+                                    }
+
                                     $seatLimit = \App\Support\PricingPlans::limit(
-                                        \App\Support\PricingPlans::normalizeKey($company->subscription_plan) ?? 'starter',
+                                        $planKey,
                                         CompanySubscription::RESOURCE_USERS
                                     );
                                     $seatsUsed = CompanySubscription::seatsUsed($company);
@@ -745,6 +887,10 @@ class UsersTable
                                         'company_id' => $company->id,
                                         'created_by' => null,
                                     ])->save();
+
+                                    if (! $order->user_id) {
+                                        $order->forceFill(['user_id' => $record->id])->save();
+                                    }
 
                                     ProspectApp::query()
                                         ->where(function ($q) use ($record) {
@@ -799,13 +945,18 @@ class UsersTable
                                     ->send();
                             }
                         })
-                        ->tooltip('Aktifkan user, buat Company WO, berikan role pengunjung')
+                        ->tooltip('Hanya muncul jika user sudah pilih paket + unggah bukti bayar')
                         ->visible(function (?User $record) {
                             if (! $record || $record->status === 'terminated') {
                                 return false;
                             }
 
                             if ($record->hasAssignedRole()) {
+                                return false;
+                            }
+
+                            // Wajib sudah checkout paket + lampirkan bukti pembayaran
+                            if (! \App\Models\SubscriptionOrder::readyForUserApproval($record)) {
                                 return false;
                             }
 

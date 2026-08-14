@@ -250,10 +250,12 @@ class VendorsTable
                     ->query(function (Builder $query, array $data): Builder {
                         return $query->when(
                             $data['usage'] === 'in_use',
-                            fn (Builder $query): Builder => $query->whereHas('productVendors')
-                                ->orWhereHas('expenses')
-                                ->orWhereHas('notaDinasDetails')
-                                ->orWhereHas('productPenambahans'),
+                            fn (Builder $query): Builder => $query->where(function (Builder $q): void {
+                                $q->whereHas('productVendors')
+                                    ->orWhereHas('expenses')
+                                    ->orWhereHas('notaDinasDetails')
+                                    ->orWhereHas('productPenambahans');
+                            }),
                         )->when(
                             $data['usage'] === 'available',
                             fn (Builder $query): Builder => $query->whereDoesntHave('productVendors')

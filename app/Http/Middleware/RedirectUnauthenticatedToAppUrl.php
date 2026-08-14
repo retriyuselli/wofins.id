@@ -8,22 +8,20 @@ use Illuminate\Support\Facades\Auth;
 
 class RedirectUnauthenticatedToAppUrl
 {
+    /**
+     * Guest yang mengakses panel admin diarahkan ke login frontend
+     * (bukan /admin/login).
+     */
     public function handle(Request $request, Closure $next)
     {
-        if (! Auth::check()) {
-            Auth::logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-
-            if ($request->expectsJson()) {
-                return response()->json(['message' => 'Unauthenticated'], 401);
-            }
-
-            $appUrl = config('app.url') ?: url('/');
-
-            return response()->redirectTo($appUrl);
+        if (Auth::check()) {
+            return $next($request);
         }
 
-        return $next($request);
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+
+        return redirect()->guest(route('front.login'));
     }
 }

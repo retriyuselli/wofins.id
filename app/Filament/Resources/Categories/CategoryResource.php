@@ -9,12 +9,14 @@ use App\Filament\Resources\Categories\Pages\ListCategories;
 use App\Filament\Resources\Categories\Schemas\CategoryForm;
 use App\Filament\Resources\Categories\Tables\CategoriesTable;
 use App\Models\Category;
+use App\Models\User;
 use App\Support\ProFeatures;
 use App\Support\UserVisibility;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class CategoryResource extends BaseResource
 {
@@ -36,24 +38,40 @@ class CategoryResource extends BaseResource
         return CategoriesTable::configure($table);
     }
 
+    /**
+     * Hanya super_admin / role admin yang boleh kelola kategori.
+     */
+    public static function actorCanManageCategories(): bool
+    {
+        if (ProFeatures::actorIsSuperAdmin()) {
+            return true;
+        }
+
+        $user = Auth::user();
+
+        return $user instanceof User
+            && method_exists($user, 'hasRole')
+            && $user->hasRole('admin');
+    }
+
     public static function canCreate(): bool
     {
-        return ProFeatures::actorIsSuperAdmin() && parent::canCreate();
+        return static::actorCanManageCategories() && parent::canCreate();
     }
 
     public static function canEdit(Model $record): bool
     {
-        return ProFeatures::actorIsSuperAdmin() && parent::canEdit($record);
+        return static::actorCanManageCategories() && parent::canEdit($record);
     }
 
     public static function canDelete(Model $record): bool
     {
-        return ProFeatures::actorIsSuperAdmin() && parent::canDelete($record);
+        return static::actorCanManageCategories() && parent::canDelete($record);
     }
 
     public static function canDeleteAny(): bool
     {
-        return ProFeatures::actorIsSuperAdmin() && parent::canDeleteAny();
+        return static::actorCanManageCategories() && parent::canDeleteAny();
     }
 
     public static function getRelations(): array

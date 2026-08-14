@@ -69,6 +69,9 @@ Route::get('/bank-reconciliation/template', [BankReconciliationTemplateControlle
 
 Route::get('/brand/logo', [BrandController::class, 'logo'])->name('brand.logo');
 Route::get('/brand/favicon', [BrandController::class, 'favicon'])->name('brand.favicon');
+Route::redirect('/admin/login', '/login', 301);
+Route::permanentRedirect('/admin/login/', '/login');
+
 Route::get('/brand/login-image', [BrandController::class, 'loginImage'])->name('brand.login-image');
 
 // Home route with proper method handling
@@ -218,7 +221,9 @@ Route::get('/solusi/{slug}', [\App\Http\Controllers\Front\SolusiController::clas
 
 Route::get('/product', [ProductCatalogController::class, 'index'])->name('product');
 
-Route::get('/pendaftaran', [RegistrationController::class, 'pendaftaran'])->name('pendaftaran');
+Route::get('/pendaftaran', [RegistrationController::class, 'pendaftaran'])
+    ->name('pendaftaran')
+    ->middleware($frontAuthVerified);
 
 // CONTACT — halaman bisa dilihat guest (dengan pemberitahuan login);
 // kirim form tetap wajib login
@@ -434,6 +439,18 @@ Route::middleware($frontAuthVerified)->group(function () {
             'latestOrder' => $latestOrder,
         ]);
     })->name('account.pending');
+
+    Route::get('/paket-berakhir', function () {
+        if (! \App\Support\CompanySubscription::isExpired()) {
+            if (Auth::user()?->canAccessAdmin()) {
+                return redirect('/admin');
+            }
+
+            return redirect()->route('profile');
+        }
+
+        return view('front.subscription-expired');
+    })->name('account.subscription-expired');
 });
 
 Route::middleware(array_merge($frontAuthVerified, ['role.required']))->group(function () {
@@ -526,11 +543,19 @@ Route::get('/prospect-app/{prospectApp}/proposal', [ProspectAppController::class
     ->name('prospect-app.proposal.pdf')
     ->middleware($authNoStoreThrottle);
 
-// Route untuk Prospect App (Frontend)
-Route::get('/prospect-app', [ProspectAppController::class, 'create'])->name('prospect-app.form');
-Route::post('/prospect-app', [ProspectAppController::class, 'store'])->name('prospect-app.store')->middleware('throttle:20,1');
-Route::get('/prospect-app/success', [ProspectAppController::class, 'success'])->name('prospect-app.success');
-Route::post('/prospect-app/check-email', [ProspectAppController::class, 'checkEmail'])->name('prospect-app.check-email')->middleware('throttle:10,1');
+// Route untuk Prospect App (Frontend) — wajib login (sama seperti /pendaftaran)
+Route::get('/prospect-app', [ProspectAppController::class, 'create'])
+    ->name('prospect-app.form')
+    ->middleware($frontAuthVerified);
+Route::post('/prospect-app', [ProspectAppController::class, 'store'])
+    ->name('prospect-app.store')
+    ->middleware([...$frontAuthVerified, 'throttle:20,1']);
+Route::get('/prospect-app/success', [ProspectAppController::class, 'success'])
+    ->name('prospect-app.success')
+    ->middleware($frontAuthVerified);
+Route::post('/prospect-app/check-email', [ProspectAppController::class, 'checkEmail'])
+    ->name('prospect-app.check-email')
+    ->middleware([...$frontAuthVerified, 'throttle:10,1']);
 
 // Route untuk Download PDF Rekonsiliasi
 Route::get('/admin/reconciliation/download-pdf', [ReconciliationController::class, 'downloadPdf'])
