@@ -27,20 +27,6 @@ class CategoryPolicy
         return (int) $category->company_id === (int) $authUser->company_id;
     }
 
-    /**
-     * Hanya super_admin / admin yang boleh menambah & mengubah kategori.
-     */
-    private function canManage(AuthUser $authUser): bool
-    {
-        if (ProFeatures::actorIsSuperAdmin()) {
-            return true;
-        }
-
-        return $authUser instanceof User
-            && method_exists($authUser, 'hasRole')
-            && $authUser->hasRole('admin');
-    }
-
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:Category');
@@ -53,56 +39,46 @@ class CategoryPolicy
 
     public function create(AuthUser $authUser): bool
     {
-        return $this->canManage($authUser) && $authUser->can('Create:Category');
+        return ProFeatures::actorIsSuperAdmin() && $authUser->can('Create:Category');
     }
 
     public function update(AuthUser $authUser, Category $category): bool
     {
-        return $this->canManage($authUser)
-            && $authUser->can('Update:Category')
-            && $this->owns($authUser, $category);
+        return ProFeatures::actorIsSuperAdmin() && $authUser->can('Update:Category');
     }
 
     public function delete(AuthUser $authUser, Category $category): bool
     {
-        return $this->canManage($authUser)
-            && $authUser->can('Delete:Category')
-            && $this->owns($authUser, $category);
+        return ProFeatures::actorIsSuperAdmin() && $authUser->can('Delete:Category');
     }
 
     public function restore(AuthUser $authUser, Category $category): bool
     {
-        return $this->canManage($authUser)
-            && $authUser->can('Restore:Category')
-            && $this->owns($authUser, $category);
+        return ProFeatures::actorIsSuperAdmin() && $authUser->can('Restore:Category');
     }
 
     public function forceDelete(AuthUser $authUser, Category $category): bool
     {
-        return $this->canManage($authUser)
-            && $authUser->can('ForceDelete:Category')
-            && $this->owns($authUser, $category);
+        return ProFeatures::actorIsSuperAdmin() && $authUser->can('ForceDelete:Category');
     }
 
     public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $this->canManage($authUser) && $authUser->can('ForceDeleteAny:Category');
+        return ProFeatures::actorIsSuperAdmin() && $authUser->can('ForceDeleteAny:Category');
     }
 
     public function restoreAny(AuthUser $authUser): bool
     {
-        return $this->canManage($authUser) && $authUser->can('RestoreAny:Category');
+        return ProFeatures::actorIsSuperAdmin() && $authUser->can('RestoreAny:Category');
     }
 
     public function replicate(AuthUser $authUser, Category $category): bool
     {
-        return $this->canManage($authUser)
-            && $authUser->can('Replicate:Category')
-            && $this->owns($authUser, $category);
+        return ProFeatures::actorIsSuperAdmin() && $authUser->can('Replicate:Category');
     }
 
     public function reorder(AuthUser $authUser): bool
     {
-        return $this->canManage($authUser) && $authUser->can('Reorder:Category');
+        return ProFeatures::actorIsSuperAdmin() && $authUser->can('Reorder:Category');
     }
 }
