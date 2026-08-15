@@ -35,4 +35,30 @@ return [
         'notes' => env('WOFINS_CHECKOUT_BANK_NOTES', 'Cantumkan kode pesanan pada berita transfer.'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Host separation (marketing vs customer app)
+    |--------------------------------------------------------------------------
+    |
+    | Production:
+    |   WOFINS_APP_HOST=app.wofins.id
+    |   WOFINS_PUBLIC_HOSTS=wofins.id,www.wofins.id
+    |   APP_URL=https://app.wofins.id
+    |   WOFINS_PUBLIC_URL=https://wofins.id
+    |
+    | Local/dev: biarkan WOFINS_APP_HOST kosong → middleware no-op.
+    |
+    */
+
+    'app_host' => env('WOFINS_APP_HOST'),
+
+    'public_hosts' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', (string) env('WOFINS_PUBLIC_HOSTS', ''))
+    ))),
+
+    'app_url' => env('WOFINS_APP_URL', env('APP_URL')),
+
+    'public_url' => env('WOFINS_PUBLIC_URL'),
+
 ];

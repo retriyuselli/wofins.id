@@ -262,7 +262,7 @@
                                 <button type="submit" class="wf-btn-navy w-full inline-flex items-center justify-center px-5 py-3.5 text-sm">
                                     Buat akun
                                 </button>
-                                <a href="{{ route('front.login') }}"
+                                <a href="{{ wofins_route('front.login') }}"
                                     class="wf-btn-ghost w-full inline-flex items-center justify-center px-5 py-3 text-sm">
                                     Sudah punya akun? Masuk
                                 </a>

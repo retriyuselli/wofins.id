@@ -302,7 +302,7 @@
                                                class="wf-btn-navy inline-flex items-center justify-center px-5 py-2.5 text-sm">
                                                 Login terlebih dahulu
                                             </a>
-                                            <a href="{{ route('front.register') }}"
+                                            <a href="{{ wofins_route('front.register') }}"
                                                class="wf-btn-ghost inline-flex items-center justify-center px-5 py-2.5 text-sm">
                                                 Belum punya akun? Daftar
                                             </a>

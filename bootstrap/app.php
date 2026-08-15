@@ -24,7 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         // Redirect guest ke halaman login front (bukan route 'login' default)
-        $middleware->redirectGuestsTo(fn () => route('front.login'));
+        $middleware->redirectGuestsTo(fn () => wofins_route('front.login'));
 
         // User yang sudah login (middleware guest): arahkan sesuai status akun
         $middleware->redirectUsersTo(function () {
@@ -43,14 +43,14 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             if ($user && ! $user->hasVerifiedEmail()) {
-                return route('verification.notice');
+                return wofins_route('verification.notice');
             }
 
             if ($user && method_exists($user, 'hasAssignedRole') && ! $user->hasAssignedRole()) {
-                return route('account.pending');
+                return wofins_route('account.pending');
             }
 
-            return route('profile');
+            return wofins_route('profile');
         });
 
         // Add middleware aliases for better organization
@@ -76,6 +76,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // Apply CheckUserExpiration to web routes
         $middleware->web(\App\Http\Middleware\CheckUserExpiration::class);
 
+        // wofins.id = marketing, app.wofins.id = customer app (no-op jika host kosong)
+        // Global agar juga menangkap /admin sebelum Filament domain mismatch → 404
+        $middleware->append(\App\Http\Middleware\EnforceHostSeparation::class);
+
         // Handle method spoofing properly
         $middleware->web(prepend: [
             \Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests::class,
@@ -87,7 +91,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json(['message' => 'Unauthenticated'], 401);
             }
 
-            return redirect()->guest(route('front.login'));
+            return redirect()->guest(wofins_route('front.login'));
         });
 
         $exceptions->render(function (Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException $e, $request) {

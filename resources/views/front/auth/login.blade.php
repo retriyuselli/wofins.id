@@ -253,7 +253,7 @@
 
                             <p class="text-center text-sm text-[var(--wf-muted)]">
                                 Belum punya akun?
-                                <a href="{{ route('front.register') }}" class="font-bold text-[var(--wf-navy)] hover:text-[var(--wf-gold)]">Daftar sekarang</a>
+                                <a href="{{ wofins_route('front.register') }}" class="font-bold text-[var(--wf-navy)] hover:text-[var(--wf-gold)]">Daftar sekarang</a>
                             </p>
                             <p class="text-center text-xs text-[var(--wf-muted)]">
                                 Butuh demo?

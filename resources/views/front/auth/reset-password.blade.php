@@ -88,7 +88,7 @@
             </form>
 
             <p class="mt-6 text-center text-sm text-gray-600">
-                <a href="{{ route('front.login') }}" class="font-medium text-blue-600 hover:text-blue-500">
+                <a href="{{ wofins_route('front.login') }}" class="font-medium text-blue-600 hover:text-blue-500">
                     Kembali ke Login
                 </a>
             </p>

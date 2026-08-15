@@ -229,12 +229,12 @@ Route::get('/pendaftaran', [RegistrationController::class, 'pendaftaran'])
 // kirim form tetap wajib login
 Route::view('/kontak', 'front.kontak')->name('kontak');
 Route::get('/kontak/lanjut-login', function () {
-    $intended = route('kontak', array_filter([
+    $intended = wofins_route('kontak', array_filter([
         'paket' => request('paket'),
     ]));
     session(['url.intended' => $intended]);
 
-    return redirect()->route('front.login');
+    return redirect()->away(wofins_route('front.login'));
 })->name('kontak.require-login')->middleware('guest');
 
 Route::post('/kontak', [ContactController::class, 'store'])
@@ -400,7 +400,7 @@ Route::middleware($frontAuthNoStore)->group(function () {
         request()->session()->invalidate();
         request()->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect()->away(wofins_public_url('/'));
     })->name('logout')->middleware('throttle:10,1');
 });
 

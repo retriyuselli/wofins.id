@@ -7,6 +7,7 @@ use App\Http\Middleware\RedirectUnauthenticatedToAppUrl;
 use App\Models\Company;
 use App\Support\PricingPlans;
 use App\Support\ProFeatures;
+use App\Support\WofinsHosts;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use CmsMulti\FilamentClearCache\FilamentClearCachePlugin;
 use Filament\Enums\GlobalSearchPosition;
@@ -60,14 +61,21 @@ class AdminPanelProvider extends PanelProvider
         $brandLogo = url('/brand/logo').'?v='.$brandVersion;
         $favicon = url('/brand/favicon').'?v='.$brandVersion;
 
-        return $panel
+        $panel = $panel
             ->globalSearch(position: GlobalSearchPosition::Topbar)
             ->default()
             ->id('admin')
             ->path('admin')
             ->font('Poppins')
             // Login hanya lewat frontend (/login) — jangan sediakan /admin/login
-            ->maxContentWidth(Width::Full)
+            ->maxContentWidth(Width::Full);
+
+        // Production: panel hanya di app host
+        if (WofinsHosts::enabled() && WofinsHosts::appHost()) {
+            $panel = $panel->domain(WofinsHosts::appHost());
+        }
+
+        return $panel
             ->brandLogo($brandLogo)
             ->brandLogoHeight('2rem')
             ->brandName('Makna Kreatif')

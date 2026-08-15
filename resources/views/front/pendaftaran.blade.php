@@ -485,7 +485,7 @@
                         <h3 class="text-lg sm:text-xl font-bold">Sudah punya akun?</h3>
                         <p class="mt-2 text-sm text-white/75 max-w-xl">Masuk untuk mengakses dashboard setelah role diaktifkan.</p>
                     </div>
-                    <a href="{{ route('front.login') }}" class="wf-btn-gold inline-flex items-center justify-center gap-2 px-6 py-3 text-sm shrink-0">
+                    <a href="{{ wofins_route('front.login') }}" class="wf-btn-gold inline-flex items-center justify-center gap-2 px-6 py-3 text-sm shrink-0">
                         Masuk ke WOFINS
                     </a>
                 </div>

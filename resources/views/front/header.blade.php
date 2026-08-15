@@ -63,7 +63,7 @@
                                 class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition duration-300 {{ request()->is('docs*') ? 'text-blue-600 bg-blue-50' : '' }}">
                                 Docs
                             </a>
-                            <a href="{{ route('front.login') }}"
+                            <a href="{{ wofins_route('front.login') }}"
                                 class="text-gray-700 hover:text-blue-600 px-4 py-2 rounded-md text-sm font-medium transition duration-300">
                                 Login
                             </a>
@@ -142,7 +142,7 @@
                     @else
                         <!-- Login & Sign Up Buttons -->
                         <div class="flex items-center space-x-3">
-                            {{-- <a href="{{ route('front.login') }}"
+                            {{-- <a href="{{ wofins_route('front.login') }}"
                                 class="text-gray-700 hover:text-blue-600 px-4 py-2 rounded-md text-sm font-medium transition duration-300">
                                 Login
                             </a> --}}
@@ -218,7 +218,7 @@
                                 <a href="/docs"
                                     class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Docs</a>
                                 <hr class="my-2">
-                                <a href="{{ route('front.login') }}"
+                                <a href="{{ wofins_route('front.login') }}"
                                     class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Login</a>
                                 <a href="{{ route('pendaftaran') }}"
                                     class="block px-4 py-2 text-blue-600 hover:bg-blue-50 font-medium">Coba Gratis</a>

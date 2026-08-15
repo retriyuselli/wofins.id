@@ -22,6 +22,6 @@ class RedirectUnauthenticatedToAppUrl
             return response()->json(['message' => 'Unauthenticated'], 401);
         }
 
-        return redirect()->guest(route('front.login'));
+        return redirect()->guest(wofins_route('front.login'));
     }
 }

@@ -130,7 +130,7 @@
 >
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex h-16 items-center justify-between gap-4">
-            <a href="{{ route('home') }}" class="flex items-center gap-2 shrink-0">
+            <a href="{{ wofins_route('home') }}" class="flex items-center gap-2 shrink-0">
                 <span class="text-2xl font-bold text-[var(--wf-navy)] tracking-wide">WOFINS</span>
             </a>
 
@@ -209,13 +209,13 @@
 
             <div class="hidden lg:flex items-center gap-3">
                 @auth
-                    <a href="{{ Auth::user()->hasAssignedRole() ? route('profile') : route('account.pending') }}" class="wf-btn-ghost px-5 py-2.5 text-sm">Dashboard</a>
+                    <a href="{{ Auth::user()->hasAssignedRole() ? wofins_route('profile') : wofins_route('account.pending') }}" class="wf-btn-ghost px-5 py-2.5 text-sm">Dashboard</a>
                     @if (Auth::user()->canAccessAdmin())
-                        <a href="{{ route('dashboard') }}" class="wf-btn-navy px-5 py-2.5 text-sm">Admin</a>
+                        <a href="{{ wofins_route('dashboard') }}" class="wf-btn-navy px-5 py-2.5 text-sm">Admin</a>
                     @endif
                 @else
-                    <a href="{{ route('front.login') }}" class="wf-btn-ghost px-5 py-2.5 text-sm">Masuk</a>
-                    <a href="{{ route('kontak') }}" class="wf-btn-navy px-5 py-2.5 text-sm">Jadwalkan Demo Gratis</a>
+                    <a href="{{ wofins_route('front.login') }}" class="wf-btn-ghost px-5 py-2.5 text-sm">Masuk</a>
+                    <a href="{{ wofins_route('kontak') }}" class="wf-btn-navy px-5 py-2.5 text-sm">Jadwalkan Demo Gratis</a>
                 @endauth
             </div>
 
@@ -257,13 +257,13 @@
             <a href="{{ route('kontak') }}" class="wf-nav-link-mobile {{ $isKontak ? 'is-active' : '' }}" :class="{ 'is-active': activeNav === 'kontak' }">Kontak</a>
             <div class="flex flex-col gap-2 pt-2">
                 @auth
-                    <a href="{{ Auth::user()->hasAssignedRole() ? route('profile') : route('account.pending') }}" class="wf-btn-ghost px-4 py-2.5 text-center text-sm">Dashboard</a>
+                    <a href="{{ Auth::user()->hasAssignedRole() ? wofins_route('profile') : wofins_route('account.pending') }}" class="wf-btn-ghost px-4 py-2.5 text-center text-sm">Dashboard</a>
                     @if (Auth::user()->canAccessAdmin())
-                        <a href="{{ route('dashboard') }}" class="wf-btn-navy px-4 py-2.5 text-center text-sm">Admin</a>
+                        <a href="{{ wofins_route('dashboard') }}" class="wf-btn-navy px-4 py-2.5 text-center text-sm">Admin</a>
                     @endif
                 @else
-                    <a href="{{ route('front.login') }}" class="wf-btn-ghost px-4 py-2.5 text-center text-sm">Masuk</a>
-                    <a href="{{ route('kontak') }}" class="wf-btn-navy px-4 py-2.5 text-center text-sm">Jadwalkan Demo Gratis</a>
+                    <a href="{{ wofins_route('front.login') }}" class="wf-btn-ghost px-4 py-2.5 text-center text-sm">Masuk</a>
+                    <a href="{{ wofins_route('kontak') }}" class="wf-btn-navy px-4 py-2.5 text-center text-sm">Jadwalkan Demo Gratis</a>
                 @endauth
             </div>
         </div>
