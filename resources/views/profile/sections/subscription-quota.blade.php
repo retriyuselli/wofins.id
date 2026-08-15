@@ -16,6 +16,17 @@
                     <h2 class="mt-1 text-lg sm:text-xl font-bold text-white">Paket & Matriks Kuota</h2>
                     <p class="mt-1 text-sm text-white/65">
                         {{ $subscriptionPlanLabel ?? 'Paket belum diatur' }}
+                        @if (! empty($subscriptionExpiresLabel))
+                            · {{ ($subscriptionIsExpired ?? false) ? 'Berakhir' : 'Aktif sampai' }}
+                            <span @class([
+                                'font-semibold',
+                                'text-red-200' => $subscriptionIsExpired ?? false,
+                                'text-[var(--wf-gold-soft)]' => ! ($subscriptionIsExpired ?? false),
+                            ])>{{ $subscriptionExpiresLabel }}</span>
+                            @if (! ($subscriptionIsExpired ?? false) && is_int($subscriptionDaysRemaining ?? null))
+                                <span class="text-white/55">(sisa {{ $subscriptionDaysRemaining }} hari)</span>
+                            @endif
+                        @endif
                         @if (! ($subscriptionConfigured ?? false))
                             <span class="text-[var(--wf-gold-soft)]">· lihat Admin → Perusahaan</span>
                         @endif

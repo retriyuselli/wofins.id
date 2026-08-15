@@ -31,6 +31,22 @@
                     <span class="w-2 h-2 rounded-full bg-emerald-400 mr-2"></span>
                     Aktif
                 </span>
+                @if (! empty($subscriptionPlanLabel) && ($subscriptionConfigured ?? false))
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-white/10 text-white border border-white/15">
+                        {{ $subscriptionPlanLabel }}
+                    </span>
+                @endif
+                @if (! empty($subscriptionExpiresLabel))
+                    <span @class([
+                        'inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold border',
+                        'bg-red-500/20 text-red-100 border-red-400/40' => $subscriptionIsExpired ?? false,
+                        'bg-amber-500/20 text-amber-100 border-amber-400/40' => ! ($subscriptionIsExpired ?? false) && is_int($subscriptionDaysRemaining ?? null) && $subscriptionDaysRemaining <= 14,
+                        'bg-white/10 text-white border-white/15' => ! ($subscriptionIsExpired ?? false) && (! is_int($subscriptionDaysRemaining ?? null) || $subscriptionDaysRemaining > 14),
+                    ])>
+                        {{ ($subscriptionIsExpired ?? false) ? 'Berakhir' : 'Aktif s/d' }}
+                        {{ $subscriptionExpiresLabel }}
+                    </span>
+                @endif
             </div>
         </div>
 

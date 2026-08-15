@@ -83,6 +83,9 @@ class ProfileController extends Controller
                 ? CompanySubscription::planKey()
                 : null,
             'subscriptionPlanLabel' => CompanySubscription::planLabel(),
+            'subscriptionExpiresLabel' => CompanySubscription::expiresAtLabel(),
+            'subscriptionIsExpired' => CompanySubscription::isExpired(),
+            'subscriptionDaysRemaining' => CompanySubscription::daysUntilExpiry(),
             'subscriptionQuotaRows' => $quotaRows,
             'subscriptionFeatureMatrix' => $featureMatrix,
             'subscriptionQuotasOverview' => CompanySubscription::quotasOverview(),

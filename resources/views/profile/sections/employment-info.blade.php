@@ -39,5 +39,31 @@
             <label class="text-sm font-medium text-[var(--wf-muted)]">Tanggal Mulai Kerja</label>
             <p class="text-[var(--wf-ink)] text-sm font-medium">{{ $user->hire_date ? $user->hire_date->format('d F Y') : 'Tidak ditentukan' }}</p>
         </div>
+        @if (($showSubscriptionQuota ?? false) && ! ($subscriptionIsSuperAdmin ?? false))
+            <div>
+                <label class="text-sm font-medium text-[var(--wf-muted)]">Paket</label>
+                <p class="text-[var(--wf-ink)] text-sm font-medium">{{ $subscriptionPlanLabel ?? 'Belum diatur' }}</p>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-[var(--wf-muted)]">Tanggal Berakhir Paket</label>
+                @if (! empty($subscriptionExpiresLabel))
+                    <p @class([
+                        'text-sm font-medium',
+                        'text-red-600' => $subscriptionIsExpired ?? false,
+                        'text-amber-700' => ! ($subscriptionIsExpired ?? false) && is_int($subscriptionDaysRemaining ?? null) && $subscriptionDaysRemaining <= 14,
+                        'text-[var(--wf-ink)]' => ! ($subscriptionIsExpired ?? false) && (! is_int($subscriptionDaysRemaining ?? null) || $subscriptionDaysRemaining > 14),
+                    ])>
+                        {{ $subscriptionExpiresLabel }}
+                        @if ($subscriptionIsExpired ?? false)
+                            <span class="text-xs font-semibold">(sudah berakhir)</span>
+                        @elseif (is_int($subscriptionDaysRemaining ?? null))
+                            <span class="text-xs text-[var(--wf-muted)] font-normal">· sisa {{ $subscriptionDaysRemaining }} hari</span>
+                        @endif
+                    </p>
+                @else
+                    <p class="text-[var(--wf-ink)] text-sm font-medium">Belum ditentukan</p>
+                @endif
+            </div>
+        @endif
     </div>
 </div>
