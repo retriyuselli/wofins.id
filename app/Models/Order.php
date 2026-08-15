@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -217,12 +218,48 @@ class Order extends Model
         return 'slug';
     }
 
-    public function setProspectAttribute($value)
+    /**
+     * Saat prospect_id di-set, isi name + slug unik (aman untuk create di luar form Filament).
+     */
+    public function setProspectIdAttribute($value): void
     {
-        $prospect = Prospect::find($value);
-        $slug = $this->generateUniqueSlug($prospect->name_event);
         $this->attributes['prospect_id'] = $value;
-        $this->attributes['slug'] = $slug;
+
+        if (! $value) {
+            return;
+        }
+
+        $prospect = Prospect::query()->find($value);
+        if (! $prospect) {
+            return;
+        }
+
+        if (blank($this->attributes['name'] ?? null)) {
+            $this->attributes['name'] = $prospect->name_event;
+        }
+
+        if (blank($this->attributes['slug'] ?? null)) {
+            $this->attributes['slug'] = static::generateUniqueSlug((string) $prospect->name_event, $this->id);
+        }
+    }
+
+    public static function generateUniqueSlug(string $base, ?int $ignoreId = null): string
+    {
+        $slug = Str::slug($base) ?: 'proyek';
+        $original = $slug;
+        $i = 1;
+
+        while (
+            static::query()
+                ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
+                ->where('slug', $slug)
+                ->exists()
+        ) {
+            $slug = $original.'-'.$i;
+            $i++;
+        }
+
+        return $slug;
     }
 
     public function getPendapatanAttribute()
