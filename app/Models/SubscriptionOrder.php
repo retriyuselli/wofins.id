@@ -32,6 +32,15 @@ class SubscriptionOrder extends Model
         'submitted_at' => 'datetime',
     ];
 
+    protected static function booted(): void
+    {
+        static::deleting(function (self $order): void {
+            if (filled($order->payment_proof_path)) {
+                Storage::disk('public')->delete($order->payment_proof_path);
+            }
+        });
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

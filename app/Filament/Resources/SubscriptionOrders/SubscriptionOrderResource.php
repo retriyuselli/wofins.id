@@ -7,6 +7,8 @@ use App\Filament\Resources\SubscriptionOrders\Pages\ListSubscriptionOrders;
 use App\Models\SubscriptionOrder;
 use App\Support\ProFeatures;
 use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -53,6 +55,11 @@ class SubscriptionOrderResource extends Resource
     }
 
     public static function canDelete(Model $record): bool
+    {
+        return ProFeatures::actorIsSuperAdmin();
+    }
+
+    public static function canDeleteAny(): bool
     {
         return ProFeatures::actorIsSuperAdmin();
     }
@@ -170,6 +177,15 @@ class SubscriptionOrderResource extends Resource
                     ->openUrlInNewTab()
                     ->visible(fn (SubscriptionOrder $record): bool => filled($record->payment_proof_path)),
                 EditAction::make()->label('Tinjau'),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make()
+                        ->label('Hapus')
+                        ->modalHeading('Hapus pesanan paket')
+                        ->modalDescription('Pesanan terpilih akan dihapus permanen, termasuk file bukti pembayaran. Tindakan ini tidak bisa dibatalkan.')
+                        ->successNotificationTitle('Pesanan paket dihapus'),
+                ]),
             ])
             ->defaultSort('created_at', 'desc');
     }
