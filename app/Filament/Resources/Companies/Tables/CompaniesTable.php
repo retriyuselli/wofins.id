@@ -5,13 +5,13 @@ namespace App\Filament\Resources\Companies\Tables;
 use App\Filament\Resources\Companies\CompanyResource;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 
 class CompaniesTable
@@ -27,6 +27,15 @@ class CompaniesTable
                     ->searchable()
                     ->weight('bold')
                     ->sortable(),
+                IconColumn::make('is_active')
+                    ->label('Aktif')
+                    ->boolean()
+                    ->sortable(),
+                TextColumn::make('deactivated_at')
+                    ->label('Nonaktif sejak')
+                    ->dateTime('d M Y H:i')
+                    ->placeholder('-')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('business_license')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -89,6 +98,11 @@ class CompaniesTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                TernaryFilter::make('is_active')
+                    ->label('Status aktif')
+                    ->trueLabel('Aktif')
+                    ->falseLabel('Nonaktif')
+                    ->placeholder('Semua'),
                 SelectFilter::make('legal_entity_type')
                     ->options([
                         'PT' => 'PT',
@@ -112,11 +126,7 @@ class CompaniesTable
                     EditAction::make(),
                 ]),
             ])
-            ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
-            ])
+            ->toolbarActions([])
             ->emptyStateDescription(
                 \App\Support\ProFeatures::actorIsSuperAdmin()
                     ? 'Silakan buat perusahaan baru untuk memulai.'

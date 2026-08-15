@@ -19,7 +19,13 @@ class SubscriptionQuotaWidget extends BaseWidget
 
     public static function canView(): bool
     {
-        return Auth::check();
+        if (! Auth::check()) {
+            return false;
+        }
+
+        // Kuota bersifat per-company / paket tenant.
+        // Super admin tanpa company_id tidak punya konteks paket → jangan tampilkan.
+        return CompanySubscription::company() !== null;
     }
 
     protected function getStats(): array

@@ -10,14 +10,22 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureCompanySubscriptionActive
 {
-    /**
-     * Blokir akses backend Filament jika masa aktif paket perusahaan sudah habis.
+/**
+     * Blokir akses backend Filament jika perusahaan nonaktif atau paket habis.
      * Super admin tetap boleh masuk.
      */
     public function handle(Request $request, Closure $next): Response
     {
         if (ProFeatures::forceUnlocked() || ProFeatures::actorIsSuperAdmin()) {
             return $next($request);
+        }
+
+        $company = CompanySubscription::company();
+
+        if ($company && $company->isDeactivated()) {
+            return redirect()
+                ->route('account.company-deactivated')
+                ->with('error', 'Perusahaan Anda dinonaktifkan. Hubungi admin WOFINS untuk mengaktifkan kembali.');
         }
 
         if (! CompanySubscription::isExpired()) {

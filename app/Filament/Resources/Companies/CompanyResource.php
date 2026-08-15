@@ -64,12 +64,13 @@ class CompanyResource extends Resource
 
     public static function canDelete(Model $record): bool
     {
-        return ProFeatures::actorIsSuperAdmin() && parent::canDelete($record);
+        // Hapus biasa diganti Nonaktifkan / Hapus permanen di EditCompany.
+        return false;
     }
 
     public static function canDeleteAny(): bool
     {
-        return ProFeatures::actorIsSuperAdmin() && parent::canDeleteAny();
+        return false;
     }
 
     public static function getRelations(): array

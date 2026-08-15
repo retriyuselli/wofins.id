@@ -43,12 +43,50 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
 
+            $user = Auth::user();
+            if ($user instanceof User) {
+                $blockReason = $this->loginBlockReason($user);
+                if ($blockReason !== null) {
+                    Auth::logout();
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
+
+                    throw ValidationException::withMessages([
+                        'email' => [$blockReason],
+                    ]);
+                }
+            }
+
             return $this->redirectAfterAuth(Auth::user());
         }
 
         throw ValidationException::withMessages([
             'email' => ['Email atau password tidak valid.'],
         ]);
+    }
+
+    /**
+     * Alasan blokir login, atau null jika boleh masuk.
+     */
+    protected function loginBlockReason(User $user): ?string
+    {
+        if (in_array($user->status, ['inactive', 'terminated'], true)) {
+            return $user->status === 'terminated'
+                ? 'Akun Anda telah dinonaktifkan permanen. Hubungi administrator.'
+                : 'Akun Anda sedang nonaktif. Hubungi administrator.';
+        }
+
+        if ($user->hasRole('super_admin')) {
+            return null;
+        }
+
+        $user->loadMissing('company');
+
+        if ($user->company && $user->company->isDeactivated()) {
+            return 'Perusahaan Anda dinonaktifkan. Hubungi admin WOFINS.';
+        }
+
+        return null;
     }
 
     /**
@@ -180,10 +218,10 @@ class AuthController extends Controller
             ->first();
 
         if ($user) {
-            if (in_array($user->status, ['inactive', 'terminated'], true)) {
+            if ($reason = $this->loginBlockReason($user)) {
                 return redirect()
                     ->route('front.login')
-                    ->with('error', 'Akun Anda tidak aktif. Hubungi administrator.');
+                    ->with('error', $reason);
             }
 
             $updates = [];
@@ -298,6 +336,14 @@ class AuthController extends Controller
             session()->forget('url.intended');
 
             return redirect()->to($checkoutUrl);
+        }
+
+        // Paket company habis: boleh login, tapi arahkan ke halaman perpanjang (bukan admin).
+        if (! $user->hasRole('super_admin')
+            && \App\Support\CompanySubscription::isExpired($user)) {
+            return redirect()
+                ->route('account.subscription-expired')
+                ->with('error', 'Masa aktif paket perusahaan Anda sudah berakhir. Perpanjang paket untuk membuka kembali dashboard.');
         }
 
         if (! $user->hasAssignedRole()) {

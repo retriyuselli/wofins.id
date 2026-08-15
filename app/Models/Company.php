@@ -82,6 +82,9 @@ class Company extends Model
         'pendapatan_lain_limit_override',
         'pengeluaran_lain_limit_override',
         'subscription_expires_at',
+        'is_active',
+        'deactivated_at',
+        'deactivated_by',
         'crew_invite_token',
         'crew_invite_enabled',
         'crew_invite_rotated_at',
@@ -112,6 +115,8 @@ class Company extends Model
         'pendapatan_lain_limit_override' => 'integer',
         'pengeluaran_lain_limit_override' => 'integer',
         'subscription_expires_at' => 'datetime',
+        'is_active' => 'boolean',
+        'deactivated_at' => 'datetime',
         'crew_invite_enabled' => 'boolean',
         'crew_invite_rotated_at' => 'datetime',
     ];
@@ -120,7 +125,7 @@ class Company extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['company_name', 'owner_name', 'email', 'phone'])
+            ->logOnly(['company_name', 'owner_name', 'email', 'phone', 'is_active', 'subscription_plan'])
             ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}")
             ->useLogName('company');
     }
@@ -156,6 +161,25 @@ class Company extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
+    }
+
+    public function deactivatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'deactivated_by');
+    }
+
+    public function isActive(): bool
+    {
+        if (Schema::hasColumn('companies', 'is_active')) {
+            return (bool) $this->is_active;
+        }
+
+        return true;
+    }
+
+    public function isDeactivated(): bool
+    {
+        return ! $this->isActive();
     }
 
     public function prospectApps(): HasMany

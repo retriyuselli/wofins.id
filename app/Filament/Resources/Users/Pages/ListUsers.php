@@ -19,15 +19,15 @@ class ListUsers extends ListRecords
     {
         $actions = [];
 
+        // Header hanya kuota pengguna (ringkas). Matriks lengkap ada di widget Dashboard.
         if (UserVisibility::canViewTeamSeatSummary()) {
+            $canAddUser = CompanySubscription::hasSeatAvailable()
+                || UserVisibility::actorIsSuperAdmin();
+
             $actions[] = Action::make('subscription_seats')
-                ->label(
-                    UserVisibility::actorIsSuperAdmin()
-                        ? CompanySubscription::quotasOverview()
-                        : ('Tim: '.CompanySubscription::seatSummary())
-                )
+                ->label(CompanySubscription::seatSummary())
                 ->icon('heroicon-o-ticket')
-                ->color(CompanySubscription::hasSeatAvailable() ? 'gray' : 'warning')
+                ->color($canAddUser ? 'gray' : 'warning')
                 ->disabled()
                 ->extraAttributes(['class' => 'pointer-events-none']);
         }

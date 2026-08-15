@@ -135,10 +135,40 @@ class UserForm
                                                 : 'Minimal 8 karakter. Password ini akan dikirim ke email anggota tim bersama tautan login.')
                                             ->columnSpan(2),
                                     ]),
+
+                                Section::make('Status Akses')
+                                    ->schema([
+                                        Select::make('status')
+                                            ->label('Status Akun')
+                                            ->options([
+                                                'active' => 'Aktif — dapat mengakses sistem',
+                                                'inactive' => 'Nonaktif — akses sementara diblokir',
+                                                'terminated' => 'Terminated — akses permanen diblokir',
+                                            ])
+                                            ->default('active')
+                                            ->required()
+                                            ->helperText('Nonaktif/Terminated: user tidak bisa login.')
+                                            ->live()
+                                            ->afterStateUpdated(function ($state, $set) {
+                                                if ($state === 'terminated') {
+                                                    $set('expire_date', now());
+                                                } elseif ($state === 'active') {
+                                                    $set('expire_date', null);
+                                                }
+                                            }),
+                                        DateTimePicker::make('expire_date')
+                                            ->label('Tanggal Kedaluwarsa Akun')
+                                            ->helperText('Kosongkan jika akun tidak memiliki batas waktu. Otomatis diisi jika status Terminated.')
+                                            ->displayFormat('d/m/Y H:i')
+                                            ->disabled(fn ($get) => $get('status') === 'terminated')
+                                            ->dehydrated(),
+                                    ])
+                                    ->columns(2),
                             ]),
 
                         Tab::make('Personal & Kepegawaian')
                             ->icon('heroicon-o-briefcase')
+                            ->visible(fn (): bool => UserVisibility::actorIsSuperAdmin())
                             ->schema([
                                 Section::make('Informasi Personal')
                                     ->schema([
@@ -244,39 +274,13 @@ class UserForm
                                                     ->acceptedFileTypes(['image/jpeg', 'image/png'])
                                                     ->helperText('Upload gambar tanda tangan (transparan lebih baik). Format: PNG, JPG.')
                                                     ->columnSpan(1),
-
-                                                Select::make('status')
-                                                    ->label('Status Akun')
-                                                    ->options([
-                                                        'active' => '🟢 Aktif - Dapat mengakses sistem',
-                                                        'inactive' => '🟠 Nonaktif - Akses sementara diblokir',
-                                                        'terminated' => '🔴 Terminated - Akses permanent diblokir',
-                                                    ])
-                                                    ->default('active')
-                                                    ->required()
-                                                    ->helperText('Mengatur tingkat akses pengguna ke sistem')
-                                                    ->live()
-                                                    ->afterStateUpdated(function ($state, $set) {
-                                                        if ($state === 'terminated') {
-                                                            $set('expire_date', now());
-                                                        } else {
-                                                            $set('expire_date', null);
-                                                        }
-                                                    }),
                                             ]),
-
-                                        DateTimePicker::make('expire_date')
-                                            ->label('Tanggal Kedaluwarsa Akun')
-                                            ->helperText('Kosongkan jika akun tidak memiliki batas waktu. Otomatis diisi jika status Terminated.')
-                                            ->displayFormat('d/m/Y H:i')
-                                            ->disabled(fn ($get) => $get('status') === 'terminated')
-                                            ->dehydrated()
-                                            ->columnSpanFull(),
                                     ]),
                             ]),
 
                         Tab::make('Dokumen & Catatan')
                             ->icon('heroicon-o-document-text')
+                            ->visible(fn (): bool => UserVisibility::actorIsSuperAdmin())
                             ->schema([
                                 Section::make('Upload Dokumen')
                                     ->schema([

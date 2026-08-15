@@ -179,6 +179,59 @@ class AppServiceProvider extends ServiceProvider
             $view->with('subscriptionPlanLabel', CompanySubscription::planLabel());
             $view->with('subscriptionSeatSummary', CompanySubscription::seatSummary());
             $view->with('adminToolsReadonly', $adminToolsReadonly);
+
+            // Banner akses akun/company di semua halaman portal profil
+            if ($user instanceof User && ! $view->offsetExists('accountAccessAlerts')) {
+                $alerts = [];
+                $user->loadMissing('company');
+
+                if ($user->status === 'terminated') {
+                    $alerts[] = [
+                        'type' => 'account_terminated',
+                        'tone' => 'danger',
+                        'title' => 'Akun dinonaktifkan permanen',
+                        'body' => 'Status akun Anda Terminated. Akses backend dan login berikutnya diblokir. Hubungi administrator jika ini kesalahan.',
+                    ];
+                } elseif ($user->status === 'inactive') {
+                    $alerts[] = [
+                        'type' => 'account_inactive',
+                        'tone' => 'warning',
+                        'title' => 'Akun sedang nonaktif',
+                        'body' => 'Status akun Anda Nonaktif. Akses sementara diblokir. Hubungi administrator untuk mengaktifkan kembali.',
+                    ];
+                }
+
+                $company = $user->company;
+                if ($company && method_exists($company, 'isDeactivated') && $company->isDeactivated() && ! $user->hasRole('super_admin')) {
+                    $alerts[] = [
+                        'type' => 'company_deactivated',
+                        'tone' => 'warning',
+                        'title' => 'Perusahaan dinonaktifkan',
+                        'body' => 'Perusahaan “'.($company->company_name ?? 'Anda').'” sedang dinonaktifkan. Data tetap tersimpan, tetapi akses dashboard admin ditangguhkan. Hubungi support WOFINS.',
+                    ];
+                }
+
+                if (CompanySubscription::isExpired() && ! $user->hasRole('super_admin')) {
+                    $expiresLabel = CompanySubscription::expiresAtLabel() ?? 'tanggal berakhir';
+                    $alerts[] = [
+                        'type' => 'subscription_expired',
+                        'tone' => 'danger',
+                        'title' => 'Masa aktif paket berakhir',
+                        'body' => 'Paket '.CompanySubscription::planLabel().' berakhir pada '.$expiresLabel.'. Perpanjang paket untuk membuka kembali akses backend.',
+                    ];
+                }
+
+                if (method_exists($user, 'isExpired') && $user->isExpired() && ! in_array($user->status, ['inactive', 'terminated'], true)) {
+                    $alerts[] = [
+                        'type' => 'account_expired',
+                        'tone' => 'danger',
+                        'title' => 'Akun kedaluwarsa',
+                        'body' => 'Tanggal kedaluwarsa akun sudah lewat. Hubungi administrator untuk perpanjangan.',
+                    ];
+                }
+
+                $view->with('accountAccessAlerts', $alerts);
+            }
         });
 
         FilamentClearCache::addCommand('optimize:clear');

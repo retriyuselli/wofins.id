@@ -451,6 +451,20 @@ Route::middleware($frontAuthVerified)->group(function () {
 
         return view('front.subscription-expired');
     })->name('account.subscription-expired');
+
+    Route::get('/perusahaan-nonaktif', function () {
+        $company = \App\Support\CompanySubscription::company();
+
+        if (! $company || $company->isActive()) {
+            if (Auth::user()?->canAccessAdmin()) {
+                return redirect('/admin');
+            }
+
+            return redirect()->route('profile');
+        }
+
+        return view('front.company-deactivated');
+    })->name('account.company-deactivated');
 });
 
 Route::middleware(array_merge($frontAuthVerified, ['role.required']))->group(function () {

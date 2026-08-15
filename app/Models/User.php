@@ -406,6 +406,10 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
             return false;
         }
 
+        if ($this->company && method_exists($this->company, 'isDeactivated') && $this->company->isDeactivated()) {
+            return false;
+        }
+
         return $this->hasAssignedRole();
     }
 

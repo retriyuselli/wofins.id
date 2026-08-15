@@ -512,7 +512,8 @@
 <div class="wf-page min-h-screen" x-data="{
     sidebarOpen: false,
     successOpen: {{ session('success') ? 'true' : 'false' }},
-    errorOpen: {{ session('error') ? 'true' : 'false' }}
+    errorOpen: {{ session('error') ? 'true' : 'false' }},
+    accessAlertOpen: false
 }">
     @include('front.partials.wf-nav')
 
@@ -556,6 +557,8 @@
     </div>
 
     @include('front.partials.wf-footer')
+
+    @include('profile.partials.account-access-banner')
 
     {{-- Success modal --}}
     <div x-show="successOpen" x-cloak
