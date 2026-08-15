@@ -890,4 +890,56 @@ class CompanySubscription
 
         return $company->fresh();
     }
+
+    /**
+     * Perkiraan / tanggal berakhir dari pesanan (sama rumus activateFromOrder).
+     * - Belum approved: dari sekarang (atau sisa masa aktif company jika masih jalan)
+     * - Sudah approved + company punya expires_at: tampilkan expires_at company
+     */
+    public static function projectedExpiryFromOrder(\App\Models\SubscriptionOrder $order): ?\Carbon\CarbonInterface
+    {
+        $planKey = PricingPlans::normalizeKey($order->plan_key);
+        if (! $planKey) {
+            $found = PricingPlans::find($order->plan_key);
+            $planKey = $found['key'] ?? null;
+        }
+
+        $plan = $planKey ? PricingPlans::find($planKey) : null;
+        if (! $plan) {
+            return null;
+        }
+
+        $pricing = PricingPlans::resolveBillingPrice($plan, (string) $order->billing);
+        $months = max(1, (int) ($pricing['months'] ?? 1));
+
+        $company = null;
+        $user = $order->user;
+        if ($user instanceof User && $user->company_id) {
+            $company = Company::query()->find($user->company_id);
+        }
+        if (! $company && filled($order->company_name)) {
+            $company = Company::query()
+                ->where('company_name', $order->company_name)
+                ->first();
+        }
+
+        if ($order->status === 'approved' && $company?->subscription_expires_at) {
+            return $company->subscription_expires_at;
+        }
+
+        $base = now();
+        $currentExpiry = $company?->subscription_expires_at;
+        if ($currentExpiry instanceof \Carbon\CarbonInterface && $currentExpiry->greaterThan($base)) {
+            $base = $currentExpiry->copy();
+        }
+
+        return $base->copy()->addMonthsNoOverflow($months)->endOfDay();
+    }
+
+    public static function projectedExpiryLabelFromOrder(\App\Models\SubscriptionOrder $order): ?string
+    {
+        return static::projectedExpiryFromOrder($order)
+            ?->timezone(config('app.timezone'))
+            ->translatedFormat('d F Y');
+    }
 }

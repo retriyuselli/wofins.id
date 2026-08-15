@@ -75,6 +75,18 @@ class SubscriptionOrderResource extends Resource
                     ? \App\Support\PricingPlans::billingLabel($state)
                     : '—')
                 ->disabled(),
+            TextInput::make('projected_expires_at')
+                ->label('Berakhir')
+                ->formatStateUsing(fn ($state, ?SubscriptionOrder $record): string => $record
+                    ? (\App\Support\CompanySubscription::projectedExpiryLabelFromOrder($record) ?? '—')
+                    : '—')
+                ->helperText(fn (?SubscriptionOrder $record): string => match ($record?->status) {
+                    'approved' => 'Tanggal berakhir paket di company (setelah disetujui).',
+                    'rejected' => 'Perkiraan jika pesanan ini disetujui (tidak aktif karena ditolak).',
+                    default => 'Perkiraan jika disetujui sekarang; bertambah dari sisa masa aktif company bila masih berlaku.',
+                })
+                ->disabled()
+                ->dehydrated(false),
             TextInput::make('amount')->label('Total transfer')->disabled()->prefix('Rp'),
             TextInput::make('unique_amount')->label('Kode unik')->disabled()->prefix('Rp'),
             TextInput::make('full_name')->label('Nama')->disabled(),
@@ -115,6 +127,14 @@ class SubscriptionOrderResource extends Resource
                 TextColumn::make('billing')
                     ->label('Durasi')
                     ->formatStateUsing(fn (string $state): string => \App\Support\PricingPlans::billingLabel($state)),
+                TextColumn::make('projected_expires_at')
+                    ->label('Berakhir')
+                    ->state(fn (SubscriptionOrder $record): ?string => \App\Support\CompanySubscription::projectedExpiryLabelFromOrder($record))
+                    ->placeholder('—')
+                    ->description(fn (SubscriptionOrder $record): ?string => $record->status === 'approved'
+                        ? null
+                        : 'perkiraan')
+                    ->toggleable(),
                 TextColumn::make('amount')
                     ->label('Total transfer')
                     ->formatStateUsing(fn ($state) => 'Rp '.number_format((int) $state, 0, ',', '.'))
