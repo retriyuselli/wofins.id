@@ -213,11 +213,33 @@ class AppServiceProvider extends ServiceProvider
 
                 if (CompanySubscription::isExpired() && ! $user->hasRole('super_admin')) {
                     $expiresLabel = CompanySubscription::expiresAtLabel() ?? 'tanggal berakhir';
+                    $canManage = CompanySubscription::canManageSubscription($user);
+                    $contact = CompanySubscription::subscriptionAdminContact($user);
                     $alerts[] = [
                         'type' => 'subscription_expired',
                         'tone' => 'danger',
                         'title' => 'Masa aktif paket berakhir',
-                        'body' => 'Paket '.CompanySubscription::planLabel().' berakhir pada '.$expiresLabel.'. Perpanjang paket untuk membuka kembali akses backend.',
+                        'body' => $canManage
+                            ? 'Paket '.CompanySubscription::planLabel().' berakhir pada '.$expiresLabel.'. Perpanjang paket agar seluruh tim kembali bisa mengakses backend.'
+                            : 'Paket perusahaan berakhir pada '.$expiresLabel.'. Hubungi admin WO ('.$contact['label'].') untuk perpanjang — akses dashboard ditangguhkan untuk seluruh tim.',
+                        'can_manage' => $canManage,
+                        'admin_email' => $contact['email'],
+                    ];
+                } elseif (CompanySubscription::isExpiringSoon() && ! $user->hasRole('super_admin')) {
+                    $expiresLabel = CompanySubscription::expiresAtLabel() ?? 'segera';
+                    $days = CompanySubscription::daysUntilExpiry();
+                    $canManage = CompanySubscription::canManageSubscription($user);
+                    $contact = CompanySubscription::subscriptionAdminContact($user);
+                    $daysText = is_int($days) ? " (sisa {$days} hari)" : '';
+                    $alerts[] = [
+                        'type' => 'subscription_expiring_soon',
+                        'tone' => 'warning',
+                        'title' => 'Paket hampir berakhir',
+                        'body' => $canManage
+                            ? 'Paket '.CompanySubscription::planLabel().' aktif sampai '.$expiresLabel.$daysText.'. Perpanjang sekarang agar tim tidak terdampak.'
+                            : 'Paket perusahaan aktif sampai '.$expiresLabel.$daysText.'. Hubungi admin WO ('.$contact['label'].') jika perlu perpanjang.',
+                        'can_manage' => $canManage,
+                        'admin_email' => $contact['email'],
                     ];
                 }
 

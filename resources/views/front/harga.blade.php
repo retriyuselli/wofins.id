@@ -402,31 +402,28 @@
     $plans = collect(PricingPlans::all())->map(function (array $plan) {
         $monthly = (int) ($plan['price_monthly'] ?? 0);
         $annual = (int) ($plan['price_annual'] ?? 0);
-        $biennial = (int) ($plan['price_biennial'] ?? (int) round($monthly * 22));
-        $quadrennial = (int) ($plan['price_quadrennial'] ?? (int) round($monthly * 44));
+        $biennial = (int) ($plan['price_biennial'] ?? ($monthly * 24));
+        $quadrennial = (int) ($plan['price_quadrennial'] ?? ($monthly * 48));
         $annualPerMonth = $annual > 0 ? (int) round($annual / 12) : 0;
         $biennialPerMonth = $biennial > 0 ? (int) round($biennial / 24) : $monthly;
         $quadrennialPerMonth = $quadrennial > 0 ? (int) round($quadrennial / 48) : $monthly;
 
-        $formatRb = static function (int $amount): string {
+        $formatIdr = static function (int $amount): string {
             if ($amount <= 0) {
                 return '';
             }
 
-            // Tampilkan dalam ribuan, dibulatkan tanpa desimal.
-            $rb = (int) round($amount / 1000);
-
-            return number_format($rb, 0, ',', '.');
+            return number_format($amount, 0, ',', '.');
         };
 
-        $plan['monthly_display'] = $formatRb($monthly);
-        $plan['annual_monthly_display'] = $formatRb($annualPerMonth);
-        $plan['annual_total_display'] = $formatRb($annual);
-        $plan['biennial_monthly_display'] = $formatRb($biennialPerMonth);
-        $plan['biennial_total_display'] = $formatRb($biennial);
-        $plan['quadrennial_monthly_display'] = $formatRb($quadrennialPerMonth);
-        $plan['quadrennial_total_display'] = $formatRb($quadrennial);
-        $plan['monthly_yearly_total_display'] = $formatRb($monthly * 12);
+        $plan['monthly_display'] = $formatIdr($monthly);
+        $plan['annual_monthly_display'] = $formatIdr($annualPerMonth);
+        $plan['annual_total_display'] = $formatIdr($annual);
+        $plan['biennial_monthly_display'] = $formatIdr($biennialPerMonth);
+        $plan['biennial_total_display'] = $formatIdr($biennial);
+        $plan['quadrennial_monthly_display'] = $formatIdr($quadrennialPerMonth);
+        $plan['quadrennial_total_display'] = $formatIdr($quadrennial);
+        $plan['monthly_yearly_total_display'] = $formatIdr($monthly * 12);
         $plan['has_price'] = $monthly > 0 && $annual > 0;
 
         return $plan;
@@ -440,7 +437,7 @@
         ['Bisakah saya upgrade paket nanti?', 'Bisa. Anda dapat upgrade kapan saja; selisih biaya akan disesuaikan dengan sisa masa aktif langganan.'],
         ['Apakah ada paket Custom?', 'Ya. Jika kebutuhan Anda di luar paket Starter, Professional, atau Business, pilih paket Custom dan hubungi pengembang untuk diskusi scope serta harga.'],
         ['Apakah ada paket Enterprise?', 'Paket Enterprise adalah solusi terpisah di luar aplikasi WOFINS standar ini. Hubungi pengembang jika kebutuhan Anda melebihi paket Business.'],
-        ['Bagaimana dengan kategori?', 'Master kategori dikelola admin platform (super admin), tanpa kuota per paket. Tim WO tetap bisa memakai kategori yang sudah disediakan.'],
+        ['Bagaimana dengan kategori?', 'Master kategori dikelola admin platform (super admin). Tim WO tetap bisa memakai kategori yang sudah disediakan.'],
         ['Apa itu crew freelance?', 'Data crew freelance milik company (bukan akun pengguna). Semua paket bisa menambah crew dan membagikan link undangan agar crew mengisi sendiri tanpa makan kuota pengguna.'],
         ['Apakah data saya aman?', 'Ya. Akses berbasis peran, riwayat aktivitas, approval, backup terpusat, dan audit trail membantu menjaga keamanan data bisnis Anda.'],
         ['Apakah ada masa uji coba?', 'Kami sediakan demo gratis dan konsultasi kebutuhan agar Anda bisa menilai kesesuaian WOFINS sebelum berlangganan.'],
@@ -526,7 +523,7 @@
                                 { value: 'monthly', label: '1 bulan' },
                                 { value: 'annual', label: '12 bulan' },
                                 { value: 'biennial', label: '24 bulan' },
-                                { value: 'quadrennial', label: '48 bulan', best: true },
+                                { value: 'quadrennial', label: '48 bulan' },
                             ]" :key="opt.value">
                                 <button type="button"
                                         class="wf-billing-option"
@@ -535,7 +532,6 @@
                                         :aria-selected="(billing === opt.value).toString()"
                                         @click="billing = opt.value; billingOpen = false">
                                     <span x-text="opt.label"></span>
-                                    <span class="wf-best-badge" x-show="opt.best">PENAWARAN TERBAIK</span>
                                 </button>
                             </template>
                         </div>
@@ -559,51 +555,44 @@
 
                             <div class="mb-5">
                                 @if ($plan['has_price'])
-                                    {{-- 1 bulan: tanpa hemat --}}
+                                    {{-- 1 bulan --}}
                                     <div class="flex items-end gap-1" x-show="billing === 'monthly'" x-cloak>
                                         <span class="text-sm font-semibold text-[var(--wf-muted)] mb-1">Rp</span>
                                         <span class="text-4xl font-extrabold text-[var(--wf-navy)] leading-none">{{ $plan['monthly_display'] }}</span>
-                                        <span class="text-lg font-bold text-[var(--wf-navy)] mb-0.5">RB</span>
                                         <span class="text-sm text-[var(--wf-muted)] mb-1">/ bulan</span>
                                     </div>
                                     <div class="mt-2 text-xs text-[var(--wf-muted)]" x-show="billing === 'monthly'" x-cloak>
-                                        Ditagih bulanan · tanpa hemat
+                                        Ditagih bulanan
                                     </div>
 
                                     {{-- 12 bulan --}}
                                     <div class="flex items-end gap-1" x-show="billing === 'annual'" x-cloak>
                                         <span class="text-sm font-semibold text-[var(--wf-muted)] mb-1">Rp</span>
                                         <span class="text-4xl font-extrabold text-[var(--wf-navy)] leading-none">{{ $plan['annual_monthly_display'] }}</span>
-                                        <span class="text-lg font-bold text-[var(--wf-navy)] mb-0.5">RB</span>
                                         <span class="text-sm text-[var(--wf-muted)] mb-1">/ bulan</span>
                                     </div>
-                                    <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-[var(--wf-muted)]" x-show="billing === 'annual'" x-cloak>
-                                        <span>Dibayar 12 bulan Rp {{ $plan['annual_total_display'] }} RB</span>
-                                        <span class="wf-save-pill">Hemat 1 bulan</span>
+                                    <div class="mt-2 text-xs text-[var(--wf-muted)]" x-show="billing === 'annual'" x-cloak>
+                                        Dibayar 12 bulan Rp {{ $plan['annual_total_display'] }}
                                     </div>
 
                                     {{-- 24 bulan --}}
                                     <div class="flex items-end gap-1" x-show="billing === 'biennial'" x-cloak>
                                         <span class="text-sm font-semibold text-[var(--wf-muted)] mb-1">Rp</span>
                                         <span class="text-4xl font-extrabold text-[var(--wf-navy)] leading-none">{{ $plan['biennial_monthly_display'] }}</span>
-                                        <span class="text-lg font-bold text-[var(--wf-navy)] mb-0.5">RB</span>
                                         <span class="text-sm text-[var(--wf-muted)] mb-1">/ bulan</span>
                                     </div>
-                                    <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-[var(--wf-muted)]" x-show="billing === 'biennial'" x-cloak>
-                                        <span>Dibayar 24 bulan Rp {{ $plan['biennial_total_display'] }} RB</span>
-                                        <span class="wf-save-pill">Hemat 2 bulan</span>
+                                    <div class="mt-2 text-xs text-[var(--wf-muted)]" x-show="billing === 'biennial'" x-cloak>
+                                        Dibayar 24 bulan Rp {{ $plan['biennial_total_display'] }}
                                     </div>
 
                                     {{-- 48 bulan --}}
                                     <div class="flex items-end gap-1" x-show="billing === 'quadrennial'" x-cloak>
                                         <span class="text-sm font-semibold text-[var(--wf-muted)] mb-1">Rp</span>
                                         <span class="text-4xl font-extrabold text-[var(--wf-navy)] leading-none">{{ $plan['quadrennial_monthly_display'] }}</span>
-                                        <span class="text-lg font-bold text-[var(--wf-navy)] mb-0.5">RB</span>
                                         <span class="text-sm text-[var(--wf-muted)] mb-1">/ bulan</span>
                                     </div>
-                                    <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-[var(--wf-muted)]" x-show="billing === 'quadrennial'" x-cloak>
-                                        <span>Dibayar 48 bulan Rp {{ $plan['quadrennial_total_display'] }} RB</span>
-                                        <span class="wf-save-pill">Hemat 4 bulan</span>
+                                    <div class="mt-2 text-xs text-[var(--wf-muted)]" x-show="billing === 'quadrennial'" x-cloak>
+                                        Dibayar 48 bulan Rp {{ $plan['quadrennial_total_display'] }}
                                     </div>
                                 @else
                                     <p class="text-3xl font-extrabold text-[var(--wf-navy)] leading-tight">Custom</p>

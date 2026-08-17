@@ -53,10 +53,29 @@
             </div>
             <div class="px-6 py-5 flex flex-col sm:flex-row gap-2 justify-center">
                 @if (($primaryAlert['type'] ?? '') === 'subscription_expired')
-                    <a href="{{ route('harga') }}"
-                       class="wf-btn-gold inline-flex items-center justify-center px-5 py-3 text-sm">
-                        Perpanjang paket
-                    </a>
+                    @if ($primaryAlert['can_manage'] ?? false)
+                        <a href="{{ route('harga') }}"
+                           class="wf-btn-gold inline-flex items-center justify-center px-5 py-3 text-sm">
+                            Perpanjang paket
+                        </a>
+                    @elseif (! empty($primaryAlert['admin_email']))
+                        <a href="mailto:{{ $primaryAlert['admin_email'] }}?subject={{ rawurlencode('Perpanjang paket WOFINS') }}"
+                           class="wf-btn-gold inline-flex items-center justify-center px-5 py-3 text-sm">
+                            Hubungi admin WO
+                        </a>
+                    @endif
+                @elseif (($primaryAlert['type'] ?? '') === 'subscription_expiring_soon')
+                    @if ($primaryAlert['can_manage'] ?? false)
+                        <a href="{{ route('harga') }}"
+                           class="wf-btn-gold inline-flex items-center justify-center px-5 py-3 text-sm">
+                            Perpanjang sekarang
+                        </a>
+                    @elseif (! empty($primaryAlert['admin_email']))
+                        <a href="mailto:{{ $primaryAlert['admin_email'] }}?subject={{ rawurlencode('Paket WOFINS hampir berakhir') }}"
+                           class="wf-btn-gold inline-flex items-center justify-center px-5 py-3 text-sm">
+                            Hubungi admin WO
+                        </a>
+                    @endif
                 @endif
                 <a href="{{ route('kontak') }}"
                    class="wf-btn-navy inline-flex items-center justify-center px-5 py-3 text-sm">

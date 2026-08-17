@@ -343,7 +343,7 @@ Route::get('/laporan/expense/pdf', [ReportController::class, 'generateExpensePdf
 // Route untuk Laporan Net Cash Flow PDF Stream
 Route::get('/laporan/net-cash-flow/pdf/stream', [ReportController::class, 'streamNetCashFlowPdf'])
     ->name('reports.net-cash-flow.pdf.stream')
-    ->middleware(array_merge($authNoStoreThrottle, ['pro.feature:advanced_reports']));
+    ->middleware(array_merge($authNoStoreThrottle, ['pro.feature:reconciliation']));
 
 // RUTE DATA CREW FREELANCE (URL legacy: /data-pribadi)
 // Bukan data pribadi akun user — katalog crew freelance milik company.

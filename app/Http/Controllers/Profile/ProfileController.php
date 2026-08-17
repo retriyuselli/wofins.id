@@ -54,16 +54,16 @@ class ProfileController extends Controller
 
         $featureDefs = [
             PricingPlans::FEATURE_PROJECTS => 'Proyek wedding',
+            PricingPlans::FEATURE_SIMULASI => 'Simulasi & draft kontrak',
             PricingPlans::FEATURE_BASIC_FINANCE => 'Keuangan dasar',
+            PricingPlans::FEATURE_FIXED_ASSETS => 'Fixed assets',
             PricingPlans::FEATURE_NOTA_DINAS => 'Nota dinas',
             PricingPlans::FEATURE_DOCUMENTS => 'Dokumen & SOP',
-            PricingPlans::FEATURE_RECONCILIATION => 'Rekonsiliasi',
+            PricingPlans::FEATURE_RECONCILIATION => 'Rekonsiliasi & arus kas bersih',
             PricingPlans::FEATURE_HRIS => 'HRIS / Absensi',
             PricingPlans::FEATURE_PAYROLL => 'Payroll',
-            PricingPlans::FEATURE_ROLE_MANAGEMENT => 'Hak akses jabatan',
             PricingPlans::FEATURE_EMPLOYEE_PORTAL => 'Portal karyawan',
-            PricingPlans::FEATURE_ADVANCED_REPORTS => 'Laporan lanjutan',
-            PricingPlans::FEATURE_MULTI_APPROVAL => 'Multi-approval',
+            PricingPlans::FEATURE_ADVANCED_REPORTS => 'Laporan lanjutan (kinerja AM)',
         ];
 
         $featureMatrix = [];

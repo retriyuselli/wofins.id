@@ -750,8 +750,6 @@ class CompanySubscription
             PricingPlans::FEATURE_HRIS,
             PricingPlans::FEATURE_EMPLOYEE_PORTAL,
             PricingPlans::FEATURE_ADVANCED_REPORTS,
-            PricingPlans::FEATURE_MULTI_APPROVAL,
-            PricingPlans::FEATURE_ROLE_MANAGEMENT,
         ];
 
         $target = in_array($feature, $businessOnly, true)
@@ -828,6 +826,47 @@ class CompanySubscription
         $expires = static::expiresAt($actor);
 
         return $expires?->timezone(config('app.timezone'))->translatedFormat('d F Y');
+    }
+
+    /**
+     * Siapa yang boleh memicu perpanjang paket (owner / root tim).
+     * Super admin platform selalu boleh.
+     */
+    public static function canManageSubscription(?User $actor = null): bool
+    {
+        $actor ??= Auth::user();
+
+        if (! $actor instanceof User) {
+            return false;
+        }
+
+        if ($actor->hasRole('super_admin')) {
+            return true;
+        }
+
+        return UserVisibility::isTeamOwner($actor);
+    }
+
+    /**
+     * Kontak admin WO untuk staf (nama + email owner bila ada).
+     */
+    public static function subscriptionAdminContact(?User $actor = null): array
+    {
+        $owner = UserVisibility::teamOwner($actor);
+        $company = static::company($actor);
+
+        $name = $owner?->name
+            ?: ($company?->owner_name ?: null)
+            ?: 'admin perusahaan Anda';
+
+        $email = $owner?->email
+            ?: ($company?->email ?: null);
+
+        return [
+            'name' => $name,
+            'email' => $email,
+            'label' => $email ? "{$name} ({$email})" : $name,
+        ];
     }
 
     /**

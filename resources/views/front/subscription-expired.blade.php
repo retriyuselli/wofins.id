@@ -55,6 +55,8 @@
 
     $planLabel = CompanySubscription::planLabel();
     $expiresLabel = CompanySubscription::expiresAtLabel();
+    $canManage = CompanySubscription::canManageSubscription();
+    $adminContact = CompanySubscription::subscriptionAdminContact();
 @endphp
 <div class="wf-expired-page">
     @include('front.partials.wf-nav')
@@ -78,8 +80,19 @@
                         @else
                             sudah berakhir.
                         @endif
-                        Perpanjang langganan untuk kembali membuka backend.
+                        Seluruh tim di perusahaan Anda terdampak sampai paket diperpanjang.
                     </p>
+                    @if ($canManage)
+                        <p class="mt-2 text-sm text-[var(--wf-muted)] leading-relaxed">
+                            Sebagai admin perusahaan, Anda dapat perpanjang paket agar semua user kembali aktif.
+                        </p>
+                    @else
+                        <p class="mt-2 text-sm text-[var(--wf-muted)] leading-relaxed">
+                            Hubungi admin perusahaan Anda
+                            (<strong class="text-[var(--wf-navy)]">{{ $adminContact['label'] }}</strong>
+                            untuk perpanjang paket. Staf tidak perlu memesan sendiri.
+                        </p>
+                    @endif
                 </div>
 
                 @if (session('error'))
@@ -89,12 +102,24 @@
                 @endif
 
                 <div class="flex flex-col sm:flex-row gap-3 pt-1">
-                    <a href="{{ route('harga') }}" class="wf-btn-gold inline-flex flex-1 items-center justify-center px-5 py-3 text-sm">
-                        Perpanjang paket
-                    </a>
-                    <a href="{{ route('kontak') }}" class="wf-btn-navy inline-flex flex-1 items-center justify-center px-5 py-3 text-sm">
-                        Hubungi support
-                    </a>
+                    @if ($canManage)
+                        <a href="{{ route('harga') }}" class="wf-btn-gold inline-flex flex-1 items-center justify-center px-5 py-3 text-sm">
+                            Perpanjang paket
+                        </a>
+                        <a href="{{ route('kontak') }}" class="wf-btn-navy inline-flex flex-1 items-center justify-center px-5 py-3 text-sm">
+                            Hubungi support WOFINS
+                        </a>
+                    @else
+                        @if (! empty($adminContact['email']))
+                            <a href="mailto:{{ $adminContact['email'] }}?subject={{ rawurlencode('Perpanjang paket WOFINS') }}"
+                               class="wf-btn-gold inline-flex flex-1 items-center justify-center px-5 py-3 text-sm">
+                                Hubungi admin WO
+                            </a>
+                        @endif
+                        <a href="{{ route('profile') }}" class="wf-btn-navy inline-flex flex-1 items-center justify-center px-5 py-3 text-sm">
+                            Kembali ke profil
+                        </a>
+                    @endif
                 </div>
             </div>
         </div>

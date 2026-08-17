@@ -19,7 +19,7 @@ class PlanResourceGate
             // Proyek & katalog
             \App\Filament\Resources\Orders\OrderResource::class => PricingPlans::FEATURE_PROJECTS,
             \App\Filament\Resources\Prospects\ProspectResource::class => PricingPlans::FEATURE_PROJECTS,
-            \App\Filament\Resources\SimulasiProduks\SimulasiProdukResource::class => PricingPlans::FEATURE_PROJECTS,
+            \App\Filament\Resources\SimulasiProduks\SimulasiProdukResource::class => PricingPlans::FEATURE_SIMULASI,
             \App\Filament\Resources\Products\ProductResource::class => PricingPlans::FEATURE_PROJECTS,
             \App\Filament\Resources\Vendors\VendorResource::class => PricingPlans::FEATURE_PROJECTS,
             // Crew freelance company (bukan data pribadi akun user / HRIS karyawan)
@@ -33,9 +33,11 @@ class PlanResourceGate
             \App\Filament\Resources\PengeluaranLains\PengeluaranLainResource::class => PricingPlans::FEATURE_BASIC_FINANCE,
             \App\Filament\Resources\Piutangs\PiutangResource::class => PricingPlans::FEATURE_BASIC_FINANCE,
             \App\Filament\Resources\PembayaranPiutangs\PembayaranPiutangResource::class => PricingPlans::FEATURE_BASIC_FINANCE,
-            \App\Filament\Resources\FixedAssets\FixedAssetResource::class => PricingPlans::FEATURE_BASIC_FINANCE,
             \App\Filament\Resources\PaymentMethods\PaymentMethodResource::class => PricingPlans::FEATURE_BASIC_FINANCE,
             \App\Filament\Resources\DataPembayarans\DataPembayaranResource::class => PricingPlans::FEATURE_BASIC_FINANCE,
+
+            // Fixed assets (Professional+)
+            \App\Filament\Resources\FixedAssets\FixedAssetResource::class => PricingPlans::FEATURE_FIXED_ASSETS,
 
             // Nota dinas
             \App\Filament\Resources\NotaDinas\NotaDinasResource::class => PricingPlans::FEATURE_NOTA_DINAS,
@@ -71,7 +73,7 @@ class PlanResourceGate
             // Payroll (Professional+)
             \App\Filament\Resources\Payrolls\PayrollResource::class => PricingPlans::FEATURE_PAYROLL,
 
-            // Laporan lanjutan (Business): Target AM; Net Cash Flow digating di page-nya
+            // Laporan lanjutan (Business): Kinerja AM — target vs closing (AccountManagerTarget)
             \App\Filament\Resources\AccountManagerTargets\AccountManagerTargetResource::class => PricingPlans::FEATURE_ADVANCED_REPORTS,
 
             default => null,

@@ -59,6 +59,33 @@ class UserVisibility
         return (int) $user->id;
     }
 
+    /**
+     * Pemilik paket / root tim company (user yang di-Approve pertama).
+     */
+    public static function teamOwner(?User $actor = null): ?User
+    {
+        $rootId = static::teamRootId($actor);
+
+        if (! $rootId) {
+            return null;
+        }
+
+        return User::query()->find($rootId);
+    }
+
+    public static function isTeamOwner(?User $user = null): bool
+    {
+        $user ??= Auth::user();
+
+        if (! $user instanceof User) {
+            return false;
+        }
+
+        $rootId = static::teamRootId($user);
+
+        return $rootId !== null && (int) $user->id === $rootId;
+    }
+
     public static function companyId(?User $user = null): ?int
     {
         $user ??= Auth::user();

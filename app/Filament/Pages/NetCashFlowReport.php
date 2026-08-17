@@ -39,7 +39,7 @@ class NetCashFlowReport extends Page
 
     public static function canAccess(): bool
     {
-        return ProFeatures::allows(PricingPlans::FEATURE_ADVANCED_REPORTS)
+        return ProFeatures::allows(PricingPlans::FEATURE_RECONCILIATION)
             && parent::canAccess();
     }
 

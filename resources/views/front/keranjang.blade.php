@@ -55,8 +55,8 @@
     $fmt = static fn (int $n) => 'Rp '.number_format($n, 0, ',', '.');
     $monthly = (int) ($plan['price_monthly'] ?? 0);
     $annual = (int) ($plan['price_annual'] ?? 0);
-    $biennial = (int) ($plan['price_biennial'] ?? (int) round($monthly * 22));
-    $quadrennial = (int) ($plan['price_quadrennial'] ?? (int) round($monthly * 44));
+    $biennial = (int) ($plan['price_biennial'] ?? ($monthly * 24));
+    $quadrennial = (int) ($plan['price_quadrennial'] ?? ($monthly * 48));
 @endphp
 
 <div class="wf-page" x-data="{
@@ -76,9 +76,9 @@
         return this.amount + this.uniqueAmount
     },
     get periodLabel() {
-        if (this.billing === 'quadrennial') return '48 bulan (hemat 4 bulan)'
-        if (this.billing === 'biennial') return '24 bulan (hemat 2 bulan)'
-        if (this.billing === 'annual') return '12 bulan (hemat 1 bulan)'
+        if (this.billing === 'quadrennial') return '48 bulan'
+        if (this.billing === 'biennial') return '24 bulan'
+        if (this.billing === 'annual') return '12 bulan'
         return '1 bulan'
     },
     get months() {
@@ -89,9 +89,6 @@
     },
     get monthlyEquiv() {
         return Math.round(this.amount / this.months)
-    },
-    get savings() {
-        return Math.max(0, (this.amountMonthly * this.months) - this.amount)
     },
     format(n) {
         return 'Rp ' + new Intl.NumberFormat('id-ID').format(n)
@@ -132,17 +129,14 @@
                                         x-model="billing"
                                         @change="$el.form.submit()">
                                     <option value="monthly" @selected($billing === 'monthly')>1 bulan — {{ $fmt($monthly) }}</option>
-                                    <option value="annual" @selected($billing === 'annual')>12 bulan (bayar 11) — {{ $fmt($annual) }}</option>
-                                    <option value="biennial" @selected($billing === 'biennial')>24 bulan (bayar 22) — {{ $fmt($biennial) }}</option>
-                                    <option value="quadrennial" @selected($billing === 'quadrennial')>48 bulan (bayar 44) — {{ $fmt($quadrennial) }}</option>
+                                    <option value="annual" @selected($billing === 'annual')>12 bulan — {{ $fmt($annual) }}</option>
+                                    <option value="biennial" @selected($billing === 'biennial')>24 bulan — {{ $fmt($biennial) }}</option>
+                                    <option value="quadrennial" @selected($billing === 'quadrennial')>48 bulan — {{ $fmt($quadrennial) }}</option>
                                 </select>
                             </div>
 
                             <div class="flex flex-wrap items-end justify-between gap-3 pt-1">
                                 <div>
-                                    <template x-if="savings > 0">
-                                        <span class="wf-save-pill" x-text="'Hemat ' + format(savings)"></span>
-                                    </template>
                                     <p class="mt-2 text-xl font-bold text-[var(--wf-navy)]">
                                         <span x-text="format(monthlyEquiv)"></span>
                                         <span class="text-sm font-semibold text-[var(--wf-muted)]">/bln</span>

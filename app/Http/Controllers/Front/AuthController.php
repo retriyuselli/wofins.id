@@ -341,9 +341,14 @@ class AuthController extends Controller
         // Paket company habis: boleh login, tapi arahkan ke halaman perpanjang (bukan admin).
         if (! $user->hasRole('super_admin')
             && \App\Support\CompanySubscription::isExpired($user)) {
+            $canManage = \App\Support\CompanySubscription::canManageSubscription($user);
+            $message = $canManage
+                ? 'Masa aktif paket perusahaan sudah berakhir. Perpanjang paket agar seluruh tim kembali bisa memakai dashboard.'
+                : 'Masa aktif paket perusahaan sudah berakhir. Hubungi admin perusahaan Anda untuk perpanjang.';
+
             return redirect()
                 ->route('account.subscription-expired')
-                ->with('error', 'Masa aktif paket perusahaan Anda sudah berakhir. Perpanjang paket untuk membuka kembali dashboard.');
+                ->with('error', $message);
         }
 
         if (! $user->hasAssignedRole()) {

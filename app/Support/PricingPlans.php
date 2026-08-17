@@ -23,7 +23,11 @@ class PricingPlans
 
     public const FEATURE_PROJECTS = 'projects';
 
+    public const FEATURE_SIMULASI = 'simulasi';
+
     public const FEATURE_BASIC_FINANCE = 'basic_finance';
+
+    public const FEATURE_FIXED_ASSETS = 'fixed_assets';
 
     public const FEATURE_NOTA_DINAS = 'nota_dinas';
 
@@ -41,172 +45,175 @@ class PricingPlans
             [
                 'key' => 'starter',
                 'name' => 'Starter',
-                'desc' => 'Cocok untuk WO yang baru mulai merapikan operasional.',
-                'price' => '99',
-                'unit' => 'RB',
-                'price_monthly' => 99_000,
-                'price_semiannual' => 544_500, // 6 bulan bayar 5,5 (hemat 0,5 bulan)
-                'price_annual' => 1_089_000, // 12 bulan bayar 11 (hemat 1 bulan)
-                'price_biennial' => 2_178_000, // 24 bulan bayar 22 (hemat 2 bulan)
-                'price_triennial' => 3_267_000, // 36 bulan bayar 33 (hemat 3 bulan)
-                'price_quadrennial' => 4_356_000, // 48 bulan bayar 44 (hemat 4 bulan)
-                'seat_limit' => 3,
-                'vendor_limit' => 10,
-                'product_limit' => 10,
-                'order_limit' => 10,
-                'prospect_limit' => 30,
-                'simulasi_limit' => 20,
-                'payment_method_limit' => 2,
-                'fixed_asset_limit' => 5,
-                'piutang_limit' => 20,
-                'pembayaran_piutang_limit' => 50,
+                'desc' => 'Kelola proyek wedding, kas, dan laporan dasar lebih rapi — cocok untuk WO solo yang baru merapikan operasional.',
+                'price' => '110.000',
+                'unit' => null,
+                'price_monthly' => 110_000,
+                'price_semiannual' => 660_000, // 6 × bulanan
+                'price_annual' => 1_320_000, // 12 × bulanan
+                'price_biennial' => 2_640_000, // 24 × bulanan
+                'price_triennial' => 3_960_000, // 36 × bulanan
+                'price_quadrennial' => 5_280_000, // 48 × bulanan
+                'seat_limit' => 1,
+                'vendor_limit' => null,
+                'product_limit' => null,
+                'order_limit' => null,
+                'prospect_limit' => null,
+                'simulasi_limit' => 0,
+                'payment_method_limit' => null,
+                'fixed_asset_limit' => 0,
+                'piutang_limit' => null,
+                'pembayaran_piutang_limit' => null,
                 'category_limit' => 10,
-                'data_pembayaran_limit' => 100,
-                'expense_limit' => 100,
-                'expense_ops_limit' => 50,
-                'pendapatan_lain_limit' => 30,
-                'pengeluaran_lain_limit' => 30,
+                'data_pembayaran_limit' => null,
+                'expense_limit' => null,
+                'expense_ops_limit' => null,
+                'pendapatan_lain_limit' => null,
+                'pengeluaran_lain_limit' => null,
                 'popular' => false,
                 'cta' => 'Pilih Paket Starter',
                 'cta_class' => 'wf-btn-ghost',
                 'check' => 'navy',
                 'features' => [
                     [
-                        'label' => 'Hingga 3 pengguna',
-                        'tip' => 'Maksimal 3 akun tim aktif (selain super admin platform). Cocok untuk owner + AM + finance.',
+                        'label' => '1 Pengguna',
+                        'tip' => 'Satu akun login untuk Anda sebagai pemilik. Cocok jika operasional masih dikelola sendiri.',
                     ],
                     [
-                        'label' => 'Hingga 10 vendor · 10 produk',
-                        'tip' => 'Kuota katalog: 10 vendor dan 10 produk/paket wedding per perusahaan. Kategori dikelola admin platform (tanpa kuota paket).',
+                        'label' => 'Invoice Proyek',
+                        'tip' => 'Terbitkan invoice proyek wedding untuk penagihan klien secara rapi dan terdokumentasi.',
                     ],
                     [
-                        'label' => 'Crew freelance + link undangan',
-                        'tip' => 'Kelola data crew freelance company dan bagikan link agar crew mengisi sendiri (tanpa makan kuota pengguna).',
+                        'label' => 'Management Prospect',
+                        'tip' => 'Catat dan kelola calon klien (prospek) — dari lead awal hingga siap closing.',
                     ],
                     [
-                        'label' => 'Hingga 10 proyek · 30 prospek · 20 simulasi',
-                        'tip' => 'Kuota penjualan: 10 proyek wedding, 30 prospek, dan 20 simulasi paket.',
+                        'label' => 'Management Vendor',
+                        'tip' => 'Simpan data vendor wedding: kontak, kategori, dan riwayat kerja sama.',
                     ],
                     [
-                        'label' => 'Hingga 2 rekening · 5 aset tetap',
-                        'tip' => '2 rekening bank/kas dan 5 aset tetap per perusahaan.',
+                        'label' => 'Management Product',
+                        'tip' => 'Kelola katalog produk/paket wedding untuk dipakai di proyek.',
                     ],
                     [
-                        'label' => 'Hingga 20 piutang · 50 pembayaran piutang',
-                        'tip' => 'Kuota catatan piutang dan transaksi pembayaran piutang dalam paket Starter.',
+                        'label' => 'Management Proyek',
+                        'tip' => 'Atur proyek wedding: status, detail acara, tim, dan progres hingga selesai.',
                     ],
                     [
-                        'label' => 'Hingga 100 pendapatan & 100 pengeluaran wedding',
-                        'tip' => 'Kuota transaksi kas proyek (pembayaran klien & biaya vendor) per perusahaan.',
+                        'label' => 'Management Pengeluaran Wedding',
+                        'tip' => 'Catat biaya vendor dan pengeluaran per proyek wedding.',
                     ],
                     [
-                        'label' => 'Hingga 50 ops · 30 pendapatan/pengeluaran lain',
-                        'tip' => 'Kuota kas operasional dan transaksi non-proyek.',
+                        'label' => 'Management Pengeluaran Lain-Lain',
+                        'tip' => 'Catat pengeluaran di luar proyek wedding (operasional/lainnya).',
                     ],
                     [
-                        'label' => 'Manajemen proyek wedding',
-                        'tip' => 'Kelola order, prospek, simulasi, produk, vendor, dan crew freelance dalam satu alur kerja. Kategori dikelola admin platform.',
+                        'label' => 'Management Pemasukan Wedding',
+                        'tip' => 'Catat pembayaran klien dan pemasukan per proyek wedding.',
                     ],
                     [
-                        'label' => 'Keuangan dasar',
-                        'tip' => 'Kas proyek & operasional, piutang, aset tetap, dan daftar rekening — tanpa rekonsiliasi bank.',
+                        'label' => 'Management Pemasukan Lain-Lain',
+                        'tip' => 'Catat pemasukan di luar proyek wedding.',
+                    ],
+                    [
+                        'label' => 'Nota Dinas Untuk Tracking Pengeluaran',
+                        'tip' => 'Buat dan lacak nota dinas pengeluaran agar setiap biaya tercatat, tersetujui, dan mudah ditelusuri.',
+                    ],
+                    [
+                        'label' => 'Kas Dan Bank',
+                        'tip' => 'Kelola rekening kas dan bank untuk memantau saldo serta arus uang masuk/keluar.',
+                    ],
+                    [
+                        'label' => 'Laporan Keuangan Dasar',
+                        'tip' => 'Lihat ringkasan keuangan proyek dan operasional. Rekonsiliasi bank tersedia di paket Professional.',
                     ],
                 ],
                 'feature_keys' => [
                     self::FEATURE_PROJECTS,
                     self::FEATURE_BASIC_FINANCE,
+                    self::FEATURE_NOTA_DINAS,
                 ],
                 'selectable' => true,
             ],
             [
                 'key' => 'professional',
                 'name' => 'Professional',
-                'desc' => 'Paling cocok untuk WO yang ingin kendali proyek, kas, dan nota dinas sehari-hari.',
-                'price' => '180',
-                'unit' => 'RB',
+                'desc' => 'Kendalikan proyek wedding, kas, nota dinas, dan rekonsiliasi bank dalam satu alur kerja harian.',
+                'price' => '180.000',
+                'unit' => null,
                 'price_monthly' => 180_000,
-                'price_semiannual' => 990_000, // 6 bulan bayar 5,5
-                'price_annual' => 1_980_000, // 12 bulan bayar 11
-                'price_biennial' => 3_960_000, // 24 bulan bayar 22
-                'price_triennial' => 5_940_000, // 36 bulan bayar 33
-                'price_quadrennial' => 7_920_000, // 48 bulan bayar 44
-                'seat_limit' => 10,
-                'vendor_limit' => 50,
-                'product_limit' => 50,
-                'order_limit' => 50,
-                'prospect_limit' => 150,
-                'simulasi_limit' => 100,
-                'payment_method_limit' => 5,
-                'fixed_asset_limit' => 25,
-                'piutang_limit' => 100,
-                'pembayaran_piutang_limit' => 300,
+                'price_semiannual' => 1_080_000, // 6 × bulanan
+                'price_annual' => 2_160_000, // 12 × bulanan
+                'price_biennial' => 4_320_000, // 24 × bulanan
+                'price_triennial' => 6_480_000, // 36 × bulanan
+                'price_quadrennial' => 8_640_000, // 48 × bulanan
+                'seat_limit' => 1,
+                'vendor_limit' => null,
+                'product_limit' => null,
+                'order_limit' => null,
+                'prospect_limit' => null,
+                'simulasi_limit' => null,
+                'payment_method_limit' => null,
+                'fixed_asset_limit' => null,
+                'piutang_limit' => null,
+                'pembayaran_piutang_limit' => null,
                 'category_limit' => 40,
-                'data_pembayaran_limit' => 500,
-                'expense_limit' => 500,
-                'expense_ops_limit' => 300,
-                'pendapatan_lain_limit' => 150,
-                'pengeluaran_lain_limit' => 150,
+                'data_pembayaran_limit' => null,
+                'expense_limit' => null,
+                'expense_ops_limit' => null,
+                'pendapatan_lain_limit' => null,
+                'pengeluaran_lain_limit' => null,
                 'popular' => true,
                 'cta' => 'Pilih Paket Professional',
                 'cta_class' => 'wf-btn-gold',
                 'check' => '',
                 'features' => [
                     [
-                        'label' => 'Hingga 10 pengguna',
-                        'tip' => 'Maksimal 10 akun tim aktif — ruang untuk owner, AM, finance, dan staf operasional.',
+                        'label' => '1 Pengguna',
+                        'tip' => 'Satu akun login untuk Anda sebagai pemilik. Cocok jika operasional masih dikelola sendiri.',
                     ],
                     [
-                        'label' => 'Hingga 50 vendor · 50 produk',
-                        'tip' => 'Kuota katalog lebih besar: 50 vendor dan 50 produk/paket per perusahaan. Kategori dikelola admin platform (tanpa kuota paket).',
+                        'label' => 'Semua Kemampuan Starter',
+                        'tip' => 'Termasuk proyek wedding, prospek, vendor, produk, nota dinas, kas, rekening, dan laporan dasar.',
                     ],
                     [
-                        'label' => 'Crew freelance + link undangan',
-                        'tip' => 'Kelola data crew freelance company dan bagikan link agar crew mengisi sendiri (tanpa makan kuota pengguna).',
+                        'label' => 'Simulasi Wedding',
+                        'tip' => 'Buat simulasi paket wedding untuk calon klien, lengkap dengan preview dan unduhan PDF.',
                     ],
                     [
-                        'label' => 'Hingga 50 proyek · 150 prospek · 100 simulasi',
-                        'tip' => 'Kuota penjualan: 50 proyek wedding, 150 prospek, dan 100 simulasi paket.',
+                        'label' => 'Draft Kontrak Kerja',
+                        'tip' => 'Siapkan draf kontrak kerja dari data simulasi/proyek sebagai dokumen awal kesepakatan.',
                     ],
                     [
-                        'label' => 'Hingga 5 rekening · 25 aset tetap',
-                        'tip' => '5 rekening bank/kas dan 25 aset tetap — cocok multi-bank atau kas terpisah.',
+                        'label' => 'Fixed Assets',
+                        'tip' => 'Catat dan kelola aset tetap perusahaan: nilai perolehan, depresiasi, serta status aset.',
                     ],
                     [
-                        'label' => 'Hingga 100 piutang · 300 pembayaran piutang',
-                        'tip' => 'Kuota piutang dan pembayaran piutang lebih longgar untuk volume transaksi harian.',
+                        'label' => 'Crew Freelance + Link Undangan',
+                        'tip' => 'Undang crew lewat link khusus. Mereka mengisi data sendiri, tanpa perlu akun pengguna tambahan.',
                     ],
                     [
-                        'label' => 'Hingga 500 pendapatan & 500 pengeluaran wedding',
-                        'tip' => 'Kuota transaksi kas proyek untuk volume pembayaran & biaya vendor yang lebih tinggi.',
+                        'label' => 'Rekonsiliasi Rekening Koran',
+                        'tip' => 'Import rekening koran, cocokkan transaksi, lalu unduh hasil rekonsiliasi. Termasuk laporan arus kas bersih (Net Cash Flow).',
                     ],
                     [
-                        'label' => 'Hingga 300 ops · 150 pendapatan/pengeluaran lain',
-                        'tip' => 'Kuota kas operasional dan transaksi non-proyek paket Professional.',
+                        'label' => 'Payroll',
+                        'tip' => 'Kelola gaji dan slip digital untuk tim inti. Modul HRIS lengkap tersedia di paket Business.',
                     ],
                     [
-                        'label' => 'Semua fitur Starter',
-                        'tip' => 'Termasuk manajemen proyek wedding dan keuangan dasar dari paket Starter.',
+                        'label' => 'Support Prioritas',
+                        'tip' => 'Antrian bantuan lebih cepat dari Starter, termasuk dampingan saat setup awal.',
                     ],
                     [
-                        'label' => 'Nota dinas digital',
-                        'tip' => 'Ajukan, setujui, dan lacak nota dinas beserta detail transfer & lampiran secara digital.',
-                    ],
-                    [
-                        'label' => 'Rekonsiliasi rekening koran',
-                        'tip' => 'Import rekening koran, cocokkan transaksi otomatis, dan unduh PDF rekonsiliasi.',
-                    ],
-                    [
-                        'label' => 'Payroll dasar',
-                        'tip' => 'Kelola payroll dan slip gaji digital untuk tim inti (tanpa modul HRIS penuh).',
-                    ],
-                    [
-                        'label' => 'Support prioritas',
-                        'tip' => 'Antrian bantuan lebih cepat dibanding Starter, termasuk dampingan setup awal.',
+                        'label' => 'Siap Upgrade Ke Business',
+                        'tip' => 'Butuh HRIS, portal karyawan, laporan kinerja AM, atau domain? Naik ke Business — data Anda tetap aman.',
                     ],
                 ],
                 'feature_keys' => [
                     self::FEATURE_PROJECTS,
+                    self::FEATURE_SIMULASI,
                     self::FEATURE_BASIC_FINANCE,
+                    self::FEATURE_FIXED_ASSETS,
                     self::FEATURE_NOTA_DINAS,
                     self::FEATURE_RECONCILIATION,
                     self::FEATURE_PAYROLL,
@@ -217,101 +224,65 @@ class PricingPlans
                 'key' => 'business',
                 'name' => 'Business',
                 'desc' => 'Untuk WO dengan banyak proyek dan tim lintas fungsi.',
-                'price' => '295',
-                'unit' => 'RB',
+                'price' => '295.000',
+                'unit' => null,
                 'price_monthly' => 295_000,
-                'price_semiannual' => 1_622_500, // 6 bulan bayar 5,5
-                'price_annual' => 3_245_000, // 12 bulan bayar 11
-                'price_biennial' => 6_490_000, // 24 bulan bayar 22
-                'price_triennial' => 9_735_000, // 36 bulan bayar 33
-                'price_quadrennial' => 12_980_000, // 48 bulan bayar 44
-                'seat_limit' => 25,
-                'vendor_limit' => 200,
-                'product_limit' => 200,
-                'order_limit' => 200,
-                'prospect_limit' => 500,
-                'simulasi_limit' => 400,
-                'payment_method_limit' => 15,
-                'fixed_asset_limit' => 100,
-                'piutang_limit' => 500,
-                'pembayaran_piutang_limit' => 2000,
+                'price_semiannual' => 1_770_000, // 6 × bulanan
+                'price_annual' => 3_540_000, // 12 × bulanan
+                'price_biennial' => 7_080_000, // 24 × bulanan
+                'price_triennial' => 10_620_000, // 36 × bulanan
+                'price_quadrennial' => 14_160_000, // 48 × bulanan
+                'seat_limit' => 3,
+                'vendor_limit' => null,
+                'product_limit' => null,
+                'order_limit' => null,
+                'prospect_limit' => null,
+                'simulasi_limit' => null,
+                'payment_method_limit' => null,
+                'fixed_asset_limit' => null,
+                'piutang_limit' => null,
+                'pembayaran_piutang_limit' => null,
                 'category_limit' => 100,
-                'data_pembayaran_limit' => 2000,
-                'expense_limit' => 2000,
-                'expense_ops_limit' => 1000,
-                'pendapatan_lain_limit' => 500,
-                'pengeluaran_lain_limit' => 500,
+                'data_pembayaran_limit' => null,
+                'expense_limit' => null,
+                'expense_ops_limit' => null,
+                'pendapatan_lain_limit' => null,
+                'pengeluaran_lain_limit' => null,
                 'popular' => false,
                 'cta' => 'Pilih Paket Business',
                 'cta_class' => 'wf-btn-ghost',
                 'check' => 'navy',
                 'features' => [
                     [
-                        'label' => 'Hingga 25 pengguna',
-                        'tip' => 'Maksimal 25 akun tim — cocok untuk finance, HRD, AM, dan staf lintas fungsi.',
+                        'label' => 'Hingga 3 Pengguna',
+                        'tip' => 'Maksimal 3 akun tim aktif — cocok untuk owner + AM/finance atau staf operasional.',
                     ],
                     [
-                        'label' => 'Hingga 200 vendor · 200 produk',
-                        'tip' => 'Kuota katalog besar: 200 vendor dan 200 produk/paket per perusahaan. Kategori dikelola admin platform (tanpa kuota paket).',
-                    ],
-                    [
-                        'label' => 'Crew freelance + link undangan',
-                        'tip' => 'Kelola data crew freelance company dan bagikan link agar crew mengisi sendiri (tanpa makan kuota pengguna).',
-                    ],
-                    [
-                        'label' => 'Hingga 200 proyek · 500 prospek · 400 simulasi',
-                        'tip' => 'Kuota penjualan: 200 proyek wedding, 500 prospek, dan 400 simulasi paket.',
-                    ],
-                    [
-                        'label' => 'Hingga 15 rekening · 100 aset tetap',
-                        'tip' => '15 rekening bank/kas dan 100 aset tetap untuk WO dengan banyak unit kas.',
-                    ],
-                    [
-                        'label' => 'Hingga 500 piutang · 2.000 pembayaran piutang',
-                        'tip' => 'Kuota piutang dan pembayaran piutang untuk volume transaksi tinggi.',
-                    ],
-                    [
-                        'label' => 'Hingga 2.000 pendapatan & 2.000 pengeluaran wedding',
-                        'tip' => 'Kuota transaksi kas proyek untuk WO dengan volume tinggi.',
-                    ],
-                    [
-                        'label' => 'Hingga 1.000 ops · 500 pendapatan/pengeluaran lain',
-                        'tip' => 'Kuota kas operasional dan transaksi non-proyek paket Business.',
-                    ],
-                    [
-                        'label' => 'Semua fitur Professional',
-                        'tip' => 'Termasuk nota dinas, rekonsiliasi rekening, payroll dasar, dan seluruh kapasitas Professional.',
+                        'label' => 'Semua Fitur Professional',
+                        'tip' => 'Termasuk simulasi wedding, draft kontrak kerja, fixed assets, rekonsiliasi & arus kas bersih, payroll, dan seluruh kapasitas Professional.',
                     ],
                     [
                         'label' => 'Dokumen & SOP',
                         'tip' => 'Simpan dokumen resmi, SOP perusahaan, dan knowledge base tim dalam satu tempat.',
                     ],
                     [
-                        'label' => 'Domain gratis (wajib minimal 1 tahun)',
+                        'label' => 'Domain Gratis (Wajib Minimal 1 Tahun)',
                         'tip' => 'Termasuk domain (.com / .id sesuai ketersediaan) selama masa berlangganan Business aktif. Syarat: berlangganan minimal 1 tahun.',
                     ],
                     [
-                        'label' => 'HRIS & absensi GPS',
+                        'label' => 'HRIS & Absensi GPS',
                         'tip' => 'Absensi GPS + foto + geofence, jadwal kerja, koreksi, lembur, cuti, data karyawan, dan master status karyawan.',
                     ],
                     [
-                        'label' => 'Payroll & portal karyawan',
-                        'tip' => 'Payroll lengkap plus portal karyawan (ESS) agar staf bisa absen/cuti tanpa akses admin penuh.',
+                        'label' => 'Portal Karyawan',
+                        'tip' => 'Portal karyawan (ESS) agar staf bisa absen/cuti tanpa akses admin penuh.',
                     ],
                     [
-                        'label' => 'Laporan lanjutan',
-                        'tip' => 'Laporan operasional lebih dalam, termasuk arus kas bersih dan target AM.',
+                        'label' => 'Laporan Lanjutan',
+                        'tip' => 'Kinerja AM: pantau target bulanan versus closing/pencapaian penjualan dari data Account Manager Target.',
                     ],
                     [
-                        'label' => 'Multi-approval workflow',
-                        'tip' => 'Alur persetujuan bertingkat untuk nota dinas, dokumen, atau permintaan staf.',
-                    ],
-                    [
-                        'label' => 'Manajemen role & permission',
-                        'tip' => 'Kelola role Spatie/Filament Shield untuk membagi akses tim secara detail.',
-                    ],
-                    [
-                        'label' => 'Onboarding & training tim',
+                        'label' => 'Onboarding & Training Tim',
                         'tip' => 'Dampingan go-live dan training agar seluruh tim siap memakai sistem.',
                     ],
                     [
@@ -321,7 +292,9 @@ class PricingPlans
                 ],
                 'feature_keys' => [
                     self::FEATURE_PROJECTS,
+                    self::FEATURE_SIMULASI,
                     self::FEATURE_BASIC_FINANCE,
+                    self::FEATURE_FIXED_ASSETS,
                     self::FEATURE_NOTA_DINAS,
                     self::FEATURE_DOCUMENTS,
                     self::FEATURE_RECONCILIATION,
@@ -329,8 +302,6 @@ class PricingPlans
                     self::FEATURE_PAYROLL,
                     self::FEATURE_EMPLOYEE_PORTAL,
                     self::FEATURE_ADVANCED_REPORTS,
-                    self::FEATURE_MULTI_APPROVAL,
-                    self::FEATURE_ROLE_MANAGEMENT,
                 ],
                 'selectable' => true,
             ],
@@ -369,19 +340,19 @@ class PricingPlans
                 'check' => 'navy',
                 'features' => [
                     [
-                        'label' => 'Kuota & modul sesuai kebutuhan',
+                        'label' => 'Kuota & Modul Sesuai Kebutuhan',
                         'tip' => 'Jumlah pengguna, proyek, dan modul disesuaikan setelah diskusi dengan pengembang.',
                     ],
                     [
-                        'label' => 'Integrasi & kustomisasi',
+                        'label' => 'Integrasi & Kustomisasi',
                         'tip' => 'Penyesuaian alur kerja, laporan, atau integrasi khusus jika diperlukan.',
                     ],
                     [
-                        'label' => 'Onboarding & pendampingan',
+                        'label' => 'Onboarding & Pendampingan',
                         'tip' => 'Setup dan training disesuaikan dengan skala dan proses internal tim Anda.',
                     ],
                     [
-                        'label' => 'Support langsung pengembang',
+                        'label' => 'Support Langsung Pengembang',
                         'tip' => 'Diskusi kebutuhan dan penawaran harga langsung dengan tim pengembang WOFINS.',
                     ],
                 ],
@@ -451,52 +422,52 @@ class PricingPlans
     public static function resolveBillingPrice(array $plan, string $billing): array
     {
         $monthly = (int) ($plan['price_monthly'] ?? 0);
-        $semiannual = (int) ($plan['price_semiannual'] ?? (int) round($monthly * 5.5));
-        $annual = (int) ($plan['price_annual'] ?? 0);
-        $biennial = (int) ($plan['price_biennial'] ?? (int) round($monthly * 22));
-        $triennial = (int) ($plan['price_triennial'] ?? (int) round($monthly * 33));
-        $quadrennial = (int) ($plan['price_quadrennial'] ?? (int) round($monthly * 44));
+        $semiannual = (int) ($plan['price_semiannual'] ?? ($monthly * 6));
+        $annual = (int) ($plan['price_annual'] ?? ($monthly * 12));
+        $biennial = (int) ($plan['price_biennial'] ?? ($monthly * 24));
+        $triennial = (int) ($plan['price_triennial'] ?? ($monthly * 36));
+        $quadrennial = (int) ($plan['price_quadrennial'] ?? ($monthly * 48));
 
         return match ($billing) {
             'semiannual' => [
                 'amount' => $semiannual,
                 'label' => '6 bulan',
-                'period' => '6 bulan (bayar 5,5 bulan)',
+                'period' => '6 bulan',
                 'months' => 6,
                 'monthly_equiv' => $semiannual > 0 ? (int) round($semiannual / 6) : $monthly,
-                'savings' => max(0, ($monthly * 6) - $semiannual),
+                'savings' => 0,
             ],
             'annual' => [
                 'amount' => $annual,
                 'label' => '12 bulan',
-                'period' => '12 bulan (bayar 11 bulan)',
+                'period' => '12 bulan',
                 'months' => 12,
                 'monthly_equiv' => $annual > 0 ? (int) round($annual / 12) : $monthly,
-                'savings' => max(0, ($monthly * 12) - $annual),
+                'savings' => 0,
             ],
             'biennial' => [
                 'amount' => $biennial,
                 'label' => '24 bulan',
-                'period' => '24 bulan (bayar 22 bulan)',
+                'period' => '24 bulan',
                 'months' => 24,
                 'monthly_equiv' => $biennial > 0 ? (int) round($biennial / 24) : $monthly,
-                'savings' => max(0, ($monthly * 24) - $biennial),
+                'savings' => 0,
             ],
             'triennial' => [
                 'amount' => $triennial,
                 'label' => '36 bulan',
-                'period' => '36 bulan (bayar 33 bulan)',
+                'period' => '36 bulan',
                 'months' => 36,
                 'monthly_equiv' => $triennial > 0 ? (int) round($triennial / 36) : $monthly,
-                'savings' => max(0, ($monthly * 36) - $triennial),
+                'savings' => 0,
             ],
             'quadrennial' => [
                 'amount' => $quadrennial,
                 'label' => '48 bulan',
-                'period' => '48 bulan (bayar 44 bulan)',
+                'period' => '48 bulan',
                 'months' => 48,
                 'monthly_equiv' => $quadrennial > 0 ? (int) round($quadrennial / 48) : $monthly,
-                'savings' => max(0, ($monthly * 48) - $quadrennial),
+                'savings' => 0,
             ],
             default => [
                 'amount' => $monthly,
@@ -576,7 +547,11 @@ class PricingPlans
 
         $fmt = static function (?int $limit): string {
             if ($limit === null) {
-                return 'Unlimited';
+                return 'Tersedia';
+            }
+
+            if ($limit <= 0) {
+                return '—';
             }
 
             return 'Hingga '.number_format($limit, 0, ',', '.');
@@ -591,37 +566,40 @@ class PricingPlans
         };
 
         return [
-            array_merge(['Jumlah pengguna'], $quota('seat_limit')),
+            array_merge(['Jumlah Pengguna'], $quota('seat_limit')),
             array_merge(['Vendor'], $quota('vendor_limit')),
             array_merge(['Produk'], $quota('product_limit')),
-            ['Kategori', 'Dikelola admin', 'Dikelola admin', 'Dikelola admin'],
-            ['Crew freelance', true, true, true],
-            array_merge(['Proyek wedding'], $quota('order_limit')),
+            ['Kategori', 'Dikelola Admin', 'Dikelola Admin', 'Dikelola Admin'],
+            ['Crew Freelance', true, true, true],
+            array_merge(['Proyek Wedding'], $quota('order_limit')),
             array_merge(['Prospek'], $quota('prospect_limit')),
             array_merge(['Simulasi'], $quota('simulasi_limit')),
-            array_merge(['Rekening bank/kas'], $quota('payment_method_limit')),
-            array_merge(['Aset tetap'], $quota('fixed_asset_limit')),
+            array_merge(['Rekening Bank/Kas'], $quota('payment_method_limit')),
+            array_merge(['Aset Tetap'], $quota('fixed_asset_limit')),
             array_merge(['Piutang'], $quota('piutang_limit')),
-            array_merge(['Pembayaran piutang'], $quota('pembayaran_piutang_limit')),
-            array_merge(['Pendapatan wedding'], $quota('data_pembayaran_limit')),
-            array_merge(['Pengeluaran wedding'], $quota('expense_limit')),
-            array_merge(['Pengeluaran operasional'], $quota('expense_ops_limit')),
-            array_merge(['Pendapatan lain'], $quota('pendapatan_lain_limit')),
-            array_merge(['Pengeluaran lain'], $quota('pengeluaran_lain_limit')),
-            ['Manajemen proyek', true, true, true],
-            ['Keuangan dasar', true, true, true],
-            ['Nota dinas digital', false, true, true],
-            ['Rekonsiliasi rekening', false, true, true],
-            ['Payroll', false, 'Dasar', 'Lengkap'],
+            array_merge(['Pembayaran Piutang'], $quota('pembayaran_piutang_limit')),
+            array_merge(['Pendapatan Wedding'], $quota('data_pembayaran_limit')),
+            array_merge(['Pengeluaran Wedding'], $quota('expense_limit')),
+            array_merge(['Pengeluaran Operasional'], $quota('expense_ops_limit')),
+            array_merge(['Pendapatan Lain'], $quota('pendapatan_lain_limit')),
+            array_merge(['Pengeluaran Lain'], $quota('pengeluaran_lain_limit')),
+            ['Manajemen Proyek', true, true, true],
+            ['Simulasi Wedding', false, true, true],
+            ['Draft Kontrak Kerja', false, true, true],
+            ['Invoice Proyek', true, true, true],
+            ['Keuangan Dasar', true, true, true],
+            ['Nota Dinas Digital', true, true, true],
+            ['Fixed Assets', false, true, true],
+            ['Rekonsiliasi Rekening', false, true, true],
+            ['Arus Kas Bersih', false, true, true],
+            ['Payroll', false, true, true],
             ['Dokumen & SOP', false, false, true],
             ['Domain', false, false, 'Gratis'],
-            ['HRIS & absensi GPS', false, false, true],
-            ['Status karyawan (master)', false, false, true],
-            ['Portal karyawan', false, false, 'Lengkap'],
-            ['Laporan lanjutan', false, false, true],
-            ['Multi-approval workflow', false, false, true],
-            ['Manajemen role', false, false, true],
-            ['Onboarding & training', false, false, true],
+            ['HRIS & Absensi GPS', false, false, true],
+            ['Status Karyawan (Master)', false, false, true],
+            ['Portal Karyawan', false, false, 'Lengkap'],
+            ['Laporan Lanjutan (Kinerja AM)', false, false, true],
+            ['Onboarding & Training', false, false, true],
             ['Support', 'Standar', 'Prioritas', 'WhatsApp'],
         ];
     }
@@ -670,9 +648,14 @@ class PricingPlans
                 'pengeluaran_lain_limit' => 'pengeluaran lain',
             ] as $key => $label) {
                 $limit = $plan[$key] ?? null;
-                $parts[] = $limit === null ? "{$label} ∞" : "{$limit} {$label}";
+                if ($limit === null) {
+                    continue;
+                }
+                $parts[] = "{$limit} {$label}";
             }
-            $options[$plan['key']] = $plan['name'].' ('.implode(', ', $parts).')';
+            $options[$plan['key']] = $parts === []
+                ? $plan['name']
+                : $plan['name'].' ('.implode(', ', $parts).')';
         }
 
         return $options;
@@ -684,7 +667,7 @@ class PricingPlans
 
         if ($plan) {
             if ($plan['price']) {
-                return "Paket {$plan['name']} — Rp {$plan['price']} {$plan['unit']} / bulan";
+                return "Paket {$plan['name']} — Rp {$plan['price']} / bulan";
             }
 
             return "Paket {$plan['name']} — Hubungi Kami";
@@ -724,7 +707,7 @@ class PricingPlans
         }
 
         if ($plan['price']) {
-            return 'Rp '.$plan['price'].' '.$plan['unit'].'/bulan';
+            return 'Rp '.$plan['price'].'/bulan';
         }
 
         return 'Hubungi Kami';
@@ -767,7 +750,7 @@ class PricingPlans
     /**
      * Batas kuota resource: users | vendors | products | orders | prospects | simulasi |
      * categories | payment_methods | fixed_assets | piutangs | pembayaran_piutangs.
-     * null = tak terbatas.
+     * null = tidak ditetapkan di konfigurasi paket.
      */
     public static function limit(?string $planKey, string $resource): ?int
     {
@@ -802,7 +785,7 @@ class PricingPlans
     }
 
     /**
-     * Batas kursi paket (null = tak terbatas).
+     * Batas kursi paket (null = tidak ditetapkan di konfigurasi paket).
      */
     public static function seatLimit(?string $key): ?int
     {

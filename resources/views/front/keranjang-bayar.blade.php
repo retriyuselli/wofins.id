@@ -58,9 +58,9 @@
     $unique = (int) $uniqueAmount;
     $payable = $amount + $unique;
     $periodLabel = match ($billing) {
-        'annual' => '12 bulan (hemat 1 bulan)',
-        'biennial' => '24 bulan (hemat 2 bulan)',
-        'quadrennial' => '48 bulan (hemat 4 bulan)',
+        'annual' => '12 bulan',
+        'biennial' => '24 bulan',
+        'quadrennial' => '48 bulan',
         default => '1 bulan',
     };
 @endphp

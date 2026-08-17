@@ -124,7 +124,7 @@
                 <div class="card-title">{{ $plan['name'] ?? '-' }}</div>
                 <div class="card-price">{{ $fmtMoney((int) ($plan['price_monthly'] ?? 0)) }}<span style="font-size:9px;font-weight:normal;color:#5b6b7c;"> / bln</span></div>
                 <div class="card-desc">
-                    Tahunan: {{ $fmtMoney((int) ($plan['price_annual'] ?? 0)) }} (hemat 1 bulan)<br>
+                    Tahunan: {{ $fmtMoney((int) ($plan['price_annual'] ?? 0)) }}<br>
                     {{ $plan['desc'] ?? '' }}
                 </div>
             </td>

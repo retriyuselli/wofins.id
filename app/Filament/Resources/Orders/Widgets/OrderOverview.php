@@ -215,7 +215,7 @@ class OrderOverview extends BaseWidget
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color('primary')
                 ->url(
-                    \App\Support\ProFeatures::allows(\App\Support\PricingPlans::FEATURE_ADVANCED_REPORTS)
+                    \App\Support\ProFeatures::allows(\App\Support\PricingPlans::FEATURE_RECONCILIATION)
                         ? NetCashFlowReport::getUrl(['status' => $statusTarget instanceof BackedEnum ? $statusTarget->value : $statusTarget])
                         : null
                 ),

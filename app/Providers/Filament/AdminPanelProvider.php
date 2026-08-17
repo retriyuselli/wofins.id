@@ -5,7 +5,6 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\ProjectDashboard;
 use App\Http\Middleware\RedirectUnauthenticatedToAppUrl;
 use App\Models\Company;
-use App\Support\PricingPlans;
 use App\Support\ProFeatures;
 use App\Support\WofinsHosts;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
@@ -129,8 +128,8 @@ class AdminPanelProvider extends PanelProvider
                     ->navigationLabel('Role')
                     ->navigationGroup('SDM')
                     ->globallySearchable(false)
-                    // Tampil untuk super_admin, atau paket yang punya role_management
-                    ->registerNavigation(fn (): bool => ProFeatures::allows(PricingPlans::FEATURE_ROLE_MANAGEMENT)),
+                    // Menu Role/Shield hanya untuk super_admin platform
+                    ->registerNavigation(fn (): bool => ProFeatures::actorIsSuperAdmin()),
                 FilamentClearCachePlugin::make(),
             ])
             ->renderHook(

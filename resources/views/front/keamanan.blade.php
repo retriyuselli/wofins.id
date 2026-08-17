@@ -35,7 +35,7 @@
                         ['fa-user-shield', 'Akses berbasis peran', 'Hak akses mengikuti jabatan (role) sehingga tiap anggota tim hanya membuka menu yang relevan.'],
                         ['fa-people-arrows', 'Isolasi data per tim', 'Non–super admin hanya melihat data milik timnya — proyek, vendor, keuangan, dan dokumen terkait.'],
                         ['fa-clock-rotate-left', 'Audit trail', 'Perubahan penting tercatat dalam riwayat aktivitas untuk penelusuran dan kepatuhan internal.'],
-                        ['fa-file-signature', 'Approval digital', 'Nota dinas, cuti, dan dokumen dapat melalui alur persetujuan — termasuk multi-approval di paket Business.'],
+                        ['fa-file-signature', 'Approval digital', 'Nota dinas, cuti, dan dokumen dapat melalui alur persetujuan sesuai peran pengguna.'],
                         ['fa-database', 'Backup terpusat', 'Data aplikasi dikelola di infrastruktur berlangganan dengan praktik backup sesuai lingkungan hosting.'],
                         ['fa-lock', 'Sesi & akun aman', 'Login terproteksi; pemilik paket mengelola kursi pengguna sesuai kuota langganan.'],
                     ] as [$icon, $title, $desc])

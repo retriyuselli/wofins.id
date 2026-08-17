@@ -33,9 +33,14 @@ class EnsureCompanySubscriptionActive
         }
 
         $expiresLabel = CompanySubscription::expiresAtLabel() ?? 'tanggal berakhir';
+        $canManage = CompanySubscription::canManageSubscription();
+
+        $message = $canManage
+            ? "Masa aktif paket berakhir pada {$expiresLabel}. Perpanjang paket agar seluruh tim kembali mengakses dashboard."
+            : "Masa aktif paket perusahaan berakhir pada {$expiresLabel}. Hubungi admin perusahaan Anda untuk perpanjang.";
 
         return redirect()
             ->route('account.subscription-expired')
-            ->with('error', "Masa aktif paket Anda berakhir pada {$expiresLabel}. Perpanjang paket untuk kembali mengakses dashboard.");
+            ->with('error', $message);
     }
 }
