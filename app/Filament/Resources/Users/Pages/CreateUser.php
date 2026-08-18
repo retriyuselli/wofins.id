@@ -91,6 +91,14 @@ class CreateUser extends CreateRecord
             $data['status'] = 'active';
             $data['expire_date'] = null;
 
+            // Tab Personal & Kepegawaian hanya SA.
+            unset(
+                $data['hire_date'],
+                $data['last_working_date'],
+                $data['avatar_url'],
+                $data['signature_url'],
+            );
+
             if (UserVisibility::canManageJobStatuses()) {
                 $sanitized = UserVisibility::sanitizeJobStatusIds(
                     isset($data['statuses']) ? (array) $data['statuses'] : null
