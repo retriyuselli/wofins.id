@@ -9,41 +9,88 @@
 @endphp
 
 <x-filament-panels::page>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('assetssimulasi/css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('assetssimulasi/css/style.css') }}">
+    {{-- Hanya CSS invoice lokal (tidak load bootstrap/themeholy global agar Filament tidak ikut berubah) --}}
     <link rel="stylesheet" href="{{ asset('assets/invoice/invoice.css') }}">
 
     <style>
-        .wofins-invoice-page,
-        .wofins-invoice-page * {
-            font-family: 'Noto Sans', sans-serif !important;
+        /* Scope tema invoice — tidak merembes ke sidebar/topbar Filament */
+        .wofins-invoice-page {
+            --inv-ink: #1a2332;
+            --inv-navy: #0b1f3a;
+            --inv-muted: #5c6675;
+            --inv-line: #e5e7eb;
+            color: var(--inv-ink);
         }
 
-        .wofins-invoice-page .invoice-container-wrap {
-            background: transparent !important;
-            min-height: auto !important;
-            padding: 0 !important;
-            display: block !important;
+        .wofins-invoice-page .invoice-sheet {
+            background: #fff;
+            border: 1px solid var(--inv-line);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem 1.75rem;
         }
 
-        .wofins-invoice-page .invoice-container {
-            background: #fff !important;
-            border: 1px solid #e5e7eb !important;
-            border-radius: 12px !important;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
-            margin: 0 auto !important;
-            max-width: 1100px !important;
-            padding: 24px !important;
-            width: 100% !important;
+        .wofins-invoice-page .invoice-office-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 14px;
+            margin-bottom: 1.25rem;
         }
 
-        .wofins-invoice-page .themeholy-header address {
-            margin: 0;
+        .wofins-invoice-page .invoice-office-header b {
+            color: var(--inv-navy);
+            font-size: 0.95rem;
+        }
+
+        .wofins-invoice-page .invoice-office-header address {
+            margin: 0.25rem 0 0;
             font-style: normal;
             line-height: 1.45;
-            color: #1f2937;
+            color: var(--inv-ink);
             font-size: 13px;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .wofins-invoice-page .invoice-office-logo img {
+            display: block;
+            max-height: 64px;
+            width: auto;
+            max-width: 160px;
+            margin-left: auto;
+            object-fit: contain;
+        }
+
+        .wofins-invoice-page .invoice-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .wofins-invoice-page .invoice-title-row h1 {
+            margin: 0 0 0.25rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--inv-navy);
+        }
+
+        .wofins-invoice-page .invoice-title-row .meta {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--inv-muted);
+        }
+
+        .wofins-invoice-page .invoice-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: flex-end;
         }
 
         .wofins-invoice-page .invoice-actions a {
@@ -51,83 +98,72 @@
         }
 
         .wofins-invoice-page .section-header-title,
-        .wofins-invoice-page h1,
         .wofins-invoice-page h2,
         .wofins-invoice-page h3 {
-            color: #0b1f3a;
+            color: var(--inv-navy);
         }
     </style>
 
     <div class="wofins-invoice-page">
-        <div class="invoice-container-wrap">
-            <div class="invoice-container themeholy-invoice invoice_style2">
-                <header class="themeholy-header header-layout1">
-                    <div class="d-flex align-items-start justify-content-between"
-                        style="border-bottom: 1px solid #000; padding-bottom: 14px; margin-bottom: 20px; gap: 12px;">
-                        <div style="text-align: left; min-width: 0; flex: 1 1 auto;">
-                            <b>Office Information :</b>
-                            <address style="white-space: normal; overflow-wrap: anywhere; word-break: break-word;">
-                                {{ $companyName }}<br>
-                                {{ $companyAddress ?: 'Alamat belum diatur' }}
-                                |
-                                Phone: {{ $companyPhone ?: '-' }}
-                                @if (! empty($companyEmail))
-                                    <br>Email: {{ $companyEmail }}
-                                @endif
-                                @if (! empty($companyWebsite))
-                                    <br>Website: {{ $companyWebsite }}
-                                @endif
-                            </address>
-                        </div>
-                        <div class="header-logo"
-                            style="max-height: 64px; text-align: right; flex: 0 0 auto; margin-left: auto;">
-                            @if ($logoSrc)
-                                <img src="{{ $logoSrc }}" alt="Logo {{ $companyName }}"
-                                    style="display: block; max-height: 64px; width: auto; max-width: 160px; margin-left: auto; object-fit: contain;">
-                            @endif
-                        </div>
-                    </div>
-                </header>
-
-                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
-                    <div>
-                        <h1 class="fw-bold mb-1" style="font-size: 1.15rem;">
-                            DETAILS #{{ $order->number ?? $order->id }}
-                        </h1>
-                        <p class="mb-0 text-muted" style="font-size: 0.9rem;">
-                            Date: {{ $order->created_at?->format('d M Y') }}
-                        </p>
-                    </div>
-
-                    <div class="invoice-actions d-flex flex-wrap gap-2 justify-content-end">
-                        @php
-                            $phone = $order->prospect->phone ?? '';
-                            $whatsappUrl = '#';
-                            if ($phone) {
-                                $phone = preg_replace('/[^0-9]/', '', $phone);
-                                if (substr($phone, 0, 1) === '0') {
-                                    $phone = '62'.$phone;
-                                } elseif (substr($phone, 0, 1) === '8') {
-                                    $phone = '62'.$phone;
-                                }
-                                $message = 'Halo, berikut adalah invoice Anda: '.route('invoice.download', ['order' => $order]);
-                                $whatsappUrl = 'https://wa.me/'.$phone.'?text='.urlencode($message);
-                            }
-                        @endphp
-
-                        @if ($phone)
-                            <a href="{{ $whatsappUrl }}" target="_blank"
-                                class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-sm text-white hover:bg-green-500">
-                                WhatsApp
-                            </a>
+        <div class="invoice-sheet">
+            <div class="invoice-office-header">
+                <div style="min-width: 0; flex: 1 1 auto;">
+                    <b>Office Information :</b>
+                    <address>
+                        {{ $companyName }}<br>
+                        {{ $companyAddress ?: 'Alamat belum diatur' }}
+                        |
+                        Phone: {{ $companyPhone ?: '-' }}
+                        @if (! empty($companyEmail))
+                            <br>Email: {{ $companyEmail }}
                         @endif
-
-                        <a href="{{ route('invoice.download', ['order' => $order]) }}" target="_blank"
-                            class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 border border-transparent rounded-md font-semibold text-sm text-white hover:bg-primary-500">
-                            Download Invoice
-                        </a>
-                    </div>
+                        @if (! empty($companyWebsite))
+                            <br>Website: {{ $companyWebsite }}
+                        @endif
+                    </address>
                 </div>
+                <div class="invoice-office-logo" style="flex: 0 0 auto;">
+                    @if ($logoSrc)
+                        <img src="{{ $logoSrc }}" alt="Logo {{ $companyName }}">
+                    @endif
+                </div>
+            </div>
+
+            <div class="invoice-title-row">
+                <div>
+                    <h1>DETAILS #{{ $order->number ?? $order->id }}</h1>
+                    <p class="meta">Date: {{ $order->created_at?->format('d M Y') }}</p>
+                </div>
+
+                <div class="invoice-actions">
+                    @php
+                        $phone = $order->prospect->phone ?? '';
+                        $whatsappUrl = '#';
+                        if ($phone) {
+                            $phone = preg_replace('/[^0-9]/', '', $phone);
+                            if (substr($phone, 0, 1) === '0') {
+                                $phone = '62'.$phone;
+                            } elseif (substr($phone, 0, 1) === '8') {
+                                $phone = '62'.$phone;
+                            }
+                            $message = 'Halo, berikut adalah invoice Anda: '.route('invoice.download', ['order' => $order]);
+                            $whatsappUrl = 'https://wa.me/'.$phone.'?text='.urlencode($message);
+                        }
+                    @endphp
+
+                    @if ($phone)
+                        <a href="{{ $whatsappUrl }}" target="_blank"
+                            class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-sm text-white hover:bg-green-500">
+                            WhatsApp
+                        </a>
+                    @endif
+
+                    <a href="{{ route('invoice.download', ['order' => $order]) }}" target="_blank"
+                        class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 border border-transparent rounded-md font-semibold text-sm text-white hover:bg-primary-500">
+                        Download Invoice
+                    </a>
+                </div>
+            </div>
 
         @php
             $grandTotal = $order->grand_total ?? 0;
@@ -790,7 +826,6 @@
                 </div>
             @endif
         </div>
-            </div>
         </div>
     </div>
 
