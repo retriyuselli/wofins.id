@@ -55,7 +55,6 @@ class SecureUserUpdateRequest extends FormRequest
             'hire_date' => 'prohibited',
             'last_working_date' => 'prohibited',
             'department' => 'prohibited',
-            'annual_leave_quota' => 'prohibited',
         ];
     }
 
@@ -77,7 +76,6 @@ class SecureUserUpdateRequest extends FormRequest
             'role.prohibited' => 'Role tidak boleh diubah melalui form ini. Hubungi administrator.',
             'status.prohibited' => 'Status tidak boleh diubah melalui form ini.',
             'department.prohibited' => 'Department tidak boleh diubah melalui form ini. Hubungi HR.',
-            'annual_leave_quota.prohibited' => 'Kuota cuti tidak boleh diubah melalui form ini.',
         ];
     }
 

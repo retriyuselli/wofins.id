@@ -741,14 +741,12 @@ class CompanySubscription
         static::forgetCache($company->id);
     }
 
-    public static function upgradeMessage(string $feature = PricingPlans::FEATURE_HRIS): string
+    public static function upgradeMessage(string $feature = PricingPlans::FEATURE_PAYROLL): string
     {
         $plan = static::planLabel();
 
         $businessOnly = [
             PricingPlans::FEATURE_DOCUMENTS,
-            PricingPlans::FEATURE_HRIS,
-            PricingPlans::FEATURE_EMPLOYEE_PORTAL,
             PricingPlans::FEATURE_ADVANCED_REPORTS,
         ];
 
@@ -762,6 +760,33 @@ class CompanySubscription
     public static function seatFullMessage(): string
     {
         return static::fullMessage(self::RESOURCE_USERS);
+    }
+
+    /**
+     * Pesan kuota penuh + petunjuk upgrade sesuai paket.
+     */
+    public static function seatUpgradeHint(): string
+    {
+        $planKey = static::planKey();
+        $plan = static::planLabel();
+        $limit = static::seatLimit();
+        $used = static::seatsUsed();
+
+        if ($limit === null) {
+            return static::seatFullMessage();
+        }
+
+        $base = "Kuota {$plan} sudah penuh ({$used}/{$limit} pengguna).";
+
+        if (in_array($planKey, ['starter', 'professional'], true)) {
+            return $base.' Paket ini hanya 1 seat (owner). Upgrade ke Business (hingga 3 pengguna) untuk menambah anggota tim.';
+        }
+
+        if ($planKey === 'business') {
+            return $base.' Nonaktifkan pengguna yang tidak dipakai, atau hubungi support untuk paket Custom.';
+        }
+
+        return $base.' Upgrade paket atau hapus pengguna yang tidak dipakai.';
     }
 
     /**

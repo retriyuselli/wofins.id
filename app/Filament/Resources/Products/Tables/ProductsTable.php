@@ -34,6 +34,23 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ProductsTable
 {
+    public static function userCanManageApproval(?User $user = null): bool
+    {
+        $user ??= Auth::user();
+
+        if (! $user instanceof User) {
+            return false;
+        }
+
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+
+        // User company yang login (tenant) — boleh approve produk company-nya
+        return \App\Support\UserVisibility::companyId($user) !== null
+            && $user->can('Update:Product');
+    }
+
     public static function configure(Table $table): Table
     {
         return $table
@@ -331,10 +348,7 @@ class ProductsTable
                             Notification::make()->title('Product Approved')->success()->send();
                         })
                         ->visible(function (Product $record): bool {
-                            /** @var User $user */
-                            $user = Auth::user();
-
-                            return ! $record->is_approved && $user?->hasRole('super_admin');
+                            return ! $record->is_approved && self::userCanManageApproval();
                         })
                         ->tooltip('Approve this product'),
 
@@ -348,10 +362,7 @@ class ProductsTable
                             Notification::make()->title('Product Disapproved')->warning()->send();
                         })
                         ->visible(function (Product $record): bool {
-                            /** @var User $user */
-                            $user = Auth::user();
-
-                            return $record->is_approved && $user?->hasRole('super_admin');
+                            return $record->is_approved && self::userCanManageApproval();
                         })
                         ->tooltip('Disapprove this product'),
 
@@ -414,12 +425,7 @@ class ProductsTable
                                 ->success()
                                 ->send();
                         })
-                        ->visible(function (): bool {
-                            /** @var User $user */
-                            $user = Auth::user();
-
-                            return $user->hasRole('super_admin');
-                        })
+                        ->visible(fn (): bool => self::userCanManageApproval())
                         ->deselectRecordsAfterCompletion(),
                 ]),
             ])

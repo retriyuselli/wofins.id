@@ -75,8 +75,13 @@ class SimulasiProdukForm
                                 ->columns(2)
                                 ->schema([
                                     Select::make('product_id')
-                                        ->relationship('product', 'name')
+                                        ->relationship(
+                                            name: 'product',
+                                            titleAttribute: 'name',
+                                            modifyQueryUsing: fn (Builder $query) => UserVisibility::constrainOwnedQuery($query, 'created_by'),
+                                        )
                                         ->label('Select Base Product')
+                                        ->helperText('Hanya menampilkan produk yang dibuat oleh user di company Anda.')
                                         ->searchable()
                                         ->preload()
                                         ->reactive()
@@ -170,11 +175,25 @@ class SimulasiProdukForm
                                         ->relationship(
                                             name: 'prospect',
                                             titleAttribute: 'name_event',
-                                            modifyQueryUsing: fn (Builder $query, ?SimulasiProduk $record) => $query->whereDoesntHave('orders', function (Builder $orderQuery) {
-                                                $orderQuery->whereNotNull('status');
-                                            })->when($record, fn ($q) => $q->orWhere('id', $record->prospect_id)),
+                                            modifyQueryUsing: function (Builder $query, ?SimulasiProduk $record) {
+                                                UserVisibility::constrainOwnedQuery($query, 'user_id');
+
+                                                return $query->where(function (Builder $inner) use ($record) {
+                                                    $inner->whereDoesntHave('orders', function (Builder $orderQuery) {
+                                                        $orderQuery->whereNotNull('status');
+                                                    });
+
+                                                    if ($record?->prospect_id) {
+                                                        $inner->orWhere(
+                                                            $inner->getModel()->getQualifiedKeyName(),
+                                                            $record->prospect_id
+                                                        );
+                                                    }
+                                                });
+                                            },
                                         )
                                         ->label('Select Prospect (for Simulation Name & Slug)')
+                                        ->helperText('Hanya menampilkan prospek dari company Anda (belum punya order).')
                                         ->required()
                                         ->searchable()
                                         ->preload()

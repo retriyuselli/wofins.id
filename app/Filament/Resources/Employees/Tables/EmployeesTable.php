@@ -86,9 +86,15 @@ class EmployeesTable
                     ->falseColor('danger'),
 
                 TextColumn::make('salary')
-                    ->label('Salary')
+                    ->label('Gaji Pokok')
                     ->money('IDR')
                     ->sortable(),
+
+                TextColumn::make('tunjangan')
+                    ->label('Tunjangan')
+                    ->money('IDR')
+                    ->sortable()
+                    ->toggleable(),
 
                 TextColumn::make('bank_name')
                     ->label('Bank')
@@ -160,11 +166,12 @@ class EmployeesTable
             ->striped()
             ->defaultPaginationPageOption(10)
             ->paginationPageOptions([10, 25, 50])
-            ->emptyStateDescription('Silakan buat data pribadi baru untuk memulai.')
+            ->emptyStateHeading('Belum ada karyawan')
+            ->emptyStateDescription('Tambah data karyawan (Employee) untuk absensi, cuti, dan payroll. Ini bukan crew freelance.')
             ->emptyStateActions([
                 Action::make('create')
-                    ->label('Buat Data Pribadi Baru')
-                    ->url(fn () => route('filament.admin.resources.data-pribadis.create'))
+                    ->label('Tambah Karyawan')
+                    ->url(fn () => route('filament.admin.resources.employees.create'))
                     ->icon('heroicon-o-plus')
                     ->button(),
             ]);

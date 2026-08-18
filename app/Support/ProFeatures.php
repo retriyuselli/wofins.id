@@ -29,9 +29,9 @@ class ProFeatures
 
     /**
      * Apakah fitur diizinkan paket perusahaan saat ini.
-     * Default feature = hris (absensi / cuti / jadwal).
+     * Default feature = payroll.
      */
-    public static function allows(string $feature = PricingPlans::FEATURE_HRIS): bool
+    public static function allows(string $feature = PricingPlans::FEATURE_PAYROLL): bool
     {
         if (static::forceUnlocked() || static::actorIsSuperAdmin()) {
             return true;
@@ -45,10 +45,10 @@ class ProFeatures
      */
     public static function enabled(): bool
     {
-        return static::allows(PricingPlans::FEATURE_HRIS);
+        return static::allows(PricingPlans::FEATURE_PAYROLL);
     }
 
-    public static function locked(string $feature = PricingPlans::FEATURE_HRIS): bool
+    public static function locked(string $feature = PricingPlans::FEATURE_PAYROLL): bool
     {
         return ! static::allows($feature);
     }

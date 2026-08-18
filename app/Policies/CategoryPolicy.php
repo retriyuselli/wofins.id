@@ -4,29 +4,14 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
-use App\Models\Category;
-use App\Models\User;
-use App\Support\ProFeatures;
-use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Foundation\Auth\User as AuthUser;
+use App\Models\Category;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class CategoryPolicy
 {
     use HandlesAuthorization;
-
-    private function owns(AuthUser $authUser, Category $category): bool
-    {
-        if (ProFeatures::actorIsSuperAdmin()) {
-            return true;
-        }
-
-        if (! $authUser instanceof User || ! $authUser->company_id) {
-            return false;
-        }
-
-        return (int) $category->company_id === (int) $authUser->company_id;
-    }
-
+    
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:Category');
@@ -34,51 +19,52 @@ class CategoryPolicy
 
     public function view(AuthUser $authUser, Category $category): bool
     {
-        return $authUser->can('View:Category') && $this->owns($authUser, $category);
+        return $authUser->can('View:Category');
     }
 
     public function create(AuthUser $authUser): bool
     {
-        return ProFeatures::actorIsSuperAdmin() && $authUser->can('Create:Category');
+        return $authUser->can('Create:Category');
     }
 
     public function update(AuthUser $authUser, Category $category): bool
     {
-        return ProFeatures::actorIsSuperAdmin() && $authUser->can('Update:Category');
+        return $authUser->can('Update:Category');
     }
 
     public function delete(AuthUser $authUser, Category $category): bool
     {
-        return ProFeatures::actorIsSuperAdmin() && $authUser->can('Delete:Category');
+        return $authUser->can('Delete:Category');
     }
 
     public function restore(AuthUser $authUser, Category $category): bool
     {
-        return ProFeatures::actorIsSuperAdmin() && $authUser->can('Restore:Category');
+        return $authUser->can('Restore:Category');
     }
 
     public function forceDelete(AuthUser $authUser, Category $category): bool
     {
-        return ProFeatures::actorIsSuperAdmin() && $authUser->can('ForceDelete:Category');
+        return $authUser->can('ForceDelete:Category');
     }
 
     public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return ProFeatures::actorIsSuperAdmin() && $authUser->can('ForceDeleteAny:Category');
+        return $authUser->can('ForceDeleteAny:Category');
     }
 
     public function restoreAny(AuthUser $authUser): bool
     {
-        return ProFeatures::actorIsSuperAdmin() && $authUser->can('RestoreAny:Category');
+        return $authUser->can('RestoreAny:Category');
     }
 
     public function replicate(AuthUser $authUser, Category $category): bool
     {
-        return ProFeatures::actorIsSuperAdmin() && $authUser->can('Replicate:Category');
+        return $authUser->can('Replicate:Category');
     }
 
     public function reorder(AuthUser $authUser): bool
     {
-        return ProFeatures::actorIsSuperAdmin() && $authUser->can('Reorder:Category');
+        return $authUser->can('Reorder:Category');
     }
+
 }

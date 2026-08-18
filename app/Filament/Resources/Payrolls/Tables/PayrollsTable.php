@@ -41,16 +41,21 @@ class PayrollsTable
                 if ($user->hasRole('super_admin') || $user->can('ViewAny:Payroll')) {
                     return;
                 }
-                $query->where('user_id', $user->id);
+                $employee = \App\Support\HrEmployee::forUser($user);
+                if ($employee) {
+                    $query->where('employee_id', $employee->id);
+                } else {
+                    $query->where('user_id', $user->id);
+                }
             })
             ->heading('Data Payroll')
-            ->description('Kelola data payroll karyawan. Default menampilkan data bulan berjalan, gunakan filter atau tombol aksi cepat untuk melihat periode lain.')
+            ->description('Payroll per periode. Gunakan Generate Periode untuk membuat draft dari karyawan aktif, atau Tambah Manual untuk kasus khusus.')
             ->columns([
-                ImageColumn::make('user.avatar_url')
+                ImageColumn::make('employee.photo')
                     ->label('Avatar')
                     ->circular()
                     ->defaultImageUrl(function ($record) {
-                        $name = $record->user?->name ?? 'User';
+                        $name = $record->employee?->name ?? $record->user?->name ?? 'User';
                         $initials = collect(explode(' ', $name))
                             ->map(fn ($word) => strtoupper(substr($word, 0, 1)))
                             ->take(2)
@@ -59,12 +64,12 @@ class PayrollsTable
                         return "https://ui-avatars.com/api/?name={$initials}&background=3b82f6&color=ffffff&size=128";
                     }),
 
-                TextColumn::make('user.name')
+                TextColumn::make('employee.name')
                     ->label('Nama Karyawan')
                     ->searchable()
                     ->sortable()
                     ->weight(FontWeight::Bold)
-                    ->description(fn ($record): string => $record->user?->email ?? ''),
+                    ->description(fn ($record): string => $record->employee?->email ?? $record->user?->email ?? ''),
 
                 TextColumn::make('periode')
                     ->label('Periode')
@@ -73,20 +78,10 @@ class PayrollsTable
                     ->color('primary')
                     ->sortable(['period_year', 'period_month']),
 
-                TextColumn::make('user.status.status_name')
-                    ->label('Status Jabatan')
+                TextColumn::make('employee.position')
+                    ->label('Jabatan')
                     ->badge()
-                    ->color(function ($state): string {
-                        return match ($state) {
-                            'Admin' => 'danger',
-                            'Finance' => 'warning',
-                            'HRD' => 'info',
-                            'Account Manager' => 'primary',
-                            'Staff' => 'success',
-                            default => 'gray',
-                        };
-                    })
-                    ->placeholder('No Status'),
+                    ->placeholder('-'),
 
                 TextColumn::make('user.department')
                     ->label('Departemen')
@@ -241,13 +236,9 @@ class PayrollsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                SelectFilter::make('user')
+                SelectFilter::make('employee')
                     ->label('Karyawan')
-                    ->relationship(
-                        'user',
-                        'name',
-                        fn (\Illuminate\Database\Eloquent\Builder $query) => \App\Support\UserVisibility::constrainUsersQuery($query)
-                    )
+                    ->relationship('employee', 'name')
                     ->searchable()
                     ->preload(),
 
@@ -467,28 +458,53 @@ class PayrollsTable
 
                                 return;
                             }
-                            $currentSalary = $record->monthly_salary;
+
+                            $employeeName = $record->employee?->name
+                                ?? $record->user?->name
+                                ?? 'Karyawan';
+
+                            // Kenaikan diterapkan ke gaji pokok (master komponen),
+                            // agar monthly_salary ikut terhitung ulang di model.
+                            $currentPokok = (int) ($record->gaji_pokok ?? 0);
+                            if ($currentPokok <= 0) {
+                                $currentPokok = max(0, (int) ($record->monthly_salary ?? 0)
+                                    - (int) ($record->tunjangan ?? 0)
+                                    - (int) ($record->bonus ?? 0)
+                                    + (int) ($record->pengurangan ?? 0));
+                            }
 
                             if ($data['raise_type'] === 'percentage') {
-                                $newSalary = $currentSalary * (1 + ($data['raise_value'] / 100));
+                                $newPokok = (int) round($currentPokok * (1 + ((float) $data['raise_value'] / 100)));
                             } else {
-                                $newSalary = $currentSalary + $data['raise_value'];
+                                $newPokok = $currentPokok + (int) $data['raise_value'];
                             }
 
                             $record->update([
-                                'monthly_salary' => $newSalary,
+                                'gaji_pokok' => $newPokok,
                                 'last_review_date' => now(),
                                 'next_review_date' => now()->addYear(),
                                 'notes' => ($record->notes ? $record->notes."\n\n" : '').
-                                          '['.now()->format('d/m/Y').'] Kenaikan gaji: '.
-                                          'Rp '.number_format($currentSalary, 0, ',', '.').' → '.
-                                          'Rp '.number_format($newSalary, 0, ',', '.').
+                                          '['.now()->format('d/m/Y').'] Kenaikan gaji pokok: '.
+                                          'Rp '.number_format($currentPokok, 0, ',', '.').' → '.
+                                          'Rp '.number_format($newPokok, 0, ',', '.').
                                           ' ('.$data['raise_reason'].')',
                             ]);
 
+                            // Sync ke master Karyawan agar generate periode berikutnya ikut naik.
+                            if ($record->employee_id) {
+                                $employee = $record->employee()->withoutGlobalScopes()->first()
+                                    ?? \App\Models\Employee::withoutGlobalScopes()->find($record->employee_id);
+                                if ($employee) {
+                                    $employee->forceFill(['salary' => $newPokok])->save();
+                                }
+                            }
+
+                            $record->refresh();
+                            $newMonthly = (int) ($record->monthly_salary ?? 0);
+
                             Notification::make()
                                 ->title('Kenaikan Gaji Berhasil')
-                                ->body("Gaji {$record->user->name} berhasil dinaikkan menjadi Rp ".number_format($newSalary, 0, ',', '.'))
+                                ->body("Gaji pokok {$employeeName} dinaikkan menjadi Rp ".number_format($newPokok, 0, ',', '.')." (take-home periode ini: Rp ".number_format($newMonthly, 0, ',', '.').')')
                                 ->success()
                                 ->send();
                         })
@@ -576,7 +592,7 @@ class PayrollsTable
                                 return;
                             }
                             // Check if payroll already exists for target period
-                            $existingPayroll = Payroll::where('user_id', $record->user_id)
+                            $existingPayroll = Payroll::where('employee_id', $record->employee_id)
                                 ->where('period_month', $data['target_month'])
                                 ->where('period_year', $data['target_year'])
                                 ->first();
@@ -588,10 +604,11 @@ class PayrollsTable
                                     9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
                                 ];
                                 $monthName = $months[$data['target_month']];
+                                $employeeName = $record->employee?->name ?? $record->user?->name ?? 'Karyawan';
 
                                 Notification::make()
                                     ->title('Duplikasi Gagal')
-                                    ->body("Payroll untuk {$record->user->name} pada {$monthName} {$data['target_year']} sudah ada!")
+                                    ->body("Payroll untuk {$employeeName} pada {$monthName} {$data['target_year']} sudah ada!")
                                     ->danger()
                                     ->send();
 
@@ -636,7 +653,7 @@ class PayrollsTable
 
                             Notification::make()
                                 ->title('Duplikasi Berhasil')
-                                ->body("Payroll {$record->user->name} berhasil diduplikasi ke periode {$targetPeriod}")
+                                ->body('Payroll '.($record->employee?->name ?? $record->user?->name ?? 'Karyawan')." berhasil diduplikasi ke periode {$targetPeriod}")
                                 ->success()
                                 ->send();
                         })
@@ -751,21 +768,21 @@ class PayrollsTable
 
                             foreach ($records as $record) {
                                 // Check if payroll already exists
-                                $existingPayroll = Payroll::where('user_id', $record->user_id)
+                                $existingPayroll = Payroll::where('employee_id', $record->employee_id)
                                     ->where('period_month', $data['target_month'])
                                     ->where('period_year', $data['target_year'])
                                     ->first();
 
                                 if ($existingPayroll && $data['skip_existing']) {
                                     $skippedCount++;
-                                    $skippedNames[] = $record->user->name;
+                                    $skippedNames[] = $record->employee?->name ?? $record->user?->name;
 
                                     continue;
                                 }
 
                                 if ($existingPayroll && ! $data['skip_existing']) {
                                     $skippedCount++;
-                                    $skippedNames[] = $record->user->name.' (sudah ada)';
+                                    $skippedNames[] = ($record->employee?->name ?? $record->user?->name).' (sudah ada)';
 
                                     continue;
                                 }
@@ -833,7 +850,75 @@ class PayrollsTable
             ->searchOnBlur()
             ->deferLoading()
             ->emptyStateHeading('Tidak ada data payroll')
-            ->emptyStateDescription('Belum ada data payroll untuk periode yang dipilih. Coba ubah filter bulan/tahun atau buat data payroll baru.')
-            ->emptyStateIcon('heroicon-o-banknotes');
+            ->emptyStateDescription('Belum ada payroll untuk periode ini. Generate dari karyawan aktif, atau tambah manual satu per satu.')
+            ->emptyStateIcon('heroicon-o-banknotes')
+            ->emptyStateActions([
+                Action::make('generatePeriodEmpty')
+                    ->label('Generate Periode')
+                    ->icon('heroicon-o-sparkles')
+                    ->color('success')
+                    ->visible(fn (): bool => Auth::user()?->can('Create:Payroll') ?? false)
+                    ->form([
+                        Select::make('period_month')
+                            ->label('Bulan')
+                            ->options([
+                                1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+                                5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+                                9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
+                            ])
+                            ->default(now()->month)
+                            ->required()
+                            ->native(false),
+                        Select::make('period_year')
+                            ->label('Tahun')
+                            ->options(function (): array {
+                                $year = now()->year;
+                                $options = [];
+                                for ($y = $year + 1; $y >= $year - 5; $y--) {
+                                    $options[$y] = (string) $y;
+                                }
+
+                                return $options;
+                            })
+                            ->default(now()->year)
+                            ->required()
+                            ->native(false),
+                    ])
+                    ->modalHeading('Generate Payroll Periode')
+                    ->modalDescription('Membuat draft dari karyawan aktif. Gaji pokok & tunjangan dari master Karyawan; di payroll hanya isi pengurangan & bonus. Yang sudah ada, atau belum punya gaji pokok, dilewati.')
+                    ->modalSubmitActionLabel('Generate')
+                    ->requiresConfirmation()
+                    ->action(function (array $data): void {
+                        $result = app(\App\Services\PayrollGenerateService::class)->generateForPeriod(
+                            (int) $data['period_month'],
+                            (int) $data['period_year'],
+                        );
+
+                        if ($result['created'] === 0 && $result['skipped'] === 0 && ($result['skipped_no_salary'] ?? 0) === 0) {
+                            Notification::make()
+                                ->title('Tidak ada karyawan aktif')
+                                ->body('Tambah data Employee aktif dulu, lalu generate lagi.')
+                                ->warning()
+                                ->send();
+
+                            return;
+                        }
+
+                        $body = "Dibuat: {$result['created']} · Sudah ada: {$result['skipped']}";
+                        if (($result['skipped_no_salary'] ?? 0) > 0) {
+                            $body .= " · Tanpa gaji pokok: {$result['skipped_no_salary']} (lengkapi di Karyawan)";
+                        }
+
+                        Notification::make()
+                            ->title('Generate selesai — '.$result['period_label'])
+                            ->body($body)
+                            ->success()
+                            ->send();
+                    }),
+                Action::make('createManual')
+                    ->label('Tambah Manual')
+                    ->icon('heroicon-o-plus')
+                    ->url(fn () => \App\Filament\Resources\Payrolls\PayrollResource::getUrl('create')),
+            ]);
     }
 }

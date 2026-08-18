@@ -13,6 +13,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
+use App\Models\Status;
 use App\Support\UserVisibility;
 use Illuminate\Database\Eloquent\Builder;
 use Spatie\Permission\Models\Role;
@@ -46,16 +47,26 @@ class UserForm
                                                     ->unique(ignoreRecord: true)
                                                     ->maxLength(255)
                                                     ->autocomplete('email')
-                                                    ->placeholder('user@example.com'),
+                                                    ->placeholder('user@example.com')
+                                                    ->disabled(fn (string $operation): bool => $operation === 'edit'
+                                                        && ! UserVisibility::actorIsSuperAdmin())
+                                                    ->dehydrated()
+                                                    ->helperText(fn (string $operation): ?string => $operation === 'edit'
+                                                        && ! UserVisibility::actorIsSuperAdmin()
+                                                        ? 'Email hanya bisa diubah oleh super admin.'
+                                                        : null),
                                             ]),
                                     ]),
 
                                 Section::make('Peran & Status')
+                                    ->visible(fn (): bool => UserVisibility::actorIsSuperAdmin()
+                                        || UserVisibility::canManageJobStatuses())
                                     ->schema([
                                         Grid::make(2)
                                             ->schema([
                                                 Select::make('roles')
                                                     ->label('Role')
+                                                    ->visible(fn (): bool => UserVisibility::actorIsSuperAdmin())
                                                     ->relationship(
                                                         'roles',
                                                         'name',
@@ -66,47 +77,31 @@ class UserForm
                                                                 $query->whereIn('name', $allowed);
                                                             }
 
-                                                            if (! UserVisibility::actorIsSuperAdmin()) {
-                                                                $query->where('name', '!=', 'super_admin');
-                                                            }
+                                                            $query->where('name', '!=', 'super_admin');
 
                                                             return $query;
                                                         }
                                                     )
                                                     ->multiple()
                                                     ->preload()
-                                                    ->searchable(fn () => UserVisibility::actorIsSuperAdmin())
+                                                    ->searchable()
                                                     ->required()
                                                     ->dehydrated()
-                                                    ->default(fn () => UserVisibility::actorIsSuperAdmin()
-                                                        ? null
-                                                        : UserVisibility::packageOwnerRoleIds())
+                                                    ->default(null)
                                                     ->placeholder('Pilih Role')
-                                                    ->maxItems(fn () => UserVisibility::actorIsSuperAdmin() ? 5 : max(1, count(UserVisibility::packageOwnerRoleNames())))
-                                                    ->helperText(fn () => UserVisibility::actorIsSuperAdmin()
-                                                        ? 'Pilih satu atau lebih role (maksimal 5).'
-                                                        : 'Pilih role anggota dari role jabatan yang Anda miliki ('
-                                                            .implode(', ', UserVisibility::packageOwnerRoleNames())
-                                                            .'). Nama paket (Starter/Pro/Business) bukan Spatie role. '
-                                                            .'Tanpa role Spatie, anggota tidak bisa masuk dashboard.')
-                                                    ->createOptionForm(fn () => UserVisibility::actorIsSuperAdmin()
-                                                        ? [
-                                                            TextInput::make('name')
-                                                                ->label('Nama Role')
-                                                                ->required()
-                                                                ->unique('roles', 'name'),
-                                                        ]
-                                                        : null)
-                                                    ->createOptionUsing(function (array $data) {
-                                                        if (! UserVisibility::actorIsSuperAdmin()) {
-                                                            return null;
-                                                        }
-
-                                                        return Role::create($data)->getKey();
-                                                    }),
+                                                    ->maxItems(5)
+                                                    ->helperText('Pilih satu atau lebih role (maksimal 5).')
+                                                    ->createOptionForm([
+                                                        TextInput::make('name')
+                                                            ->label('Nama Role')
+                                                            ->required()
+                                                            ->unique('roles', 'name'),
+                                                    ])
+                                                    ->createOptionUsing(fn (array $data) => Role::create($data)->getKey()),
 
                                                 Select::make('statuses')
                                                     ->label('Status Jabatan')
+                                                    ->visible(fn (): bool => UserVisibility::canManageJobStatuses())
                                                     ->relationship('statuses', 'status_name')
                                                     ->multiple()
                                                     ->preload()
@@ -114,8 +109,13 @@ class UserForm
                                                     ->searchable()
                                                     ->native(false)
                                                     ->selectablePlaceholder(false)
+                                                    ->dehydrated()
+                                                    ->default(fn () => self::defaultAdminStatusIds())
                                                     ->placeholder('Pilih Status Jabatan')
-                                                    ->helperText('Status jabatan pengguna (Admin, Finance, HRD, dll). Bisa pilih lebih dari satu.'),
+                                                    ->helperText(fn (): string => UserVisibility::actorIsSuperAdmin()
+                                                        ? 'Status jabatan pengguna (Admin, Finance, HRD, dll). Bisa pilih lebih dari satu.'
+                                                        : 'Tandai jabatan anggota (Admin, Finance, HRD, dll). Role akses sistem tetap dikelola otomatis.')
+                                                    ->columnSpan(fn (): int => UserVisibility::actorIsSuperAdmin() ? 1 : 2),
                                             ]),
                                     ]),
 
@@ -224,15 +224,6 @@ class UserForm
                                                     ->label('Tanggal Berakhir Kerja')
                                                     ->displayFormat('d/m/Y')
                                                     ->helperText('Kosongkan jika masih aktif bekerja'),
-
-                                                TextInput::make('annual_leave_quota')
-                                                    ->label('Kuota Cuti Tahunan')
-                                                    ->numeric()
-                                                    ->suffix('hari')
-                                                    ->default(12)
-                                                    ->minValue(0)
-                                                    ->maxValue(365)
-                                                    ->helperText('Jumlah hari cuti yang diberikan per tahun (default: 12 hari)'),
                                             ]),
                                     ]),
 
@@ -346,5 +337,17 @@ class UserForm
                     ])
                     ->columnSpanFull(),
             ]);
+    }
+
+    /**
+     * @return list<int>|null
+     */
+    public static function defaultAdminStatusIds(): ?array
+    {
+        $adminId = Status::query()
+            ->whereRaw('LOWER(status_name) = ?', ['admin'])
+            ->value('id');
+
+        return $adminId ? [(int) $adminId] : null;
     }
 }

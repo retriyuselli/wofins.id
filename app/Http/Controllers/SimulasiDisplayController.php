@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Company;
 use App\Models\SimulasiProduk;
 use App\Models\User;
+use App\Support\UserVisibility;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -50,7 +52,7 @@ class SimulasiDisplayController extends Controller
         }
 
         $data = array_merge(
-            $this->companyViewData($record),
+            $this->companyViewData($record, $this->resolveCompanyForDocument($record)),
             [
                 'record' => $record,
                 'simulasi' => $record,
@@ -101,7 +103,7 @@ class SimulasiDisplayController extends Controller
         $bulanRomawi = $months[$currentMonth] ?? '';
         $tahun = $createdAt->year;
 
-        $company = $this->resolveCompany($record);
+        $company = $this->resolveCompanyForDocument($record);
 
         $sequenceQuery = SimulasiProduk::query()
             ->whereYear('created_at', $record->created_at->year)
@@ -157,14 +159,33 @@ class SimulasiDisplayController extends Controller
     }
 
     /**
-     * Company pemilik simulasi (via Account Manager / user_id).
+     * Company untuk branding halaman simulasi.
+     * Prioritas: company user yang login → company pemilik simulasi (AM).
      */
     protected function resolveCompany(SimulasiProduk $record): ?Company
+    {
+        $authCompanyId = UserVisibility::companyId(Auth::user());
+        if ($authCompanyId) {
+            $loggedInCompany = Company::query()
+                ->with('paymentMethod')
+                ->find($authCompanyId);
+
+            if ($loggedInCompany) {
+                return $loggedInCompany;
+            }
+        }
+
+        return $this->resolveCompanyForDocument($record);
+    }
+
+    /**
+     * Branding dokumen PDF/klien: selalu company pemilik simulasi (bukan viewer).
+     */
+    protected function resolveCompanyForDocument(SimulasiProduk $record): ?Company
     {
         $record->loadMissing('user.company.paymentMethod');
 
         $company = $record->user?->company;
-
         if ($company) {
             $company->loadMissing('paymentMethod');
 
@@ -181,7 +202,8 @@ class SimulasiDisplayController extends Controller
      *     companyAddress: ?string,
      *     companyEmail: ?string,
      *     companyPhone: ?string,
-     *     companyLogoUrl: string,
+     *     companyWebsite: ?string,
+     *     companyLogoUrl: ?string,
      *     companyFaviconUrl: string
      * }
      */
@@ -199,12 +221,23 @@ class SimulasiDisplayController extends Controller
             $faviconUrl = asset('storage/'.ltrim($company->favicon_url, '/'));
         }
 
+        $addressParts = array_values(array_filter([
+            $company?->address,
+            collect([
+                $company?->city,
+                $company?->province,
+                $company?->postal_code,
+            ])->filter()->implode(', '),
+        ], fn ($part) => filled($part)));
+
+        // Nilai eksplisit agar tidak jatuh ke View::share global (company pertama / Makna).
         return [
             'company' => $company,
-            'companyName' => $company?->company_name ?? config('app.name'),
-            'companyAddress' => $company?->address,
-            'companyEmail' => $company?->email,
-            'companyPhone' => $company?->phone,
+            'companyName' => $company?->company_name ?: (string) config('app.name'),
+            'companyAddress' => $addressParts !== [] ? implode(', ', $addressParts) : null,
+            'companyEmail' => filled($company?->email) ? $company->email : null,
+            'companyPhone' => filled($company?->phone) && $company->phone !== '-' ? $company->phone : null,
+            'companyWebsite' => filled($company?->website) ? $company->website : null,
             'companyLogoUrl' => $logoUrl,
             'companyFaviconUrl' => $faviconUrl,
         ];

@@ -2,7 +2,6 @@
 
 namespace App\Observers;
 
-use App\Models\LeaveBalance;
 use App\Models\User;
 
 class UserObserver
@@ -12,8 +11,7 @@ class UserObserver
      */
     public function created(User $user): void
     {
-        // Auto-generate leave balances for new user
-        LeaveBalance::generateForUser($user);
+        //
     }
 
     /**
@@ -21,10 +19,7 @@ class UserObserver
      */
     public function updated(User $user): void
     {
-        // If annual_leave_quota was updated, regenerate leave balances
-        if ($user->isDirty('annual_leave_quota')) {
-            LeaveBalance::generateForUser($user);
-        }
+        //
     }
 
     /**
@@ -32,8 +27,7 @@ class UserObserver
      */
     public function deleted(User $user): void
     {
-        // Clean up leave balances when user is deleted
-        $user->leaveBalances()->delete();
+        //
     }
 
     /**
@@ -41,8 +35,7 @@ class UserObserver
      */
     public function restored(User $user): void
     {
-        // Regenerate leave balances when user is restored
-        LeaveBalance::generateForUser($user);
+        //
     }
 
     /**
@@ -50,7 +43,6 @@ class UserObserver
      */
     public function forceDeleted(User $user): void
     {
-        // Clean up leave balances when user is force deleted
-        $user->leaveBalances()->delete();
+        //
     }
 }

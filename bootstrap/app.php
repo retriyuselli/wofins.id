@@ -61,7 +61,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'no-store' => \App\Http\Middleware\NoStoreResponse::class,
             'super-admin' => \App\Http\Middleware\EnsureSuperAdmin::class,
             'admin-tools.access' => \App\Http\Middleware\EnsureAdminToolsAccess::class,
-            'absensi.headers' => \App\Http\Middleware\AbsensiPageSecurityHeaders::class,
             'role.required' => \App\Http\Middleware\EnsureUserHasRole::class,
             'pro.feature' => \App\Http\Middleware\EnsureProFeature::class,
         ]);

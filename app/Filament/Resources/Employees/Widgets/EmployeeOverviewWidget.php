@@ -14,7 +14,7 @@ class EmployeeOverviewWidget extends BaseWidget
 {
     protected function activeEmployeesQuery(): Builder
     {
-        return UserVisibility::constrainOwnedQuery(Employee::query(), 'user_id')
+        return UserVisibility::constrainCompanyQuery(Employee::query())
             ->where('date_of_join', '<=', now())
             ->where(function ($query) {
                 $query->whereNull('date_of_out')

@@ -5,7 +5,7 @@
     $period = $period ?? request()->get('period', 'year');
     $leaveStats = $leaveStats ?? ['approved' => 0, 'pending' => 0, 'rejected' => 0];
     $leaveByType = $leaveByType ?? collect();
-    $annualLeaveAllowance = $annualLeaveAllowance ?? ($user?->annual_leave_quota ?? 12);
+    $annualLeaveAllowance = $annualLeaveAllowance ?? 12;
     $usedLeave = $usedLeave ?? ($leaveStats['approved'] ?? 0);
     $remainingLeave = $remainingLeave ?? max(0, $annualLeaveAllowance - $usedLeave);
     $prevYear = $prevYear ?? ((int) $currentYear - 1);

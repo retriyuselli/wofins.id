@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources\Products\Schemas;
 
+use App\Filament\Resources\Products\Tables\ProductsTable;
 use App\Filament\Resources\Vendors\VendorResource;
 use App\Models\Category;
-use App\Models\User;
 use App\Models\Vendor;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
@@ -21,7 +21,6 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class ProductForm
@@ -161,12 +160,7 @@ class ProductForm
                                         ->offIcon('heroicon-s-hand-thumb-down')
                                         ->onColor('success')
                                         ->offColor('danger')
-                                        ->visible(function () {
-                                            /** @var User $user */
-                                            $user = Auth::user();
-
-                                            return $user->hasRole('super_admin');
-                                        }),
+                                        ->visible(fn (): bool => ProductsTable::userCanManageApproval()),
                                 ])
                                 ->collapsible(),
                         ]),

@@ -29,16 +29,6 @@ struct AccountView: View {
 
                     Section("SDM") {
                         NavigationLink {
-                            AttendanceView()
-                        } label: {
-                            Label("Absensi", systemImage: "checkmark.circle.fill")
-                        }
-                        NavigationLink {
-                            LeaveListView()
-                        } label: {
-                            Label("Cuti", systemImage: "calendar")
-                        }
-                        NavigationLink {
                             CompensationView()
                         } label: {
                             Label("Kompensasi", systemImage: "banknote.fill")
@@ -58,7 +48,6 @@ struct AccountView: View {
         }
     }
 }
-
 struct EditProfileView: View {
     @EnvironmentObject private var appState: AppState
     @Environment(\.dismiss) private var dismiss

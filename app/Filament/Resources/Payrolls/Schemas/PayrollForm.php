@@ -4,15 +4,11 @@ namespace App\Filament\Resources\Payrolls\Schemas;
 
 use App\Models\Payroll;
 use App\Models\User;
-use App\Services\AbsensiLaporanService;
-use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Notifications\Notification;
-use Filament\Schemas\Components\Actions as SchemaActions;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
@@ -22,8 +18,6 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\RawJs;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\HtmlString;
 
 class PayrollForm
 {
@@ -41,16 +35,9 @@ class PayrollForm
                                     ->schema([
                                         Grid::make(3)
                                             ->schema([
-                                                Select::make('user_id')
+                                                Select::make('employee_id')
                                                     ->label('Karyawan')
-                                                    ->relationship('user', 'name', function (Builder $query) {
-                                                        return \App\Support\UserVisibility::constrainUsersQuery(
-                                                            $query->with('status')
-                                                                ->whereHas('roles', function (Builder $query) {
-                                                                    $query->where('name', 'Office');
-                                                                })
-                                                        );
-                                                    })
+                                                    ->relationship('employee', 'name')
                                                     ->searchable()
                                                     ->preload()
                                                     ->required()
@@ -59,12 +46,13 @@ class PayrollForm
                                                         if (! $state) {
                                                             return;
                                                         }
-                                                        $user = User::find($state);
-                                                        if (! $user) {
+                                                        $employee = \App\Models\Employee::query()->find($state);
+                                                        if (! $employee) {
                                                             return;
                                                         }
-                                                        $baseGaji = (int) ($user->gaji_pokok_base ?? 0);
-                                                        $baseTunjangan = (int) ($user->tunjangan_base ?? 0);
+                                                        $baseGaji = (int) ($employee->salary ?? 0);
+                                                        $baseTunjangan = (int) ($employee->tunjangan ?? 0);
+                                                        $set('user_id', $employee->user_id);
                                                         $set('gaji_pokok', (string) $baseGaji);
                                                         $set('tunjangan', (string) $baseTunjangan);
                                                         $monthlySalary = Payroll::computeMonthly(
@@ -77,18 +65,7 @@ class PayrollForm
                                                         $set('annual_salary', (string) Payroll::computeAnnualBase($baseGaji, $baseTunjangan));
                                                         $set('total_compensation', (string) Payroll::computeTotalCompensationBase($baseGaji, $baseTunjangan, (int) $get('pengurangan')));
                                                     })
-                                                    ->getOptionLabelUsing(function ($value): ?string {
-                                                        $user = User::find($value);
-
-                                                        return $user?->name;
-                                                    })
-                                                    ->getOptionLabelFromRecordUsing(function (User $record): string {
-                                                        $statusName = $record->status?->status_name ?? $record->department ?? 'No Status';
-                                                        $email = $record->email ? " - {$record->email}" : '';
-
-                                                        return "{$record->name} ({$statusName}){$email}";
-                                                    })
-                                                    ->helperText('Pilih karyawan dengan role Office yang akan dibuatkan payroll')
+                                                    ->helperText('Pilih dari master Employee (boleh tanpa akun login).')
                                                     ->columnSpan(2),
 
                                                 Group::make([
@@ -126,171 +103,21 @@ class PayrollForm
                                         Placeholder::make('employee_info')
                                             ->label('Info Karyawan')
                                             ->content(function (Get $get): string {
-                                                $userId = $get('user_id');
-                                                if (! $userId) {
+                                                $employeeId = $get('employee_id');
+                                                if (! $employeeId) {
                                                     return 'Pilih karyawan untuk melihat informasi';
                                                 }
 
-                                                $user = User::with('status')->find($userId);
-                                                if (! $user) {
+                                                $employee = \App\Models\Employee::query()->with('user.status')->find($employeeId);
+                                                if (! $employee) {
                                                     return 'Karyawan tidak ditemukan';
                                                 }
 
-                                                $hireDate = $user->hire_date?->format('d/m/Y') ?? 'No Date';
+                                                $login = $employee->user_id ? "Login: {$employee->user?->email}" : 'Tanpa akun login';
+                                                $join = $employee->date_of_join?->format('d/m/Y') ?? '-';
 
-                                                $monthVal = $get('period_month');
-                                                $yearVal = $get('period_year');
-                                                $month = $monthVal instanceof \Illuminate\Support\Carbon ? $monthVal->month : (int) (is_numeric($monthVal) ? $monthVal : preg_replace('/[^\d]/', '', (string) $monthVal));
-                                                $year = $yearVal instanceof \Illuminate\Support\Carbon ? $yearVal->year : (int) (is_numeric($yearVal) ? $yearVal : preg_replace('/[^\d]/', '', (string) $yearVal));
-
-                                                $existingPayroll = null;
-                                                if ($month && $year) {
-                                                    $existingPayroll = Payroll::where('user_id', $userId)
-                                                        ->where('period_month', $month)
-                                                        ->where('period_year', $year)
-                                                        ->first();
-                                                }
-
-                                                $info = "📅 Mulai kerja: {$hireDate}";
-
-                                                if ($existingPayroll) {
-                                                    $months = [
-                                                        1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
-                                                        5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
-                                                        9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
-                                                    ];
-                                                    $monthName = $months[$month] ?? 'Unknown';
-                                                    $info .= "\n⚠️ Payroll untuk {$monthName} {$year} sudah ada!";
-                                                }
-
-                                                return $info;
-                                            })
-                                            ->visible(fn (Get $get): bool => (bool) $get('user_id')),
-
-                                        Placeholder::make('absensi_summary')
-                                            ->label('Ringkasan Absensi Periode')
-                                            ->content(function (Get $get): HtmlString|string {
-                                                $userId = $get('user_id');
-                                                $month = self::resolveMonth($get('period_month'));
-                                                $year = self::resolveYear($get('period_year'));
-
-                                                if (! $userId || ! $month || ! $year) {
-                                                    return 'Pilih karyawan dan periode untuk melihat ringkasan absensi.';
-                                                }
-
-                                                $s = app(AbsensiLaporanService::class)->ringkasanBulanan((int) $userId, $month, $year);
-                                                $pengurangan = number_format($s['usulan_pengurangan'], 0, ',', '.');
-                                                $bonus = number_format($s['usulan_bonus'], 0, ',', '.');
-
-                                                return new HtmlString(nl2br(e(
-                                                    "Hadir {$s['hadir']} · Terlambat {$s['terlambat']} ({$s['total_menit_terlambat']} mnt) · Alfa {$s['alfa']}\n".
-                                                    "Cuti {$s['cuti']} · Libur {$s['libur']} · Lembur disetujui {$s['total_menit_lembur']} mnt\n".
-                                                    "Usulan pengurangan: Rp {$pengurangan}\n".
-                                                    "Usulan bonus lembur: Rp {$bonus}"
-                                                )));
-                                            })
-                                            ->visible(fn (Get $get): bool => (bool) $get('user_id')),
-
-                                        SchemaActions::make([
-                                            Action::make('apply_absensi_notes')
-                                                ->label('Salin Ringkasan ke Catatan')
-                                                ->icon('heroicon-o-clipboard-document')
-                                                ->color('gray')
-                                                ->action(function (Get $get, Set $set): void {
-                                                    $userId = $get('user_id');
-                                                    $month = self::resolveMonth($get('period_month'));
-                                                    $year = self::resolveYear($get('period_year'));
-
-                                                    if (! $userId || ! $month || ! $year) {
-                                                        Notification::make()->title('Pilih karyawan dan periode dulu')->warning()->send();
-
-                                                        return;
-                                                    }
-
-                                                    $s = app(AbsensiLaporanService::class)->ringkasanBulanan((int) $userId, $month, $year);
-                                                    $existing = trim((string) ($get('notes') ?? ''));
-                                                    $set('notes', $existing === '' ? $s['catatan'] : $existing."\n".$s['catatan']);
-
-                                                    Notification::make()->title('Ringkasan absensi disalin ke catatan')->success()->send();
-                                                }),
-                                            Action::make('apply_absensi_pengurangan')
-                                                ->label('Terapkan Usulan Pengurangan')
-                                                ->icon('heroicon-o-minus-circle')
-                                                ->color('warning')
-                                                ->requiresConfirmation()
-                                                ->modalHeading('Terapkan usulan pengurangan dari keterlambatan?')
-                                                ->modalDescription('Nilai pengurangan diganti dengan usulan dari menit terlambat × tarif di Pengaturan Absensi.')
-                                                ->action(function (Get $get, Set $set): void {
-                                                    $userId = $get('user_id');
-                                                    $month = self::resolveMonth($get('period_month'));
-                                                    $year = self::resolveYear($get('period_year'));
-
-                                                    if (! $userId || ! $month || ! $year) {
-                                                        Notification::make()->title('Pilih karyawan dan periode dulu')->warning()->send();
-
-                                                        return;
-                                                    }
-
-                                                    $s = app(AbsensiLaporanService::class)->ringkasanBulanan((int) $userId, $month, $year);
-                                                    if ($s['usulan_pengurangan'] <= 0) {
-                                                        Notification::make()
-                                                            ->title('Tidak ada usulan pengurangan')
-                                                            ->body('Isi denda terlambat/menit di Pengaturan Absensi, atau pastikan ada menit terlambat di periode ini.')
-                                                            ->warning()
-                                                            ->send();
-
-                                                        return;
-                                                    }
-
-                                                    $set('pengurangan', number_format($s['usulan_pengurangan'], 0, '.', ','));
-                                                    self::recalculatePayrollTotals($get, $set);
-
-                                                    Notification::make()
-                                                        ->title('Pengurangan diterapkan')
-                                                        ->body('Rp '.number_format($s['usulan_pengurangan'], 0, ',', '.'))
-                                                        ->success()
-                                                        ->send();
-                                                }),
-                                            Action::make('apply_absensi_bonus')
-                                                ->label('Terapkan Usulan Bonus Lembur')
-                                                ->icon('heroicon-o-gift')
-                                                ->color('success')
-                                                ->requiresConfirmation()
-                                                ->modalHeading('Terapkan usulan bonus dari lembur disetujui?')
-                                                ->modalDescription('Nilai bonus diganti dengan usulan dari menit lembur × tarif di Pengaturan Absensi.')
-                                                ->action(function (Get $get, Set $set): void {
-                                                    $userId = $get('user_id');
-                                                    $month = self::resolveMonth($get('period_month'));
-                                                    $year = self::resolveYear($get('period_year'));
-
-                                                    if (! $userId || ! $month || ! $year) {
-                                                        Notification::make()->title('Pilih karyawan dan periode dulu')->warning()->send();
-
-                                                        return;
-                                                    }
-
-                                                    $s = app(AbsensiLaporanService::class)->ringkasanBulanan((int) $userId, $month, $year);
-                                                    if ($s['usulan_bonus'] <= 0) {
-                                                        Notification::make()
-                                                            ->title('Tidak ada usulan bonus')
-                                                            ->body('Isi tarif lembur/menit di Pengaturan Absensi, atau pastikan ada lembur disetujui di periode ini.')
-                                                            ->warning()
-                                                            ->send();
-
-                                                        return;
-                                                    }
-
-                                                    $set('bonus', number_format($s['usulan_bonus'], 0, '.', ','));
-                                                    self::recalculatePayrollTotals($get, $set);
-
-                                                    Notification::make()
-                                                        ->title('Bonus lembur diterapkan')
-                                                        ->body('Rp '.number_format($s['usulan_bonus'], 0, ',', '.'))
-                                                        ->success()
-                                                        ->send();
-                                                }),
-                                        ])
-                                            ->visible(fn (Get $get): bool => (bool) $get('user_id')),
+                                                return "{$employee->name} · Bergabung {$join} · {$login}";
+                                            }),
                                     ])->columns(1),
                             ]),
 
@@ -298,113 +125,66 @@ class PayrollForm
                             ->icon('heroicon-o-currency-dollar')
                             ->schema([
                                 Section::make('Informasi Gaji')
-                                    ->description('Pengaturan gaji bulanan dan tahunan')
+                                    ->description('Gaji pokok & tunjangan dari master Karyawan (read-only). Ubah hanya pengurangan & bonus untuk periode ini.')
                                     ->schema([
                                         Grid::make(4)
                                             ->schema([
                                                 TextInput::make('gaji_pokok')
                                                     ->label('Gaji Pokok')
-                                                    ->required()
                                                     ->prefix('Rp')
                                                     ->suffixIcon('heroicon-m-currency-dollar')
-                                                    ->placeholder('2,000,000')
                                                     ->mask(RawJs::make('$money($input)'))
                                                     ->stripCharacters(',')
-                                                    ->extraAttributes(['class' => 'bg-blue-50 text-right'])
+                                                    ->disabled()
+                                                    ->dehydrated()
                                                     ->dehydrateStateUsing(fn ($state) => (int) str_replace(',', '', (string) $state))
-                                                    ->live(onBlur: true)
-                                                    ->afterStateUpdated(function (Get $get, Set $set, ?string $state) {
-                                                        $monthlySalary = Payroll::computeMonthly(
-                                                            $state,
-                                                            $get('tunjangan'),
-                                                            $get('bonus'),
-                                                            $get('pengurangan'),
-                                                        );
-
-                                                        $set('monthly_salary', (string) $monthlySalary);
-
-                                                        $set('annual_salary', (string) Payroll::computeAnnualBase($state, $get('tunjangan')));
-                                                        $set('total_compensation', (string) Payroll::computeTotalCompensationBase($state, $get('tunjangan'), $get('pengurangan')));
-                                                    })
-                                                    ->helperText('Gaji pokok tanpa tunjangan'),
+                                                    ->helperText('Dari master Karyawan — ubah di menu Karyawan.')
+                                                    ->extraAttributes(['class' => 'bg-gray-50 text-right']),
 
                                                 TextInput::make('tunjangan')
                                                     ->label('Tunjangan')
                                                     ->prefix('Rp')
                                                     ->suffixIcon('heroicon-m-plus')
-                                                    ->placeholder('1000000')
                                                     ->default(0)
                                                     ->mask(RawJs::make('$money($input)'))
                                                     ->stripCharacters(',')
-                                                    ->extraAttributes(['class' => 'bg-gray-50 text-right'])
-                                                    ->live(onBlur: true)
+                                                    ->disabled()
+                                                    ->dehydrated()
                                                     ->dehydrateStateUsing(fn ($state) => (int) str_replace(',', '', (string) $state))
-                                                    ->afterStateUpdated(function (Get $get, Set $set, ?string $state) {
-                                                        $monthlySalary = Payroll::computeMonthly(
-                                                            $get('gaji_pokok'),
-                                                            $state,
-                                                            $get('bonus'),
-                                                            $get('pengurangan'),
-                                                        );
-
-                                                        $set('monthly_salary', (string) $monthlySalary);
-
-                                                        $set('annual_salary', (string) Payroll::computeAnnualBase($get('gaji_pokok'), $state));
-                                                        $set('total_compensation', (string) Payroll::computeTotalCompensationBase($get('gaji_pokok'), $state, $get('pengurangan')));
-                                                    })
-                                                    ->helperText('Tunjangan dan benefit lainnya'),
+                                                    ->helperText('Dari master Karyawan — ubah di menu Karyawan.')
+                                                    ->extraAttributes(['class' => 'bg-gray-50 text-right']),
 
                                                 TextInput::make('pengurangan')
                                                     ->label('Pengurangan')
                                                     ->prefix('Rp')
                                                     ->suffixIcon('heroicon-m-minus')
-                                                    ->placeholder('BPJS, keterlambatan dan lainnya')
+                                                    ->placeholder('BPJS, potongan, dll.')
                                                     ->default(0)
                                                     ->mask(RawJs::make('$money($input)'))
                                                     ->stripCharacters(',')
-                                                    ->extraAttributes(['class' => 'bg-gray-50 text-right'])
+                                                    ->extraAttributes(['class' => 'bg-amber-50 text-right'])
                                                     ->live(onBlur: true)
                                                     ->dehydrateStateUsing(fn ($state) => (int) str_replace(',', '', (string) $state))
                                                     ->afterStateUpdated(function (Get $get, Set $set, ?string $state) {
-                                                        $monthlySalary = Payroll::computeMonthly(
-                                                            $get('gaji_pokok'),
-                                                            $get('tunjangan'),
-                                                            $get('bonus'),
-                                                            $state,
-                                                        );
-
-                                                        $set('monthly_salary', (string) $monthlySalary);
-
-                                                        $set('annual_salary', (string) Payroll::computeAnnualBase($get('gaji_pokok'), $get('tunjangan')));
-                                                        $set('total_compensation', (string) Payroll::computeTotalCompensationBase($get('gaji_pokok'), $get('tunjangan'), $state));
+                                                        self::recalculatePayrollTotals($get, $set);
                                                     })
-                                                    ->helperText('BPJS, keterlambatan dan lainnya'),
-TextInput::make('bonus')
+                                                    ->helperText('Boleh diubah per periode'),
+
+                                                TextInput::make('bonus')
                                                     ->label('Bonus')
                                                     ->prefix('Rp')
                                                     ->suffixIcon('heroicon-m-gift')
-                                                    ->placeholder('1000000')
+                                                    ->placeholder('0')
                                                     ->mask(RawJs::make('$money($input)'))
                                                     ->stripCharacters(',')
                                                     ->default(0)
                                                     ->dehydrateStateUsing(fn ($state) => (int) str_replace(',', '', (string) $state))
-                                                    ->live()
-                                                    ->extraAttributes(['class' => 'bg-gray-50 text-right'])
-                                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                                                        $monthlySalary = Payroll::computeMonthly(
-                                                            $get('gaji_pokok'),
-                                                            $get('tunjangan'),
-                                                            $state,
-                                                            $get('pengurangan'),
-                                                        );
-
-                                                        $set('monthly_salary', (string) $monthlySalary);
-
-                                                        $set('annual_salary', (string) Payroll::computeAnnualBase($get('gaji_pokok'), $get('tunjangan')));
-                                                        $set('total_compensation', (string) Payroll::computeTotalCompensationBase($get('gaji_pokok'), $get('tunjangan'), $get('pengurangan')));
+                                                    ->live(onBlur: true)
+                                                    ->extraAttributes(['class' => 'bg-emerald-50 text-right'])
+                                                    ->afterStateUpdated(function (Get $get, Set $set, ?string $state) {
+                                                        self::recalculatePayrollTotals($get, $set);
                                                     })
-                                                    ->helperText('Bonus bulanan (termasuk dalam gaji bulanan)'),
-                                                
+                                                    ->helperText('Boleh diubah per periode'),
                                             ]),
 
                                         Grid::make(3)
@@ -426,7 +206,6 @@ TextInput::make('bonus')
                                                                 $record->bonus ?? 0,
                                                                 $record->pengurangan ?? 0,
                                                             );
-
                                                             $component->state((string) (int) $monthly);
                                                         }
                                                     })
@@ -454,7 +233,6 @@ TextInput::make('bonus')
                                                     ->suffixIcon('heroicon-m-calculator')
                                                     ->readOnly()
                                                     ->dehydrated(false)
-                                                    ->live()
                                                     ->mask(RawJs::make('$money($input)'))
                                                     ->stripCharacters(',')
                                                     ->formatStateUsing(fn ($state) => $state === null ? null : number_format((int) str_replace(',', '', (string) $state), 0, '.', ','))

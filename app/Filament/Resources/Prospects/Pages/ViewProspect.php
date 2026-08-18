@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Prospects\Pages;
 
 use App\Filament\Resources\Prospects\ProspectResource;
 use App\Models\Prospect;
+use App\Support\UserVisibility;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\ListRecords;
@@ -16,6 +17,17 @@ class ViewProspect extends ListRecords
 
     public function getTitle(): string
     {
+        $recordId = request()->query('record');
+        if (filled($recordId) && is_numeric($recordId)) {
+            $prospect = $this->baseProspectQuery()
+                ->whereKey((int) $recordId)
+                ->first();
+
+            return $prospect?->name_event
+                ? 'Prospek: '.$prospect->name_event
+                : 'Prospek';
+        }
+
         return match ((string) request()->query('metric')) {
             'with_orders' => 'Prospek dengan Order',
             'month' => 'Prospek Bulan Ini',
@@ -45,11 +57,15 @@ class ViewProspect extends ListRecords
 
     protected function getTableQuery(): Builder
     {
-        $metric = (string) request()->query('metric');
+        $query = $this->baseProspectQuery();
 
-        $query = Prospect::query()
-            ->withTrashed()
-            ->with(['user:id,name', 'latestOrder']);
+        // ViewAction Filament mengirim ?record=ID — tampilkan prospek itu (scoped company).
+        $recordId = request()->query('record');
+        if (filled($recordId) && is_numeric($recordId)) {
+            return $query->whereKey((int) $recordId);
+        }
+
+        $metric = (string) request()->query('metric');
 
         return match ($metric) {
             'with_orders' => $query->whereHas('orders'),
@@ -64,5 +80,17 @@ class ViewProspect extends ListRecords
             'today' => $query->whereDate('created_at', Carbon::today()),
             default => $query->whereRaw('1 = 0'),
         };
+    }
+
+    /**
+     * Super admin: semua. User company aktif: hanya prospek tim/company-nya.
+     */
+    protected function baseProspectQuery(): Builder
+    {
+        return UserVisibility::constrainOwnedQuery(
+            Prospect::query()
+                ->withTrashed()
+                ->with(['user:id,name', 'latestOrder'])
+        );
     }
 }

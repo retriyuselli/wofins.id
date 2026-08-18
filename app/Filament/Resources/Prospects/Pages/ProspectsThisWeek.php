@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Prospects\Pages;
 
 use App\Filament\Resources\Prospects\ProspectResource;
 use App\Models\Prospect;
+use App\Support\UserVisibility;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\Page;
@@ -32,9 +33,11 @@ class ProspectsThisWeek extends Page
         $from = Carbon::now()->startOfWeek()->startOfDay();
         $until = Carbon::now()->endOfWeek()->endOfDay();
 
-        $prospects = Prospect::query()
-            ->withTrashed()
-            ->with(['user:id,name', 'latestOrder'])
+        $prospects = UserVisibility::constrainOwnedQuery(
+            Prospect::query()
+                ->withTrashed()
+                ->with(['user:id,name', 'latestOrder'])
+        )
             ->whereBetween('created_at', [$from, $until])
             ->orderByDesc('created_at')
             ->get();
@@ -46,4 +49,3 @@ class ProspectsThisWeek extends Page
         ];
     }
 }
-

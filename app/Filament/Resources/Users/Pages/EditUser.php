@@ -41,6 +41,25 @@ class EditUser extends EditRecord
             isset($data['roles']) ? (array) $data['roles'] : null
         );
 
+        // Non–super_admin: kunci email & role Spatie; Status Jabatan hanya jika Business owner.
+        if (! UserVisibility::actorIsSuperAdmin()) {
+            $data['email'] = $this->record->email;
+            $data['roles'] = UserVisibility::sanitizeAssignableRoleIds(
+                $this->record->roles()->pluck('id')->all()
+            );
+
+            if (UserVisibility::canManageJobStatuses()) {
+                $sanitized = UserVisibility::sanitizeJobStatusIds(
+                    isset($data['statuses']) ? (array) $data['statuses'] : null
+                );
+                $data['statuses'] = $sanitized !== []
+                    ? $sanitized
+                    : $this->record->statuses()->pluck('statuses.id')->all();
+            } else {
+                $data['statuses'] = $this->record->statuses()->pluck('statuses.id')->all();
+            }
+        }
+
         // Pastikan anggota tim tertaut ke company / created_by pemilik paket
         if (! UserVisibility::actorIsSuperAdmin()) {
             $companyId = UserVisibility::companyId();

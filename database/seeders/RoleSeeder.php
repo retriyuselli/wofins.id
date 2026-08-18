@@ -14,9 +14,9 @@ class RoleSeeder extends Seeder
      *
      * - Paket (starter/professional/business) menempel di companies.subscription_plan.
      - Role `pengunjung` = pemilik/tim paket; permission = PackageRolePermissions (CRUD Starter+).
-     - Menu modul Pro/Business digating PlanResourceGate (nota dinas, rekonsiliasi, dokumen, HRIS, dll).
+     - Menu modul Pro/Business digating PlanResourceGate (nota dinas, rekonsiliasi, dokumen, payroll, dll).
      - `role_management` tidak ada di paket mana pun; Role Filament hanya untuk super_admin (bypass).
-     - Permission Shield penuh (LeaveRequest, Role, BankStatement, …) dibuat via `shield:generate`,
+     - Permission Shield penuh (Role, BankStatement, …) dibuat via `shield:generate`,
        bukan di seeder ini — setelah generate, sync ulang ke super_admin.
      */
     public function run(): void

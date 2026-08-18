@@ -56,7 +56,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
         'last_working_date',
         'expire_date',
         'department',
-        'annual_leave_quota',
         'status',
         'gaji_pokok_base',
         'tunjangan_base',
@@ -191,7 +190,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
             abort(403, 'Only HR/Admin can update employment info');
         }
 
-        $allowedFields = ['hire_date', 'last_working_date', 'department', 'annual_leave_quota'];
+        $allowedFields = ['hire_date', 'last_working_date', 'department'];
         $updateData = array_intersect_key($data, array_flip($allowedFields));
 
         if (empty($updateData)) {
@@ -464,29 +463,9 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
         return $this->hasMany(Payroll::class);
     }
 
-    public function leaveRequests(): HasMany
-    {
-        return $this->hasMany(LeaveRequest::class);
-    }
-
-    public function leaveBalances(): HasMany
-    {
-        return $this->hasMany(LeaveBalance::class);
-    }
-
     public function prospectApps(): HasMany
     {
         return $this->hasMany(ProspectApp::class);
-    }
-
-    public function absensis(): HasMany
-    {
-        return $this->hasMany(Absensi::class);
-    }
-
-    public function logAbsensis(): HasMany
-    {
-        return $this->hasMany(LogAbsensi::class);
     }
 
     /**

@@ -120,6 +120,8 @@ class CompanyLifecycleService
             'products' => 0,
             'prospects' => 0,
             'simulasi' => 0,
+            'employees' => 0,
+            'crew' => 0,
         ];
 
         try {
@@ -186,10 +188,36 @@ class CompanyLifecycleService
                 }
 
                 if (Schema::hasTable('data_pribadis') && Schema::hasColumn('data_pribadis', 'company_id')) {
-                    DataPribadi::withoutGlobalScopes()
+                    $crew = DataPribadi::withoutGlobalScopes()
                         ->where('company_id', $companyId)
-                        ->get()
-                        ->each->delete();
+                        ->get();
+                    $stats['crew'] = $crew->count();
+                    $crew->each->delete();
+                }
+
+                // Soft-delete Employee; bersihkan payroll terkait.
+                if (Schema::hasTable('employees') && Schema::hasColumn('employees', 'company_id')) {
+                    $employeeIds = \App\Models\Employee::withoutGlobalScopes()
+                        ->where('company_id', $companyId)
+                        ->pluck('id')
+                        ->map(fn ($id) => (int) $id)
+                        ->all();
+
+                    if ($employeeIds !== []) {
+                        foreach ([
+                            'payrolls' => 'employee_id',
+                        ] as $table => $column) {
+                            if (Schema::hasTable($table) && Schema::hasColumn($table, $column)) {
+                                DB::table($table)->whereIn($column, $employeeIds)->delete();
+                            }
+                        }
+
+                        $employeeRows = \App\Models\Employee::withoutGlobalScopes()
+                            ->whereIn('id', $employeeIds)
+                            ->get();
+                        $stats['employees'] = $employeeRows->count();
+                        $employeeRows->each->delete();
+                    }
                 }
 
                 if (Schema::hasTable('prospect_apps') && Schema::hasColumn('prospect_apps', 'company_id')) {

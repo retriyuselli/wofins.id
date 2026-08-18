@@ -60,9 +60,7 @@ class ProfileController extends Controller
             PricingPlans::FEATURE_NOTA_DINAS => 'Nota dinas',
             PricingPlans::FEATURE_DOCUMENTS => 'Dokumen & SOP',
             PricingPlans::FEATURE_RECONCILIATION => 'Rekonsiliasi & arus kas bersih',
-            PricingPlans::FEATURE_HRIS => 'HRIS / Absensi',
             PricingPlans::FEATURE_PAYROLL => 'Payroll',
-            PricingPlans::FEATURE_EMPLOYEE_PORTAL => 'Portal karyawan',
             PricingPlans::FEATURE_ADVANCED_REPORTS => 'Laporan lanjutan (kinerja AM)',
         ];
 
@@ -96,139 +94,19 @@ class ProfileController extends Controller
     {
         $currentDate = now();
 
-        $upcomingLeaves = $user
-            ->leaveRequests()
-            ->with('leaveType')
-            ->whereIn('status', ['approved', 'pending'])
-            ->where('start_date', '>=', $currentDate)
-            ->orderBy('start_date', 'asc')
-            ->take(5)
-            ->get();
-
-        $recentLeaves = $user
-            ->leaveRequests()
-            ->with('leaveType')
-            ->where('start_date', '<', $currentDate)
-            ->orderBy('start_date', 'desc')
-            ->take(3)
-            ->get();
-
-        $nextLeave = $upcomingLeaves->first();
-        $daysUntilNextLeave = $nextLeave ? (int) $currentDate->diffInDays($nextLeave->start_date, false) : null;
-
-        $statusTranslations = [
-            'approved' => 'Disetujui',
-            'pending' => 'Menunggu',
-            'rejected' => 'Ditolak',
-        ];
-
-        $leaveTypeTranslations = [
-            'Annual Leave' => 'Cuti Tahunan',
-            'Sick Leave' => 'Cuti Sakit',
-            'Emergency Leave' => 'Cuti Darurat',
-            'Unpaid Leave' => 'Cuti Tanpa Gaji',
-            'Maternity Leave' => 'Cuti Melahirkan',
-            'Paternity Leave' => 'Cuti Ayah',
-            'Marriage Leave' => 'Cuti Menikah',
-            'Bereavement Leave' => 'Cuti Duka',
-        ];
-
-        return compact(
-            'currentDate',
-            'upcomingLeaves',
-            'recentLeaves',
-            'nextLeave',
-            'daysUntilNextLeave',
-            'statusTranslations',
-            'leaveTypeTranslations',
-        );
+        return compact('currentDate');
     }
 
     private function hrSalaryLeaveViewData(User $user): array
     {
         $latestPayroll = $user->payrolls()->latest()->first();
         $currentYear = (int) date('Y');
-
         $period = request()->query('period', 'year');
-        $leaveQueryForPeriod = function () use ($user, $period, $currentYear) {
-            $q = $user->leaveRequests();
-            if ($period === 'year') {
-                $q->whereYear('start_date', $currentYear);
-            } elseif ($period === 'last_year') {
-                $q->whereYear('start_date', (int) $currentYear - 1);
-            }
-            return $q;
-        };
-
-        $leaveStats = [
-            'approved' => $leaveQueryForPeriod()->where('status', 'approved')->sum('total_days'),
-            'pending' => $leaveQueryForPeriod()->where('status', 'pending')->sum('total_days'),
-            'rejected' => $leaveQueryForPeriod()->where('status', 'rejected')->sum('total_days'),
-        ];
-
-        $leaveByType = $leaveQueryForPeriod()
-            ->with('leaveType')
-            ->where('status', 'approved')
-            ->get()
-            ->groupBy('leaveType.name')
-            ->map(function ($leaves) {
-                return $leaves->sum('total_days');
-            });
-
-        $annualLeaveAllowance = $user->annual_leave_quota ?? 12;
-        if ($annualLeaveAllowance < 12) {
-            $annualLeaveAllowance = 12;
-        }
-
-        $usedLeave = $leaveStats['approved'];
-        $remainingLeave = max(0, $annualLeaveAllowance - $usedLeave);
-
-        if ($usedLeave > $annualLeaveAllowance) {
-            $displayUsedLeave = $usedLeave;
-            $remainingLeave = 0;
-        } else {
-            $displayUsedLeave = $usedLeave;
-        }
-
-        $prevYear = (int) $currentYear - 1;
-        $prevUsedLeave = $user->leaveRequests()
-            ->where('status', 'approved')
-            ->whereYear('start_date', $prevYear)
-            ->sum('total_days');
-        $prevUsagePercentage = $annualLeaveAllowance > 0 ? round(($prevUsedLeave / $annualLeaveAllowance) * 100) : 0;
-
-        $currentMonth = (int) date('n');
-        $prevRemaining = max(0, $annualLeaveAllowance - $prevUsedLeave);
-        $carryOver = $currentMonth <= 2 ? $prevRemaining : 0;
-        $effectiveAllowanceYear = $annualLeaveAllowance + $carryOver;
-
-        $leaveTypeTranslations = [
-            'Annual Leave' => 'Cuti Tahunan',
-            'Sick Leave' => 'Cuti Sakit',
-            'Emergency Leave' => 'Cuti Darurat',
-            'Unpaid Leave' => 'Cuti Tanpa Gaji',
-            'Maternity Leave' => 'Cuti Melahirkan',
-            'Paternity Leave' => 'Cuti Ayah',
-            'Marriage Leave' => 'Cuti Menikah',
-            'Bereavement Leave' => 'Cuti Duka',
-        ];
 
         return compact(
             'latestPayroll',
             'currentYear',
             'period',
-            'leaveStats',
-            'leaveByType',
-            'annualLeaveAllowance',
-            'usedLeave',
-            'displayUsedLeave',
-            'remainingLeave',
-            'prevYear',
-            'prevUsedLeave',
-            'prevUsagePercentage',
-            'carryOver',
-            'effectiveAllowanceYear',
-            'leaveTypeTranslations',
         );
     }
 
@@ -680,12 +558,6 @@ class ProfileController extends Controller
                 'provider' => 'Corporate Health Plus',
                 'coverage' => 'Full Coverage',
                 'expiry' => now()->addYear()->format('F d, Y'),
-            ],
-            'annual_leave' => [
-                'total_days' => 24,
-                'used_days' => 6,
-                'remaining_days' => 18,
-                'pending_requests' => 0,
             ],
             'performance_bonus' => [
                 'eligibility' => 'Eligible',

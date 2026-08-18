@@ -390,11 +390,11 @@ Invoice Area
 
                                                         <div style="text-align: left; border: none !important; min-width: 0; flex: 1 1 auto;">
                                                             @php
-                                                                $company = $company ?? null;
-                                                                $logoSrc = '';
+                                                                $logoSrc = $companyLogoUrl ?? '';
 
                                                                 if (
-                                                                    $company &&
+                                                                    empty($logoSrc) &&
+                                                                    ($company ?? null) &&
                                                                     $company->logo_url &&
                                                                     \Illuminate\Support\Facades\Storage::disk('public')->exists($company->logo_url)
                                                                 ) {
@@ -406,19 +406,25 @@ Invoice Area
                                                             @endphp
                                                             <b>Office Information :</b>
                                                             <address style="white-space: normal; overflow-wrap: anywhere; word-break: break-word;">
-                                                                {{ $company->company_name ?? ($companyName ?? config('app.name')) }}<br>
-                                                                {{ $company->address ?? ($companyAddress ?? '-') }}
+                                                                {{ $companyName ?? config('app.name') }}<br>
+                                                                {{ $companyAddress ?: 'Alamat belum diatur' }}
                                                                 |
-                                                                Phone: {{ $company->phone ?? ($companyPhone ?? '-') }} <br>
+                                                                Phone: {{ $companyPhone ?: '-' }}
+                                                                @if(!empty($companyEmail))
+                                                                    <br>Email: {{ $companyEmail }}
+                                                                @endif
+                                                                @if(!empty($companyWebsite))
+                                                                    <br>Website: {{ $companyWebsite }}
+                                                                @endif
                                                             </address>
                                                         </div>
 
                                                         <div class="header-logo"
-                                                            style="max-height: 100px; text-align: right; flex: 0 0 auto; margin-left: auto;">
+                                                            style="max-height: 64px; text-align: right; flex: 0 0 auto; margin-left: auto;">
                                                             @if ($logoSrc)
-                                                                <img src="{{ $logoSrc }}" alt="Logo {{ $company->company_name ?? 'Perusahaan' }}"
+                                                                <img src="{{ $logoSrc }}" alt="Logo {{ $companyName ?? 'Perusahaan' }}"
                                                                     class="company-logo"
-                                                                    style="display: block; max-height: 100px; width: auto; max-width: 250px; margin-left: auto;">
+                                                                    style="display: block; max-height: 64px; width: auto; max-width: 160px; margin-left: auto; object-fit: contain;">
                                                             @endif
                                                         </div>
 
@@ -725,7 +731,7 @@ Invoice Area
                                                     style="border-top: 1px solid var(--title-color); margin: 0 10px; padding-top: 5px;">
                                                     ( {{ $simulasi->user->name ?? 'Account Manager' }} )
                                                 </p>
-                                                <p>{{ $company->company_name ?? ($companyName ?? config('app.name')) }}</p>
+                                                <p>{{ $companyName ?? config('app.name') }}</p>
                                             </div>
                                             <div
                                                 style="float: right; width: 40%; text-align: center; margin-right: 5%;">

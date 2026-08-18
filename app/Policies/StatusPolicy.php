@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
-use App\Models\Status;
-use App\Support\ProFeatures;
-use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Foundation\Auth\User as AuthUser;
+use App\Models\Status;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class StatusPolicy
 {
     use HandlesAuthorization;
-
+    
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:Status');
@@ -25,46 +24,47 @@ class StatusPolicy
 
     public function create(AuthUser $authUser): bool
     {
-        return ProFeatures::actorIsSuperAdmin() && $authUser->can('Create:Status');
+        return $authUser->can('Create:Status');
     }
 
     public function update(AuthUser $authUser, Status $status): bool
     {
-        return ProFeatures::actorIsSuperAdmin() && $authUser->can('Update:Status');
+        return $authUser->can('Update:Status');
     }
 
     public function delete(AuthUser $authUser, Status $status): bool
     {
-        return ProFeatures::actorIsSuperAdmin() && $authUser->can('Delete:Status');
+        return $authUser->can('Delete:Status');
     }
 
     public function restore(AuthUser $authUser, Status $status): bool
     {
-        return ProFeatures::actorIsSuperAdmin() && $authUser->can('Restore:Status');
+        return $authUser->can('Restore:Status');
     }
 
     public function forceDelete(AuthUser $authUser, Status $status): bool
     {
-        return ProFeatures::actorIsSuperAdmin() && $authUser->can('ForceDelete:Status');
+        return $authUser->can('ForceDelete:Status');
     }
 
     public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return ProFeatures::actorIsSuperAdmin() && $authUser->can('ForceDeleteAny:Status');
+        return $authUser->can('ForceDeleteAny:Status');
     }
 
     public function restoreAny(AuthUser $authUser): bool
     {
-        return ProFeatures::actorIsSuperAdmin() && $authUser->can('RestoreAny:Status');
+        return $authUser->can('RestoreAny:Status');
     }
 
     public function replicate(AuthUser $authUser, Status $status): bool
     {
-        return ProFeatures::actorIsSuperAdmin() && $authUser->can('Replicate:Status');
+        return $authUser->can('Replicate:Status');
     }
 
     public function reorder(AuthUser $authUser): bool
     {
-        return ProFeatures::actorIsSuperAdmin() && $authUser->can('Reorder:Status');
+        return $authUser->can('Reorder:Status');
     }
+
 }

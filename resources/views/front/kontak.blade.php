@@ -452,7 +452,7 @@
                                     'Demo walkthrough modul WOFINS',
                                     'Rekomendasi paket sesuai ukuran tim',
                                     'Diskusi onboarding & migrasi data',
-                                    'Pertanyaan fitur absensi, keuangan, rekonsiliasi',
+                                    'Pertanyaan fitur payroll, keuangan, rekonsiliasi',
                                 ] as $help)
                                     <li class="flex items-start gap-2.5">
                                         <span class="mt-0.5 w-5 h-5 rounded-full bg-[rgba(201,162,39,0.15)] text-[var(--wf-gold)] inline-flex items-center justify-center text-[0.6rem] shrink-0">

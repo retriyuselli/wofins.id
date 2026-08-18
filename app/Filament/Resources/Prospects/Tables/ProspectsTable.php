@@ -242,7 +242,10 @@ class ProspectsTable
                 ActionGroup::make([
                     ViewAction::make()
                         ->icon('heroicon-m-eye')
-                        ->tooltip('Lihat detail prospek'),
+                        ->tooltip('Lihat detail prospek')
+                        ->url(fn (Prospect $record): string => ProspectResource::getUrl('view', [
+                            'record' => $record->getKey(),
+                        ])),
 
                     EditAction::make()
                         ->icon('heroicon-m-pencil')

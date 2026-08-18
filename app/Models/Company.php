@@ -192,6 +192,11 @@ class Company extends Model
         return $this->hasMany(DataPribadi::class);
     }
 
+    public function employees(): HasMany
+    {
+        return $this->hasMany(Employee::class);
+    }
+
     public function isCrewInviteOpen(): bool
     {
         if (! Schema::hasColumn('companies', 'crew_invite_enabled')) {

@@ -1,8 +1,6 @@
 <?php
 
 use App\Http\Controllers\AccountManagerReportController;
-use App\Http\Controllers\AbsensiLaporanController;
-use App\Http\Controllers\AbsensiPhotoController;
 use App\Http\Controllers\BankReconciliationTemplateController;
 use App\Http\Controllers\BankStatementFileController;
 use App\Http\Controllers\NotaDinasInvoiceFileController;
@@ -28,7 +26,6 @@ use App\Http\Controllers\LaporanKeuanganController;
 use App\Http\Controllers\NotaDinasPdfController;
 use App\Http\Controllers\PayrollSlipController;
 use App\Http\Controllers\ProductDisplayController;
-use App\Http\Controllers\Profile\AbsensiController as ProfileAbsensiController;
 use App\Http\Controllers\Profile\ProfileController;
 use App\Http\Controllers\Profile\AdminToolsController;
 use App\Http\Controllers\ProspectAppController;
@@ -38,8 +35,6 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SimulasiDisplayController;
 use App\Http\Controllers\SopPrintController;
 use App\Http\Controllers\UserFormPdfController;
-use App\Http\Controllers\LeaveApprovalController;
-use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\DocumentationController;
 use App\Enums\OrderStatus;
 use App\Models\DataPembayaran;
@@ -115,34 +110,6 @@ Route::get('/payroll/{record}/slip-gaji', [PayrollSlipController::class, 'downlo
     ->name('payroll.slip-gaji.download')
     ->middleware(array_merge($authNoStoreThrottle, ['pro.feature:payroll']));
 
-// LEAVE APPROVAL DETAIL
-// Rute untuk melihat detail persetujuan cuti
-Route::get('/leave-request/{leaveRequest}/approval-detail', [LeaveApprovalController::class, 'show'])
-    ->name('leave-request.approval-detail')
-    ->middleware($authNoStore);
-
-// LEAVE REQUEST FORM
-Route::get('/leave/show', [LeaveRequestController::class, 'create'])
-    ->name('leave.show')
-    ->middleware($authNoStore);
-
-Route::get('/leave/create', [LeaveRequestController::class, 'create'])
-    ->name('leave.create')
-    ->middleware($authNoStore);
-
-Route::post('/leave', [LeaveRequestController::class, 'store'])
-    ->name('leave.store')
-    ->middleware(array_merge($authNoStore, ['pro.feature:employee_portal']));
-
-Route::put('/leave/{id}', [LeaveRequestController::class, 'update'])
-    ->name('leave.update')
-    ->middleware(array_merge($authNoStore, ['pro.feature:employee_portal']))
-    ->whereNumber('id');
-
-Route::get('/leave/status', [LeaveRequestController::class, 'status'])
-    ->name('leave.status')
-    ->middleware($authNoStore);
-
 // DOCUMENT
 Route::get('/document/{record}/stream', [DocumentController::class, 'stream'])
     ->name('document.stream')
@@ -170,7 +137,7 @@ Route::get('/features/payroll', [PayrollFeatureController::class, 'index'])->nam
 Route::view('/fitur', 'front.fitur')->name('fitur');
 Route::get('/fitur/{slug}', [FiturDetailController::class, 'show'])
     ->name('fitur.show')
-    ->where('slug', 'proyek-wedding|keuangan|rekonsiliasi|nota-dinas|absensi|cuti-payroll|portal-karyawan|dokumen-sop|hak-akses');
+    ->where('slug', 'proyek-wedding|keuangan|rekonsiliasi|nota-dinas|payroll|dokumen-sop|hak-akses');
 Route::view('/harga', 'front.harga')->name('harga');
 
 // Keranjang paket (wajib login — manual transfer + bukti bayar, belum Midtrans)
@@ -267,19 +234,7 @@ Route::middleware($authNoStore)->group(function () {
     Route::get('/bank-statements/{bankStatement}/reconciliation/download', [BankStatementFileController::class, 'downloadReconciliation'])
         ->name('bank-statements.reconciliation.download')
         ->middleware('throttle:60,1');
-
-    Route::get('/absensi/laporan/excel', [AbsensiLaporanController::class, 'excel'])
-        ->name('absensi.laporan.excel')
-        ->middleware('throttle:30,1');
-    Route::get('/absensi/laporan/pdf', [AbsensiLaporanController::class, 'pdf'])
-        ->name('absensi.laporan.pdf')
-        ->middleware('throttle:30,1');
 });
-
-// Foto absensi: private disk via temporary signed URL
-Route::get('/absensi/logs/{logAbsensi}/foto', [AbsensiPhotoController::class, 'show'])
-    ->name('absensi.logs.foto')
-    ->middleware(['signed', 'throttle:60,1']);
 
 // WIDGET ROUTE
 // Widget yang langsung link ke processing
@@ -471,37 +426,8 @@ Route::middleware(array_merge($frontAuthVerified, ['role.required']))->group(fun
     Route::get('/profile', [ProfileController::class, 'overview'])->name('profile');
     Route::get('/profile/show', [ProfileController::class, 'overview'])->name('profile.show');
     Route::get('/profile/overview', [ProfileController::class, 'overview'])->name('profile.overview');
-    Route::get('/profile/absensi', [ProfileAbsensiController::class, 'index'])
-        ->name('profile.absensi')
-        ->middleware('absensi.headers');
-    Route::post('/profile/absensi/masuk', [ProfileAbsensiController::class, 'masuk'])
-        ->name('profile.absensi.masuk')
-        ->middleware(['pro.feature:employee_portal', 'absensi.headers', 'throttle:20,1']);
-    Route::post('/profile/absensi/pulang', [ProfileAbsensiController::class, 'pulang'])
-        ->name('profile.absensi.pulang')
-        ->middleware(['pro.feature:employee_portal', 'absensi.headers', 'throttle:20,1']);
-    Route::post('/profile/absensi/koreksi', [ProfileAbsensiController::class, 'koreksi'])
-        ->name('profile.absensi.koreksi')
-        ->middleware(['pro.feature:employee_portal', 'absensi.headers', 'throttle:10,1']);
-    Route::post('/profile/absensi/lembur', [ProfileAbsensiController::class, 'lembur'])
-        ->name('profile.absensi.lembur')
-        ->middleware(['pro.feature:employee_portal', 'absensi.headers', 'throttle:10,1']);
-    Route::get('/profile/absensi/laporan/excel', [ProfileAbsensiController::class, 'laporanExcel'])
-        ->name('profile.absensi.laporan.excel')
-        ->middleware(['pro.feature:employee_portal', 'throttle:20,1']);
-    Route::get('/profile/absensi/laporan/pdf', [ProfileAbsensiController::class, 'laporanPdf'])
-        ->name('profile.absensi.laporan.pdf')
-        ->middleware(['pro.feature:employee_portal', 'throttle:20,1']);
     Route::get('/profile/compensation', [ProfileController::class, 'compensation'])->name('profile.compensation');
     Route::get('/profile/schedule', [ProfileController::class, 'schedule'])->name('profile.schedule');
-    Route::get('/profile/kelola-cuti', [\App\Http\Controllers\Profile\ProfileLeaveManageController::class, 'index'])
-        ->name('profile.leave-manage');
-    Route::post('/profile/kelola-cuti/{leaveRequest}/approve', [\App\Http\Controllers\Profile\ProfileLeaveManageController::class, 'approve'])
-        ->name('profile.leave-manage.approve')
-        ->middleware('throttle:30,1');
-    Route::post('/profile/kelola-cuti/{leaveRequest}/reject', [\App\Http\Controllers\Profile\ProfileLeaveManageController::class, 'reject'])
-        ->name('profile.leave-manage.reject')
-        ->middleware('throttle:30,1');
     Route::get('/profile/laporan-keuangan', [ProfileController::class, 'financialReport'])
         ->name('profile.financial-report')
         ->middleware('super-admin');

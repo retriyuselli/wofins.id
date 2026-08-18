@@ -7,8 +7,6 @@ class PricingPlans
     /**
      * Fitur yang digating per paket.
      */
-    public const FEATURE_HRIS = 'hris';
-
     public const FEATURE_RECONCILIATION = 'reconciliation';
 
     public const FEATURE_PAYROLL = 'payroll';
@@ -18,8 +16,6 @@ class PricingPlans
     public const FEATURE_ADVANCED_REPORTS = 'advanced_reports';
 
     public const FEATURE_MULTI_APPROVAL = 'multi_approval';
-
-    public const FEATURE_EMPLOYEE_PORTAL = 'employee_portal';
 
     public const FEATURE_PROJECTS = 'projects';
 
@@ -198,7 +194,7 @@ class PricingPlans
                     ],
                     [
                         'label' => 'Payroll',
-                        'tip' => 'Kelola gaji dan slip digital untuk tim inti. Modul HRIS lengkap tersedia di paket Business.',
+                        'tip' => 'Kelola gaji dan slip digital untuk tim inti (master Employee + payroll).',
                     ],
                     [
                         'label' => 'Support Prioritas',
@@ -206,7 +202,7 @@ class PricingPlans
                     ],
                     [
                         'label' => 'Siap Upgrade Ke Business',
-                        'tip' => 'Butuh HRIS, portal karyawan, laporan kinerja AM, atau domain? Naik ke Business — data Anda tetap aman.',
+                        'tip' => 'Butuh dokumen & SOP, laporan kinerja AM, atau domain? Naik ke Business — data Anda tetap aman.',
                     ],
                 ],
                 'feature_keys' => [
@@ -270,14 +266,6 @@ class PricingPlans
                         'tip' => 'Termasuk domain (.com / .id sesuai ketersediaan) selama masa berlangganan Business aktif. Syarat: berlangganan minimal 1 tahun.',
                     ],
                     [
-                        'label' => 'HRIS & Absensi GPS',
-                        'tip' => 'Absensi GPS + foto + geofence, jadwal kerja, koreksi, lembur, cuti, data karyawan, dan master status karyawan.',
-                    ],
-                    [
-                        'label' => 'Portal Karyawan',
-                        'tip' => 'Portal karyawan (ESS) agar staf bisa absen/cuti tanpa akses admin penuh.',
-                    ],
-                    [
                         'label' => 'Laporan Lanjutan',
                         'tip' => 'Kinerja AM: pantau target bulanan versus closing/pencapaian penjualan dari data Account Manager Target.',
                     ],
@@ -298,9 +286,7 @@ class PricingPlans
                     self::FEATURE_NOTA_DINAS,
                     self::FEATURE_DOCUMENTS,
                     self::FEATURE_RECONCILIATION,
-                    self::FEATURE_HRIS,
                     self::FEATURE_PAYROLL,
-                    self::FEATURE_EMPLOYEE_PORTAL,
                     self::FEATURE_ADVANCED_REPORTS,
                 ],
                 'selectable' => true,
@@ -593,11 +579,9 @@ class PricingPlans
             ['Rekonsiliasi Rekening', false, true, true],
             ['Arus Kas Bersih', false, true, true],
             ['Payroll', false, true, true],
+            ['Master Karyawan (Employee)', false, true, true],
             ['Dokumen & SOP', false, false, true],
             ['Domain', false, false, 'Gratis'],
-            ['HRIS & Absensi GPS', false, false, true],
-            ['Status Karyawan (Master)', false, false, true],
-            ['Portal Karyawan', false, false, 'Lengkap'],
             ['Laporan Lanjutan (Kinerja AM)', false, false, true],
             ['Onboarding & Training', false, false, true],
             ['Support', 'Standar', 'Prioritas', 'WhatsApp'],

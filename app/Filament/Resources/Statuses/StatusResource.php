@@ -20,7 +20,11 @@ class StatusResource extends BaseResource
 
     protected static string|\UnitEnum|null $navigationGroup = 'SDM';
 
-    protected static ?string $navigationLabel = 'Status Karyawan';
+    protected static ?string $navigationLabel = 'Status Jabatan (Login)';
+
+    protected static ?string $modelLabel = 'status jabatan';
+
+    protected static ?string $pluralModelLabel = 'status jabatan';
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-check-badge';
 

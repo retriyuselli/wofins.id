@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToHrEmployee;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
@@ -9,9 +10,11 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Payroll extends Model
 {
+    use BelongsToHrEmployee;
     use HasFactory, LogsActivity;
 
     protected $fillable = [
+        'employee_id',
         'user_id',
         'period_month',
         'period_year',
@@ -52,15 +55,15 @@ class Payroll extends Model
                 $payroll->period_year = now()->year;
             }
 
-            // Defaultkan gaji pokok & tunjangan dari User jika tidak diisi (snapshot nilai dasar)
-            if ($payroll->user_id && ($payroll->gaji_pokok === null || $payroll->tunjangan === null)) {
-                $user = $payroll->relationLoaded('user') ? $payroll->user : $payroll->user()->first();
-                if ($user) {
+            // Snapshot gaji pokok & tunjangan hanya dari master Employee (bukan User).
+            if ($payroll->employee_id && ($payroll->gaji_pokok === null || $payroll->tunjangan === null)) {
+                $employee = $payroll->relationLoaded('employee') ? $payroll->employee : $payroll->employee()->first();
+                if ($employee) {
                     if ($payroll->gaji_pokok === null) {
-                        $payroll->gaji_pokok = (int) ($user->gaji_pokok_base ?? 0);
+                        $payroll->gaji_pokok = (int) ($employee->salary ?? 0);
                     }
                     if ($payroll->tunjangan === null) {
-                        $payroll->tunjangan = (int) ($user->tunjangan_base ?? 0);
+                        $payroll->tunjangan = (int) ($employee->tunjangan ?? 0);
                     }
                 }
             }

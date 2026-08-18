@@ -1,4 +1,4 @@
-@if ($proFeatureLocked ?? \App\Support\ProFeatures::locked(\App\Support\PricingPlans::FEATURE_EMPLOYEE_PORTAL))
+@if ($proFeatureLocked ?? \App\Support\ProFeatures::locked(\App\Support\PricingPlans::FEATURE_PAYROLL))
     @php
         $planLabel = $subscriptionPlanLabel ?? \App\Support\CompanySubscription::planLabel();
     @endphp
@@ -13,8 +13,8 @@
                     <span class="wf-pro-badge">Upgrade</span>
                 </div>
                 <p class="mt-0.5 text-xs text-[var(--wf-muted)] leading-relaxed">
-                    Anda dapat melihat tampilan fitur ini, tetapi aksi (absen, ajukan cuti, unduh laporan, dll.) dinonaktifkan.
-                    Fitur HRIS tersedia mulai paket Professional.
+                    Anda dapat melihat tampilan fitur ini, tetapi aksi terkait payroll dinonaktifkan.
+                    Fitur payroll tersedia mulai paket Professional.
                     <a href="{{ route('harga') }}" class="font-semibold text-[var(--wf-navy)] underline underline-offset-2 hover:text-[var(--wf-gold)]">Lihat paket</a>
                 </p>
             </div>

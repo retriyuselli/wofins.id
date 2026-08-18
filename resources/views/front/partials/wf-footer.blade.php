@@ -4,7 +4,7 @@
             <div class="lg:col-span-2">
                 <p class="text-2xl font-bold text-white tracking-wide">WOFINS</p>
                 <p class="mt-3 text-sm leading-relaxed text-white/65 max-w-xs">
-                    Wedding Organizer Financial Information System — kelola proyek, keuangan, HRIS, dan operasional dalam satu platform.
+                    Wedding Organizer Financial Information System — kelola proyek, keuangan, payroll, dan operasional dalam satu platform.
                 </p>
                 <div class="mt-5 flex items-center gap-3">
                     @foreach ([

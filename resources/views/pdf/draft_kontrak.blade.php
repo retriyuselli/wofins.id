@@ -24,22 +24,27 @@
             top: -90px;
             left: 0;
             right: 0;
-            height: 100px;
+            height: auto;
+            min-height: 70px;
         }
 
         .header-table {
             width: 100%;
             border-bottom: 2px solid #000;
-            padding-bottom: 5px;
+            padding-bottom: 8px;
+            border-collapse: collapse;
         }
 
         .header-table td {
-            vertical-align: middle;
+            vertical-align: top;
         }
 
         .logo-img {
-            max-height: 60px;
-            width: 80%;
+            max-height: 56px;
+            max-width: 140px;
+            width: auto;
+            height: auto;
+            display: inline-block;
         }
 
         /* Footer */
@@ -463,7 +468,7 @@
                         Email : {{ $companyEmail }}
                     </div>
                 </td>
-                <td style="text-align: right;">
+                <td style="width: 35%; text-align: right; vertical-align: top;">
                     @php
                         $logoPath = null;
                         $logoSrc = '';
@@ -485,7 +490,7 @@
                         }
                     @endphp
                     @if ($logoSrc)
-                        <img src="{{ $logoSrc }}" alt="Logo Perusahaan" class="logo-img">
+                        <img src="{{ $logoSrc }}" alt="Logo Perusahaan" class="logo-img" style="max-height: 56px; max-width: 140px; width: auto; height: auto;">
                     @else
                         <b>{{ $companyName }}</b>
                     @endif

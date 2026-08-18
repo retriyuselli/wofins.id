@@ -8,6 +8,7 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
@@ -16,7 +17,6 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\RawJs;
-use Illuminate\Support\Str;
 
 class EmployeeForm
 {
@@ -38,14 +38,55 @@ class EmployeeForm
                                                     ->placeholder('Nama lengkap (depan dan belakang)')
                                                     ->maxLength(255)
                                                     ->live(onBlur: true)
-                                                    ->afterStateUpdated(function ($state, Set $set) {
-                                                        $set('slug', Str::slug($state));
+                                                    ->afterStateUpdated(function ($state, Set $set, ?Employee $record) {
+                                                        $set('slug', Employee::generateUniqueSlug(
+                                                            (string) $state,
+                                                            $record?->id
+                                                        ));
+
+                                                        $matches = Employee::findSameNameInCompany(
+                                                            (string) $state,
+                                                            $record?->id
+                                                        );
+
+                                                        if ($matches->isEmpty()) {
+                                                            return;
+                                                        }
+
+                                                        $list = $matches
+                                                            ->map(fn (Employee $e) => $e->name.($e->email ? " ({$e->email})" : ''))
+                                                            ->implode(', ');
+
+                                                        Notification::make()
+                                                            ->title('Nama sudah dipakai')
+                                                            ->body("Ada karyawan dengan nama sama: {$list}. Anda tetap boleh menyimpan — pastikan ini memang orang berbeda.")
+                                                            ->warning()
+                                                            ->persistent()
+                                                            ->send();
+                                                    })
+                                                    ->helperText(function (Get $get, ?Employee $record): string {
+                                                        $matches = Employee::findSameNameInCompany(
+                                                            (string) $get('name'),
+                                                            $record?->id
+                                                        );
+
+                                                        if ($matches->isEmpty()) {
+                                                            return 'Nama boleh sama. Identitas unik memakai email.';
+                                                        }
+
+                                                        $list = $matches
+                                                            ->take(3)
+                                                            ->map(fn (Employee $e) => $e->name.($e->email ? " ({$e->email})" : ''))
+                                                            ->implode(', ');
+
+                                                        return "Peringatan: nama sama sudah ada — {$list}. Tetap boleh disimpan.";
                                                     }),
 
                                                 TextInput::make('slug')
                                                     ->disabled()
                                                     ->dehydrated()
-                                                    ->maxLength(255),
+                                                    ->maxLength(255)
+                                                    ->helperText('Otomatis unik (nama sama → slug-1, slug-2, dst).'),
 
                                                 DatePicker::make('date_of_birth')
                                                     ->label('Tanggal Lahir')
@@ -69,7 +110,19 @@ class EmployeeForm
                                                 TextInput::make('email')
                                                     ->email()
                                                     ->required()
-                                                    ->unique(ignoreRecord: true)
+                                                    ->unique(
+                                                        table: Employee::class,
+                                                        column: 'email',
+                                                        ignoreRecord: true,
+                                                        modifyRuleUsing: fn ($rule) => $rule->where(
+                                                            'company_id',
+                                                            \App\Support\UserVisibility::companyId()
+                                                        )
+                                                    )
+                                                    ->validationMessages([
+                                                        'unique' => 'Email ini sudah dipakai karyawan lain di company Anda.',
+                                                    ])
+                                                    ->helperText('Wajib unik per company — dipakai sebagai identitas karyawan.')
                                                     ->maxLength(255),
 
                                                 TextInput::make('phone')
@@ -104,7 +157,7 @@ class EmployeeForm
                                                     ->options([
                                                         'Account Manager' => 'Account Manager',
                                                         'Event Manager' => 'Event Manager',
-                                                        'Crew' => 'Crew',
+                                                        'Crew Internal' => 'Crew Internal',
                                                         'Finance' => 'Finance',
                                                         'Founder' => 'Founder',
                                                         'Co Founder' => 'Co Founder',
@@ -116,27 +169,19 @@ class EmployeeForm
 
                                                 Select::make('user_id')
                                                     ->relationship(
-                                'user',
-                                'name',
-                                fn (\Illuminate\Database\Eloquent\Builder $query) => \App\Support\UserVisibility::constrainUsersQuery($query)
-                            )
+                                                        'user',
+                                                        'name',
+                                                        fn (\Illuminate\Database\Eloquent\Builder $query) => \App\Support\UserVisibility::constrainUsersQuery($query)
+                                                            ->where(function ($q) {
+                                                                $q->whereNull('status')->orWhere('status', 'active');
+                                                            })
+                                                    )
                                                     ->label('Akun Pengguna Terkait')
+                                                    ->helperText('Opsional. Hanya User terdaftar (seat) di company ini — untuk portal ESS. Kosongkan jika karyawan tanpa login.')
                                                     ->preload()
                                                     ->searchable()
-                                                    ->createOptionForm([
-                                                        TextInput::make('name')
-                                                            ->required(),
-                                                        TextInput::make('email')
-                                                            ->required()
-                                                            ->email(),
-                                                        TextInput::make('password')
-                                                            ->password()
-                                                            ->required()
-                                                            ->confirmed(),
-                                                        TextInput::make('password_confirmation')
-                                                            ->password()
-                                                            ->required(),
-                                                    ]),
+                                                    ->nullable()
+                                                    ->unique(ignoreRecord: true),
 
                                                 DatePicker::make('date_of_join')
                                                     ->label('Tanggal Bergabung')
@@ -152,16 +197,29 @@ class EmployeeForm
                                     ]),
 
                                 Section::make('Kompensasi & Perbankan')
+                                    ->description('Sumber gaji master: gaji pokok & tunjangan di sini. Saat generate payroll nilai di-snapshot; di periode hanya ubah pengurangan & bonus.')
                                     ->schema([
                                         Grid::make(2)
                                             ->schema([
                                                 TextInput::make('salary')
+                                                    ->label('Gaji Pokok')
                                                     ->required()
                                                     ->prefix('Rp. ')
                                                     ->mask(RawJs::make('$money($input)'))
                                                     ->stripCharacters(',')
                                                     ->dehydrateStateUsing(fn ($state) => (int) preg_replace('/[^\d]/', '', (string) $state))
-                                                    ->placeholder('0'),
+                                                    ->placeholder('0')
+                                                    ->helperText('Wajib diisi — dipakai otomatis saat Generate Periode.'),
+
+                                                TextInput::make('tunjangan')
+                                                    ->label('Tunjangan')
+                                                    ->prefix('Rp. ')
+                                                    ->mask(RawJs::make('$money($input)'))
+                                                    ->stripCharacters(',')
+                                                    ->default(0)
+                                                    ->dehydrateStateUsing(fn ($state) => (int) preg_replace('/[^\d]/', '', (string) $state))
+                                                    ->placeholder('0')
+                                                    ->helperText('Tunjangan tetap bulanan (snapshot ke payroll saat generate).'),
 
                                                 TextInput::make('bank_name')
                                                     ->required()

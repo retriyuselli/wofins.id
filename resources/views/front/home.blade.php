@@ -745,7 +745,7 @@
                             <span class="text-[var(--wf-gold)]">Satu Platform</span>
                         </h1>
                         <p class="wf-anim wf-anim-d3 mt-5 text-base sm:text-lg text-[var(--wf-muted)] leading-relaxed max-w-xl">
-                            WOFINS membantu Wedding Organizer mengelola proyek, vendor, keuangan, HRIS, hingga operasional harian dalam satu sistem terintegrasi.
+                            WOFINS membantu Wedding Organizer mengelola proyek, vendor, keuangan, payroll, hingga operasional harian dalam satu sistem terintegrasi.
                         </p>
 
                         <ul class="wf-hero-list mt-7 space-y-3 text-sm sm:text-base text-[var(--wf-ink)]">
@@ -813,7 +813,7 @@
                             </div>
                             <div class="wf-hero-node n-bl is-outline">
                                 <div class="n-core"><i class="fa-solid fa-user-check"></i></div>
-                                <span class="n-label">HRIS</span>
+                                <span class="n-label">Payroll</span>
                             </div>
                             <div class="wf-hero-node n-br is-gold">
                                 <div class="n-core"><i class="fa-solid fa-building-columns"></i></div>
@@ -830,7 +830,7 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="text-center max-w-3xl mx-auto mb-12">
                     <h2 class="text-3xl sm:text-4xl font-bold text-[var(--wf-navy)]">Fitur Lengkap untuk Operasional Wedding Organizer</h2>
-                    <p class="mt-3 text-[var(--wf-muted)]">Dari proyek dan keuangan hingga HRIS — semuanya terhubung dalam satu alur kerja.</p>
+                    <p class="mt-3 text-[var(--wf-muted)]">Dari proyek dan keuangan hingga payroll — semuanya terhubung dalam satu alur kerja.</p>
                 </div>
 
                 <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -840,7 +840,7 @@
                             ['icon' => 'fa-chart-line', 'color' => 'bg-sky-50 text-sky-700', 'title' => 'Keuangan', 'desc' => 'Pantau pendapatan klien, pengeluaran proyek, dan laporan laba rugi secara real-time.'],
                             ['icon' => 'fa-building-columns', 'color' => 'bg-emerald-50 text-emerald-700', 'title' => 'Rekonsiliasi Rekening Koran', 'desc' => 'Cocokkan transaksi bank dengan sistem lebih cepat dan akurat.'],
                             ['icon' => 'fa-file-lines', 'color' => 'bg-violet-50 text-violet-700', 'title' => 'Nota Dinas Digital', 'desc' => 'Ajukan, setujui, dan arsipkan nota dinas beserta lampiran PDF.'],
-                            ['icon' => 'fa-user-check', 'color' => 'bg-rose-50 text-rose-700', 'title' => 'HRIS', 'desc' => 'Absensi GPS geofence, foto kamera, jadwal kerja, koreksi, dan lembur.'],
+                            ['icon' => 'fa-user-check', 'color' => 'bg-rose-50 text-rose-700', 'title' => 'Payroll', 'desc' => 'Master karyawan, perhitungan gaji, slip digital, dan PPh 21.'],
                             ['icon' => 'fa-wallet', 'color' => 'bg-indigo-50 text-indigo-700', 'title' => 'Payroll & Portal Karyawan', 'desc' => 'Kelola gaji, cuti, dan akses portal untuk karyawan tanpa masuk admin penuh.'],
                             ['icon' => 'fa-folder-open', 'color' => 'bg-teal-50 text-teal-700', 'title' => 'Dokumen & SOP', 'desc' => 'Simpan dokumen resmi, SOP, dan knowledge base perusahaan.'],
                             ['icon' => 'fa-shield-halved', 'color' => 'bg-slate-100 text-slate-700', 'title' => 'Hak Akses Berdasarkan Jabatan', 'desc' => 'Role & permission untuk owner, finance, HRD, AM, dan staff.'],
@@ -870,7 +870,7 @@
                             @foreach ([
                                 ['Buat perusahaan & pengguna', 'Setup profil perusahaan, role, dan akun tim Anda.'],
                                 ['Input proyek & keuangan', 'Masukkan order, vendor, pendapatan, dan pengeluaran.'],
-                                ['Aktifkan absensi & cuti', 'Atur lokasi kantor, jadwal, dan kuota cuti karyawan.'],
+                                ['Aktifkan payroll', 'Siapkan master karyawan dan komponen gaji tim.'],
                                 ['Pantau laporan real-time', 'Ambil keputusan dari dashboard, cash flow, dan rekonsiliasi.'],
                             ] as $i => $step)
                                 <div class="flex gap-4">
@@ -922,7 +922,7 @@
                             @foreach ([
                                 ['Dibangun khusus untuk WO', 'Bukan ERP generik — alur kerjanya cocok dengan operasional wedding organizer.'],
                                 ['Data terpusat', 'Proyek, keuangan, HR, dan dokumen tidak lagi tercecer di spreadsheet.'],
-                                ['Kurangi kerja manual', 'Approval, absensi, dan rekonsiliasi lebih cepat.'],
+                                ['Kurangi kerja manual', 'Approval, payroll, dan rekonsiliasi lebih cepat.'],
                                 ['Monitoring real-time', 'Owner melihat kas, proyek, dan kehadiran tanpa menunggu laporan akhir bulan.'],
                                 ['Siap berkembang', 'Skalakan dari tim kecil hingga multi-role dengan permission yang jelas.'],
                             ] as $item)
@@ -946,8 +946,8 @@
                                 ['Owner', 'Pantau kinerja perusahaan, kas, dan kepatuhan operasional.'],
                                 ['Account Manager', 'Kelola prospek, proyek, target, dan simulasi paket.'],
                                 ['Finance', 'Kelola transaksi, piutang, dan rekonsiliasi rekening koran.'],
-                                ['Event Manager & Staff', 'Jalankan operasional harian dan absensi di lokasi.'],
-                                ['HRD', 'Kelola absensi office, cuti, dan payroll.'],
+                                ['Event Manager & Staff', 'Jalankan operasional harian dan koordinasi proyek.'],
+                                ['Finance', 'Kelola kas, rekonsiliasi, dan payroll.'],
                             ] as $role)
                                 <div class="flex gap-3 items-start bg-white/80 rounded-xl p-4 border border-white">
                                     <div class="w-10 h-10 rounded-full bg-[var(--wf-navy)] text-white flex items-center justify-center text-sm font-bold shrink-0">
@@ -1010,7 +1010,7 @@
                 <div class="space-y-3" x-data="{ open: 0 }">
                     @foreach ([
                         ['Apakah WOFINS khusus untuk wedding organizer?', 'Ya. Alur proyek, vendor, nota dinas, dan keuangan dirancang untuk operasional WO / EO, bukan ERP generik.'],
-                        ['Apakah ada portal untuk karyawan?', 'Ada. Karyawan bisa absensi (GPS + foto), ajukan cuti/koreksi/lembur, dan melihat kompensasi lewat /profile.'],
+                        ['Apakah ada modul gaji?', 'Ada. Professional+ mencakup payroll dan master karyawan (Employee). Slip gaji digital siap dibagikan ke tim.'],
                         ['Bisakah rekonsiliasi rekening koran?', 'Bisa. Unggah rekening koran, cocokkan transaksi, dan unduh hasil rekonsiliasi.'],
                         ['Apakah bisa dibatasi per jabatan?', 'Bisa. Role & permission mengatur akses owner, finance, HRD, account manager, dan staff.'],
                         ['Bagaimana cara mencoba?', 'Jadwalkan demo gratis melalui halaman Kontak, atau masuk jika sudah memiliki akun.'],
@@ -1055,7 +1055,7 @@
                 <div class="wf-cta-panel p-8 sm:p-10 text-white">
                     <h2 class="text-3xl sm:text-4xl font-bold leading-tight">Saatnya Mengelola Wedding Organizer dengan Lebih Profesional</h2>
                     <p class="mt-4 text-white/80 max-w-xl">
-                        Satukan proyek, keuangan, absensi, dan dokumen dalam satu platform. Ambil keputusan lebih cepat dengan data yang rapi.
+                        Satukan proyek, keuangan, payroll, dan dokumen dalam satu platform. Ambil keputusan lebih cepat dengan data yang rapi.
                     </p>
                     <div class="mt-8 flex flex-col sm:flex-row gap-3">
                         <a href="{{ route('kontak') }}" class="wf-btn-gold inline-flex items-center justify-center px-6 py-3.5 text-sm">

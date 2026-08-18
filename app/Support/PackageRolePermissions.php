@@ -5,11 +5,10 @@ namespace App\Support;
 /**
  * Permission Shield untuk role pemilik paket (pengunjung).
  * CRUD diizinkan di permission; menu/aksi tetap digating PlanResourceGate:
- * - Starter: proyek + keuangan dasar
- * - Professional+: nota dinas, rekonsiliasi, payroll
- * - Business+: dokumen/SOP, HRIS, portal karyawan, dll.
- * Permission modul Pro/Business tetap di-seed agar upgrade tidak perlu re-sync role.
- * Tidak termasuk Role / BankStatement / Leave* / Absensi* (bukan fitur paket pelanggan).
+ * - Starter: proyek + keuangan dasar + crew freelance
+ * - Professional+: nota dinas, rekonsiliasi, payroll, simulasi (gate terpisah)
+ * - Business+: dokumen/SOP, laporan kinerja AM, dll.
+ * Absensi/cuti/portal ESS tidak di-seed (fitur tidak ditawarkan di paket).
  */
 class PackageRolePermissions
 {
@@ -31,6 +30,8 @@ class PackageRolePermissions
             'Product',
             'Vendor',
             'Category',
+            // Crew freelance (bukan HRIS)
+            'DataPribadi',
             // Keuangan dasar
             'Expense',
             'ExpenseOps',
@@ -44,6 +45,8 @@ class PackageRolePermissions
             // Nota dinas (gate: Professional+)
             'NotaDinas',
             'NotaDinasDetail',
+            // Rekonsiliasi (gate: Professional+)
+            'BankStatement',
             // Dokumen & SOP (gate: Business+)
             'Document',
             'DocumentCategory',
@@ -51,6 +54,12 @@ class PackageRolePermissions
             'SopCategory',
             'Documentation',
             'DocumentationCategory',
+            // Payroll (gate: Professional+) — tanpa modul absensi/cuti
+            'Payroll',
+            'Employee',
+            'Status',
+            // Laporan lanjutan (gate: Business+)
+            'AccountManagerTarget',
         ];
     }
 

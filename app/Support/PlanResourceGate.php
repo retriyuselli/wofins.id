@@ -54,24 +54,10 @@ class PlanResourceGate
             // Rekonsiliasi (Professional+)
             \App\Filament\Resources\BankStatements\BankStatementResource::class => PricingPlans::FEATURE_RECONCILIATION,
 
-            // HRIS (Business+)
-            \App\Filament\Resources\Absensis\AbsensiResource::class => PricingPlans::FEATURE_HRIS,
-            \App\Filament\Resources\LogAbsensis\LogAbsensiResource::class => PricingPlans::FEATURE_HRIS,
-            \App\Filament\Resources\KoreksiAbsensis\KoreksiAbsensiResource::class => PricingPlans::FEATURE_HRIS,
-            \App\Filament\Resources\PengajuanLemburs\PengajuanLemburResource::class => PricingPlans::FEATURE_HRIS,
-            \App\Filament\Resources\LokasiAbsensis\LokasiAbsensiResource::class => PricingPlans::FEATURE_HRIS,
-            \App\Filament\Resources\PengaturanAbsensis\PengaturanAbsensiResource::class => PricingPlans::FEATURE_HRIS,
-            \App\Filament\Resources\PenugasanJadwals\PenugasanJadwalResource::class => PricingPlans::FEATURE_HRIS,
-            \App\Filament\Resources\JadwalKerjas\JadwalKerjaResource::class => PricingPlans::FEATURE_HRIS,
-            \App\Filament\Resources\HariLiburs\HariLiburResource::class => PricingPlans::FEATURE_HRIS,
-            \App\Filament\Resources\LeaveRequests\LeaveRequestResource::class => PricingPlans::FEATURE_HRIS,
-            \App\Filament\Resources\LeaveBalances\LeaveBalanceResource::class => PricingPlans::FEATURE_HRIS,
-            \App\Filament\Resources\LeaveTypes\LeaveTypeResource::class => PricingPlans::FEATURE_HRIS,
-            \App\Filament\Resources\Employees\EmployeeResource::class => PricingPlans::FEATURE_HRIS,
-            \App\Filament\Resources\Statuses\StatusResource::class => PricingPlans::FEATURE_HRIS,
-
-            // Payroll (Professional+)
+            // Payroll (Professional+) — termasuk master Employee
             \App\Filament\Resources\Payrolls\PayrollResource::class => PricingPlans::FEATURE_PAYROLL,
+            \App\Filament\Resources\Employees\EmployeeResource::class => PricingPlans::FEATURE_PAYROLL,
+            \App\Filament\Resources\Statuses\StatusResource::class => PricingPlans::FEATURE_PAYROLL,
 
             // Laporan lanjutan (Business): Kinerja AM — target vs closing (AccountManagerTarget)
             \App\Filament\Resources\AccountManagerTargets\AccountManagerTargetResource::class => PricingPlans::FEATURE_ADVANCED_REPORTS,

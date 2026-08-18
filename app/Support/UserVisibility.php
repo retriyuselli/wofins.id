@@ -122,6 +122,15 @@ class UserVisibility
             return $query;
         }
 
+        // Starter / Professional (1 seat): hanya akun sendiri di daftar.
+        if (static::isSingleSeatPlan()) {
+            $actorId = static::actorId();
+
+            return $actorId
+                ? $query->whereKey($actorId)
+                : $query->whereRaw('1 = 0');
+        }
+
         $companyId = static::companyId();
 
         if ($companyId !== null) {
@@ -490,6 +499,11 @@ class UserVisibility
             return false;
         }
 
+        // Paket 1 seat: tidak kelola akun orang lain (meski masih ada data legacy).
+        if (static::isSingleSeatPlan($actor)) {
+            return false;
+        }
+
         $root = static::teamRootId($actor);
 
         // Hanya pemilik paket (root tim) yang boleh kelola anggota lain
@@ -518,6 +532,77 @@ class UserVisibility
     public static function canEditUser(?User $target): bool
     {
         return static::canAccessUser($target);
+    }
+
+    /**
+     * Paket dengan maksimal 1 seat (Starter / Professional).
+     * Tenant hanya kelola akun sendiri; tambah anggota = upgrade.
+     */
+    public static function isSingleSeatPlan(?User $actor = null): bool
+    {
+        if (static::actorIsSuperAdmin()) {
+            return false;
+        }
+
+        $limit = CompanySubscription::seatLimit();
+
+        return $limit !== null && $limit <= 1;
+    }
+
+    /**
+     * Boleh menambah anggota tim (Create User) — pemilik paket + seat tersedia.
+     */
+    public static function canCreateTeamUser(): bool
+    {
+        if (static::actorIsSuperAdmin()) {
+            return true;
+        }
+
+        if (! static::isTeamOwner()) {
+            return false;
+        }
+
+        return CompanySubscription::hasSeatAvailable();
+    }
+
+    /**
+     * Status Jabatan (bukan Role Spatie): SA, atau pemilik paket Business.
+     */
+    public static function canManageJobStatuses(): bool
+    {
+        if (static::actorIsSuperAdmin()) {
+            return true;
+        }
+
+        return static::isTeamOwner()
+            && CompanySubscription::planKey() === 'business';
+    }
+
+    /**
+     * Filter ID status jabatan dari form (hanya ID yang valid di tabel statuses).
+     *
+     * @param  list<int|string>|null  $statusIds
+     * @return list<int>
+     */
+    public static function sanitizeJobStatusIds(?array $statusIds): array
+    {
+        $selected = collect($statusIds ?? [])
+            ->filter(fn ($id) => filled($id))
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($selected === []) {
+            return [];
+        }
+
+        return \App\Models\Status::query()
+            ->whereIn('id', $selected)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->all();
     }
 
     /**

@@ -26,20 +26,33 @@ class CreateUser extends CreateRecord
     public function mount(): void
     {
         parent::mount();
+
+        if (! UserVisibility::canCreateTeamUser()) {
+            Notification::make()
+                ->title('Tidak dapat menambah pengguna')
+                ->body(
+                    UserVisibility::isTeamOwner() || UserVisibility::actorIsSuperAdmin()
+                        ? CompanySubscription::seatUpgradeHint()
+                        : 'Hanya pemilik paket yang dapat menambah pengguna.'
+                )
+                ->warning()
+                ->send();
+
+            $this->redirect(UserResource::getUrl('index'));
+        }
     }
 
     protected function beforeCreate(): void
     {
-        $roles = $this->form->getState()['roles'] ?? [];
+        // Super admin boleh lewati kuota seat (mis. provisioning).
+        if (UserVisibility::actorIsSuperAdmin()) {
+            return;
+        }
 
-        if (! empty($roles) && ! CompanySubscription::hasSeatAvailable()) {
+        if (! UserVisibility::canCreateTeamUser()) {
             Notification::make()
                 ->title('Kuota pengguna penuh')
-                ->body(
-                    CompanySubscription::seatFullMessage()
-                    .' Saat ini '.CompanySubscription::seatSummary()
-                    .'. Kosongkan role, hapus user yang tidak dipakai, atau upgrade paket.'
-                )
+                ->body(CompanySubscription::seatUpgradeHint())
                 ->warning()
                 ->persistent()
                 ->send();
@@ -69,6 +82,27 @@ class CreateUser extends CreateRecord
         $data['roles'] = UserVisibility::sanitizeAssignableRoleIds(
             isset($data['roles']) ? (array) $data['roles'] : null
         );
+
+        if (! UserVisibility::actorIsSuperAdmin()) {
+            // Non–super_admin tidak boleh mengubah role Spatie dari form.
+            $data['roles'] = UserVisibility::sanitizeAssignableRoleIds(
+                UserVisibility::packageOwnerRoleIds()
+            );
+
+            if (UserVisibility::canManageJobStatuses()) {
+                $sanitized = UserVisibility::sanitizeJobStatusIds(
+                    isset($data['statuses']) ? (array) $data['statuses'] : null
+                );
+                $data['statuses'] = $sanitized !== []
+                    ? $sanitized
+                    : (\App\Filament\Resources\Users\Schemas\UserForm::defaultAdminStatusIds() ?? []);
+            } else {
+                $adminIds = \App\Filament\Resources\Users\Schemas\UserForm::defaultAdminStatusIds();
+                if ($adminIds) {
+                    $data['statuses'] = $adminIds;
+                }
+            }
+        }
 
         // Simpan plaintext untuk email undangan (cast User akan meng-hash saat save).
         $this->invitePlainPassword = filled($data['password'] ?? null)

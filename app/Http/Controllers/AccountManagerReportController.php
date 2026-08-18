@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\AccountManagerTarget;
 use App\Models\Company;
-use App\Models\LeaveRequest;
 use App\Models\Order;
 use App\Models\Payroll;
 use App\Models\User;
@@ -288,19 +287,8 @@ class AccountManagerReportController extends Controller
                 ->first();
         }
 
-        // Leave
+        // Leave (fitur cuti dihapus — tetap kirim koleksi kosong agar view lama aman)
         $leaveData = collect();
-        if (class_exists(LeaveRequest::class)) {
-            $leaveData = LeaveRequest::where('user_id', $userId)
-                ->where(function ($query) use ($year, $month) {
-                    $query->whereYear('start_date', $year)->whereMonth('start_date', $month);
-                })
-                ->orWhere(function ($query) use ($year, $month) {
-                    $query->whereYear('end_date', $year)->whereMonth('end_date', $month);
-                })
-                ->with('leaveType')
-                ->get();
-        }
 
         return compact(
             'accountManager', 'target', 'orders',

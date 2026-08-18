@@ -8,7 +8,7 @@
     <title>Simulasi Penawaran</title>
     <style>
         @page {
-            margin: 110pt 35pt 18pt 60pt;
+            margin: 85pt 35pt 18pt 60pt;
             size: A4 portrait;
         }
 
@@ -46,7 +46,7 @@
             position: fixed;
             left: 0;
             right: 0;
-            top: -84pt;
+            top: -65pt;
         }
 
         table {
@@ -65,7 +65,7 @@
         .header-wrap {
             border-bottom: 1px solid #000;
             padding-bottom: 8pt;
-            margin-bottom: 6pt;
+            margin-bottom: 0;
             page-break-inside: avoid;
         }
 
@@ -88,7 +88,7 @@
 
         .meta-grid {
             width: 100%;
-            margin: -16pt 0 12pt 0;
+            margin: 14pt 0 12pt 0;
         }
 
         .meta-grid td {
@@ -207,12 +207,20 @@
         $company = $company ?? null;
 
         $logoSrc = '';
-        if ($company && $company->logo_url && \Illuminate\Support\Facades\Storage::disk('public')->exists($company->logo_url)) {
+        if (! empty($companyLogoUrl) && str_starts_with((string) $companyLogoUrl, 'data:')) {
+            $logoSrc = $companyLogoUrl;
+        } elseif ($company && $company->logo_url && \Illuminate\Support\Facades\Storage::disk('public')->exists($company->logo_url)) {
             $logoPath = \Illuminate\Support\Facades\Storage::disk('public')->path($company->logo_url);
             if (is_string($logoPath) && file_exists($logoPath)) {
-                $logoSrc = 'data:' . mime_content_type($logoPath) . ';base64,' . base64_encode(file_get_contents($logoPath));
+                $mime = mime_content_type($logoPath) ?: 'image/png';
+                $logoSrc = 'data:'.$mime.';base64,'.base64_encode(file_get_contents($logoPath));
             }
         }
+
+        $displayName = $companyName ?? ($company?->company_name ?? config('app.name'));
+        $displayAddress = $companyAddress ?? ($company?->address ?: null);
+        $displayPhone = $companyPhone ?? ($company?->phone ?: null);
+        $displayEmail = $companyEmail ?? ($company?->email ?: null);
 
         $itemsCollection = collect($items ?? []);
 
@@ -246,16 +254,18 @@
             <table>
                 <tr>
                     <td class="header-left">
-                        {{-- <p class="header-title">Office Information :</p> --}}
                         <div>
-                            <div><strong>{{ strtoupper($company->company_name ?? ($companyName ?? config('app.name'))) }}</strong></div>
-                            <div>{{ $company->address ?? '-' }}</div>
-                            <div>Phone: {{ $company->phone ?? '-' }}</div>
+                            <div><strong>{{ strtoupper($displayName) }}</strong></div>
+                            <div>{{ $displayAddress ?: 'Alamat belum diatur' }}</div>
+                            <div>Phone: {{ $displayPhone ?: '-' }}</div>
+                            @if(!empty($displayEmail))
+                                <div>Email: {{ $displayEmail }}</div>
+                            @endif
                         </div>
                     </td>
                     <td class="header-right">
                         @if ($logoSrc)
-                            <img src="{{ $logoSrc }}" alt="Logo" style="max-height: 60pt; width: 100pt;">
+                            <img src="{{ $logoSrc }}" alt="Logo {{ $displayName }}" style="max-height: 36pt; max-width: 90pt; width: auto; height: auto;">
                         @endif
                     </td>
                 </tr>
@@ -410,7 +420,7 @@
             <td class="signature-col">
                 <div style="margin-bottom: 60pt;">Hormat Kami,</div>
                 <div class="signature-line">( {{ $simulasi->user->name ?? 'Account Manager' }} )</div>
-                <div>{{ $company->company_name ?? ($companyName ?? config('app.name')) }}</div>
+                <div>{{ $displayName }}</div>
             </td>
             <td class="signature-col">
                 <div style="margin-bottom: 60pt;">Disetujui Oleh,</div>

@@ -1,9 +1,7 @@
 <?php
 
-use App\Http\Controllers\Api\V1\AbsensiController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\FinanceController;
-use App\Http\Controllers\Api\V1\LeaveRequestController;
 use App\Http\Controllers\Api\V1\MeController;
 use Illuminate\Support\Facades\Route;
 
@@ -35,39 +33,6 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/me/compensation', [MeController::class, 'compensation'])
             ->name('api.v1.me.compensation');
-        Route::get('/me/leave-balances', [MeController::class, 'leaveBalances'])
-            ->name('api.v1.me.leave-balances');
-        Route::get('/me/schedule', [MeController::class, 'schedule'])
-            ->name('api.v1.me.schedule');
-        Route::get('/me/leave-types', [MeController::class, 'leaveTypes'])
-            ->name('api.v1.me.leave-types');
-
-        Route::get('/me/leave-requests', [LeaveRequestController::class, 'index'])
-            ->name('api.v1.me.leave-requests.index');
-        Route::post('/me/leave-requests', [LeaveRequestController::class, 'store'])
-            ->name('api.v1.me.leave-requests.store');
-        Route::get('/me/leave-requests/{id}', [LeaveRequestController::class, 'show'])
-            ->whereNumber('id')
-            ->name('api.v1.me.leave-requests.show');
-
-        Route::prefix('absensi')->group(function () {
-            Route::get('/hari-ini', [AbsensiController::class, 'hariIni'])
-                ->name('api.v1.absensi.hari-ini');
-            Route::get('/lokasi', [AbsensiController::class, 'lokasi'])
-                ->name('api.v1.absensi.lokasi');
-            Route::get('/cek-lokasi', [AbsensiController::class, 'cekLokasi'])
-                ->name('api.v1.absensi.cek-lokasi');
-            Route::post('/masuk', [AbsensiController::class, 'masuk'])
-                ->middleware('throttle:20,1')
-                ->name('api.v1.absensi.masuk');
-            Route::post('/pulang', [AbsensiController::class, 'pulang'])
-                ->middleware('throttle:20,1')
-                ->name('api.v1.absensi.pulang');
-            Route::get('/riwayat', [AbsensiController::class, 'riwayat'])
-                ->name('api.v1.absensi.riwayat');
-            Route::get('/ringkasan', [AbsensiController::class, 'ringkasan'])
-                ->name('api.v1.absensi.ringkasan');
-        });
 
         Route::prefix('finance')->group(function () {
             Route::get('/dashboard', [FinanceController::class, 'dashboard'])

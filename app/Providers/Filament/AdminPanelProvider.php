@@ -86,8 +86,6 @@ class AdminPanelProvider extends PanelProvider
                 'Kas Operasional',
                 'Keuangan',
                 'SDM',
-                'Absensi',
-                'Manajemen Cuti',
                 'Administrasi',
                 'Knowledge Base',
                 'Konten',

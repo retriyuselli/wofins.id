@@ -21,8 +21,3 @@ Schedule::command('targets:generate --update')
 Schedule::command('activitylog:clean')
     ->monthly()
     ->description('Clean old activity logs');
-
-Schedule::command('absensi:rekap-harian')
-    ->dailyAt('01:15')
-    ->timezone('Asia/Jakarta')
-    ->description('Rekap absensi harian (cuti/libur/alfa)');

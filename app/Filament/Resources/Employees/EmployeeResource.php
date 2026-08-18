@@ -86,7 +86,7 @@ class EmployeeResource extends BaseResource
 
     public static function getEloquentQuery(): Builder
     {
-        return \App\Support\UserVisibility::constrainOwnedQuery(
+        return \App\Support\UserVisibility::constrainCompanyQuery(
             parent::getEloquentQuery()
                 ->withoutGlobalScopes([
                     SoftDeletingScope::class,

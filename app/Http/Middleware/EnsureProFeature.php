@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureProFeature
 {
-    public function handle(Request $request, Closure $next, string $feature = PricingPlans::FEATURE_HRIS): Response
+    public function handle(Request $request, Closure $next, string $feature = PricingPlans::FEATURE_PAYROLL): Response
     {
         if (ProFeatures::allows($feature)) {
             return $next($request);

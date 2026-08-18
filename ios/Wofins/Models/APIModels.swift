@@ -72,85 +72,15 @@ struct UpdateProfilePayload: Encodable {
     var emergency_contact: String?
 }
 
-struct LeaveTypeRef: Decodable, Equatable {
-    let id: Int?
-    let name: String?
-    let keterangan: String?
-    let max_days_per_year: Int?
-}
-
 struct NamedRef: Decodable, Equatable {
     let id: Int?
     let name: String?
-}
-
-struct LeaveRequestItem: Decodable, Identifiable, Equatable {
-    let id: Int
-    let leave_type: LeaveTypeRef?
-    let start_date: String?
-    let end_date: String?
-    let total_days: Int?
-    let reason: String?
-    let emergency_contact: String?
-    let status: String?
-    let documents: [LeaveDocument]?
-    let replacement_employee: NamedRef?
-    let approver: NamedRef?
-    let approval_notes: String?
-    let created_at: String?
-    let updated_at: String?
-
-    var statusLabel: String {
-        switch status {
-        case "approved": return "Disetujui"
-        case "pending": return "Menunggu"
-        case "rejected": return "Ditolak"
-        default: return status?.capitalized ?? "-"
-        }
-    }
-}
-
-struct LeaveDocument: Decodable, Equatable {
-    let path: String?
-    let url: String?
-}
-
-struct LeaveTypeItem: Decodable, Identifiable, Hashable {
-    let id: Int
-    let name: String
-    let keterangan: String?
-    let max_days_per_year: Int?
-}
-
-struct CreateLeavePayload: Encodable {
-    let leave_type_id: Int
-    let start_date: String
-    let end_date: String
-    let reason: String
-    let emergency_contact: String?
 }
 
 struct CompensationData: Decodable {
     let period: String?
     let current_year: Int?
     let payroll: PayrollItem?
-    let leave_stats: LeaveStats?
-    let leave_by_type: [String: Int]?
-    let annual_leave_allowance: Int?
-    let used_leave: Int?
-    let display_used_leave: Int?
-    let remaining_leave: Int?
-    let prev_year: Int?
-    let prev_used_leave: Int?
-    let prev_usage_percentage: Int?
-    let carry_over: Int?
-    let effective_allowance_year: Int?
-}
-
-struct LeaveStats: Decodable {
-    let approved: Int?
-    let pending: Int?
-    let rejected: Int?
 }
 
 struct PayrollItem: Decodable {
@@ -171,22 +101,6 @@ struct PayrollFormatted: Decodable {
     let annual_salary: String?
     let bonus: String?
     let total_compensation: String?
-}
-
-struct LeaveBalancesData: Decodable {
-    let year: Int?
-    let annual_leave_allowance: Int?
-    let balances: [LeaveBalanceItem]
-}
-
-struct LeaveBalanceItem: Decodable, Identifiable {
-    let id: Int
-    let year: FlexibleStringInt?
-    let leave_type: LeaveTypeRef?
-    let allocated_days: Int?
-    let carried_over_days: Int?
-    let used_days: Int?
-    let remaining_days: Int?
 }
 
 /// API sometimes returns year as Int or String.
@@ -211,90 +125,6 @@ enum FlexibleStringInt: Decodable, Equatable {
         case .string(let v): return v
         }
     }
-}
-
-struct ScheduleData: Decodable {
-    let current_date: String?
-    let days_until_next_leave: Int?
-    let next_leave: LeaveRequestItem?
-    let upcoming_leaves: [LeaveRequestItem]
-    let recent_leaves: [LeaveRequestItem]
-    let status_translations: [String: String]?
-    let leave_type_translations: [String: String]?
-}
-
-// MARK: - Absensi
-
-struct AbsensiPengaturan: Decodable, Equatable {
-    let jam_masuk: String?
-    let jam_pulang: String?
-    let wajib_foto: Bool?
-    let wajib_lokasi: Bool?
-    let tolak_jika_di_luar_radius: Bool?
-    let ukuran_foto_maks_kb: Int?
-}
-
-struct AbsensiLogItem: Decodable, Identifiable, Equatable {
-    let id: Int
-    let jenis: String?
-    let waktu: String?
-    let lintang: Double?
-    let bujur: Double?
-    let jarak_ke_kantor_meter: Int?
-    let dalam_radius: Bool?
-    let foto_url: String?
-    let valid: Bool?
-}
-
-struct AbsensiItem: Decodable, Identifiable, Equatable {
-    let id: Int
-    let tanggal: String?
-    let status: String?
-    let jam_masuk: String?
-    let jam_pulang: String?
-    let menit_kerja: Int?
-    let menit_terlambat: Int?
-    let menit_pulang_cepat: Int?
-    let sumber: String?
-    let catatan: String?
-    let sudah_masuk: Bool?
-    let sudah_pulang: Bool?
-    let logs: [AbsensiLogItem]?
-}
-
-struct AbsensiHariIniData: Decodable {
-    let tanggal: String?
-    let pengaturan: AbsensiPengaturan?
-    let absensi: AbsensiItem?
-    let bisa_masuk: Bool?
-    let bisa_pulang: Bool?
-}
-
-struct LokasiAbsensiItem: Decodable, Identifiable, Equatable {
-    let id: Int
-    let nama: String?
-    let lintang: Double
-    let bujur: Double
-    let radius_meter: Int
-    let alamat: String?
-    let urutan: Int?
-}
-
-struct CekLokasiData: Decodable {
-    let dalam_radius: Bool
-    let jarak_meter: Int?
-    let lokasi: LokasiAbsensiItem?
-}
-
-struct AbsensiRingkasanData: Decodable {
-    let periode: String?
-    let total_hari: Int?
-    let hadir: Int?
-    let terlambat: Int?
-    let alfa: Int?
-    let cuti: Int?
-    let total_menit_terlambat: Int?
-    let total_menit_kerja: Int?
 }
 
 // MARK: - Finance

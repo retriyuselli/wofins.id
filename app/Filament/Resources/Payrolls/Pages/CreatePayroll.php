@@ -14,7 +14,7 @@ class CreatePayroll extends CreateRecord
 
     protected function handleRecordCreation(array $data): Model
     {
-        $existing = Payroll::where('user_id', $data['user_id'])
+        $existing = Payroll::where('employee_id', $data['employee_id'])
             ->where('period_month', $data['period_month'])
             ->where('period_year', $data['period_year'])
             ->first();

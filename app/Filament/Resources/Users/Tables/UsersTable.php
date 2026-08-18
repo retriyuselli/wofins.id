@@ -63,8 +63,6 @@ class UsersTable
 
     /**
      * Relasi yang benar-benar memblokir hapus (data historis bisnis).
-     * Catatan: leave_balances TIDAK ikut di sini — dibuat otomatis oleh UserObserver
-     * dan ikut terhapus (cascade + observer), jadi tidak boleh memblokir delete.
      *
      * @return array<string, list<string>>
      */
@@ -72,7 +70,6 @@ class UsersTable
     {
         return [
             'nota_dinas' => ['approved_by', 'pengirim_id', 'penerima_id'],
-            'leave_requests' => ['user_id', 'replacement_employee_id'],
             'payrolls' => ['user_id'],
         ];
     }
@@ -113,16 +110,6 @@ class UsersTable
                 continue;
             }
 
-            if ($table === 'leave_requests') {
-                $asUser = DB::table('leave_requests')->where('user_id', $record->id)->count();
-                $asReplacement = DB::table('leave_requests')->where('replacement_employee_id', $record->id)->count();
-                if ($asUser + $asReplacement > 0) {
-                    $details[] = '• Pengajuan Cuti: sebagai pemohon ('.$asUser.') atau pengganti ('.$asReplacement.')';
-                }
-
-                continue;
-            }
-
             if ($table === 'payrolls') {
                 $count = DB::table('payrolls')->where('user_id', $record->id)->count();
                 if ($count > 0) {
@@ -144,10 +131,6 @@ class UsersTable
      */
     private static function cleanupDeletableUserRelations(User $record): void
     {
-        if (method_exists($record, 'leaveBalances')) {
-            $record->leaveBalances()->delete();
-        }
-
         if (DBSchema::hasTable('model_has_roles')) {
             DB::table('model_has_roles')
                 ->where('model_type', $record->getMorphClass())
@@ -215,6 +198,7 @@ class UsersTable
                     ->label('Telepon')
                     ->searchable()
                     ->placeholder('Tidak ada')
+                    ->visible(fn (): bool => static::isSuperAdmin())
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->icon('heroicon-o-phone'),
 
@@ -300,6 +284,7 @@ class UsersTable
                 TextColumn::make('department')
                     ->label('Departemen')
                     ->badge()
+                    ->visible(fn (): bool => static::isSuperAdmin())
                     ->color(function (string $state): string {
                         return match ($state) {
                             'bisnis' => 'success',
@@ -320,6 +305,7 @@ class UsersTable
                     ->money('IDR')
                     ->sortable()
                     ->placeholder('Belum diatur')
+                    ->visible(fn (): bool => static::isSuperAdmin())
                     ->getStateUsing(function ($record) {
                         // payrolls sudah di-eager load (latest) — gunakan koleksi, bukan query baru
                         $latestPayroll = $record->payrolls->first();
@@ -355,96 +341,12 @@ class UsersTable
                         );
                     }),
 
-                TextColumn::make('total_leave_taken')
-                    ->label('Cuti Diambil')
-                    ->getStateUsing(function ($record) {
-                        // leave_approved_days pre-computed via withSum di UserResource
-                        return (int) ($record->leave_approved_days ?? 0);
-                    })
-                    ->formatStateUsing(function ($state) {
-                        return $state.' hari';
-                    })
-                    ->badge()
-                    ->color(function ($state) {
-                        if ($state == 0) {
-                            return 'gray';
-                        }
-                        if ($state <= 6) {
-                            return 'success';
-                        }
-                        if ($state <= 12) {
-                            return 'warning';
-                        }
-
-                        return 'danger';
-                    })
-                    ->icon('heroicon-o-calendar-days')
-                    ->tooltip(function ($record) {
-                        // Gunakan pre-computed aggregates dari withSum di UserResource
-                        $currentYear = date('Y');
-                        $totalApproved = (int) ($record->leave_approved_days ?? 0);
-                        $totalPending  = (int) ($record->leave_pending_days ?? 0);
-                        $totalRejected = (int) ($record->leave_rejected_days ?? 0);
-
-                        return sprintf(
-                            "Tahun %s:\nDisetujui: %d hari\nMenunggu: %d hari\nDitolak: %d hari",
-                            $currentYear,
-                            $totalApproved,
-                            $totalPending,
-                            $totalRejected
-                        );
-                    })
-                    ->sortable(),
-
-                TextColumn::make('remaining_leave')
-                    ->label('Sisa Cuti')
-                    ->getStateUsing(function ($record) {
-                        $annualLeaveAllowance = 12;
-                        $usedLeave = (int) ($record->leave_approved_days ?? 0);
-
-                        return max(0, $annualLeaveAllowance - $usedLeave);
-                    })
-                    ->formatStateUsing(function ($state) {
-                        return $state.' hari';
-                    })
-                    ->badge()
-                    ->color(function ($state) {
-                        if ($state >= 8) {
-                            return 'success';
-                        }
-                        if ($state >= 4) {
-                            return 'warning';
-                        }
-                        if ($state > 0) {
-                            return 'danger';
-                        }
-
-                        return 'gray';
-                    })
-                    ->icon('heroicon-o-clock')
-                    ->tooltip(function ($record) {
-                        $annualLeaveAllowance = 12;
-                        $usedLeave    = (int) ($record->leave_approved_days ?? 0);
-                        $remainingLeave = max(0, $annualLeaveAllowance - $usedLeave);
-                        $percentage   = $annualLeaveAllowance > 0
-                            ? round(($usedLeave / $annualLeaveAllowance) * 100, 1)
-                            : 0;
-
-                        return sprintf(
-                            "Jatah Tahunan: %d hari\nTerpakai: %d hari (%.1f%%)\nSisa: %d hari",
-                            $annualLeaveAllowance,
-                            $usedLeave,
-                            $percentage,
-                            $remainingLeave
-                        );
-                    })
-                    ->sortable(),
-
                 TextColumn::make('hire_date')
                     ->label('Tanggal Mulai')
                     ->date('d/m/Y')
                     ->sortable()
                     ->placeholder('Tidak ada')
+                    ->visible(fn (): bool => static::isSuperAdmin())
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->icon('heroicon-o-calendar'),
 
@@ -493,6 +395,7 @@ class UsersTable
 
                 TextColumn::make('gender')
                     ->label('Jenis Kelamin')
+                    ->visible(fn (): bool => static::isSuperAdmin())
                     ->formatStateUsing(function (string $state): string {
                         return match ($state) {
                             'male' => 'Laki-laki',
@@ -545,6 +448,7 @@ class UsersTable
 
                 SelectFilter::make('department')
                     ->label('Departemen')
+                    ->visible(fn (): bool => static::isSuperAdmin())
                     ->options([
                         'bisnis' => 'Bisnis',
                         'operasional' => 'Operasional',
@@ -552,6 +456,7 @@ class UsersTable
 
                 SelectFilter::make('salary_range')
                     ->label('Range Gaji')
+                    ->visible(fn (): bool => static::isSuperAdmin())
                     ->options([
                         'below_5m' => 'Di bawah 5 Juta',
                         '5m_8m' => '5 - 8 Juta',
@@ -585,6 +490,7 @@ class UsersTable
 
                 SelectFilter::make('gender')
                     ->label('Jenis Kelamin')
+                    ->visible(fn (): bool => static::isSuperAdmin())
                     ->options([
                         'male' => 'Laki-laki',
                         'female' => 'Perempuan',
@@ -599,73 +505,6 @@ class UsersTable
                     ->label('Aktif (Tanpa Batas)')
                     ->query(fn (Builder $query): Builder => $query->whereNull('expire_date'))
                     ->toggle(),
-
-                SelectFilter::make('leave_usage')
-                    ->label('Penggunaan Cuti')
-                    ->options([
-                        'no_leave' => 'Belum Pernah Cuti',
-                        'low_usage' => 'Penggunaan Rendah (≤ 3 hari)',
-                        'medium_usage' => 'Penggunaan Sedang (4-8 hari)',
-                        'high_usage' => 'Penggunaan Tinggi (> 8 hari)',
-                        'over_limit' => 'Melebihi Jatah (> 12 hari)',
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        if (! isset($data['value']) || ! $data['value']) {
-                            return $query;
-                        }
-
-                        $currentYear = date('Y');
-
-                        switch ($data['value']) {
-                            case 'no_leave':
-                                return $query->whereDoesntHave('leaveRequests', function (Builder $q) use ($currentYear) {
-                                    $q->where('status', 'approved')
-                                        ->whereYear('start_date', $currentYear);
-                                });
-
-                            case 'low_usage':
-                                return $query->whereHas('leaveRequests', function (Builder $q) use ($currentYear) {
-                                    $q->where('status', 'approved')
-                                        ->whereYear('start_date', $currentYear);
-                                })->whereRaw("
-                                    (SELECT COALESCE(SUM(total_days), 0) 
-                                     FROM leave_requests 
-                                     WHERE user_id = users.id 
-                                     AND status = 'approved' 
-                                     AND YEAR(start_date) = ?) <= 3
-                                ", [$currentYear]);
-
-                            case 'medium_usage':
-                                return $query->whereRaw("
-                                    (SELECT COALESCE(SUM(total_days), 0) 
-                                     FROM leave_requests 
-                                     WHERE user_id = users.id 
-                                     AND status = 'approved' 
-                                     AND YEAR(start_date) = ?) BETWEEN 4 AND 8
-                                ", [$currentYear]);
-
-                            case 'high_usage':
-                                return $query->whereRaw("
-                                    (SELECT COALESCE(SUM(total_days), 0) 
-                                     FROM leave_requests 
-                                     WHERE user_id = users.id 
-                                     AND status = 'approved' 
-                                     AND YEAR(start_date) = ?) BETWEEN 9 AND 12
-                                ", [$currentYear]);
-
-                            case 'over_limit':
-                                return $query->whereRaw("
-                                    (SELECT COALESCE(SUM(total_days), 0) 
-                                     FROM leave_requests 
-                                     WHERE user_id = users.id 
-                                     AND status = 'approved' 
-                                     AND YEAR(start_date) = ?) > 12
-                                ", [$currentYear]);
-
-                            default:
-                                return $query;
-                        }
-                    }),
             ])
             ->recordActions([
                 ViewAction::make()
@@ -1148,7 +987,7 @@ class UsersTable
                             if (static::userHasDeleteBlockers($record)) {
                                 Notification::make()
                                     ->title('Tidak dapat dihapus')
-                                    ->body('User memiliki data terkait (nota dinas, cuti, atau payroll).')
+                                    ->body('User memiliki data terkait (nota dinas atau payroll).')
                                     ->warning()
                                     ->persistent()
                                     ->send();
@@ -1163,12 +1002,6 @@ class UsersTable
                                         DB::table('nota_dinas')
                                             ->where('approved_by', $record->id)
                                             ->update(['approved_by' => null]);
-                                    }
-
-                                    if (DBSchema::hasTable('leave_requests')) {
-                                        DB::table('leave_requests')
-                                            ->where('replacement_employee_id', $record->id)
-                                            ->update(['replacement_employee_id' => null]);
                                     }
 
                                     static::cleanupDeletableUserRelations($record);
@@ -1346,6 +1179,25 @@ class UsersTable
             ->selectCurrentPageOnly()
             ->recordTitleAttribute('name')
             ->searchOnBlur()
-            ->deferLoading();
+            ->deferLoading()
+            ->emptyStateHeading('Belum ada pengguna')
+            ->emptyStateDescription(function (): string {
+                if (static::isSuperAdmin()) {
+                    return 'Tambah pengguna baru untuk mulai mengelola akun.';
+                }
+
+                $summary = CompanySubscription::seatSummary();
+                $plan = CompanySubscription::planLabel();
+
+                if (UserVisibility::isSingleSeatPlan()) {
+                    return "Paket {$plan} ({$summary}) hanya untuk akun pemilik. Upgrade ke Business untuk menambah anggota tim.";
+                }
+
+                if (! CompanySubscription::hasSeatAvailable()) {
+                    return CompanySubscription::seatUpgradeHint();
+                }
+
+                return "Paket {$plan} ({$summary}). Tambah anggota tim sesuai kuota seat Anda.";
+            });
     }
 }

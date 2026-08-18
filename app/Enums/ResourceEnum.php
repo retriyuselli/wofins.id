@@ -24,9 +24,6 @@ enum ResourceEnum: string implements HasLabel
     case ExpenseResource = 'ExpenseResource';
     case FixedAssetResource = 'FixedAssetResource';
     case IndustryResource = 'IndustryResource';
-    case LeaveBalanceResource = 'LeaveBalanceResource';
-    case LeaveRequestResource = 'LeaveRequestResource';
-    case LeaveTypeResource = 'LeaveTypeResource';
     case NotaDinasResource = 'NotaDinasResource';
     case NotaDinasDetailResource = 'NotaDinasDetailResource';
     case OrderResource = 'OrderResource';
@@ -67,9 +64,6 @@ enum ResourceEnum: string implements HasLabel
             self::ExpenseResource => 'Expense',
             self::FixedAssetResource => 'Fixed Asset',
             self::IndustryResource => 'Industry',
-            self::LeaveBalanceResource => 'Leave Balance',
-            self::LeaveRequestResource => 'Leave Request',
-            self::LeaveTypeResource => 'Leave Type',
             self::NotaDinasResource => 'Nota Dinas',
             self::NotaDinasDetailResource => 'Nota Dinas Detail',
             self::OrderResource => 'Order',

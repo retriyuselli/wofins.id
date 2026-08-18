@@ -7,12 +7,10 @@ use App\Http\Responses\Filament\LogoutResponse;
 use App\Models\BankStatement;
 use App\Models\Company;
 use App\Models\Document;
-use App\Models\LeaveRequest;
 use App\Models\Order;
 use App\Models\User;
 use App\Observers\BankStatementObserver;
 use App\Observers\DocumentObserver;
-use App\Observers\LeaveRequestObserver;
 use App\Observers\OrderObserver;
 use App\Observers\UserObserver;
 use App\Support\CompanySubscription;
@@ -59,11 +57,8 @@ class AppServiceProvider extends ServiceProvider
             $cache = Cache::store('array');
         }
 
-        // Register User Observer for auto-generating leave balances
+        // Register User Observer
         User::observe(UserObserver::class);
-
-        // Register LeaveRequest Observer for auto-filling user_id
-        LeaveRequest::observe(LeaveRequestObserver::class);
 
         // Register Order Observer for tracking last edited by
         Order::observe(OrderObserver::class);
@@ -162,7 +157,7 @@ class AppServiceProvider extends ServiceProvider
             return 1;
         }));
 
-        View::composer(['profile.*', 'leave.*'], function ($view) {
+        View::composer(['profile.*'], function ($view) {
             $user = auth()->user();
             $adminToolsReadonly = $user
                 && method_exists($user, 'hasRole')
@@ -170,10 +165,9 @@ class AppServiceProvider extends ServiceProvider
                 && ! $user->hasRole('super_admin');
 
             // Super admin: portal tidak dikunci paket (boleh pakai semua aksi).
-            // ESS (absensi/cuti/kompensasi/jadwal) digating employee_portal (Business).
             $proLocked = $user && method_exists($user, 'hasRole') && $user->hasRole('super_admin')
                 ? false
-                : ProFeatures::locked(PricingPlans::FEATURE_EMPLOYEE_PORTAL);
+                : ProFeatures::locked(PricingPlans::FEATURE_PAYROLL);
 
             $view->with('proFeatureLocked', $proLocked);
             $view->with('subscriptionPlanLabel', CompanySubscription::planLabel());

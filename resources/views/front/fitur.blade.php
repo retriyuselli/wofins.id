@@ -544,7 +544,7 @@
     $hubNodes = [
         ['fa-ring', 'Proyek'],
         ['fa-coins', 'Keuangan'],
-        ['fa-id-card', 'HRIS'],
+        ['fa-id-card', 'Payroll'],
         ['fa-folder', 'Dokumen'],
         ['fa-file-signature', 'Nota Dinas'],
         ['fa-building-columns', 'Rekonsiliasi'],
@@ -597,7 +597,7 @@
                             <div class="wf-mosaic-badge"><i class="fa-solid fa-bolt"></i></div>
                             <div style="flex:1;min-width:0">
                                 <p class="m-label">Sync realtime</p>
-                                <p class="m-title" style="margin-top:0.15rem">Proyek · Kas · HRIS</p>
+                                <p class="m-title" style="margin-top:0.15rem">Proyek · Kas · Payroll</p>
                                 <div class="wf-mosaic-rail" style="margin-top:0.55rem"><b></b></div>
                             </div>
                         </div>
@@ -649,7 +649,7 @@
                         <div>
                             <h2 class="text-2xl sm:text-3xl font-bold leading-tight">Semua Fitur Terintegrasi dalam Satu Platform</h2>
                             <p class="mt-3 text-white/75 text-sm leading-relaxed max-w-md">
-                                Proyek, keuangan, HRIS, dokumen, dan approval saling terhubung — tanpa spreadsheet terpisah atau data dobel.
+                                Proyek, keuangan, payroll, dokumen, dan approval saling terhubung — tanpa spreadsheet terpisah atau data dobel.
                             </p>
                             <a href="{{ route('kontak') }}" class="wf-btn-gold inline-flex items-center justify-center px-6 py-3.5 text-sm mt-7">
                                 Jadwalkan Demo Gratis

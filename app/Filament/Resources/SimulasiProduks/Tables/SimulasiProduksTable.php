@@ -154,7 +154,11 @@ class SimulasiProduksTable
 
                 SelectFilter::make('product_id')
                     ->label('Product')
-                    ->relationship('product', 'name')
+                    ->relationship(
+                        name: 'product',
+                        titleAttribute: 'name',
+                        modifyQueryUsing: fn (\Illuminate\Database\Eloquent\Builder $query) => \App\Support\UserVisibility::constrainOwnedQuery($query, 'created_by'),
+                    )
                     ->searchable()
                     ->preload(),
 

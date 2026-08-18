@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>Slip Gaji - {{ $user->name }} - {{ $companyName ?? config('app.name') }}</title>
+    <title>Slip Gaji - {{ $person->name ?? $user->name }} - {{ $companyName ?? config('app.name') }}</title>
     <meta name="author" content="{{ $companyName ?? config('app.name') }}">
     <meta name="description" content="Slip Gaji - {{ $companyName ?? config('app.name') }}">
     <meta name="keywords" content="Slip Gaji, Payroll, {{ $companyName ?? config('app.name') }}" />
@@ -13,7 +13,9 @@
     <!-- Mobile Specific Metas -->
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    @php($faviconUrl = url('/brand/favicon') . '?v=' . ($companyBrandVersion ?? 1))
+    @php
+        $faviconUrl = url('/brand/favicon').'?v='.($companyBrandVersion ?? 1);
+    @endphp
     <link rel="icon" type="image/png" sizes="32x32" href="{{ $faviconUrl }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ $faviconUrl }}">
     <link rel="apple-touch-icon" href="{{ $faviconUrl }}">
@@ -77,11 +79,24 @@
         .header-logo {
             margin-left: 0 !important;
             padding-left: 0 !important;
+            max-width: 160px;
+            line-height: 0;
+        }
+        
+        .header-logo a {
+            display: inline-block;
+            max-width: 100%;
         }
         
         .header-logo img {
             margin-left: 0 !important;
             padding-left: 0 !important;
+            display: block;
+            max-height: 64px !important;
+            max-width: 160px !important;
+            width: auto !important;
+            height: auto !important;
+            object-fit: contain;
         }
         
         .themeholy-header {
@@ -98,8 +113,8 @@
             margin-left: 0 !important;
         }
 
-        /* Print/PDF-specific rules */
-        @media print {
+        /* Print/PDF-specific rules — @@ agar Blade tidak menelan @media */
+        @@media print {
             * {
                 font-family: 'Noto Sans', sans-serif !important;
                 font-size: 10px !important;
@@ -182,8 +197,11 @@
             }
             
             .header-logo img {
-                max-height: 60px !important;
+                max-height: 48px !important;
+                max-width: 140px !important;
                 width: auto !important;
+                height: auto !important;
+                object-fit: contain !important;
             }
             
             .row {
@@ -253,7 +271,7 @@
 Invoice Area
 ==============================-->
                 <div class="themeholy-invoice invoice_style15">
-                    <div class="download-inner" id="download_section" data-employee-name="{{ $user->name }}">
+                    <div class="download-inner" id="download_section" data-employee-name="{{ $person->name ?? $user->name }}">
                         <!--==============================
 	Header Area
 ==============================-->
@@ -261,13 +279,13 @@ Invoice Area
                             <div class="row align-items-center justify-content-between">
                                 <div class="col-auto">
                                     <div class="header-logo">
-                                        <a href="#"><img src="{{ asset('images/logomki.png') }}" alt="{{ $companyName ?? config('app.name') }}"></a>
+                                        <a href="#"><img src="{{ $companyLogoUrl ?? asset('images/logomki.png') }}" alt="{{ $companyName ?? config('app.name') }}" style="max-height: 64px; max-width: 160px; width: auto; height: auto; object-fit: contain;"></a>
                                     </div>
                                 </div>
                                 <div class="col-auto">
-                                    <h1 class="big-title">SLIP GAJI123</h1>
-                                    <span><b>Karyawan :</b> {{ $user->name }}</span>
-                                    <span><b>Periode :</b> {{ now()->format('F Y') }}</span>
+                                    <h1 class="big-title">SLIP GAJI</h1>
+                                    <span><b>Karyawan :</b> {{ $person->name ?? $user->name }}</span>
+                                    <span><b>Periode :</b> {{ $periodLabel ?? now()->format('F Y') }}</span>
                                 </div>
                             </div>
                         </header>
@@ -277,8 +295,11 @@ Invoice Area
                                     <b>Informasi Perusahaan :</b>
                                     <address>
                                         {{ $companyName ?? config('app.name') }} <br>
-                                        Jl. Sintraman Jaya I No.2148, 20 Ilir D II, <br>
-                                        Kec. Kemuning, Kota Palembang, Sumatera Selatan 30137
+                                        @if(!empty($companyAddress))
+                                            {!! nl2br(e($companyAddress)) !!}
+                                        @else
+                                            Alamat belum diatur
+                                        @endif
                                     </address>
                                 </div>
                             </div>
@@ -286,9 +307,11 @@ Invoice Area
                                 <div class="invoice-right">
                                     <b>Kontak :</b>
                                     <address>
-                                        Email: info@maknawedding.id <br>
-                                        Telp: +62 822-9796-2600 <br>
-                                        Website: https://paketpernikahan.co.id
+                                        Email: {{ $companyEmail ?: '-' }} <br>
+                                        Telp: {{ $companyPhone ?: '-' }}
+                                        @if(!empty($companyWebsite))
+                                            <br>Website: {{ $companyWebsite }}
+                                        @endif
                                     </address>
                                 </div>
                             </div>
@@ -301,15 +324,15 @@ Invoice Area
                             <tbody>
                                 <tr>
                                     <th>Nama Lengkap</th>
-                                    <td>{{ $user->name }}</td>
+                                    <td>{{ $person->name ?? $user->name }}</td>
                                     <th>Email</th>
-                                    <td>{{ $user->email }}</td>
+                                    <td>{{ $person->email ?? $user->email ?? '-' }}</td>
                                 </tr>
                                 <tr>
                                     <th>No Tlp</th>
-                                    <td>{{ $user->phone_number ?? 'Tidak ada status' }}</td>
+                                    <td>{{ $person->phone ?? $user->phone ?? $user->phone_number ?? '-' }}</td>
                                     <th>Departemen</th>
-                                    <td>{{ ucfirst($user->department ?? 'Tidak ada departemen') }}</td>
+                                    <td>{{ ucfirst($person->department ?? $user->department ?? 'Tidak ada departemen') }}</td>
                                 </tr>
                                 @if($record->last_review_date)
                                 <tr>
@@ -389,7 +412,7 @@ Invoice Area
                         <div class="row justify-content-between">
                             <div class="col-auto">
                                 <b>Informasi Gaji :</b>
-                                <p class="mb-0">Periode: {{ now()->format('F Y') }} <br>
+                                <p class="mb-0">Periode: {{ $periodLabel ?? now()->format('F Y') }} <br>
                                     Dibuat: {{ now()->format('d/m/Y H:i') }} WIB</p>
                             </div>
                         </div>

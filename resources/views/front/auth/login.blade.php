@@ -144,7 +144,7 @@
                             Kelola keuangan wedding organizer dengan lebih rapi
                         </h2>
                         <p class="mt-3 text-sm text-white/75 max-w-sm">
-                            Proyek, rekonsiliasi, absensi, dan laporan — dalam satu sistem.
+                            Proyek, rekonsiliasi, payroll, dan laporan — dalam satu sistem.
                         </p>
                     </div>
                 </div>

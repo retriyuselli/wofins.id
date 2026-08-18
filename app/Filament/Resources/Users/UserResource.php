@@ -24,7 +24,9 @@ class UserResource extends Resource
 
     protected static ?string $navigationLabel = 'Pengguna';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'SDM';
+    protected static string|\UnitEnum|null $navigationGroup = 'Administrasi';
+
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $recordTitleAttribute = 'name';
 
@@ -53,30 +55,12 @@ class UserResource extends Resource
      */
     public static function getEloquentQuery(): Builder
     {
-        $currentYear = (int) date('Y');
-
         $query = parent::getEloquentQuery()
             // Payrolls diload sekali untuk semua baris — gunakan $record->payrolls->first() di Table
             ->with(['payrolls' => fn ($q) => $q->latest()])
             ->with('statuses')
             ->with('roles')
-            ->withCount('roles')
-            // Pre-compute leave aggregates — hindari N+1 di kolom cuti
-            ->withSum([
-                'leaveRequests as leave_approved_days' => fn ($q) => $q
-                    ->where('status', 'approved')
-                    ->whereYear('start_date', $currentYear),
-            ], 'total_days')
-            ->withSum([
-                'leaveRequests as leave_pending_days' => fn ($q) => $q
-                    ->where('status', 'pending')
-                    ->whereYear('start_date', $currentYear),
-            ], 'total_days')
-            ->withSum([
-                'leaveRequests as leave_rejected_days' => fn ($q) => $q
-                    ->where('status', 'rejected')
-                    ->whereYear('start_date', $currentYear),
-            ], 'total_days');
+            ->withCount('roles');
 
         return UserVisibility::constrainUsersQuery($query);
     }
@@ -84,6 +68,23 @@ class UserResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return UserForm::configure($schema);
+    }
+
+    public static function canCreate(): bool
+    {
+        return parent::canCreate() && UserVisibility::canCreateTeamUser();
+    }
+
+    public static function canEdit($record): bool
+    {
+        return parent::canEdit($record)
+            && UserVisibility::canEditUser($record instanceof User ? $record : null);
+    }
+
+    public static function canView($record): bool
+    {
+        return parent::canView($record)
+            && UserVisibility::canAccessUser($record instanceof User ? $record : null);
     }
 
     public static function table(Table $table): Table

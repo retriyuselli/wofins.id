@@ -40,16 +40,9 @@ class DatabaseSeeder extends Seeder
             // 4. Data HR (tergantung pada User)
             EmployeeSeeder::class,         // Data karyawan.
             DataPribadiSeeder::class,      // Data pribadi karyawan.
-            LeaveTypeSeeder::class,        // Jenis-jenis cuti karyawan.
             PayrollSeeder::class,          // Data gaji karyawan.
             UpdateExistingPayrollPeriodSeeder::class, // Update periode payroll yang lama.
-            LeaveRequestSeeder::class,     // Data permohonan cuti.
             AccountManagerTargetSeeder::class, // Target bulanan Account Manager.
-            LeaveBalanceSeeder::class,     // Saldo cuti per user & tipe cuti (2026–2027).
-            LeaveBalanceHistorySeeder::class, // Riwayat mutasi saldo cuti per user.
-            LeaveManagementSeeder::class,  // Manajemen cuti tambahan (tipe, saldo, request).
-            JadwalKerjaSeeder::class,      // Jadwal kerja, hari kerja, penugasan per user, hari libur.
-            AbsensiSeeder::class,          // Pengaturan, lokasi, absensi, log, koreksi, lembur.
 
             // 5. Data Bisnis (tergantung pada User, Industry, Product)
             ProspectSeeder::class,         // Calon klien.

@@ -21,8 +21,7 @@ class ListUsers extends ListRecords
 
         // Header hanya kuota pengguna (ringkas). Matriks lengkap ada di widget Dashboard.
         if (UserVisibility::canViewTeamSeatSummary()) {
-            $canAddUser = CompanySubscription::hasSeatAvailable()
-                || UserVisibility::actorIsSuperAdmin();
+            $canAddUser = UserVisibility::canCreateTeamUser();
 
             $actions[] = Action::make('subscription_seats')
                 ->label(CompanySubscription::seatSummary())
@@ -32,14 +31,22 @@ class ListUsers extends ListRecords
                 ->extraAttributes(['class' => 'pointer-events-none']);
         }
 
+        $canCreate = UserResource::canCreate() && Auth::user()?->can('Create:User');
+
         $actions[] = CreateAction::make()
-            ->visible(fn () => Auth::user()?->can('Create:User'))
-            ->disabled(fn () => ! CompanySubscription::hasSeatAvailable()
-                && ! UserVisibility::actorIsSuperAdmin())
-            ->tooltip(fn () => CompanySubscription::hasSeatAvailable()
-                || UserVisibility::actorIsSuperAdmin()
-                ? null
-                : CompanySubscription::seatFullMessage());
+            ->visible(fn () => (bool) Auth::user()?->can('Create:User'))
+            ->disabled(fn () => ! $canCreate)
+            ->tooltip(function () use ($canCreate): ?string {
+                if ($canCreate) {
+                    return null;
+                }
+
+                if (! UserVisibility::isTeamOwner() && ! UserVisibility::actorIsSuperAdmin()) {
+                    return 'Hanya pemilik paket yang dapat menambah pengguna.';
+                }
+
+                return CompanySubscription::seatUpgradeHint();
+            });
 
         return $actions;
     }
