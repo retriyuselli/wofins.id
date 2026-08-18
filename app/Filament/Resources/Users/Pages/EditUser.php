@@ -44,6 +44,8 @@ class EditUser extends EditRecord
         // Non–super_admin: kunci email & role Spatie; Status Jabatan hanya jika Business owner.
         if (! UserVisibility::actorIsSuperAdmin()) {
             $data['email'] = $this->record->email;
+            $data['status'] = $this->record->status;
+            $data['expire_date'] = $this->record->expire_date;
             $data['roles'] = UserVisibility::sanitizeAssignableRoleIds(
                 $this->record->roles()->pluck('id')->all()
             );

@@ -88,6 +88,8 @@ class CreateUser extends CreateRecord
             $data['roles'] = UserVisibility::sanitizeAssignableRoleIds(
                 UserVisibility::packageOwnerRoleIds()
             );
+            $data['status'] = 'active';
+            $data['expire_date'] = null;
 
             if (UserVisibility::canManageJobStatuses()) {
                 $sanitized = UserVisibility::sanitizeJobStatusIds(

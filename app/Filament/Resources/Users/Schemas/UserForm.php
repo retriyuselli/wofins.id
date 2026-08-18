@@ -137,6 +137,7 @@ class UserForm
                                     ]),
 
                                 Section::make('Status Akses')
+                                    ->visible(fn (): bool => UserVisibility::actorIsSuperAdmin())
                                     ->schema([
                                         Select::make('status')
                                             ->label('Status Akun')
