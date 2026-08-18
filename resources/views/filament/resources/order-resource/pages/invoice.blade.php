@@ -1,75 +1,133 @@
 @php
-    $company = null;
-    if (\Illuminate\Support\Facades\Schema::hasTable('companies')) {
-        $company = \App\Models\Company::query()->first();
-    }
-    $logoSrc =
-        $company && $company->logo_url
-            ? \Illuminate\Support\Facades\Storage::disk('public')->url($company->logo_url)
-            : asset(config('invoice.logo', 'images/logo.png'));
+    $companyName = $companyName ?? config('app.name');
+    $companyAddress = $companyAddress ?? null;
+    $companyPhone = $companyPhone ?? null;
+    $companyEmail = $companyEmail ?? null;
+    $companyWebsite = $companyWebsite ?? null;
+    $companyLogoUrl = $companyLogoUrl ?? null;
+    $logoSrc = $companyLogoUrl ?: '';
 @endphp
 
 <x-filament-panels::page>
-
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('assetssimulasi/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assetssimulasi/css/style.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/invoice/invoice.css') }}">
 
-    <div
-        class="bg-white dark:bg-gray-800 shadow-m border border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-6 lg:p-8 ring-gray-100 dark:ring-gray-700">
-        <!-- Invoice Header -->
-        <div
-            class="flex justify-between items-center border-b border-gray-200 dark:border-gray-600 dark:border-gray-600 pb-4">
-            <div>
-                <h1 class="font-bold text-gray-800 dark:text-white text-sm sm:text-base">DETAILS #{{ $order->id }}
-                </h1>
-                <p class="text-gray-600 dark:text-white text-sm sm:text-base">Date:
-                    {{ $order->created_at->format('d M Y') }}
-                </p>
-            </div>
-            <div>
-                <img src="{{ $logoSrc }}" alt="Company Logo" class="h-10 w-auto mr-4">
-            </div>
-        </div>
+    <style>
+        .wofins-invoice-page,
+        .wofins-invoice-page * {
+            font-family: 'Noto Sans', sans-serif !important;
+        }
 
-        <!-- Download Buttons -->
-        <div class="mt-6 flex justify-end gap-3">
-            @php
-                $phone = $order->prospect->phone ?? '';
-                $whatsappUrl = '#';
-                if ($phone) {
-                    $phone = preg_replace('/[^0-9]/', '', $phone);
-                    // Jika dimulai dengan 0, ganti dengan 62
-                    if (substr($phone, 0, 1) === '0') {
-                        $phone = '62' . substr($phone, 1);
-                    }
-                    // Jika dimulai dengan 8, tambahkan 62 di depan
-                    elseif (substr($phone, 0, 1) === '8') {
-                        $phone = '62' . $phone;
-                    }
-                    $message = "Halo, berikut adalah invoice Anda: " . route('invoice.download', ['order' => $order]);
-                    $whatsappUrl = "https://wa.me/{$phone}?text=" . urlencode($message);
-                }
-            @endphp
+        .wofins-invoice-page .invoice-container-wrap {
+            background: transparent !important;
+            min-height: auto !important;
+            padding: 0 !important;
+            display: block !important;
+        }
 
-            @if($phone)
-                <a href="{{ $whatsappUrl }}" target="_blank"
-                    class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-sm text-white hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-                    </svg>
-                    WhatsApp
-                </a>
-            @endif
+        .wofins-invoice-page .invoice-container {
+            background: #fff !important;
+            border: 1px solid #e5e7eb !important;
+            border-radius: 12px !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+            margin: 0 auto !important;
+            max-width: 1100px !important;
+            padding: 24px !important;
+            width: 100% !important;
+        }
 
-            <a href="{{ route('invoice.download', ['order' => $order]) }}" target="_blank"
-                class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 border border-transparent rounded-md font-semibold text-sm text-white hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                    stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                </svg>
-                Download Invoice
-            </a>
-        </div>
+        .wofins-invoice-page .themeholy-header address {
+            margin: 0;
+            font-style: normal;
+            line-height: 1.45;
+            color: #1f2937;
+            font-size: 13px;
+        }
+
+        .wofins-invoice-page .invoice-actions a {
+            text-decoration: none;
+        }
+
+        .wofins-invoice-page .section-header-title,
+        .wofins-invoice-page h1,
+        .wofins-invoice-page h2,
+        .wofins-invoice-page h3 {
+            color: #0b1f3a;
+        }
+    </style>
+
+    <div class="wofins-invoice-page">
+        <div class="invoice-container-wrap">
+            <div class="invoice-container themeholy-invoice invoice_style2">
+                <header class="themeholy-header header-layout1">
+                    <div class="d-flex align-items-start justify-content-between"
+                        style="border-bottom: 1px solid #000; padding-bottom: 14px; margin-bottom: 20px; gap: 12px;">
+                        <div style="text-align: left; min-width: 0; flex: 1 1 auto;">
+                            <b>Office Information :</b>
+                            <address style="white-space: normal; overflow-wrap: anywhere; word-break: break-word;">
+                                {{ $companyName }}<br>
+                                {{ $companyAddress ?: 'Alamat belum diatur' }}
+                                |
+                                Phone: {{ $companyPhone ?: '-' }}
+                                @if (! empty($companyEmail))
+                                    <br>Email: {{ $companyEmail }}
+                                @endif
+                                @if (! empty($companyWebsite))
+                                    <br>Website: {{ $companyWebsite }}
+                                @endif
+                            </address>
+                        </div>
+                        <div class="header-logo"
+                            style="max-height: 64px; text-align: right; flex: 0 0 auto; margin-left: auto;">
+                            @if ($logoSrc)
+                                <img src="{{ $logoSrc }}" alt="Logo {{ $companyName }}"
+                                    style="display: block; max-height: 64px; width: auto; max-width: 160px; margin-left: auto; object-fit: contain;">
+                            @endif
+                        </div>
+                    </div>
+                </header>
+
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+                    <div>
+                        <h1 class="fw-bold mb-1" style="font-size: 1.15rem;">
+                            DETAILS #{{ $order->number ?? $order->id }}
+                        </h1>
+                        <p class="mb-0 text-muted" style="font-size: 0.9rem;">
+                            Date: {{ $order->created_at?->format('d M Y') }}
+                        </p>
+                    </div>
+
+                    <div class="invoice-actions d-flex flex-wrap gap-2 justify-content-end">
+                        @php
+                            $phone = $order->prospect->phone ?? '';
+                            $whatsappUrl = '#';
+                            if ($phone) {
+                                $phone = preg_replace('/[^0-9]/', '', $phone);
+                                if (substr($phone, 0, 1) === '0') {
+                                    $phone = '62'.$phone;
+                                } elseif (substr($phone, 0, 1) === '8') {
+                                    $phone = '62'.$phone;
+                                }
+                                $message = 'Halo, berikut adalah invoice Anda: '.route('invoice.download', ['order' => $order]);
+                                $whatsappUrl = 'https://wa.me/'.$phone.'?text='.urlencode($message);
+                            }
+                        @endphp
+
+                        @if ($phone)
+                            <a href="{{ $whatsappUrl }}" target="_blank"
+                                class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-sm text-white hover:bg-green-500">
+                                WhatsApp
+                            </a>
+                        @endif
+
+                        <a href="{{ route('invoice.download', ['order' => $order]) }}" target="_blank"
+                            class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 border border-transparent rounded-md font-semibold text-sm text-white hover:bg-primary-500">
+                            Download Invoice
+                        </a>
+                    </div>
+                </div>
 
         @php
             $grandTotal = $order->grand_total ?? 0;
@@ -731,6 +789,8 @@
                     </button>
                 </div>
             @endif
+        </div>
+            </div>
         </div>
     </div>
 

@@ -45,7 +45,13 @@ class OrderFinance
 
     public function paymentsTotal()
     {
-        return $this->order->dataPembayaran->sum('nominal');
+        $payments = $this->order->relationLoaded('dataPembayaran')
+            ? $this->order->dataPembayaran
+            : $this->order->dataPembayaran()->get();
+
+        return (int) $payments
+            ->filter(fn ($payment) => ($payment->kategori_transaksi ?? 'uang_masuk') !== 'uang_keluar')
+            ->sum('nominal');
     }
 
     public function expensesTotal()

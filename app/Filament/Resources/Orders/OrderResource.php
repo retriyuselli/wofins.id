@@ -138,26 +138,16 @@ class OrderResource extends BaseResource
                         return $query->pluck('name', 'id');
                     })
                     ->required()
-                    ->reactive()
-                    ->live() // Anda bisa menambahkan live() jika ingin update instan saat produk dipilih
-                    ->afterStateHydrated(function (Set $set, Get $get, $state) {
-                        $product = Product::find($state);
-                        $set('stock', $product?->stock ?? 0);
-                        $set('unit_price', $product?->product_price ?? 0);
-                    })
-
+                    ->live()
                     ->afterStateUpdated(function ($state, Set $set, Get $get) {
                         $product = Product::find($state);
-                        $set('stock', $product?->stock ?? 0);
                         $set('unit_price', $product?->product_price ?? 0);
-                        $quantity = $get('quantity') ?? 1; // Get quantity or default to 1
-                        $stock = $get('stock');
                         self::updateTotalPrice($get, $set);
                     })
                     ->distinct()
                     ->disableOptionsWhenSelectedInSiblingRepeaterItems()
                     ->columnSpan([
-                        'md' => 5,
+                        'md' => 6,
                     ])
                     ->searchable(),
                 TextInput::make('quantity')
@@ -165,29 +155,20 @@ class OrderResource extends BaseResource
                     ->numeric()
                     ->default(1)
                     ->columnSpan([
-                        'md' => 1,
+                        'md' => 2,
                     ])
                     ->minValue(1)
                     ->required()
-                    ->reactive()
-                    // ->live() // Anda bisa menambahkan live() jika ingin update instan saat kuantitas diubah
+                    ->live(onBlur: true)
                     ->afterStateUpdated(function ($state, Set $set, Get $get) {
-                        $stock = $get('stock');
-                        if ($state > $stock) {
-                            $set('quantity', $stock);
+                        $product = Product::find($get('product_id'));
+                        $stock = $product?->stock;
+                        if ($stock !== null && (int) $state > (int) $stock) {
+                            $set('quantity', (int) $stock);
                             Notification::make()->title('Stock tidak mencukupi')->warning()->send();
                         }
                         self::updateTotalPrice($get, $set);
                     }),
-                TextInput::make('stock')
-                    ->label('Stok')
-                    ->disabled()
-                    ->dehydrated()
-                    ->numeric()
-                    ->required()
-                    ->columnSpan([
-                        'md' => 1,
-                    ]),
                 TextInput::make('unit_price')
                     ->label('Unit Price')
                     ->disabled()
@@ -198,14 +179,12 @@ class OrderResource extends BaseResource
                     ->dehydrateStateUsing(fn ($state) => is_numeric($state) ? (int) $state : (int) preg_replace('/[^\d]/', '', (string) $state))
                     ->required()
                     ->columnSpan([
-                        'md' => 3,
+                        'md' => 4,
                     ]),
             ])
             ->collapsible()
             ->reorderable()
             ->cloneable()
-            ->reactive()
-            ->live()
             ->itemLabel(fn (array $state): ?string => Product::find($state['product_id'])?->name)
             ->extraItemActions([
                 Action::make('openProduct')
@@ -225,14 +204,11 @@ class OrderResource extends BaseResource
             ->defaultItems(1)
             ->hiddenLabel()
             ->columns([
-                'md' => 10,
+                'md' => 12,
             ])
-            ->reactive() // Membuat repeater reaktif
-            // ->live() // Anda bisa menambahkan live() jika ingin update instan saat item ditambah/dihapus
+            // Jangan ->live() di repeater: setelah hydrate terus $set parent field → request Livewire tanpa henti.
             ->afterStateUpdated(function (Get $get, Set $set) {
-                // Logika ini akan dijalankan ketika item di repeater berubah (ditambah, dihapus, atau field reaktif di dalamnya berubah)
-                // $get relatif terhadap parent dari repeater (dalam kasus ini, Wizard\Step 'Payment Details')
-                $orderItems = $get('items') ?? []; // 'items' adalah nama repeater
+                $orderItems = $get('items') ?? [];
                 $calculatedProductPengurangan = 0;
                 $calculatedProductPenambahan = 0;
                 $calculatedTotalPrice = 0;
@@ -242,29 +218,79 @@ class OrderResource extends BaseResource
                         if (! empty($item['product_id']) && ! empty($item['quantity'])) {
                             $product = Product::find($item['product_id']);
                             if ($product) {
-                                // Akumulasi total pengurangan dari produk (kuantitas * pengurangan produk)
                                 $calculatedProductPengurangan += $item['quantity'] * ($product->pengurangan ?? 0);
-                                // Akumulasi total penambahan dari produk (kuantitas * penambahan_publish produk)
                                 $calculatedProductPenambahan += $item['quantity'] * ($product->penambahan_publish ?? 0);
-                                // Akumulasi total harga berdasarkan harga jual produk (kuantitas * harga produk)
                                 $calculatedTotalPrice += $item['quantity'] * ($product->product_price ?? 0);
                             }
                         }
                     }
                 }
 
-                $set('pengurangan', $calculatedProductPengurangan); // Mengatur field 'pengurangan' di form Order
-                $set('penambahan', $calculatedProductPenambahan); // Mengatur field 'penambahan' dari penambahan_publish produk
-                $set('total_price', $calculatedTotalPrice); // Mengatur field 'total_price' di form Order
-                $promo = $get('promo') ?? 0;
+                static::setIfChanged($set, $get, 'pengurangan', $calculatedProductPengurangan);
+                static::setIfChanged($set, $get, 'penambahan', $calculatedProductPenambahan);
+                static::setIfChanged($set, $get, 'total_price', $calculatedTotalPrice);
+
+                $promoRaw = $get('promo') ?? 0;
+                $promo = is_numeric($promoRaw) ? (int) $promoRaw : (int) preg_replace('/[^\d]/', '', (string) $promoRaw);
                 $grandTotal = Order::computeGrandTotalFromValues(
                     $calculatedTotalPrice,
                     $calculatedProductPenambahan,
                     $promo,
                     $calculatedProductPengurangan
                 );
-                $set('grand_total', $grandTotal); // Mengatur field 'grand_total' di form Order
+                static::setIfChanged($set, $get, 'grand_total', $grandTotal);
+                self::updateDependentFinancialFields($get, $set);
             });
+    }
+
+    /**
+     * Hindari $set berulang nilai sama (pemicu loop Livewire + mask uang).
+     */
+    public static function setIfChanged(Set $set, Get $get, string $field, mixed $value): void
+    {
+        $current = $get($field);
+
+        if (is_bool($value) || is_bool($current)) {
+            if ((bool) $current === (bool) $value) {
+                return;
+            }
+
+            $set($field, (bool) $value);
+
+            return;
+        }
+
+        if (is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}/', $value)) {
+            if ((string) $current === (string) $value) {
+                return;
+            }
+
+            $set($field, $value);
+
+            return;
+        }
+
+        $normalize = static function ($v) {
+            if ($v === null || $v === '') {
+                return 0;
+            }
+
+            if (is_int($v) || is_float($v)) {
+                return (int) $v;
+            }
+
+            if (is_numeric($v)) {
+                return (int) $v;
+            }
+
+            return (int) preg_replace('/[^\d]/', '', (string) $v);
+        };
+
+        if ($normalize($current) === $normalize($value)) {
+            return;
+        }
+
+        $set($field, $value);
     }
 
     public static function updateTotalPrice(Get $get, Set $set): void
@@ -282,36 +308,38 @@ class OrderResource extends BaseResource
 
         foreach ($selectedProducts as $item) {
             $productId = $item['product_id'];
-            $quantity = $item['quantity'] ?? 0;
+            $quantity = (int) ($item['quantity'] ?? 0);
 
-            // Check if product exists in our fetched collection and has a price
-            if (isset($productsFromDb[$productId]) && isset($productsFromDb[$productId]->price)) {
-                $productPrice = $productsFromDb[$productId]->product_price ?? 0;
-                $productPengurangan = $productsFromDb[$productId]->pengurangan ?? 0;
-                $productPenambahanPublish = $productsFromDb[$productId]->penambahan_publish ?? 0;
-
-                $calculatedTotalPrice += $productPrice * $quantity;
-                $calculatedProductPengurangan += $productPengurangan * $quantity;
-                $calculatedProductPenambahan += $productPenambahanPublish * $quantity;
+            if (! isset($productsFromDb[$productId]) || $quantity < 1) {
+                continue;
             }
+
+            $product = $productsFromDb[$productId];
+            // Harga jual order memakai product_price (bukan kolom price vendor).
+            $productPrice = (int) ($product->product_price ?? 0);
+            $productPengurangan = (int) ($product->pengurangan ?? 0);
+            $productPenambahanPublish = (int) ($product->penambahan_publish ?? 0);
+
+            $calculatedTotalPrice += $productPrice * $quantity;
+            $calculatedProductPengurangan += $productPengurangan * $quantity;
+            $calculatedProductPenambahan += $productPenambahanPublish * $quantity;
         }
 
-        $set('total_price', $calculatedTotalPrice);
-        $set('pengurangan', $calculatedProductPengurangan); // Set field 'pengurangan'
-        $set('penambahan', $calculatedProductPenambahan); // Set field 'penambahan' from product's penambahan_publish
+        static::setIfChanged($set, $get, 'total_price', $calculatedTotalPrice);
+        static::setIfChanged($set, $get, 'pengurangan', $calculatedProductPengurangan);
+        static::setIfChanged($set, $get, 'penambahan', $calculatedProductPenambahan);
 
         // Recalculate grand_total
-        $promo = $get('promo') ?? 0;
-        // Gunakan $calculatedProductPengurangan dan $calculatedProductPenambahan yang baru dihitung
+        $promoRaw = $get('promo') ?? 0;
+        $promo = is_numeric($promoRaw) ? (int) $promoRaw : (int) preg_replace('/[^\d]/', '', (string) $promoRaw);
         $grandTotal = Order::computeGrandTotalFromValues(
             $calculatedTotalPrice,
             $calculatedProductPenambahan,
             $promo,
             $calculatedProductPengurangan
         );
-        $set('grand_total', $grandTotal);
+        static::setIfChanged($set, $get, 'grand_total', $grandTotal);
 
-        // Panggil method baru untuk update sisa dan is_paid
         self::updateDependentFinancialFields($get, $set);
     }
 
@@ -323,7 +351,7 @@ class OrderResource extends BaseResource
         $penambahanPrice = $get('penambahan') ?? 0;
         $penguranganPrice = $get('pengurangan') ?? 0;
         $exchangePaid = $totalPrice - $paidAmount - $promoPrice - $penguranganPrice + $penambahanPrice;
-        $set('change_amount', $exchangePaid);
+        static::setIfChanged($set, $get, 'change_amount', $exchangePaid);
     }
 
     public static function updateDependentFinancialFields(Get $get, Set $set): void
@@ -339,26 +367,28 @@ class OrderResource extends BaseResource
             $promo_val,
             $pengurangan_val
         );
-        $set('grand_total', $grandTotal);
+        static::setIfChanged($set, $get, 'grand_total', $grandTotal);
 
         $paymentItems = $get('Jika Ada Pembayaran') ?? [];
         $bayar = 0;
         if (is_array($paymentItems)) {
             foreach ($paymentItems as $paymentItem) {
+                // Hanya uang masuk yang dihitung sebagai pembayaran klien.
+                $tipe = $paymentItem['kategori_transaksi'] ?? 'uang_masuk';
+                if ($tipe === 'uang_keluar') {
+                    continue;
+                }
+
                 $nominalValue = $normalize($paymentItem['nominal'] ?? 0);
                 $bayar += $nominalValue;
             }
         }
-        $set('bayar', $bayar);
+        static::setIfChanged($set, $get, 'bayar', $bayar);
 
-        // Hitung 'sisa'
         $sisa = $grandTotal - $bayar;
-        $set('sisa', $sisa);
+        static::setIfChanged($set, $get, 'sisa', $sisa);
+        static::setIfChanged($set, $get, 'is_paid', $sisa <= 0);
 
-        // Update 'is_paid'
-        $set('is_paid', $sisa <= 0);
-
-        // Update 'closing_date' based on the first payment date
         self::updateClosingDate($get, $set);
     }
 
@@ -366,17 +396,17 @@ class OrderResource extends BaseResource
     {
         $paymentItems = $get('Jika Ada Pembayaran') ?? [];
         if (! empty($paymentItems)) {
-            // Urutkan pembayaran berdasarkan tgl_bayar untuk mendapatkan yang paling awal
             usort($paymentItems, function ($a, $b) {
                 return strtotime($a['tgl_bayar'] ?? 'now') <=> strtotime($b['tgl_bayar'] ?? 'now');
             });
             if (isset($paymentItems[0]['tgl_bayar']) && ! empty($paymentItems[0]['tgl_bayar'])) {
-                $set('closing_date', Carbon::parse($paymentItems[0]['tgl_bayar'])->format('Y-m-d'));
-
-                return; // Keluar setelah menemukan tanggal pembayaran pertama
+                static::setIfChanged(
+                    $set,
+                    $get,
+                    'closing_date',
+                    Carbon::parse($paymentItems[0]['tgl_bayar'])->format('Y-m-d')
+                );
             }
         }
-        // Jika tidak ada pembayaran, bisa di-set ke default atau dibiarkan (tergantung kebutuhan)
-        // $set('closing_date', now()->format('Y-m-d')); // Atau biarkan saja jika tidak ada pembayaran
     }
 }
