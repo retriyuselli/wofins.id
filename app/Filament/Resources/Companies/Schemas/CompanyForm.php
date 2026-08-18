@@ -78,6 +78,86 @@ class CompanyForm
                                                     ->placeholder('Jumlah karyawan'),
                                             ]),
                                     ]),
+                                Section::make('Kontak & Alamat')
+                                    ->schema([
+                                        Grid::make()
+                                            ->columns(2)
+                                            ->schema([
+                                                TextInput::make('email')
+                                                    ->label('Email address')
+                                                    ->email()
+                                                    ->required()
+                                                    ->unique(ignoreRecord: true)
+                                                    ->maxLength(255)
+                                                    ->placeholder('contoh@perusahaan.com')
+                                                    ->disabled()
+                                                    ->dehydrated(false)
+                                                    ->helperText('Email dari pendaftaran — tidak dapat diubah.'),
+                                                TextInput::make('phone')
+                                                    ->tel()
+                                                    ->required()
+                                                    ->minLength(8)
+                                                    ->maxLength(20)
+                                                    ->regex('/^[0-9+\s\-]+$/')
+                                                    ->placeholder('+62 812 xxxx xxxx'),
+                                            ]),
+                                        Textarea::make('address')
+                                            ->maxLength(1000)
+                                            ->columnSpanFull()
+                                            ->placeholder('Alamat lengkap perusahaan'),
+                                        Grid::make()
+                                            ->columns(3)
+                                            ->schema([
+                                                TextInput::make('city')
+                                                    ->maxLength(100)
+                                                    ->placeholder('Kota/Kabupaten'),
+                                                TextInput::make('province')
+                                                    ->maxLength(100)
+                                                    ->placeholder('Provinsi'),
+                                                TextInput::make('postal_code')
+                                                    ->minLength(4)
+                                                    ->maxLength(10)
+                                                    ->regex('/^[0-9]+$/')
+                                                    ->placeholder('Kode pos'),
+                                            ]),
+                                        Grid::make()
+                                            ->columns(2)
+                                            ->schema([
+                                                TextInput::make('website')
+                                                    ->url()
+                                                    ->maxLength(255)
+                                                    ->placeholder('https://example.com')
+                                                    ->helperText('Gunakan URL lengkap diawali http:// atau https://'),
+                                                FileUpload::make('logo_url')
+                                                    ->disk('public')
+                                                    ->directory('company/logo')
+                                                    ->image()
+                                                    ->maxSize(5120),
+                                            ]),
+                                        Grid::make()
+                                            ->columns(2)
+                                            ->schema([
+                                                FileUpload::make('favicon_url')
+                                                    ->disk('public')
+                                                    ->directory('company/favicon')
+                                                    ->acceptedFileTypes(['image/png', 'image/x-icon', 'image/svg+xml'])
+                                                    ->imagePreviewHeight('64')
+                                                    ->maxSize(5120),
+                                                FileUpload::make('image_login')
+                                                    ->label('Image Login')
+                                                    ->disk('public')
+                                                    ->directory('company/login_image')
+                                                    ->image()
+                                                    ->maxSize(5120)
+                                                    ->helperText('Gambar untuk halaman login frontend'),
+                                                TextInput::make('logo_url')
+                                                    ->hidden(),
+                                            ]),
+                                        Textarea::make('description')
+                                            ->maxLength(1000)
+                                            ->columnSpanFull()
+                                            ->placeholder('Deskripsi singkat perusahaan'),
+                                    ]),
                                 Section::make('Paket Langganan')
                                     ->description($isSuperAdmin
                                         ? 'Bukan role Spatie — menentukan kuota dan fitur yang aktif.'
@@ -241,90 +321,6 @@ class CompanyForm
                                             ->searchable()
                                             ->preload()
                                             ->placeholder('Pilih rekening bank utama (milik perusahaan Anda)'),
-                                    ]),
-                            ]),
-                        Tabs\Tab::make('Kontak & Alamat')
-                            ->icon(Heroicon::OutlinedCurrencyDollar)
-                            ->schema([
-                                Section::make('Kontak & Alamat')
-                                    ->schema([
-                                        Grid::make()
-                                            ->columns(2)
-                                            ->schema([
-                                                TextInput::make('email')
-                                                    ->label('Email address')
-                                                    ->email()
-                                                    ->required()
-                                                    ->unique(ignoreRecord: true)
-                                                    ->maxLength(255)
-                                                    ->placeholder('contoh@perusahaan.com')
-                                                    ->disabled()
-                                                    ->dehydrated(false)
-                                                    ->helperText('Email dari pendaftaran — tidak dapat diubah.'),
-                                                TextInput::make('phone')
-                                                    ->tel()
-                                                    ->required()
-                                                    ->minLength(8)
-                                                    ->maxLength(20)
-                                                    ->regex('/^[0-9+\s\-]+$/')
-                                                    ->placeholder('+62 812 xxxx xxxx'),
-                                            ]),
-                                        Textarea::make('address')
-                                            ->maxLength(1000)
-                                            ->columnSpanFull()
-                                            ->placeholder('Alamat lengkap perusahaan'),
-                                        Grid::make()
-                                            ->columns(3)
-                                            ->schema([
-                                                TextInput::make('city')
-                                                    ->maxLength(100)
-                                                    ->placeholder('Kota/Kabupaten'),
-                                                TextInput::make('province')
-                                                    ->maxLength(100)
-                                                    ->placeholder('Provinsi'),
-                                                TextInput::make('postal_code')
-                                                    ->minLength(4)
-                                                    ->maxLength(10)
-                                                    ->regex('/^[0-9]+$/')
-                                                    ->placeholder('Kode pos'),
-                                            ]),
-                                        Grid::make()
-                                            ->columns(2)
-                                            ->schema([
-                                                TextInput::make('website')
-                                                    ->url()
-                                                    ->maxLength(255)
-                                                    ->placeholder('https://example.com')
-                                                    ->helperText('Gunakan URL lengkap diawali http:// atau https://'),
-                                                FileUpload::make('logo_url')
-                                                    ->disk('public')
-                                                    ->directory('company/logo')
-                                                    ->image()
-                                                    ->maxSize(5120),
-                                            ]),
-                                        Grid::make()
-                                            ->columns(2)
-                                            ->schema([
-                                                FileUpload::make('favicon_url')
-                                                    ->disk('public')
-                                                    ->directory('company/favicon')
-                                                    ->acceptedFileTypes(['image/png', 'image/x-icon', 'image/svg+xml'])
-                                                    ->imagePreviewHeight('64')
-                                                    ->maxSize(5120),
-                                                FileUpload::make('image_login')
-                                                    ->label('Image Login')
-                                                    ->disk('public')
-                                                    ->directory('company/login_image')
-                                                    ->image()
-                                                    ->maxSize(5120)
-                                                    ->helperText('Gambar untuk halaman login frontend'),
-                                                TextInput::make('logo_url')
-                                                    ->hidden(),
-                                            ]),
-                                        Textarea::make('description')
-                                            ->maxLength(1000)
-                                            ->columnSpanFull()
-                                            ->placeholder('Deskripsi singkat perusahaan'),
                                     ]),
                             ]),
                         Tabs\Tab::make('Legal Perusahaan')

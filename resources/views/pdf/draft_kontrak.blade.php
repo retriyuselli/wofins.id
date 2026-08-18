@@ -6,8 +6,8 @@
     <title>Draft Kontrak</title>
     <style>
         @page {
-            /* Top margin adjusted to ensure content starts below the fixed header on all pages */
-            margin: 110px 45px 30px 65px;
+            /* Top margin: ruang fixed header + jarak garis bawah */
+            margin: 128px 45px 30px 65px;
         }
 
         body {
@@ -30,13 +30,24 @@
 
         .header-table {
             width: 100%;
-            border-bottom: 2px solid #000;
-            padding-bottom: 8px;
             border-collapse: collapse;
+            border-bottom: none;
+            padding-bottom: 0;
         }
 
         .header-table td {
             vertical-align: top;
+            padding-bottom: 0;
+        }
+
+        /* Garis dipisah agar bisa turun tanpa menggeser teks/logo */
+        .header-rule {
+            width: 100%;
+            border-bottom: 2px solid #000;
+            margin-top: 18px;
+            height: 0;
+            line-height: 0;
+            font-size: 0;
         }
 
         .logo-img {
@@ -497,6 +508,7 @@
                 </td>
             </tr>
         </table>
+        <div class="header-rule"></div>
     </header>
 
     <!-- FOOTER -->

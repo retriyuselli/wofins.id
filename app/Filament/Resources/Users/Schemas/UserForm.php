@@ -58,6 +58,48 @@ class UserForm
                                             ]),
                                     ]),
 
+                                Section::make('Informasi Personal')
+                                    ->visible(fn (): bool => UserVisibility::actorIsSuperAdmin())
+                                    ->schema([
+                                        Grid::make(2)
+                                            ->schema([
+                                                TextInput::make('phone_number')
+                                                    ->label('Nomor Telepon')
+                                                    ->tel()
+                                                    ->maxLength(255)
+                                                    ->placeholder('08xx-xxxx-xxxx'),
+
+                                                DatePicker::make('date_of_birth')
+                                                    ->label('Tanggal Lahir')
+                                                    ->displayFormat('d/m/Y')
+                                                    ->maxDate(now()->subYears(17)),
+
+                                                Select::make('gender')
+                                                    ->label('Jenis Kelamin')
+                                                    ->options([
+                                                        'male' => 'Laki-laki',
+                                                        'female' => 'Perempuan',
+                                                    ])
+                                                    ->placeholder('Pilih jenis kelamin'),
+
+                                                Select::make('department')
+                                                    ->label('Departemen')
+                                                    ->options([
+                                                        'bisnis' => 'Bisnis',
+                                                        'operasional' => 'Operasional',
+                                                    ])
+                                                    ->default('operasional')
+                                                    ->required(),
+                                            ]),
+
+                                        Textarea::make('address')
+                                            ->label('Alamat')
+                                            ->maxLength(500)
+                                            ->rows(3)
+                                            ->placeholder('Alamat lengkap')
+                                            ->columnSpanFull(),
+                                    ]),
+
                                 Section::make('Peran & Status')
                                     ->visible(fn (): bool => UserVisibility::actorIsSuperAdmin()
                                         || UserVisibility::canManageJobStatuses())
@@ -171,47 +213,6 @@ class UserForm
                             ->icon('heroicon-o-briefcase')
                             ->visible(fn (): bool => UserVisibility::actorIsSuperAdmin())
                             ->schema([
-                                Section::make('Informasi Personal')
-                                    ->schema([
-                                        Grid::make(2)
-                                            ->schema([
-                                                TextInput::make('phone_number')
-                                                    ->label('Nomor Telepon')
-                                                    ->tel()
-                                                    ->maxLength(255)
-                                                    ->placeholder('08xx-xxxx-xxxx'),
-
-                                                DatePicker::make('date_of_birth')
-                                                    ->label('Tanggal Lahir')
-                                                    ->displayFormat('d/m/Y')
-                                                    ->maxDate(now()->subYears(17)),
-
-                                                Select::make('gender')
-                                                    ->label('Jenis Kelamin')
-                                                    ->options([
-                                                        'male' => 'Laki-laki',
-                                                        'female' => 'Perempuan',
-                                                    ])
-                                                    ->placeholder('Pilih jenis kelamin'),
-
-                                                Select::make('department')
-                                                    ->label('Departemen')
-                                                    ->options([
-                                                        'bisnis' => 'Bisnis',
-                                                        'operasional' => 'Operasional',
-                                                    ])
-                                                    ->default('operasional')
-                                                    ->required(),
-                                            ]),
-
-                                        Textarea::make('address')
-                                            ->label('Alamat')
-                                            ->maxLength(500)
-                                            ->rows(3)
-                                            ->placeholder('Alamat lengkap')
-                                            ->columnSpanFull(),
-                                    ]),
-
                                 Section::make('Informasi Kepegawaian')
                                     ->schema([
                                         Grid::make(2)
