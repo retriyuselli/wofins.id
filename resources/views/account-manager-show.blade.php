@@ -233,13 +233,17 @@ Invoice Area
                                                     <td style="width: 70%; vertical-align: top; border: none;">
                                                         <div style="margin-top: 6px; font-size: 13px; color: #555; line-height: 1.4;">
                                                             <div style="font-weight: 600; color: #333;">{{ $companyName ?? config('app.name') }}</div>
-                                                            <div>{{ $companyAddress ?? 'Griya Antasena Kav No.B-1, Sembung, Balecatur, Gamping, Sleman Regency, Special Region of Yogyakarta' }}</div>
-                                                            <div>Email: {{ $companyEmail ?? 'maknawedding@gmail.com' }} | Tlp: {{ $companyPhone ?? '+62 857-2907-0664' }}</div>
+                                                            <div>{{ $companyAddress ?: 'Alamat belum diatur' }}</div>
+                                                            <div>
+                                                                @if (! empty($companyEmail)) Email: {{ $companyEmail }} @endif
+                                                                @if (! empty($companyEmail) && ! empty($companyPhone)) | @endif
+                                                                @if (! empty($companyPhone)) Tlp: {{ $companyPhone }} @endif
+                                                            </div>
                                                         </div>
                                                     </td>
                                                     <td style="width: 30%; vertical-align: top; text-align: right; border: none;">
                                                         <div class="header-logo" style="text-align: right;">
-                                                            <a href="#"><img src="{{ $companyLogoUrl ?? asset('images/logomki.png') }}"
+                                                            <a href="#"><img src="{{ $companyLogoUrl ?? \App\Support\CompanyBrand::logoUrl() }}"
                                                                     alt="{{ $companyName ?? config('app.name') }}" width="150" height="auto"
                                                                     style="max-width: 250px; height: auto;"></a>
                                                         </div>

@@ -134,21 +134,14 @@
                 <td class="no-border p-0" style="line-height: 1; text-align: left;">
                     <div style="font-size: 14px; font-weight: bold; text-transform: uppercase;">{{ strtoupper($companyName ?? config('app.name')) }}</div>
                     <div style="font-size: 12px;">
-                        Alamat : Jln. Sintraman Jaya, No. 2148, Sekip Jaya, Palembang<br>
-                        No. Tlp : +62 822-9796-2600<br>
-                        Email : maknawedding@gmail.com
+                        Alamat : {{ $companyAddress ?: 'Alamat belum diatur' }}<br>
+                        @if (! empty($companyPhone)) No. Tlp : {{ $companyPhone }}<br>@endif
+                        @if (! empty($companyEmail)) Email : {{ $companyEmail }}@endif
                     </div>
                 </td>
                 <td class="no-border p-0" style="width: 40%; text-align: right; vertical-align: middle;">
                     @php
-                        $logoPath = public_path(config('invoice.logo', 'images/logo.png'));
-                        if (file_exists($logoPath)) {
-                            $logoType = pathinfo($logoPath, PATHINFO_EXTENSION);
-                            $logoData = file_get_contents($logoPath);
-                            $logoBase64 = 'data:image/' . $logoType . ';base64,' . base64_encode($logoData);
-                        } else {
-                            $logoBase64 = '';
-                        }
+                        $logoBase64 = \App\Support\CompanyBrand::logoDataUri();
                     @endphp
                     @if ($logoBase64)
                         <img src="{{ $logoBase64 }}" alt="Company Logo" style="max-height: 50px; width: auto;">

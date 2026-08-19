@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Orders\RelationManagers;
 
+use App\Filament\Actions\GenerateWeddingExpensesAction;
 use App\Models\Expense;
 use App\Models\NotaDinas;
 use App\Models\NotaDinasDetail;
@@ -323,6 +324,8 @@ class ExpensesRelationManager extends RelationManager
                 TrashedFilter::make(),
             ])
             ->headerActions([
+                GenerateWeddingExpensesAction::make($orderId > 0 ? $orderId : null)
+                    ->label('Generate dari Nota Dinas'),
                 CreateAction::make()
                     ->label('Tambah Pengeluaran')
                     ->modalWidth('7xl')

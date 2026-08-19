@@ -286,7 +286,7 @@ class UserVisibility
     }
 
     /**
-     * ExpenseOps belum punya kolom pemilik — non-SA: kosong (belum bisa diatribusi ke tim).
+     * ExpenseOps: filter lewat payment_methods.company_id.
      *
      * @template TModel of \Illuminate\Database\Eloquent\Model
      *
@@ -295,7 +295,35 @@ class UserVisibility
      */
     public static function constrainExpenseOpsQuery(Builder $query): Builder
     {
-        return static::constrainPlatformOnlyQuery($query);
+        return static::constrainViaCompanyPaymentMethods($query);
+    }
+
+    /**
+     * Expense ops / pendapatan lain / pengeluaran lain / rekening koran:
+     * lewat payment_methods.company_id.
+     *
+     * @template TModel of \Illuminate\Database\Eloquent\Model
+     *
+     * @param  Builder<TModel>  $query
+     * @return Builder<TModel>
+     */
+    public static function constrainViaCompanyPaymentMethods(Builder $query, string $column = 'payment_method_id'): Builder
+    {
+        if (static::actorSeesGlobalAggregates()) {
+            return $query;
+        }
+
+        $companyId = static::companyId();
+        if ($companyId === null || ! Schema::hasColumn('payment_methods', 'company_id')) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        $table = $query->getModel()->getTable();
+        $qualified = str_contains($column, '.') ? $column : "{$table}.{$column}";
+
+        return $query->whereIn($qualified, function ($q) use ($companyId) {
+            $q->select('id')->from('payment_methods')->where('company_id', $companyId);
+        });
     }
 
     /**
@@ -472,6 +500,19 @@ class UserVisibility
         return $query->whereIn($piutangIdColumn, function ($q) use ($teamIds) {
             $q->select('id')->from('piutangs')->whereIn('dibuat_oleh', $teamIds);
         });
+    }
+
+    public static function ownsCompanyId(?int $recordCompanyId): bool
+    {
+        if (static::actorIsSuperAdmin()) {
+            return true;
+        }
+
+        $companyId = static::companyId();
+
+        return $companyId !== null
+            && $recordCompanyId !== null
+            && (int) $recordCompanyId === $companyId;
     }
 
     public static function canAccessUser(?User $target): bool

@@ -7,6 +7,8 @@ use App\Models\Company;
 use App\Models\Order;
 use App\Models\Payroll;
 use App\Models\User;
+use App\Support\CompanyBrand;
+use App\Support\UserVisibility;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Exception;
@@ -81,7 +83,7 @@ class AccountManagerReportController extends Controller
             extract($data);
 
             [$currentYearData, $previousYearData, $currentYear, $currentMonth] = $this->fetchYearlyData($userId);
-            [$company, $companyName, $companyAddress, $companyEmail, $companyPhone, $logoBase64] = $this->fetchCompanyData();
+            [$company, $companyName, $companyAddress, $companyEmail, $companyPhone, $logoBase64] = $this->fetchCompanyData($accountManager);
 
             $pdf = Pdf::loadView('reports.account-manager-report-dompdf', [
                 'accountManager'       => $accountManager,
@@ -144,7 +146,7 @@ class AccountManagerReportController extends Controller
             extract($data);
 
             [$currentYearData, $previousYearData, $currentYear, $currentMonth] = $this->fetchYearlyData($userId);
-            [$company, $companyName, $companyAddress, $companyEmail, $companyPhone, $logoBase64] = $this->fetchCompanyData();
+            [$company, $companyName, $companyAddress, $companyEmail, $companyPhone, $logoBase64] = $this->fetchCompanyData($accountManager);
 
             $pdf = Pdf::loadView('reports.account-manager-report-dompdf', [
                 'accountManager'       => $accountManager,
@@ -316,14 +318,18 @@ class AccountManagerReportController extends Controller
      * Fetch company info and build a cached base64 logo string.
      * Returns [$company, $companyName, $companyAddress, $companyEmail, $companyPhone, $logoBase64].
      */
-    private function fetchCompanyData(): array
+    private function fetchCompanyData(?User $accountManager = null): array
     {
         $company = null;
         if (Schema::hasTable('companies')) {
-            $company = Company::query()->first();
+            $companyId = UserVisibility::companyId(Auth::user())
+                ?: UserVisibility::companyId($accountManager)
+                ?: CompanyBrand::companyId();
+
+            $company = $companyId ? Company::query()->find($companyId) : null;
         }
 
-        $companyName    = $company?->company_name;
+        $companyName    = $company?->company_name ?: CompanyBrand::name();
         $companyAddress = $company?->address;
         $companyEmail   = $company?->email;
         $companyPhone   = $company?->phone;
@@ -334,9 +340,9 @@ class AccountManagerReportController extends Controller
             md5((string) ($company?->logo_url ?? ''));
 
         $logoBase64 = Cache::remember($logoCacheKey, 3600, function () use ($company): string {
-            $logoPath = $company && $company->logo_url
+            $logoPath = $company && $company->logo_url && Storage::disk('public')->exists($company->logo_url)
                 ? Storage::disk('public')->path($company->logo_url)
-                : public_path('images/logomki.png');
+                : public_path(CompanyBrand::DEFAULT_LOGO);
 
             if (! is_string($logoPath) || ! file_exists($logoPath)) {
                 return '';

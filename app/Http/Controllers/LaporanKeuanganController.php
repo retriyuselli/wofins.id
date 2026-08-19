@@ -6,6 +6,7 @@ use App\Models\ExpenseOps;
 use App\Models\Order;
 use App\Models\PendapatanLain;
 use App\Models\PengeluaranLain;
+use App\Support\UserVisibility;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -26,7 +27,9 @@ class LaporanKeuanganController extends Controller
         $endDate = $validated['endDate'] ?? now()->endOfMonth()->toDateString();
 
         // Query orders using All Event dates (Lamaran, Akad, Reception)
-        $query = Order::with(['prospect', 'dataPembayaran', 'expenses'])
+        $query = UserVisibility::constrainOrdersQuery(
+            Order::with(['prospect', 'dataPembayaran', 'expenses'])
+        )
             ->whereHas('prospect', function ($prospectQuery) use ($startDate, $endDate) {
                 $prospectQuery->where(function ($dateQuery) use ($startDate, $endDate) {
                     // Filter by Lamaran Date
@@ -58,16 +61,22 @@ class LaporanKeuanganController extends Controller
         });
 
         // Get additional expenses data (ExpenseOps and PengeluaranLain)
-        $expenseOps = ExpenseOps::with('vendor')->whereBetween('date_expense', [$startDate, $endDate])
+        $expenseOps = UserVisibility::constrainExpenseOpsQuery(
+            ExpenseOps::with('vendor')->whereBetween('date_expense', [$startDate, $endDate])
+        )
             ->orderBy('date_expense', 'desc')
             ->get();
 
-        $pengeluaranLain = PengeluaranLain::with('vendor')->whereBetween('date_expense', [$startDate, $endDate])
+        $pengeluaranLain = UserVisibility::constrainViaCompanyPaymentMethods(
+            PengeluaranLain::with('vendor')->whereBetween('date_expense', [$startDate, $endDate])
+        )
             ->orderBy('date_expense', 'desc')
             ->get();
 
         // Get pendapatan lain data
-        $pendapatanLain = PendapatanLain::with('vendor')->whereBetween('tgl_bayar', [$startDate, $endDate])
+        $pendapatanLain = UserVisibility::constrainViaCompanyPaymentMethods(
+            PendapatanLain::with('vendor')->whereBetween('tgl_bayar', [$startDate, $endDate])
+        )
             ->orderBy('tgl_bayar', 'desc')
             ->get();
 

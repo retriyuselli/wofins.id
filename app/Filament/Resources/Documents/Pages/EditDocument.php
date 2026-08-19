@@ -7,6 +7,7 @@ use App\Models\DocumentApproval;
 use App\Models\User;
 use App\Support\PricingPlans;
 use App\Support\ProFeatures;
+use App\Support\UserVisibility;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -70,7 +71,18 @@ class EditDocument extends EditRecord
                 ->form([
                     Select::make('user_id')
                         ->label('Approver berikutnya')
-                        ->options(fn () => User::query()->orderBy('name')->pluck('name', 'id'))
+                        ->options(function () {
+                            $query = User::query()->orderBy('name');
+                            $companyId = $this->getRecord()?->company_id;
+
+                            if (ProFeatures::actorIsSuperAdmin()) {
+                                return $companyId
+                                    ? $query->where('company_id', $companyId)->pluck('name', 'id')
+                                    : collect();
+                            }
+
+                            return UserVisibility::constrainUsersQuery($query)->pluck('name', 'id');
+                        })
                         ->searchable()
                         ->required(),
                 ])

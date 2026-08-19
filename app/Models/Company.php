@@ -23,10 +23,12 @@ class Company extends Model
 
         static::saved(function (Company $company) {
             \App\Support\CompanySubscription::forgetCache($company->id);
+            \App\Support\CompanyBrand::forgetCache($company->id);
         });
 
         static::deleted(function (Company $company) {
             \App\Support\CompanySubscription::forgetCache($company->id);
+            \App\Support\CompanyBrand::forgetCache($company->id);
         });
     }
 
@@ -180,6 +182,37 @@ class Company extends Model
     public function isDeactivated(): bool
     {
         return ! $this->isActive();
+    }
+
+    /**
+     * Kode singkat untuk nomor surat (inisial nama company, maks 3 huruf).
+     */
+    public function documentCode(): string
+    {
+        $name = trim((string) $this->company_name);
+        if ($name === '') {
+            return 'DOC';
+        }
+
+        $words = preg_split('/\s+/', $name) ?: [];
+        $letters = '';
+        foreach ($words as $word) {
+            $clean = preg_replace('/[^A-Za-z0-9]/', '', (string) $word);
+            if ($clean !== '') {
+                $letters .= strtoupper(substr($clean, 0, 1));
+            }
+            if (strlen($letters) >= 3) {
+                break;
+            }
+        }
+
+        if (strlen($letters) >= 2) {
+            return $letters;
+        }
+
+        $alnum = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $name) ?: 'DOC');
+
+        return substr($alnum, 0, 3);
     }
 
     public function prospectApps(): HasMany

@@ -2,18 +2,20 @@
 
 namespace App\Filament\Resources\DocumentCategories;
 
+use App\Filament\Resources\BaseResource;
 use App\Filament\Resources\DocumentCategories\Pages\CreateDocumentCategory;
 use App\Filament\Resources\DocumentCategories\Pages\EditDocumentCategory;
 use App\Filament\Resources\DocumentCategories\Pages\ListDocumentCategories;
 use App\Filament\Resources\DocumentCategories\Schemas\DocumentCategoryForm;
 use App\Filament\Resources\DocumentCategories\Tables\DocumentCategoriesTable;
 use App\Models\DocumentCategory;
+use App\Support\ProFeatures;
 use BackedEnum;
-use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class DocumentCategoryResource extends BaseResource
@@ -36,6 +38,26 @@ class DocumentCategoryResource extends BaseResource
     public static function table(Table $table): Table
     {
         return DocumentCategoriesTable::configure($table);
+    }
+
+    public static function canCreate(): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::canCreate();
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::canEdit($record);
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::canDelete($record);
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::canDeleteAny();
     }
 
     public static function getRelations(): array

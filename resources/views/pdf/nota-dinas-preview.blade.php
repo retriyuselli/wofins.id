@@ -135,9 +135,14 @@
                         <h1 style="font-size: 18px; font-weight: bold; margin-bottom: 5px; font-family: 'Noto Sans', sans-serif;">SURAT PERSETUJUAN PEMBAYARAN</h1>
                         <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 5px; font-family: 'Noto Sans', sans-serif;">{{ $notaDinas->no_nd }}</h2>
                         <p style="font-size: 11px; color: #666; font-family: 'Noto Sans', sans-serif;">Tgl: {{ $notaDinas->created_at->format('d F Y') }}</p>
+                        <p style="font-size: 10px; color: #666; font-family: 'Noto Sans', sans-serif;">{{ $companyName ?? config('app.name') }}</p>
                     </div>
                     <div>
-                        <img src="{{ asset('images/logomkiinv.png') }}" alt="Logo" style="height: 40px;">
+                        @if (! empty($logoSrc))
+                            <img src="{{ $logoSrc }}" alt="{{ $companyName ?? config('app.name') }}" style="height: 40px; max-width: 160px; object-fit: contain;">
+                        @elseif (! empty($companyLogoUrl))
+                            <img src="{{ $companyLogoUrl }}" alt="{{ $companyName ?? config('app.name') }}" style="height: 40px; max-width: 160px; object-fit: contain;">
+                        @endif
                     </div>
                 </div>
             </div>

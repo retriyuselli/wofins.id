@@ -41,11 +41,13 @@ class BankStatementResource extends BaseResource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
+        $query = parent::getEloquentQuery()
             ->with([
                 'paymentMethod:id,name,bank_name,no_rekening',
                 'lastEditedBy:id,name',
             ]);
+
+        return \App\Support\UserVisibility::constrainViaCompanyPaymentMethods($query);
     }
 
     public static function getRelations(): array
@@ -69,7 +71,7 @@ class BankStatementResource extends BaseResource
     public static function getNavigationBadge(): ?string
     {
         // Menampilkan jumlah total rekening koran sebagai badge
-        return static::getModel()::count();
+        return (string) static::getEloquentQuery()->count();
     }
 
     public static function getNavigationBadgeColor(): string|array|null

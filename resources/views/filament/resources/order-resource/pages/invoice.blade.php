@@ -6,56 +6,104 @@
     $companyWebsite = $companyWebsite ?? null;
     $companyLogoUrl = $companyLogoUrl ?? null;
     $logoSrc = $companyLogoUrl ?: '';
+
+    $phone = $order->prospect->phone ?? '';
+    $whatsappUrl = '#';
+    if ($phone) {
+        $phone = preg_replace('/[^0-9]/', '', $phone);
+        if (substr($phone, 0, 1) === '0') {
+            $phone = '62'.$phone;
+        } elseif (substr($phone, 0, 1) === '8') {
+            $phone = '62'.$phone;
+        }
+        $message = 'Halo, berikut adalah invoice Anda: '.route('invoice.download', ['order' => $order]);
+        $whatsappUrl = 'https://wa.me/'.$phone.'?text='.urlencode($message);
+    }
+
+    $grandTotal = $order->grand_total ?? 0;
+    $totalPaid = $order->bayar ?? 0;
+    $balanceDue = $order->sisa ?? 0;
+    $paymentProgress = $grandTotal > 0 ? ($totalPaid / $grandTotal) * 100 : 0;
+    $paymentProgress = min($paymentProgress, 100);
+    $eventName = $order->prospect->name_event ?? null;
 @endphp
 
 <x-filament-panels::page>
-    {{-- Hanya CSS invoice lokal (tidak load bootstrap/themeholy global agar Filament tidak ikut berubah) --}}
-    <link rel="stylesheet" href="{{ asset('assets/invoice/invoice.css') }}">
+    {{-- Tema sama dengan Detail Rekening (navy / gold / cream / Poppins) — scoped di .pm-wf --}}
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('assets/payment/paymentmethod.css') }}?v={{ @filemtime(public_path('assets/payment/paymentmethod.css')) }}">
 
     <style>
-        /* Scope tema invoice — tidak merembes ke sidebar/topbar Filament */
-        .wofins-invoice-page {
-            --inv-ink: #1a2332;
-            --inv-navy: #0b1f3a;
-            --inv-muted: #5c6675;
-            --inv-line: #e5e7eb;
-            color: var(--inv-ink);
+        .pm-wf .pm-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            padding: 0.55rem 1rem;
+            border-radius: 999px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            text-decoration: none;
+            border: 1px solid transparent;
+            transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
         }
 
-        .wofins-invoice-page .invoice-sheet {
-            background: #fff;
-            border: 1px solid var(--inv-line);
-            border-radius: 12px;
-            padding: 1.25rem 1.5rem 1.75rem;
+        .pm-wf .pm-btn--gold {
+            background: var(--wf-gold);
+            color: var(--wf-navy-deep);
         }
 
-        .wofins-invoice-page .invoice-office-header {
+        .pm-wf .pm-btn--gold:hover {
+            background: var(--wf-gold-soft);
+        }
+
+        .pm-wf .pm-btn--cream {
+            background: rgba(247, 244, 238, 0.14);
+            color: var(--wf-cream);
+            border-color: rgba(247, 244, 238, 0.35);
+        }
+
+        .pm-wf .pm-btn--cream:hover {
+            background: rgba(247, 244, 238, 0.24);
+        }
+
+        .pm-wf .pm-hero__actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: flex-end;
+            margin-top: 0.85rem;
+        }
+
+        .pm-wf .inv-office {
             display: flex;
             align-items: flex-start;
             justify-content: space-between;
-            gap: 12px;
-            border-bottom: 1px solid #000;
-            padding-bottom: 14px;
+            gap: 1rem;
+            padding-bottom: 1rem;
             margin-bottom: 1.25rem;
+            border-bottom: 1px solid var(--wf-line);
         }
 
-        .wofins-invoice-page .invoice-office-header b {
-            color: var(--inv-navy);
-            font-size: 0.95rem;
+        .pm-wf .inv-office__label {
+            margin: 0;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--wf-gold);
         }
 
-        .wofins-invoice-page .invoice-office-header address {
-            margin: 0.25rem 0 0;
+        .pm-wf .inv-office address {
+            margin: 0.35rem 0 0;
             font-style: normal;
-            line-height: 1.45;
-            color: var(--inv-ink);
-            font-size: 13px;
-            white-space: normal;
+            line-height: 1.5;
+            font-size: 0.875rem;
+            color: var(--wf-ink);
             overflow-wrap: anywhere;
-            word-break: break-word;
         }
 
-        .wofins-invoice-page .invoice-office-logo img {
+        .pm-wf .inv-office__logo img {
             display: block;
             max-height: 64px;
             width: auto;
@@ -64,114 +112,126 @@
             object-fit: contain;
         }
 
-        .wofins-invoice-page .invoice-title-row {
+        .pm-wf .progress-bar-container {
+            margin: 1.5rem 0;
+        }
+
+        .pm-wf .progress-bar-header {
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
-            flex-wrap: wrap;
-            gap: 0.75rem;
-            margin-bottom: 1.25rem;
+            margin-bottom: 0.35rem;
+            font-size: 0.875rem;
         }
 
-        .wofins-invoice-page .invoice-title-row h1 {
-            margin: 0 0 0.25rem;
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--inv-navy);
+        .pm-wf .progress-bar-label {
+            font-weight: 500;
+            color: var(--wf-muted);
         }
 
-        .wofins-invoice-page .invoice-title-row .meta {
-            margin: 0;
-            font-size: 0.9rem;
-            color: var(--inv-muted);
+        .pm-wf .progress-bar-track {
+            height: 0.55rem;
+            border-radius: 999px;
+            overflow: hidden;
+            border: 1px solid var(--wf-line);
+            background: var(--wf-cream);
         }
 
-        .wofins-invoice-page .invoice-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            justify-content: flex-end;
-        }
-
-        .wofins-invoice-page .invoice-actions a {
-            text-decoration: none;
-        }
-
-        .wofins-invoice-page .section-header-title,
-        .wofins-invoice-page h2,
-        .wofins-invoice-page h3 {
-            color: var(--inv-navy);
+        .pm-wf .progress-bar-fill {
+            height: 100%;
+            border-radius: 999px;
         }
     </style>
 
-    <div class="wofins-invoice-page">
-        <div class="invoice-sheet">
-            <div class="invoice-office-header">
-                <div style="min-width: 0; flex: 1 1 auto;">
-                    <b>Office Information :</b>
-                    <address>
-                        {{ $companyName }}<br>
-                        {{ $companyAddress ?: 'Alamat belum diatur' }}
-                        |
-                        Phone: {{ $companyPhone ?: '-' }}
-                        @if (! empty($companyEmail))
-                            <br>Email: {{ $companyEmail }}
-                        @endif
-                        @if (! empty($companyWebsite))
-                            <br>Website: {{ $companyWebsite }}
-                        @endif
-                    </address>
-                </div>
-                <div class="invoice-office-logo" style="flex: 0 0 auto;">
-                    @if ($logoSrc)
-                        <img src="{{ $logoSrc }}" alt="Logo {{ $companyName }}">
-                    @endif
-                </div>
+    <div class="pm-wf space-y-6">
+        <header class="pm-hero">
+            <div class="pm-hero__shapes" aria-hidden="true">
+                <span class="pm-shape pm-shape--blob pm-shape--l1"></span>
+                <span class="pm-shape pm-shape--ring pm-shape--l2"></span>
+                <span class="pm-shape pm-shape--square pm-shape--l3"></span>
+                <span class="pm-shape pm-shape--dot pm-shape--l4"></span>
+                <span class="pm-shape pm-shape--tri pm-shape--l5"></span>
+                <span class="pm-shape pm-shape--blob pm-shape--r1"></span>
+                <span class="pm-shape pm-shape--ring pm-shape--r2"></span>
+                <span class="pm-shape pm-shape--square pm-shape--r3"></span>
+                <span class="pm-shape pm-shape--dot pm-shape--r4"></span>
+                <span class="pm-shape pm-shape--blob pm-shape--r5"></span>
+                <span class="pm-shape pm-shape--blob pm-shape--t1"></span>
+                <span class="pm-shape pm-shape--blob pm-shape--b1"></span>
             </div>
-
-            <div class="invoice-title-row">
-                <div>
-                    <h1>DETAILS #{{ $order->number ?? $order->id }}</h1>
-                    <p class="meta">Date: {{ $order->created_at?->format('d M Y') }}</p>
+            <div class="pm-hero__glow" aria-hidden="true"></div>
+            <div class="pm-hero__body">
+                <div class="pm-hero__meta">
+                    <p class="pm-hero__eyebrow">Invoice Order</p>
+                    <p class="pm-hero__company">{{ $companyName }}</p>
+                    <h1 class="pm-hero__title">DETAILS #{{ $order->number ?? $order->id }}</h1>
+                    <p class="pm-hero__sub">
+                        <span>{{ $order->created_at?->format('d M Y') }}</span>
+                        @if ($eventName)
+                            <span class="pm-hero__dot">·</span>
+                            <span>{{ $eventName }}</span>
+                        @endif
+                    </p>
+                    <div class="pm-hero__badges">
+                        @if ($order->is_paid)
+                            <span class="pm-badge pm-badge--gold">Paid</span>
+                        @else
+                            <span class="pm-badge pm-badge--cream">Unpaid</span>
+                        @endif
+                        <span class="pm-badge pm-badge--outline">{{ $companyName }}</span>
+                    </div>
                 </div>
 
-                <div class="invoice-actions">
-                    @php
-                        $phone = $order->prospect->phone ?? '';
-                        $whatsappUrl = '#';
-                        if ($phone) {
-                            $phone = preg_replace('/[^0-9]/', '', $phone);
-                            if (substr($phone, 0, 1) === '0') {
-                                $phone = '62'.$phone;
-                            } elseif (substr($phone, 0, 1) === '8') {
-                                $phone = '62'.$phone;
-                            }
-                            $message = 'Halo, berikut adalah invoice Anda: '.route('invoice.download', ['order' => $order]);
-                            $whatsappUrl = 'https://wa.me/'.$phone.'?text='.urlencode($message);
-                        }
-                    @endphp
-
-                    @if ($phone)
-                        <a href="{{ $whatsappUrl }}" target="_blank"
-                            class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-sm text-white hover:bg-green-500">
-                            WhatsApp
+                <div class="pm-hero__balance">
+                    <p class="pm-hero__balance-label">Sisa Tagihan</p>
+                    <p @class([
+                        'pm-hero__balance-value',
+                        'is-positive' => $balanceDue <= 0,
+                        'is-negative' => $balanceDue > 0,
+                    ])>
+                        Rp {{ number_format($balanceDue, 0, ',', '.') }}
+                    </p>
+                    <p class="pm-hero__balance-delta is-flat">
+                        Dibayar Rp {{ number_format($totalPaid, 0, ',', '.') }}
+                        dari Rp {{ number_format($grandTotal, 0, ',', '.') }}
+                    </p>
+                    <div class="pm-hero__actions">
+                        @if ($phone)
+                            <a href="{{ $whatsappUrl }}" target="_blank" class="pm-btn pm-btn--cream">WhatsApp</a>
+                        @endif
+                        <a href="{{ route('invoice.download', ['order' => $order]) }}" target="_blank" class="pm-btn pm-btn--gold">
+                            Download Invoice
                         </a>
-                    @endif
-
-                    <a href="{{ route('invoice.download', ['order' => $order]) }}" target="_blank"
-                        class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 border border-transparent rounded-md font-semibold text-sm text-white hover:bg-primary-500">
-                        Download Invoice
-                    </a>
+                    </div>
                 </div>
             </div>
+        </header>
+
+        <div class="pm-tabs-shell">
+            <div class="pm-panel">
+                <div class="inv-office">
+                    <div style="min-width: 0; flex: 1 1 auto;">
+                        <p class="inv-office__label">Office Information</p>
+                        <address>
+                            <strong>{{ $companyName }}</strong><br>
+                            {{ $companyAddress ?: 'Alamat belum diatur' }}
+                            · Phone: {{ $companyPhone ?: '-' }}
+                            @if (! empty($companyEmail))
+                                <br>Email: {{ $companyEmail }}
+                            @endif
+                            @if (! empty($companyWebsite))
+                                <br>Website: {{ $companyWebsite }}
+                            @endif
+                        </address>
+                    </div>
+                    <div class="inv-office__logo" style="flex: 0 0 auto;">
+                        @if ($logoSrc)
+                            <img src="{{ $logoSrc }}" alt="Logo {{ $companyName }}">
+                        @endif
+                    </div>
+                </div>
 
         @php
-            $grandTotal = $order->grand_total ?? 0;
-            $totalPaid = $order->bayar ?? 0;
-            $paymentProgress = $grandTotal > 0 ? ($totalPaid / $grandTotal) * 100 : 0;
-            $paymentProgress = min($paymentProgress, 100);
-
-            // Hitung total berdasarkan jumlah harga publik item dari semua produk dalam order
+            // Hitung total berdasarkan harga publik item dari semua produk dalam order
             $totalPublicPrice = 0;
             $totalVendorPrice = 0;
             $totalAdditionAmount = 0;
@@ -224,63 +284,62 @@
 
         <!-- Billing Information -->
         <div class="billing-info text-sm sm:text-base">
-            {{-- <div class="mt-6 grid grid-cols-2 gap-4 text-sm"> --}}
             <div>
-                <h2 class="text-gray-700 dark:text-white font-bold mb-2">Billed To :</h2>
-                <table class="w-full text-gray-600 dark:text-white">
+                <h2 class="pm-section-title">Billed To</h2>
+                <table class="w-full text-gray-600">
                     <tr>
-                        <td class="align-top whitespace-nowrap pr-2">Event</td>
-                        <td class="align-top px-2">:</td>
-                        <td class="align-top">{{ $order->prospect->name_event ?? 'N/A' }}</td>
+                        <td class="align-top whitespace-nowrap pr-2 pm-muted">Event</td>
+                        <td class="align-top px-2 pm-muted">:</td>
+                        <td class="align-top pm-ink">{{ $order->prospect->name_event ?? 'N/A' }}</td>
                     </tr>
                     <tr>
-                        <td class="align-top whitespace-nowrap pr-2">Name Nama</td>
-                        <td class="align-top px-2">:</td>
-                        <td class="align-top">CPP_{{ $order->prospect->name_cpp }} & CPW_{{ $order->prospect->name_cpw }}</td>
+                        <td class="align-top whitespace-nowrap pr-2 pm-muted">Nama</td>
+                        <td class="align-top px-2 pm-muted">:</td>
+                        <td class="align-top pm-ink">CPP_{{ $order->prospect->name_cpp }} & CPW_{{ $order->prospect->name_cpw }}</td>
                     </tr>
                     <tr>
-                        <td class="align-top whitespace-nowrap pr-2">Alamat</td>
-                        <td class="align-top px-2">:</td>
-                        <td class="align-top">{{ ucwords(strtolower($order->prospect->address ?? 'N/A')) }}</td>
+                        <td class="align-top whitespace-nowrap pr-2 pm-muted">Alamat</td>
+                        <td class="align-top px-2 pm-muted">:</td>
+                        <td class="align-top pm-ink">{{ ucwords(strtolower($order->prospect->address ?? 'N/A')) }}</td>
                     </tr>
                     <tr>
-                        <td class="align-top whitespace-nowrap pr-2">No Tlp</td>
-                        <td class="align-top px-2">:</td>
-                        <td class="align-top">+62{{ $order->prospect->phone ?? 'N/A' }}</td>
+                        <td class="align-top whitespace-nowrap pr-2 pm-muted">No Tlp</td>
+                        <td class="align-top px-2 pm-muted">:</td>
+                        <td class="align-top pm-ink">+62{{ $order->prospect->phone ?? 'N/A' }}</td>
                     </tr>
                     <tr>
-                        <td class="align-top whitespace-nowrap pr-2">Venue</td>
-                        <td class="align-top px-2">:</td>
-                        <td class="align-top">{{ $order->prospect->venue ?? 'N/A' }} / {{ $order->pax ?? 'N/A' }} Pax</td>
+                        <td class="align-top whitespace-nowrap pr-2 pm-muted">Venue</td>
+                        <td class="align-top px-2 pm-muted">:</td>
+                        <td class="align-top pm-ink">{{ $order->prospect->venue ?? 'N/A' }} / {{ $order->pax ?? 'N/A' }} Pax</td>
                     </tr>
                     <tr>
-                        <td class="align-top whitespace-nowrap pr-2">Account Manager</td>
-                        <td class="align-top px-2">:</td>
-                        <td class="align-top">{{ $order->user->name ?? 'N/A' }}</td>
+                        <td class="align-top whitespace-nowrap pr-2 pm-muted">Account Manager</td>
+                        <td class="align-top px-2 pm-muted">:</td>
+                        <td class="align-top pm-ink">{{ $order->user->name ?? 'N/A' }}</td>
                     </tr>
                     <tr>
-                        <td class="align-top whitespace-nowrap pr-2">Event Manager</td>
-                        <td class="align-top px-2">:</td>
-                        <td class="align-top">{{ $order->employee->name ?? 'N/A' }}</td>
+                        <td class="align-top whitespace-nowrap pr-2 pm-muted">Event Manager</td>
+                        <td class="align-top px-2 pm-muted">:</td>
+                        <td class="align-top pm-ink">{{ $order->employee->name ?? 'N/A' }}</td>
                     </tr>
                 </table>
             </div>
             <div>
-                <h2 class="text-sm font-semibold mb-2 text-gray-900 dark:text-white">Invoice Information :</h2>
-                <table class="w-full text-gray-600 dark:text-white">
+                <h2 class="pm-section-title">Invoice Information</h2>
+                <table class="w-full text-gray-600">
                     <tr>
-                        <td class="align-top whitespace-nowrap pr-2">Invoice Date</td>
-                        <td class="align-top px-2">:</td>
-                        <td class="align-top">{{ now()->format('d F Y') }}</td>
+                        <td class="align-top whitespace-nowrap pr-2 pm-muted">Invoice Date</td>
+                        <td class="align-top px-2 pm-muted">:</td>
+                        <td class="align-top pm-ink">{{ now()->format('d F Y') }}</td>
                     </tr>
                     <tr>
-                        <td class="align-top whitespace-nowrap pr-2">Due Date</td>
-                        <td class="align-top px-2">:</td>
-                        <td class="align-top">{{ now()->addDays(30)->format('d F Y') }}</td>
+                        <td class="align-top whitespace-nowrap pr-2 pm-muted">Due Date</td>
+                        <td class="align-top px-2 pm-muted">:</td>
+                        <td class="align-top pm-ink">{{ now()->addDays(30)->format('d F Y') }}</td>
                     </tr>
                     <tr>
-                        <td class="align-top whitespace-nowrap pr-2">Status Pembayaran</td>
-                        <td class="align-top px-2">:</td>
+                        <td class="align-top whitespace-nowrap pr-2 pm-muted">Status Pembayaran</td>
+                        <td class="align-top px-2 pm-muted">:</td>
                         <td class="align-top status-bayar">
                             @if ($order->is_paid)
                                 <span class="text-green-600 font-semibold">Paid</span>
@@ -290,26 +349,23 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="align-top whitespace-nowrap pr-2">Tgl Lamaran</td>
-                        <td class="align-top px-2">:</td>
-                        <td class="align-top">{{ $order->prospect->date_lamaran ? \Carbon\Carbon::parse($order->prospect->date_lamaran)->format('d F Y') : '-' }}</td>
+                        <td class="align-top whitespace-nowrap pr-2 pm-muted">Tgl Lamaran</td>
+                        <td class="align-top px-2 pm-muted">:</td>
+                        <td class="align-top pm-ink">{{ $order->prospect->date_lamaran ? \Carbon\Carbon::parse($order->prospect->date_lamaran)->format('d F Y') : '-' }}</td>
                     </tr>
                     <tr>
-                        <td class="align-top whitespace-nowrap pr-2">Tgl Akad</td>
-                        <td class="align-top px-2">:</td>
-                        <td class="align-top">{{ $order->prospect->date_akad ? \Carbon\Carbon::parse($order->prospect->date_akad)->format('d F Y') : '-' }}</td>
+                        <td class="align-top whitespace-nowrap pr-2 pm-muted">Tgl Akad</td>
+                        <td class="align-top px-2 pm-muted">:</td>
+                        <td class="align-top pm-ink">{{ $order->prospect->date_akad ? \Carbon\Carbon::parse($order->prospect->date_akad)->format('d F Y') : '-' }}</td>
                     </tr>
                     <tr>
-                        <td class="align-top whitespace-nowrap pr-2">Tgl Resepsi</td>
-                        <td class="align-top px-2">:</td>
-                        <td class="align-top">{{ $order->prospect->date_resepsi ? \Carbon\Carbon::parse($order->prospect->date_resepsi)->format('d F Y') : '-' }}</td>
+                        <td class="align-top whitespace-nowrap pr-2 pm-muted">Tgl Resepsi</td>
+                        <td class="align-top px-2 pm-muted">:</td>
+                        <td class="align-top pm-ink">{{ $order->prospect->date_resepsi ? \Carbon\Carbon::parse($order->prospect->date_resepsi)->format('d F Y') : '-' }}</td>
                     </tr>
                 </table>
             </div>
         </div>
-
-        <!-- Separator Line -->
-        <hr class="border-t-2 border-gray-200 dark:border-gray-600 py-1.5">
 
         <!-- Rincian Perhitungan Pada Product -->
         <div class="mt-8 pt-10 mb-10">
@@ -826,8 +882,9 @@
                 </div>
             @endif
         </div>
-        </div>
-    </div>
+            </div>{{-- /.pm-panel --}}
+        </div>{{-- /.pm-tabs-shell --}}
+    </div>{{-- /.pm-wf --}}
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {

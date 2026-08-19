@@ -12,6 +12,13 @@ class EditDocumentCategory extends EditRecord
 {
     protected static string $resource = DocumentCategoryResource::class;
 
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        $data['company_id'] = null;
+
+        return $data;
+    }
+
     protected function getHeaderActions(): array
     {
         return [

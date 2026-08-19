@@ -149,9 +149,14 @@
                         <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">{{ $notaDinas->no_nd }}</h2>
                         <p style="font-size: 11px; color: #666;">Tgl: {{ $notaDinas->created_at->format('d F Y') }}
                         </p>
+                        <p style="font-size: 10px; color: #666;">{{ $companyName ?? config('app.name') }}</p>
                     </div>
                     <div>
-                        <img src="{{ asset('images/logomkiinv.png') }}" alt="Logo" style="height: 30px;">
+                        @if (! empty($logoSrc))
+                            <img src="{{ $logoSrc }}" alt="{{ $companyName ?? config('app.name') }}" style="height: 30px; max-width: 160px; object-fit: contain;">
+                        @elseif (! empty($companyLogoUrl))
+                            <img src="{{ $companyLogoUrl }}" alt="{{ $companyName ?? config('app.name') }}" style="height: 30px; max-width: 160px; object-fit: contain;">
+                        @endif
                     </div>
                 </div>
             </div>

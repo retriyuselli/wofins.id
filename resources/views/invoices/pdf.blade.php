@@ -471,8 +471,8 @@
                 <td style="line-height: 1.2; font-size: 13px;">
                     <div>
                         <b>{{ $company->company_name ?? ($companyName ?? config('app.name')) }}</b><br>
-                        {{ $company->address ?? 'Jln. Sintraman Jaya, No. 2148, Sekip Jaya, Palembang' }}<br>
-                        Tlp: {{ $company->phone ?? '+62 822-9796-2600' }} | Email: {{ $company->email ?? 'maknawedding@gmail.com' }}
+                        {{ $company->address ?? ($companyAddress ?: 'Alamat belum diatur') }}<br>
+                        Tlp: {{ $company->phone ?? ($companyPhone ?: '-') }} | Email: {{ $company->email ?? ($companyEmail ?: '-') }}
                     </div>
                 </td>
                 <td style="width: auto; height: 35px; text-align: right; vertical-align: middle;">

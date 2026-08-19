@@ -213,7 +213,7 @@ Invoice Area
                                                 <tr>
                                                     <td style="width: 50%; text-align: left; vertical-align: middle;">
                                                         <div class="header-logo">
-                                                            <img src="{{ public_path('images/logomki.png') }}"
+                                                            <img src="{{ $logoBase64 ?? \App\Support\CompanyBrand::logoDataUri() }}"
                                                                 alt="{{ $companyName ?? config('app.name') }}" width="250"
                                                                 style="max-width: 250px; height: auto;">
                                                         </div>
@@ -257,11 +257,9 @@ Invoice Area
                                                     <div class="invoice-right">
                                                         <b>{{ $companyName ?? config('app.name') }}</b>
                                                         <address>
-                                                            Jl. Sintraman Jaya I No. 2148 <br>
-                                                            20 Ilir D II, Kec. Kemuning, Kota Palembang<br>
-                                                            Sumatera Selatan 30137<br>
-                                                            Email: info@maknawedding.id<br>
-                                                            Tlp: +62 813 7318 3794
+                                                            {{ $companyAddress ?: 'Alamat belum diatur' }}<br>
+                                                            @if (! empty($companyEmail)) Email: {{ $companyEmail }}<br>@endif
+                                                            @if (! empty($companyPhone)) Tlp: {{ $companyPhone }}@endif
                                                         </address>
                                                     </div>
                                                 </div>

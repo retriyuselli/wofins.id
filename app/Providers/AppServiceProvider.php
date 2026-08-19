@@ -5,7 +5,6 @@ namespace App\Providers;
 use App\Listeners\CheckUserExpirationOnLogin;
 use App\Http\Responses\Filament\LogoutResponse;
 use App\Models\BankStatement;
-use App\Models\Company;
 use App\Models\Document;
 use App\Models\Order;
 use App\Models\User;
@@ -13,6 +12,7 @@ use App\Observers\BankStatementObserver;
 use App\Observers\DocumentObserver;
 use App\Observers\OrderObserver;
 use App\Observers\UserObserver;
+use App\Support\CompanyBrand;
 use App\Support\CompanySubscription;
 use App\Support\PricingPlans;
 use App\Support\ProFeatures;
@@ -25,7 +25,6 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -88,74 +87,9 @@ class AppServiceProvider extends ServiceProvider
             });
         }
 
-        View::share('companyName', $cache->remember('company_name', 3600, function () use ($hasTable) {
-            if ($hasTable('companies')) {
-                return Company::value('company_name');
-            }
-
-            return config('app.name');
-        }));
-
-        View::share('companyAddress', $cache->remember('company_address', 3600, function () use ($hasTable) {
-            if ($hasTable('companies')) {
-                return Company::value('address');
-            }
-
-            return null;
-        }));
-
-        View::share('companyEmail', $cache->remember('company_email', 3600, function () use ($hasTable) {
-            if ($hasTable('companies')) {
-                return Company::value('email');
-            }
-
-            return null;
-        }));
-
-        View::share('companyPhone', $cache->remember('company_phone', 3600, function () use ($hasTable) {
-            if ($hasTable('companies')) {
-                return Company::value('phone');
-            }
-
-            return null;
-        }));
-
-        View::share('companyLogoUrl', $cache->remember('company_logo_url', 3600, function () use ($hasTable) {
-            if ($hasTable('companies')) {
-                $path = Company::value('logo_url');
-                if ($path && Storage::disk('public')->exists($path)) {
-                    return asset('storage/'.ltrim($path, '/'));
-                }
-            }
-
-            return asset('images/logomki.png');
-        }));
-
-        View::share('companyFaviconUrl', $cache->remember('company_favicon_url', 3600, function () use ($hasTable) {
-            if ($hasTable('companies')) {
-                $path = Company::value('favicon_url');
-                if ($path && Storage::disk('public')->exists($path)) {
-                    return asset('storage/'.ltrim($path, '/'));
-                }
-            }
-
-            return asset('images/favicon_makna.png');
-        }));
-
-        View::share('companyBrandVersion', $cache->remember('company_brand_version', 60, function () use ($hasTable) {
-            if ($hasTable('companies')) {
-                $updatedAt = Company::query()->value('updated_at');
-                if ($updatedAt) {
-                    try {
-                        return (int) \Illuminate\Support\Carbon::parse($updatedAt)->timestamp;
-                    } catch (\Throwable $e) {
-                        return 1;
-                    }
-                }
-            }
-
-            return 1;
-        }));
+        View::composer('*', function ($view) {
+            $view->with(CompanyBrand::viewData());
+        });
 
         View::composer(['profile.*'], function ($view) {
             $user = auth()->user();

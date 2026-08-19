@@ -270,18 +270,14 @@
     {{-- Header Section — branding dari model Company (+ logoSrc dari controller) --}}
     <div class="header">
         @php
-            $displayCompanyName = $company?->company_name ?? ($companyName ?? config('app.name'));
-            $addressParts = array_filter([
-                $company?->address,
-                $company?->city,
-                $company?->province,
-                $company?->postal_code,
-            ]);
-            $displayAddress = ! empty($addressParts)
-                ? implode(', ', $addressParts)
-                : 'Jl. Sintraman Jaya I No. 2148, 20 Ilir D II, Kecamatan Kemuning, Kota Palembang, Sumatera Selatan 30137';
-            $displayPhone = $company?->phone ?? '+62 822-9796-2600';
-            $displayEmail = $company?->email ?? 'maknawedding@gmail.com';
+            $displayCompanyName = $companyName ?? $company?->company_name ?? config('app.name');
+            $displayAddress = $companyAddress ?? (
+                ! empty(array_filter([$company?->address, $company?->city, $company?->province, $company?->postal_code]))
+                    ? implode(', ', array_filter([$company?->address, $company?->city, $company?->province, $company?->postal_code]))
+                    : 'Alamat belum diatur'
+            );
+            $displayPhone = $companyPhone ?? $company?->phone ?? '-';
+            $displayEmail = $companyEmail ?? $company?->email ?? '-';
         @endphp
         <table class="header-table">
             <tr>
@@ -325,7 +321,7 @@
             <table class="items-table">
                 <thead>
                     <tr>
-                        <th style="width: 5%;">No</th>
+                        <th style="width: 3%;">No</th>
                         <th>Description</th>
                         <th style="width: 15%; text-align: right;">Vendor</th>
                         <th style="width: 15%; text-align: right;">Public</th>
@@ -378,7 +374,7 @@
                 <table class="items-table">
                     <thead>
                         <tr>
-                            <th style="width: 5%; vertical-align: top;">No</th>
+                            <th style="width: 3%; vertical-align: top;">No</th>
                             <th style="vertical-align: top;">Description</th>
                             <th style="width: 15%; text-align: right; vertical-align: top;">Vendor</th>
                             <th style="width: 15%; text-align: right; vertical-align: top;">Public</th>
@@ -421,7 +417,7 @@
                 <table class="items-table">
                     <thead>
                         <tr>
-                            <th style="width: 5%; vertical-align: top;">No</th>
+                            <th style="width: 3%; vertical-align: top;">No</th>
                             <th style="vertical-align: top;">Description</th>
                             <th style="width: 15%; text-align: right; vertical-align: top;">Value</th>
                         </tr>

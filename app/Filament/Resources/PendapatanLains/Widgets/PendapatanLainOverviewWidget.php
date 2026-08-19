@@ -12,7 +12,7 @@ class PendapatanLainOverviewWidget extends BaseWidget
 {
     protected function getStats(): array
     {
-        $base = UserVisibility::constrainPlatformOnlyQuery(PendapatanLain::query());
+        $base = UserVisibility::constrainViaCompanyPaymentMethods(PendapatanLain::query());
 
         // Get totals for current year
         $currentYear = Carbon::now()->year;
@@ -90,7 +90,7 @@ class PendapatanLainOverviewWidget extends BaseWidget
 
     private function scopedQuery()
     {
-        return UserVisibility::constrainPlatformOnlyQuery(PendapatanLain::query());
+        return UserVisibility::constrainViaCompanyPaymentMethods(PendapatanLain::query());
     }
 
     private function getPendapatanChartData(): array

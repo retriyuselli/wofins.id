@@ -71,29 +71,32 @@ class PaymentMethodStatsWidget extends BaseWidget
         $years = collect();
 
         // Get years from DataPembayaran
-        $paymentYears = DataPembayaran::select(DB::raw('YEAR(tgl_bayar) as year'))
+        $paymentYears = UserVisibility::constrainViaTeamOrders(DataPembayaran::query())
+            ->select(DB::raw('YEAR(tgl_bayar) as year'))
             ->distinct()
             ->whereNotNull('tgl_bayar')
             ->pluck('year');
 
-        // Get years from PendapatanLain
-        $incomeYears = PendapatanLain::select(DB::raw('YEAR(tgl_bayar) as year'))
+        $incomeYears = UserVisibility::constrainViaCompanyPaymentMethods(PendapatanLain::query())
+            ->select(DB::raw('YEAR(tgl_bayar) as year'))
             ->distinct()
             ->whereNotNull('tgl_bayar')
             ->pluck('year');
 
-        // Get years from all expense tables
-        $expenseYears = Expense::select(DB::raw('YEAR(date_expense) as year'))
+        $expenseYears = UserVisibility::constrainViaTeamOrders(Expense::query())
+            ->select(DB::raw('YEAR(date_expense) as year'))
             ->distinct()
             ->whereNotNull('date_expense')
             ->pluck('year');
 
-        $expenseOpsYears = ExpenseOps::select(DB::raw('YEAR(date_expense) as year'))
+        $expenseOpsYears = UserVisibility::constrainExpenseOpsQuery(ExpenseOps::query())
+            ->select(DB::raw('YEAR(date_expense) as year'))
             ->distinct()
             ->whereNotNull('date_expense')
             ->pluck('year');
 
-        $pengeluaranYears = PengeluaranLain::select(DB::raw('YEAR(date_expense) as year'))
+        $pengeluaranYears = UserVisibility::constrainViaCompanyPaymentMethods(PengeluaranLain::query())
+            ->select(DB::raw('YEAR(date_expense) as year'))
             ->distinct()
             ->whereNotNull('date_expense')
             ->pluck('year');
@@ -165,7 +168,7 @@ class PaymentMethodStatsWidget extends BaseWidget
             return [$method->id => $method->saldo];
         });
 
-        // Summary: pembayaran/expense lewat order tim; ops & lain-lain = platform-only
+        // Summary: pembayaran/expense lewat order tim; ops & lain-lain lewat rekening company
         $totalMasukSemua = (
             UserVisibility::constrainViaTeamOrders(DataPembayaran::query())
                 ->whereYear('tgl_bayar', $year)
@@ -173,7 +176,7 @@ class PaymentMethodStatsWidget extends BaseWidget
                 ->whereNull('deleted_at')
                 ->sum('nominal')
         ) + (
-            UserVisibility::constrainPlatformOnlyQuery(PendapatanLain::query())
+            UserVisibility::constrainViaCompanyPaymentMethods(PendapatanLain::query())
                 ->whereYear('tgl_bayar', $year)
                 ->whereMonth('tgl_bayar', $month)
                 ->whereNull('deleted_at')
@@ -193,7 +196,7 @@ class PaymentMethodStatsWidget extends BaseWidget
                 ->whereNull('deleted_at')
                 ->sum('amount')
         ) + (
-            UserVisibility::constrainPlatformOnlyQuery(PengeluaranLain::query())
+            UserVisibility::constrainViaCompanyPaymentMethods(PengeluaranLain::query())
                 ->whereYear('date_expense', $year)
                 ->whereMonth('date_expense', $month)
                 ->whereNull('deleted_at')

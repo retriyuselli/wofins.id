@@ -68,11 +68,7 @@ class DocumentsPendingApprovalWidget extends BaseWidget
                 Action::make('review')
                     ->label('Review')
                     ->authorize('update')
-                    ->visible(function (): bool {
-                        /** @var \App\Models\User|null $user */
-                        $user = Auth::user();
-                        return $user?->hasRole('super_admin') ?? false;
-                    })
+                    ->visible(fn (Document $record): bool => Auth::user()?->can('update', $record) ?? false)
                     ->url(fn (Document $record): string => route('filament.admin.resources.documents.edit', ['record' => $record->id]))
                     ->icon('heroicon-m-eye'),
                 Action::make('print')

@@ -37,19 +37,12 @@
     <div class="max-w-6xl mx-auto my-10 bg-white p-7 md:p-10 rounded-xl shadow-lg">
         <div class="text-center mb-8 pb-6 border-b border-gray-300" role="banner">
             @php
-                $logoPath = public_path('images/logomki.png');
-                $logoSrc = '';
-                if (file_exists($logoPath)) {
-                    $logoMime = mime_content_type($logoPath);
-                    if ($logoMime) {
-                        $logoSrc = 'data:' . $logoMime . ';base64,' . base64_encode(file_get_contents($logoPath));
-                    }
-                }
+                $logoSrc = $companyLogoUrl ?? \App\Support\CompanyBrand::logoUrl();
             @endphp
             @if($logoSrc)
                 <img
                     src="{{ $logoSrc }}"
-                    alt="Nama Perusahaan Anda"
+                    alt="{{ $companyName ?? config('app.name') }}"
                     class="max-h-10 mx-auto mb-4 block"
                 />
             @endif
@@ -73,11 +66,12 @@
                 @endisset
             </h1>
             <p class="text-xs text-gray-500 mt-1">
-                Jl. Sintraman Jaya I No. 2148, 20 Ilir D II, <br />
-                Kecamatan Kemuning, Kota Palembang, Sumatera Selatan 30137
+                {{ $companyAddress ?: 'Alamat belum diatur' }}
             </p>
             <p class="text-xs text-gray-500 mt-0">
-                {{ $companyName ?? config('app.name') }} | maknawedding@gmail.com | +62 822-9796-2600
+                {{ $companyName ?? config('app.name') }}
+                @if (! empty($companyEmail)) | {{ $companyEmail }} @endif
+                @if (! empty($companyPhone)) | {{ $companyPhone }} @endif
             </p>
         </div>
 

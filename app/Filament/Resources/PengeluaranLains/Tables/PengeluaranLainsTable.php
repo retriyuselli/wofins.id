@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\PengeluaranLains\Tables;
 
+use App\Filament\Actions\GeneratePengeluaranLainAction;
 use App\Models\PengeluaranLain;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -328,12 +329,13 @@ class PengeluaranLainsTable
                 ])->label('Aksi Massal'),
             ])
             ->emptyStateActions([
+                GeneratePengeluaranLainAction::make(),
                 CreateAction::make()
                     ->label('Buat Pengeluaran Lain Pertama')
                     ->icon('heroicon-o-plus-circle'),
             ])
             ->emptyStateHeading('Belum Ada Pengeluaran Lain')
-            ->emptyStateDescription('Mulai dengan membuat pengeluaran di luar operasional harian pertama Anda.')
+            ->emptyStateDescription('Generate dari Nota Dinas Detail lain-lain, atau tambah manual.')
             ->emptyStateIcon('heroicon-o-credit-card')
             ->poll('60s')
             ->striped()

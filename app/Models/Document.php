@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use App\Support\ProFeatures;
+use App\Support\UserVisibility;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Schema;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -15,9 +19,9 @@ class Document extends Model
     use SoftDeletes, LogsActivity;
 
     protected $fillable = [
+        'company_id',
         'category_id',
         'document_number',
-        // 'recipient_id', // Removed in favor of relation
         'title',
         'summary',
         'content',
@@ -39,24 +43,50 @@ class Document extends Model
         'show_confidentiality_warning' => 'boolean',
     ];
 
+    protected static function booted(): void
+    {
+        static::addGlobalScope('tenant_company', function (Builder $builder) {
+            if (! Schema::hasColumn('documents', 'company_id')) {
+                return;
+            }
+
+            if (! auth()->check()) {
+                return;
+            }
+
+            if (ProFeatures::actorIsSuperAdmin()) {
+                return;
+            }
+
+            $companyId = UserVisibility::companyId();
+
+            if ($companyId === null) {
+                $builder->whereRaw('1 = 0');
+
+                return;
+            }
+
+            $builder->where('company_id', $companyId);
+        });
+    }
 
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['title', 'document_number', 'category_id', 'date_effective'])
+            ->logOnly(['title', 'document_number', 'category_id', 'company_id', 'date_effective'])
             ->setDescriptionForEvent(fn (string $eventName) => "{$eventName}")
             ->useLogName('document');
+    }
+
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
     }
 
     public function category(): BelongsTo
     {
         return $this->belongsTo(DocumentCategory::class);
     }
-
-    // public function recipient(): BelongsTo
-    // {
-    //     return $this->belongsTo(User::class, 'recipient_id');
-    // }
 
     public function recipientsList(): BelongsToMany
     {

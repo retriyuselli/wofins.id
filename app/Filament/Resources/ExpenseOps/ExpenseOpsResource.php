@@ -101,7 +101,7 @@ class ExpenseOpsResource extends BaseResource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
+        $query = parent::getEloquentQuery()
             ->with([
                 'vendor:id,name',
                 'paymentMethod:id,name,no_rekening',
@@ -110,6 +110,8 @@ class ExpenseOpsResource extends BaseResource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+
+        return \App\Support\UserVisibility::constrainExpenseOpsQuery($query);
     }
 
     public static function getNavigationBadge(): ?string

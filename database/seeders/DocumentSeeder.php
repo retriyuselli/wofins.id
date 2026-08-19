@@ -48,10 +48,18 @@ class DocumentSeeder extends Seeder
             $romanMonth = $this->getRomanMonth($month);
             $seq = str_pad($i, 3, '0', STR_PAD_LEFT);
 
+            $companyCode = 'DOC';
+            if ($creator->company_id) {
+                $company = \App\Models\Company::query()->find((int) $creator->company_id);
+                if ($company) {
+                    $companyCode = $company->documentCode();
+                }
+            }
+
             $docNumber = $category->format_number ?? 'DOC/{Y}/{SEQ}';
             $docNumber = str_replace(
-                ['{Y}', '{SEQ}', '{DEPT}', '{ROMAN_MONTH}'],
-                [$year, $seq, 'GEN', $romanMonth],
+                ['{Y}', '{SEQ}', '{DEPT}', '{ROMAN_MONTH}', '{CAT}', '{CO}'],
+                [$year, $seq, 'GEN', $romanMonth, $category->code ?? 'DOC', $companyCode],
                 $docNumber
             );
 
@@ -62,6 +70,7 @@ class DocumentSeeder extends Seeder
             $effective = Carbon::create($year, $month, min(28, $i));
 
             Document::create([
+                'company_id' => $creator->company_id,
                 'category_id' => $category->id,
                 'document_number' => $docNumber,
                 'title' => \fake()->sentence(rand(4, 8)),

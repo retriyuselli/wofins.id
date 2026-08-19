@@ -8,6 +8,7 @@ use App\Models\ExpenseOps;
 use App\Models\Order;
 use App\Models\PendapatanLain;
 use App\Models\PengeluaranLain;
+use App\Support\UserVisibility;
 use Barryvdh\DomPDF\Facade\Pdf;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Exception;
@@ -72,7 +73,9 @@ class LaporanKeuangan extends Page
                     $endDate = $this->tanggal_akhir ?? now()->endOfMonth()->toDateString();
 
                     // Query orders using All Event dates (Lamaran, Akad, Reception)
-                    $query = Order::with(['prospect', 'dataPembayaran', 'expenses'])
+                    $query = UserVisibility::constrainOrdersQuery(
+                        Order::with(['prospect', 'dataPembayaran', 'expenses'])
+                    )
                         ->whereHas('prospect', function ($prospectQuery) use ($startDate, $endDate) {
                             $prospectQuery->where(function ($dateQuery) use ($startDate, $endDate) {
                                 // Filter by Lamaran Date
@@ -114,16 +117,22 @@ class LaporanKeuangan extends Page
                     });
 
                     // Get additional expenses data (ExpenseOps and PengeluaranLain)
-                    $expenseOps = ExpenseOps::with('vendor')->whereBetween('date_expense', [$startDate, $endDate])
+                    $expenseOps = UserVisibility::constrainExpenseOpsQuery(
+                        ExpenseOps::with('vendor')->whereBetween('date_expense', [$startDate, $endDate])
+                    )
                         ->orderBy('date_expense', 'desc')
                         ->get();
 
-                    $pengeluaranLain = PengeluaranLain::with('vendor')->whereBetween('date_expense', [$startDate, $endDate])
+                    $pengeluaranLain = UserVisibility::constrainViaCompanyPaymentMethods(
+                        PengeluaranLain::with('vendor')->whereBetween('date_expense', [$startDate, $endDate])
+                    )
                         ->orderBy('date_expense', 'desc')
                         ->get();
 
                     // Get pendapatan lain data
-                    $pendapatanLain = PendapatanLain::with('vendor')->whereBetween('tgl_bayar', [$startDate, $endDate])
+                    $pendapatanLain = UserVisibility::constrainViaCompanyPaymentMethods(
+                        PendapatanLain::with('vendor')->whereBetween('tgl_bayar', [$startDate, $endDate])
+                    )
                         ->orderBy('tgl_bayar', 'desc')
                         ->get();
 
@@ -178,7 +187,9 @@ class LaporanKeuangan extends Page
         $startDate = $this->tanggal_awal ?? now()->startOfMonth()->toDateString();
         $endDate = $this->tanggal_akhir ?? now()->endOfMonth()->toDateString();
 
-        $query = Order::with(['prospect', 'dataPembayaran', 'expenses'])
+        $query = UserVisibility::constrainOrdersQuery(
+            Order::with(['prospect', 'dataPembayaran', 'expenses'])
+        )
             ->whereHas('prospect', function ($prospectQuery) use ($startDate, $endDate) {
                 $prospectQuery->where(function ($dateQuery) use ($startDate, $endDate) {
                     $dateQuery->whereBetween('date_lamaran', [$startDate, $endDate])
@@ -230,18 +241,21 @@ class LaporanKeuangan extends Page
             : 0;
 
         $expenseOps = $includeOps
-            ? ExpenseOps::with('vendor')->whereBetween('date_expense', [$startDate, $endDate])
-                ->orderBy('date_expense', 'desc')->get()
+            ? UserVisibility::constrainExpenseOpsQuery(
+                ExpenseOps::with('vendor')->whereBetween('date_expense', [$startDate, $endDate])
+            )->orderBy('date_expense', 'desc')->get()
             : collect([]);
 
         $pengeluaranLain = $includePengeluaranLain
-            ? PengeluaranLain::with('vendor')->whereBetween('date_expense', [$startDate, $endDate])
-                ->orderBy('date_expense', 'desc')->get()
+            ? UserVisibility::constrainViaCompanyPaymentMethods(
+                PengeluaranLain::with('vendor')->whereBetween('date_expense', [$startDate, $endDate])
+            )->orderBy('date_expense', 'desc')->get()
             : collect([]);
 
         $pendapatanLain = $includePendapatanLain
-            ? PendapatanLain::with('vendor')->whereBetween('tgl_bayar', [$startDate, $endDate])
-                ->orderBy('tgl_bayar', 'desc')->get()
+            ? UserVisibility::constrainViaCompanyPaymentMethods(
+                PendapatanLain::with('vendor')->whereBetween('tgl_bayar', [$startDate, $endDate])
+            )->orderBy('tgl_bayar', 'desc')->get()
             : collect([]);
 
         $totalExpenseOps = $expenseOps->sum('amount');
@@ -407,7 +421,9 @@ class LaporanKeuangan extends Page
         $start = $this->tanggal_awal;
         $end = $this->tanggal_akhir;
 
-        $uangMasuk = DataPembayaran::whereBetween('tgl_bayar', [$start, $end])
+        $uangMasuk = UserVisibility::constrainViaTeamOrders(
+            DataPembayaran::whereBetween('tgl_bayar', [$start, $end])
+        )
             ->select(
                 DB::raw('tgl_bayar as tanggal'),
                 DB::raw('nominal as jumlah'),
@@ -434,7 +450,9 @@ class LaporanKeuangan extends Page
                 ) as payment_method_details')
             );
 
-        $pengeluaranWedding = Expense::whereBetween('date_expense', [$start, $end])
+        $pengeluaranWedding = UserVisibility::constrainViaTeamOrders(
+            Expense::whereBetween('date_expense', [$start, $end])
+        )
             ->select(
                 DB::raw('date_expense as tanggal'),
                 DB::raw('amount as jumlah'),
@@ -466,7 +484,9 @@ class LaporanKeuangan extends Page
                 ) as payment_method_details')
             );
 
-        $pengeluaranOps = ExpenseOps::whereBetween('date_expense', [$start, $end])
+        $pengeluaranOps = UserVisibility::constrainExpenseOpsQuery(
+            ExpenseOps::whereBetween('date_expense', [$start, $end])
+        )
             ->select(
                 DB::raw('date_expense as tanggal'),
                 DB::raw('amount as jumlah'),
@@ -483,7 +503,9 @@ class LaporanKeuangan extends Page
                 ) as payment_method_details')
             );
 
-        $pendapatanLain = PendapatanLain::whereBetween('tgl_bayar', [$start, $end])
+        $pendapatanLain = UserVisibility::constrainViaCompanyPaymentMethods(
+            PendapatanLain::whereBetween('tgl_bayar', [$start, $end])
+        )
             ->select(
                 DB::raw('tgl_bayar as tanggal'),
                 DB::raw('nominal as jumlah'),
@@ -500,7 +522,9 @@ class LaporanKeuangan extends Page
                 ) as payment_method_details')
             );
 
-        $pengeluaranLain = PengeluaranLain::whereBetween('date_expense', [$start, $end])
+        $pengeluaranLain = UserVisibility::constrainViaCompanyPaymentMethods(
+            PengeluaranLain::whereBetween('date_expense', [$start, $end])
+        )
             ->select(
                 DB::raw('date_expense as tanggal'),
                 DB::raw('amount as jumlah'),

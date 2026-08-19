@@ -469,18 +469,11 @@
 
         <div class="report-title-header">
             @php
-                $company = null;
-                if (\Illuminate\Support\Facades\Schema::hasTable('companies')) {
-                    $company = \App\Models\Company::query()->first();
-                }
-
-                $logoSrc =
-                    $company && $company->logo_url
-                        ? \Illuminate\Support\Facades\Storage::disk('public')->url($company->logo_url)
-                        : asset('images/logomki.png');
+                $company = \App\Support\CompanyBrand::model();
+                $logoSrc = $companyLogoUrl ?? \App\Support\CompanyBrand::logoUrl();
             @endphp
             @if ($logoSrc)
-                <img src="{{ $logoSrc }}" alt="Nama Perusahaan Anda" class="company-logo">
+                <img src="{{ $logoSrc }}" alt="{{ $companyName ?? config('app.name') }}" class="company-logo">
             @endif
 
             <h1 class="report-main-title">
@@ -519,11 +512,12 @@
                     @endif
                 </p>
             @else
-                <p class="company-address">Jl. Sintraman Jaya I No. 2148, 20 Ilir D II, <br>
-                    Kecamatan Kemuning, Kota Palembang, Sumatera Selatan 30137</p>
-                <p class="company-address" style="margin-top:0;">{{ $companyName ?? config('app.name') }} | maknawedding@gmail.com |
-                    +62
-                    822-9796-2600</p>
+                <p class="company-address">{{ $companyAddress ?: 'Alamat belum diatur' }}</p>
+                <p class="company-address" style="margin-top:0;">
+                    {{ $companyName ?? config('app.name') }}
+                    @if (! empty($companyEmail)) | {{ $companyEmail }} @endif
+                    @if (! empty($companyPhone)) | {{ $companyPhone }} @endif
+                </p>
             @endif
         </div>
 

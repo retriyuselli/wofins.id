@@ -50,6 +50,15 @@
             top: 0;
         }
 
+        .col-no {
+            width: 2rem;
+            max-width: 2.25rem;
+            padding-left: 0.25rem !important;
+            padding-right: 0.25rem !important;
+            text-align: center;
+            white-space: nowrap;
+        }
+
         @media print {
 
             /* --- PENGATURAN HALAMAN DASAR --- */
@@ -287,10 +296,10 @@
             @endif
             {{-- <h1 class="text-[16px] font-bold uppercase tracking-wide text-gray-800">{{ $product->name ?? 'Nama Produk Tidak Tersedia' }}</h1> --}}
             <p class="text-[12px] text-gray-600 mt-1.5">
-                {{ $company?->address ?? 'Jl. Sintraman Jaya I No. 2148, 20 Ilir D II, Kecamatan Kemuning, Kota Palembang, Sumatera Selatan 30137' }}
+                {{ $companyAddress ?? $company?->address ?? 'Alamat belum diatur' }}
             </p>
-            <p class="text-[12px] text-gray-600 mt-0">{{ $company?->company_name ?? ($companyName ?? config('app.name')) }} |
-                {{ $company?->email ?? 'maknawedding@gmail.com' }} | {{ $company?->phone ?? '+62 822-9796-2600' }}</p>
+            <p class="text-[12px] text-gray-600 mt-0">{{ $companyName ?? $company?->company_name ?? config('app.name') }} |
+                {{ $companyEmail ?? $company?->email ?? '-' }} | {{ $companyPhone ?? $company?->phone ?? '-' }}</p>
         </div>
 
         {{-- Simulation Information --}}
@@ -318,7 +327,7 @@
                 <thead>
                     <tr>
                         <th
-                            class="border text-[13px] px-4 py-3 text-left bg-slate-100 font-bold uppercase tracking-wider">
+                            class="col-no border text-[13px] py-3 bg-slate-100 font-bold uppercase tracking-wider">
                             No
                         </th>
                         <th
@@ -336,7 +345,7 @@
                     @forelse($product->items ?? [] as $item)
                         <tr
                             class="odd:bg-white even:bg-slate-50/70 hover:bg-indigo-50/70 transition-colors duration-150 ease-in-out">
-                            <td class="border border-slate-300 px-4 py-3 text-center align-top">{{ $loop->iteration }}
+                            <td class="col-no border border-slate-300 py-3 align-top">{{ $loop->iteration }}
                             </td>
                             <td class="border border-slate-300 px-4 py-3 align-top">
                                 <div class="font-bold uppercase text-[13px]">
@@ -368,8 +377,7 @@
                 <h3 class="text-sm font-semibold mb-5">Penambahan</h3>
                 <table class="w-full border-collapse text-sm">
                     <thead>
-                        <th class="border text-[13px] px-4 py-3 text-center bg-slate-100 font-bold uppercase tracking-wider"
-                            style="width: 6%;">No</th>
+                        <th class="col-no border text-[13px] py-3 bg-slate-100 font-bold uppercase tracking-wider">No</th>
                         <th
                             class="border text-[13px] px-4 py-3 text-left bg-slate-100 font-bold uppercase tracking-wider">
                             Description</th>
@@ -382,7 +390,7 @@
                         @foreach ($product->penambahanHarga as $index => $addition)
                             <tr
                                 class="odd:bg-white even:bg-slate-50/70 hover:bg-indigo-50/70 transition-colors duration-150 ease-in-out">
-                                <td class="border border-slate-300 px-4 py-3 text-center align-top text-[13px]">
+                                <td class="col-no border border-slate-300 py-3 align-top text-[13px]">
                                     {{ $index + 1 }}
                                 </td>
                                 <td class="border border-slate-300 px-4 py-3 align-top">
@@ -419,8 +427,7 @@
                 <h3 class="text-sm font-semibold mb-5">Pengurangan</h3>
                 <table class="w-full border-collapse text-sm">
                     <thead>
-                        <th class="border text-[13px] px-4 py-3 text-center bg-slate-100 font-bold uppercase tracking-wider"
-                            style="width: 8%;">No</th>
+                        <th class="col-no border text-[13px] py-3 bg-slate-100 font-bold uppercase tracking-wider">No</th>
                         <th
                             class="border text-[13px] px-4 py-3 text-left bg-slate-100 font-bold uppercase tracking-wider">
                             Description</th>
@@ -431,7 +438,7 @@
                         @foreach ($product->pengurangans as $index => $discount)
                             <tr
                                 class="odd:bg-white even:bg-slate-50/70 hover:bg-indigo-50/70 transition-colors duration-150 ease-in-out">
-                                <td class="border border-slate-300 px-4 py-3 text-center align-top text-[13px]">
+                                <td class="col-no border border-slate-300 py-3 align-top text-[13px]">
                                     {{ $index + 1 }}
                                 </td>
                                 <td class="border border-slate-300 px-4 py-3 align-top">

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ExpenseOps\Pages;
 
+use App\Filament\Actions\GenerateExpenseOpsAction;
 use App\Filament\Resources\ExpenseOps\ExpenseOpsResource;
 use App\Filament\Resources\ExpenseOps\Widgets\ExpenseOpsOverview;
 use App\Support\CompanySubscription;
@@ -17,7 +18,9 @@ class ListExpenseOps extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        $actions = [];
+        $actions = [
+            GenerateExpenseOpsAction::make(),
+        ];
 
         if (UserVisibility::canViewTeamSeatSummary()) {
             $actions[] = Action::make('quota_expense_ops')

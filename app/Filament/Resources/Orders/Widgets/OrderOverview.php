@@ -195,9 +195,9 @@ class OrderOverview extends BaseWidget
                 ->description(sprintf('%d dokumen menunggu verifikasi', $this->metrics['pending_documents']))
                 ->color('primary'),
 
-            // Ringkasan Total Pendapatan
-            Stat::make('Total Pendapatan', $this->formatCurrency($this->metrics['total_revenue']))
-                ->description('Pendapatan keseluruhan')
+            // Ringkasan Total Revenue
+            Stat::make('Total Revenue', $this->formatCurrency($this->metrics['total_revenue']))
+                ->description('Revenue keseluruhan')
                 ->descriptionIcon('heroicon-m-currency-dollar')
                 ->chart($revenueTrend)
                 ->color('success'),

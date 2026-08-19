@@ -57,7 +57,6 @@ class PlanResourceGate
             // Payroll (Professional+) — termasuk master Employee
             \App\Filament\Resources\Payrolls\PayrollResource::class => PricingPlans::FEATURE_PAYROLL,
             \App\Filament\Resources\Employees\EmployeeResource::class => PricingPlans::FEATURE_PAYROLL,
-            \App\Filament\Resources\Statuses\StatusResource::class => PricingPlans::FEATURE_PAYROLL,
 
             // Laporan lanjutan (Business): Kinerja AM — target vs closing (AccountManagerTarget)
             \App\Filament\Resources\AccountManagerTargets\AccountManagerTargetResource::class => PricingPlans::FEATURE_ADVANCED_REPORTS,

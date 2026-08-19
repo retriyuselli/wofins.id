@@ -2,6 +2,9 @@
 
 namespace App\Filament\Resources\Documents\Schemas;
 
+use App\Models\Company;
+use App\Support\ProFeatures;
+use App\Support\UserVisibility;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\KeyValue;
@@ -16,12 +19,16 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
 
 class DocumentForm
 {
     public static function configure(Schema $schema): Schema
     {
+        $isSuperAdmin = ProFeatures::actorIsSuperAdmin();
+
         return $schema
             ->components([
                 Tabs::make('Document')
@@ -30,6 +37,16 @@ class DocumentForm
                             ->schema([
                                 Section::make()
                                     ->schema([
+                                        Select::make('company_id')
+                                            ->label('Perusahaan')
+                                            ->options(fn () => Company::query()->orderBy('company_name')->pluck('company_name', 'id'))
+                                            ->searchable()
+                                            ->preload()
+                                            ->required($isSuperAdmin)
+                                            ->visible($isSuperAdmin)
+                                            ->dehydrated($isSuperAdmin)
+                                            ->live()
+                                            ->helperText('Dokumen hanya terlihat oleh user perusahaan ini.'),
                                         TextInput::make('title')
                                             ->required()
                                             ->maxLength(255)
@@ -37,7 +54,21 @@ class DocumentForm
                                         Select::make('recipientsList')
                                             ->label('Kepada')
                                             ->placeholder('Pilih Tujuan Pengiriman')
-                                            ->relationship('recipientsList', 'name')
+                                            ->relationship(
+                                                name: 'recipientsList',
+                                                titleAttribute: 'name',
+                                                modifyQueryUsing: function (Builder $query, Get $get) {
+                                                    if (ProFeatures::actorIsSuperAdmin()) {
+                                                        $companyId = $get('company_id');
+
+                                                        return $companyId
+                                                            ? $query->where('company_id', $companyId)
+                                                            : $query->whereRaw('1 = 0');
+                                                    }
+
+                                                    return UserVisibility::constrainUsersQuery($query);
+                                                },
+                                            )
                                             ->multiple()
                                             ->searchable()
                                             ->preload()

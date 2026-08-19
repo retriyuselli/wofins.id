@@ -4,7 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\ProjectDashboard;
 use App\Http\Middleware\RedirectUnauthenticatedToAppUrl;
-use App\Models\Company;
+use App\Support\CompanyBrand;
 use App\Support\ProFeatures;
 use App\Support\WofinsHosts;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
@@ -23,43 +23,12 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Throwable;
 
 class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
-        $hasTable = function (string $table): bool {
-            try {
-                return Schema::hasTable($table);
-            } catch (Throwable) {
-                return false;
-            }
-        };
-
-        $cache = Cache::store();
-        if (config('cache.default') === 'database' && ! $hasTable('cache')) {
-            $cache = Cache::store('array');
-        }
-
-        $brandVersion = $cache->remember('company_brand_version', 60, function () use ($hasTable) {
-            if (! $hasTable('companies')) {
-                return 1;
-            }
-
-            try {
-                return Company::query()->value('updated_at')?->timestamp ?? 1;
-            } catch (Throwable) {
-                return 1;
-            }
-        });
-
-        $brandLogo = url('/brand/logo').'?v='.$brandVersion;
-        $favicon = url('/brand/favicon').'?v='.$brandVersion;
-
         $panel = $panel
             ->globalSearch(position: GlobalSearchPosition::Topbar)
             ->default()
@@ -75,10 +44,10 @@ class AdminPanelProvider extends PanelProvider
         }
 
         return $panel
-            ->brandLogo($brandLogo)
+            ->brandLogo(fn (): string => url('/brand/logo').'?v='.CompanyBrand::version())
             ->brandLogoHeight('2rem')
-            ->brandName('Makna Kreatif')
-            ->favicon($favicon)
+            ->brandName(fn (): string => CompanyBrand::name())
+            ->favicon(fn (): string => url('/brand/favicon').'?v='.CompanyBrand::version())
             ->sidebarCollapsibleOnDesktop(true)
             ->navigationGroups([
                 'Penjualan',

@@ -99,6 +99,47 @@ class UserForm
                                             ->columnSpanFull(),
                                     ]),
 
+                                Section::make('Foto Profil & Tanda Tangan')
+                                    ->schema([
+                                        Grid::make(2)
+                                            ->schema([
+                                                FileUpload::make('avatar_url')
+                                                    ->label('Foto Profil')
+                                                    ->image()
+                                                    ->disk('public')
+                                                    ->directory('avatars')
+                                                    ->visibility('public')
+                                                    ->openable()
+                                                    ->downloadable()
+                                                    ->imageCropAspectRatio('1:1')
+                                                    ->imageResizeTargetWidth('300')
+                                                    ->imageResizeTargetHeight('300')
+                                                    ->circleCropper()
+                                                    ->maxSize(2048)
+                                                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                                                    ->helperText('Upload foto profil (maksimal 2MB, format: JPG, PNG, WebP)')
+                                                    ->imagePreviewHeight('150')
+                                                    ->uploadingMessage('Mengupload foto...')
+                                                    ->removeUploadedFileButtonPosition('right')
+                                                    ->uploadButtonPosition('left')
+                                                    ->extraAttributes(['class' => 'avatar-upload-field'])
+                                                    ->columnSpan(1),
+
+                                                FileUpload::make('signature_url')
+                                                    ->label('Tanda Tangan Digital')
+                                                    ->image()
+                                                    ->disk('public')
+                                                    ->directory('signatures')
+                                                    ->visibility('public')
+                                                    ->openable()
+                                                    ->downloadable()
+                                                    ->maxSize(2048)
+                                                    ->acceptedFileTypes(['image/jpeg', 'image/png'])
+                                                    ->helperText('Upload gambar tanda tangan (transparan lebih baik). Format: PNG, JPG.')
+                                                    ->columnSpan(1),
+                                            ]),
+                                    ]),
+
                                 Section::make('Peran & Status')
                                     ->schema([
                                         Grid::make(2)
@@ -249,47 +290,6 @@ class UserForm
                                                     ->label('Tanggal Berakhir Kerja')
                                                     ->displayFormat('d/m/Y')
                                                     ->helperText('Kosongkan jika masih aktif bekerja'),
-                                            ]),
-                                    ]),
-
-                                Section::make('Pengaturan Akun')
-                                    ->schema([
-                                        Grid::make(2)
-                                            ->schema([
-                                                FileUpload::make('avatar_url')
-                                                    ->label('Foto Profil')
-                                                    ->image()
-                                                    ->disk('public')
-                                                    ->directory('avatars')
-                                                    ->visibility('public')
-                                                    ->openable()
-                                                    ->downloadable()
-                                                    ->imageCropAspectRatio('1:1')
-                                                    ->imageResizeTargetWidth('300')
-                                                    ->imageResizeTargetHeight('300')
-                                                    ->circleCropper()
-                                                    ->maxSize(2048)
-                                                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
-                                                    ->helperText('Upload foto profil (maksimal 2MB, format: JPG, PNG, WebP)')
-                                                    ->imagePreviewHeight('150')
-                                                    ->uploadingMessage('Mengupload foto...')
-                                                    ->removeUploadedFileButtonPosition('right')
-                                                    ->uploadButtonPosition('left')
-                                                    ->extraAttributes(['class' => 'avatar-upload-field'])
-                                                    ->columnSpan(1),
-
-                                                FileUpload::make('signature_url')
-                                                    ->label('Tanda Tangan Digital')
-                                                    ->image()
-                                                    ->disk('public')
-                                                    ->directory('signatures')
-                                                    ->visibility('public')
-                                                    ->openable()
-                                                    ->downloadable()
-                                                    ->maxSize(2048)
-                                                    ->acceptedFileTypes(['image/jpeg', 'image/png'])
-                                                    ->helperText('Upload gambar tanda tangan (transparan lebih baik). Format: PNG, JPG.')
-                                                    ->columnSpan(1),
                                             ]),
                                     ]),
                             ]),

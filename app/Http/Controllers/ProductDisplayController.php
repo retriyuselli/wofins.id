@@ -6,7 +6,10 @@ use App\Exports\ProductExport;
 use App\Models\Company;
 use App\Models\Product;
 use App\Services\ProductPricingCalculator;
+use App\Support\CompanyBrand;
+use App\Support\UserVisibility;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -15,25 +18,65 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ProductDisplayController extends Controller
 {
-    private function companyPreviewData(bool $forPdf = false): array
+    /**
+     * Company untuk branding preview/PDF produk.
+     * Prioritas: company user login → company pembuat produk → cookie brand.
+     */
+    private function resolveCompany(?Product $product = null): ?Company
     {
-        $company = null;
-        if (Schema::hasTable('companies')) {
-            $company = Company::query()->first();
+        if (! Schema::hasTable('companies')) {
+            return null;
         }
 
-        if ($company && $company->logo_url && Storage::disk('public')->exists($company->logo_url)) {
+        $authCompanyId = UserVisibility::companyId(Auth::user());
+        if ($authCompanyId) {
+            $loggedInCompany = Company::query()->find($authCompanyId);
+            if ($loggedInCompany) {
+                return $loggedInCompany;
+            }
+        }
+
+        if ($product) {
+            $product->loadMissing('creator.company');
+            $ownerCompany = $product->creator?->company;
+            if ($ownerCompany) {
+                return $ownerCompany;
+            }
+        }
+
+        $brandCompanyId = CompanyBrand::companyId();
+        if ($brandCompanyId) {
+            return Company::query()->find($brandCompanyId);
+        }
+
+        return null;
+    }
+
+    private function companyPreviewData(bool $forPdf = false, ?Product $product = null): array
+    {
+        $company = $this->resolveCompany($product);
+
+        $logoPath = public_path(CompanyBrand::DEFAULT_LOGO);
+        if ($company?->logo_url && Storage::disk('public')->exists($company->logo_url)) {
             $logoPath = Storage::disk('public')->path($company->logo_url);
-        } else {
-            $logoPath = public_path('images/logomki.png');
         }
 
         $logoSrc = $this->encodeLogoForDisplay($logoPath, $forPdf);
 
+        $addressParts = array_values(array_filter([
+            $company?->address,
+            collect([$company?->city, $company?->province, $company?->postal_code])
+                ->filter()
+                ->implode(', '),
+        ]));
+
         return [
             'company' => $company,
             'logoSrc' => $logoSrc,
-            'companyName' => $company?->company_name ?? config('app.name'),
+            'companyName' => $company?->company_name ?: config('app.name'),
+            'companyAddress' => $addressParts !== [] ? implode(', ', $addressParts) : null,
+            'companyEmail' => filled($company?->email) ? $company->email : null,
+            'companyPhone' => filled($company?->phone) && $company->phone !== '-' ? $company->phone : null,
         ];
     }
 
@@ -137,7 +180,7 @@ class ProductDisplayController extends Controller
         return array_merge([
             'product' => $product,
             'pricing' => ProductPricingCalculator::calculateForProduct($product),
-        ], $this->companyPreviewData($forPdf));
+        ], $this->companyPreviewData($forPdf, $product));
     }
 
     private function buildProductPdf(Product $product)

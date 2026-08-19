@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Company;
 use App\Models\Employee;
 use App\Models\Payroll;
+use App\Support\CompanyBrand;
 use App\Support\UserVisibility;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -80,7 +81,7 @@ class PayrollSlipController extends Controller
             ? Company::query()->find($companyId)
             : null;
 
-        $logoUrl = asset('images/logomki.png');
+        $logoUrl = CompanyBrand::logoUrl();
         if ($company?->logo_url && Storage::disk('public')->exists($company->logo_url)) {
             $logoUrl = asset('storage/'.ltrim($company->logo_url, '/'));
         }

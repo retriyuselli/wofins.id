@@ -69,25 +69,10 @@ class DocumentResource extends BaseResource
         $query = parent::getEloquentQuery()
             ->with(['category:id,name']);
 
-        if (\App\Support\UserVisibility::actorIsSuperAdmin()) {
-            return $query;
-        }
-
-        $teamIds = \App\Support\UserVisibility::teamUserIds();
-        $actorId = \App\Support\UserVisibility::actorId();
-
-        if ($teamIds === [] && $actorId === null) {
-            return $query->whereRaw('1 = 0');
-        }
-
-        // Dokumen dibuat anggota tim, atau actor adalah penerima
-        return $query->where(function (Builder $q) use ($teamIds, $actorId) {
-            if ($teamIds !== []) {
-                $q->whereIn('created_by', $teamIds);
-            }
-            if ($actorId !== null) {
-                $q->orWhereHas('recipientsList', fn (Builder $r) => $r->where('users.id', $actorId));
-            }
-        });
+        return \App\Support\UserVisibility::constrainCompanyQuery(
+            $query->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ])
+        );
     }
 }

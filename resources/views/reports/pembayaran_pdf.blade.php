@@ -106,9 +106,9 @@
 
 <body>
     <div class="header">
-        <img src="{{ public_path('images/logomki.png') }}" class="logo" alt="Logo">
+        <img src="{{ \App\Support\CompanyBrand::logoDataUri() }}" class="logo" alt="Logo">
         <div class="company-name">{{ $companyName ?? config('app.name') }}</div>
-        <div class="company-address">Jl. Sintraman Jaya I No. 2148, 20 Ilir D II, Kec. Kemuning, Kota Palembang</div>
+        <div class="company-address">{{ $companyAddress ?: 'Alamat belum diatur' }}</div>
     </div>
 
     <div class="title-container">

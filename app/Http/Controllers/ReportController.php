@@ -9,6 +9,7 @@ use App\Models\ExpenseOps; // Pastikan path model ini benar
 use App\Models\Order;
 use App\Models\PaymentMethod;
 use App\Models\NotaDinasDetail;
+use App\Support\UserVisibility;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -34,7 +35,8 @@ class ReportController extends Controller
         }
 
         // Ambil tahun unik dari data pembayaran yang ada, atau default ke rentang beberapa tahun
-        $availableYearsDb = DataPembayaran::selectRaw('DISTINCT YEAR(tgl_bayar) as year')
+        $availableYearsDb = UserVisibility::constrainViaTeamOrders(DataPembayaran::query())
+            ->selectRaw('DISTINCT YEAR(tgl_bayar) as year')
             ->whereNotNull('tgl_bayar')
             ->orderBy('year', 'desc')
             ->pluck('year')
@@ -53,7 +55,9 @@ class ReportController extends Controller
 
         $orderStatuses = OrderStatus::cases();
 
-        $query = DataPembayaran::query()->with(['order', 'paymentMethod']); // Load order, status is an attribute
+        $query = UserVisibility::constrainViaTeamOrders(
+            DataPembayaran::query()->with(['order', 'paymentMethod'])
+        );
 
         if ($selectedMonth && $selectedYear) {
             $query->whereYear('tgl_bayar', $selectedYear)
@@ -99,7 +103,9 @@ class ReportController extends Controller
         $selectedYear = $request->input('year');
         $selectedStatus = $request->input('status');
 
-        $query = DataPembayaran::query()->with(['order', 'paymentMethod']);
+        $query = UserVisibility::constrainViaTeamOrders(
+            DataPembayaran::query()->with(['order', 'paymentMethod'])
+        );
 
         // Jika filter tanggal aktif, sesuaikan nama kolom karena query sudah di-join nanti
         // Tapi query builder whereYear/Month otomatis nambahin table name kalau pakai model,
@@ -125,7 +131,7 @@ class ReportController extends Controller
             ->leftJoin('orders', 'data_pembayarans.order_id', '=', 'orders.id')
             ->select('data_pembayarans.*') // Ambil hanya kolom dari data_pembayarans agar tidak tertimpa kolom orders (misal id)
             ->with(['order' => function ($query) {
-                $query->withoutGlobalScopes()->with('product');
+                $query->with('product');
             }])
             ->orderBy('orders.name', 'asc')
             ->orderBy('data_pembayarans.tgl_bayar', 'asc')
@@ -146,7 +152,9 @@ class ReportController extends Controller
     {
         Gate::authorize('viewAny', ExpenseOps::class);
 
-        $query = ExpenseOps::query()->with(['vendor', 'paymentMethod']); // Eager load untuk menghindari N+1
+        $query = UserVisibility::constrainExpenseOpsQuery(
+            ExpenseOps::query()->with(['vendor', 'paymentMethod'])
+        );
 
         $selectedMonth = $request->input('month');
         $selectedYear = $request->input('year');
@@ -179,7 +187,8 @@ class ReportController extends Controller
         }
 
         // Ambil tahun unik dari data pengeluaran operasional yang ada
-        $availableYearsDb = ExpenseOps::selectRaw('DISTINCT YEAR(date_expense) as year')
+        $availableYearsDb = UserVisibility::constrainExpenseOpsQuery(ExpenseOps::query())
+            ->selectRaw('DISTINCT YEAR(date_expense) as year')
             ->whereNotNull('date_expense')
             ->orderBy('year', 'desc')
             ->pluck('year')
@@ -211,7 +220,9 @@ class ReportController extends Controller
     {
         Gate::authorize('viewAny', ExpenseOps::class);
 
-        $query = ExpenseOps::query()->with(['vendor', 'paymentMethod']); // Eager load untuk menghindari N+1
+        $query = UserVisibility::constrainExpenseOpsQuery(
+            ExpenseOps::query()->with(['vendor', 'paymentMethod'])
+        );
 
         $selectedMonth = $request->input('month');
         $selectedYear = $request->input('year');
@@ -240,7 +251,8 @@ class ReportController extends Controller
             $months[str_pad($m, 2, '0', STR_PAD_LEFT)] = Carbon::create()->month($m)->locale('id')->isoFormat('MMMM');
         }
 
-        $availableYearsDb = ExpenseOps::selectRaw('DISTINCT YEAR(date_expense) as year')
+        $availableYearsDb = UserVisibility::constrainExpenseOpsQuery(ExpenseOps::query())
+            ->selectRaw('DISTINCT YEAR(date_expense) as year')
             ->whereNotNull('date_expense')
             ->orderBy('year', 'desc')
             ->pluck('year')
@@ -270,7 +282,9 @@ class ReportController extends Controller
         $searchName = $request->input('search_name'); // Asumsi nama pengeluaran ada di kolom 'name'
         $searchNote = $request->input('search_note'); // Asumsi catatan ada di kolom 'note'
         $selectedOrderStatus = $request->input('order_status');
-        $query = Expense::query()->with(['order', 'vendor']); // Eager load relasi untuk menghindari N+1
+        $query = UserVisibility::constrainViaTeamOrders(
+            Expense::query()->with(['order', 'vendor'])
+        );
 
         if ($selectedYear) {
             $query->whereYear('date_expense', $selectedYear);
@@ -305,7 +319,8 @@ class ReportController extends Controller
             $months[str_pad($m, 2, '0', STR_PAD_LEFT)] = Carbon::create()->month($m)->locale('id')->isoFormat('MMMM');
         }
 
-        $availableYearsDb = Expense::selectRaw('DISTINCT YEAR(date_expense) as year')
+        $availableYearsDb = UserVisibility::constrainViaTeamOrders(Expense::query())
+            ->selectRaw('DISTINCT YEAR(date_expense) as year')
             ->whereNotNull('date_expense')
             ->orderBy('year', 'desc')
             ->pluck('year')
@@ -342,7 +357,9 @@ class ReportController extends Controller
         $searchName = $request->input('search_name'); // Ini akan mencari nama dari relasi order
         $searchNote = $request->input('search_note');
         $selectedOrderStatus = $request->input('order_status'); // Ambil status order dari request
-        $query = Expense::query()->with(['order', 'vendor']); // Eager load untuk menghindari N+1
+        $query = UserVisibility::constrainViaTeamOrders(
+            Expense::query()->with(['order', 'vendor'])
+        );
 
         if ($selectedYear) {
             $query->whereYear('date_expense', $selectedYear);
@@ -376,7 +393,8 @@ class ReportController extends Controller
             $months[str_pad($m, 2, '0', STR_PAD_LEFT)] = Carbon::create()->month($m)->locale('id')->isoFormat('MMMM');
         }
 
-        $availableYearsDb = Expense::selectRaw('DISTINCT YEAR(date_expense) as year')
+        $availableYearsDb = UserVisibility::constrainViaTeamOrders(Expense::query())
+            ->selectRaw('DISTINCT YEAR(date_expense) as year')
             ->whereNotNull('date_expense')
             ->orderBy('year', 'desc')
             ->pluck('year')
@@ -418,9 +436,11 @@ class ReportController extends Controller
             abort(404);
         }
 
-        $query = DataPembayaran::query()
-            ->whereRelation('order', 'status', $statusEnum)
-            ->with(['order.prospect', 'paymentMethod']) // Eager load relasi yang dibutuhkan
+        $query = UserVisibility::constrainViaTeamOrders(
+            DataPembayaran::query()
+                ->whereRelation('order', 'status', $statusEnum)
+                ->with(['order.prospect', 'paymentMethod'])
+        )
             ->orderBy('tgl_bayar', 'desc');
 
         // Ambil input filter
@@ -483,8 +503,10 @@ class ReportController extends Controller
         $status = $request->input('status', 'processing');
         $statusEnum = OrderStatus::tryFrom($status) ?? OrderStatus::Processing;
 
-        $orders = Order::where('status', $statusEnum)
-            ->with(['dataPembayaran', 'expenses', 'prospect', 'user', 'employee', 'items.product.parent'])
+        $orders = UserVisibility::constrainOrdersQuery(
+            Order::where('status', $statusEnum)
+                ->with(['dataPembayaran', 'expenses', 'prospect', 'user', 'employee', 'items.product.parent'])
+        )
             ->get()
             ->map(function ($order) {
                 $totalPayments = $order->dataPembayaran->sum('nominal');
@@ -528,11 +550,15 @@ class ReportController extends Controller
 
         $year = (int) ($validated['year'] ?? now()->year);
         $month = (int) ($validated['month'] ?? now()->month);
-        $details = NotaDinasDetail::with([
-            'notaDinas:id,no_nd,status',
-            'vendor:id,name',
-            'order:id,name',
-        ])
+
+        $details = UserVisibility::constrainNotaDinasDetailsQuery(
+            NotaDinasDetail::query()
+        )
+            ->with([
+                'notaDinas:id,no_nd,status',
+                'vendor:id,name',
+                'order:id,name',
+            ])
             ->whereYear('created_at', $year)
             ->whereMonth('created_at', $month)
             ->orderBy('created_at', 'desc')

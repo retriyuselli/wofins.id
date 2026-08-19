@@ -12,7 +12,7 @@ class PengeluaranOverviewWidgets extends BaseWidget
 {
     protected function getStats(): array
     {
-        $base = UserVisibility::constrainPlatformOnlyQuery(PengeluaranLain::query());
+        $base = UserVisibility::constrainViaCompanyPaymentMethods(PengeluaranLain::query());
 
         // Get totals for current year
         $currentYear = Carbon::now()->year;
@@ -90,7 +90,7 @@ class PengeluaranOverviewWidgets extends BaseWidget
 
     private function scopedQuery()
     {
-        return UserVisibility::constrainPlatformOnlyQuery(PengeluaranLain::query());
+        return UserVisibility::constrainViaCompanyPaymentMethods(PengeluaranLain::query());
     }
 
     private function getPengeluaranChartData(): array

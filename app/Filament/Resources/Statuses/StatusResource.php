@@ -38,6 +38,16 @@ class StatusResource extends BaseResource
         return StatusesTable::configure($table);
     }
 
+    public static function canViewAny(): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::canViewAny();
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::shouldRegisterNavigation();
+    }
+
     public static function canCreate(): bool
     {
         return ProFeatures::actorIsSuperAdmin() && parent::canCreate();

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\CompanyBrand;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -56,6 +57,8 @@ class AuthController extends Controller
                     ]);
                 }
             }
+
+            CompanyBrand::remember($user);
 
             return $this->redirectAfterAuth(Auth::user());
         }
@@ -116,6 +119,7 @@ class AuthController extends Controller
 
         Auth::login($user);
         $request->session()->regenerate();
+        CompanyBrand::remember($user);
 
         $user->sendEmailVerificationNotification();
 
@@ -250,6 +254,7 @@ class AuthController extends Controller
 
         Auth::login($user, true);
         $request->session()->regenerate();
+        CompanyBrand::remember($user);
 
         return $this->redirectAfterAuth($user);
     }

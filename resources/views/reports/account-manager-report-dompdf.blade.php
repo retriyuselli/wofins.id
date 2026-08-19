@@ -46,10 +46,9 @@
         $barWidth = min(max($achievement, 0), 100);
 
         $companyName = $companyName ?? config('app.name');
-        
-        $companyAddress = $companyAddress ?? 'Jl. Sintraman Jaya I No. 2148, 20 Ilir D II, Kec. Kemuning, Kota Palembang, Sumatera Selatan';
-        $companyEmail = $companyEmail ?? 'info@maknawedding.id';
-        $companyPhone = $companyPhone ?? '+62 813 7318 3794';
+        $companyAddress = $companyAddress ?: 'Alamat belum diatur';
+        $companyEmail = $companyEmail ?: '-';
+        $companyPhone = $companyPhone ?: '-';
     @endphp
 
     <header>

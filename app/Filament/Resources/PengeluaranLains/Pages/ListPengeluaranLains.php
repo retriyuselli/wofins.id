@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\PengeluaranLains\Pages;
 
+use App\Filament\Actions\GeneratePengeluaranLainAction;
 use App\Filament\Resources\PengeluaranLains\PengeluaranLainResource;
 use App\Filament\Resources\PengeluaranLains\Widgets\PengeluaranOverviewWidgets;
 use App\Support\CompanySubscription;
@@ -17,7 +18,9 @@ class ListPengeluaranLains extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        $actions = [];
+        $actions = [
+            GeneratePengeluaranLainAction::make(),
+        ];
 
         if (UserVisibility::canViewTeamSeatSummary()) {
             $actions[] = Action::make('quota_pengeluaran_lain')

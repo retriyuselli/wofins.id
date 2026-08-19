@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Expenses\Pages;
 
+use App\Filament\Actions\GenerateWeddingExpensesAction;
 use App\Filament\Resources\Expenses\ExpenseResource;
 use App\Filament\Resources\Expenses\Widgets\ExpenseOverview;
 use App\Support\CompanySubscription;
@@ -15,18 +16,20 @@ class ListExpenses extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        if (! UserVisibility::canViewTeamSeatSummary()) {
-            return [];
-        }
+        $actions = [
+            GenerateWeddingExpensesAction::make(),
+        ];
 
-        return [
-            Action::make('quota_pengeluaran_wedding')
+        if (UserVisibility::canViewTeamSeatSummary()) {
+            $actions[] = Action::make('quota_pengeluaran_wedding')
                 ->label(CompanySubscription::summary(CompanySubscription::RESOURCE_EXPENSES))
                 ->icon('heroicon-o-receipt-refund')
                 ->color(CompanySubscription::canCreate(CompanySubscription::RESOURCE_EXPENSES) ? 'gray' : 'warning')
                 ->disabled()
-                ->extraAttributes(['class' => 'pointer-events-none']),
-        ];
+                ->extraAttributes(['class' => 'pointer-events-none']);
+        }
+
+        return $actions;
     }
 
     protected function getHeaderWidgets(): array

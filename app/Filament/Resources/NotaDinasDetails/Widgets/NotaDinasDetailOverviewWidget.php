@@ -14,7 +14,7 @@ class NotaDinasDetailOverviewWidget extends BaseWidget
     protected function getStats(): array
     {
         $currentYear = Carbon::now()->year;
-        $base = UserVisibility::constrainViaTeamOrders(NotaDinasDetail::query());
+        $base = UserVisibility::constrainNotaDinasDetailsQuery(NotaDinasDetail::query());
 
         $totalDetails = (clone $base)->count();
         $totalTransferThisYear = (clone $base)->whereYear('created_at', $currentYear)->sum('jumlah_transfer');

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\DocumentCategories\Schemas;
 
 use App\Enums\DocumentCategoryType;
+use App\Models\DocumentCategory;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -24,13 +25,14 @@ class DocumentCategoryForm
                         TextInput::make('code')
                             ->required()
                             ->maxLength(255)
-                            ->unique(ignoreRecord: true),
+                            ->unique(table: DocumentCategory::class, column: 'code', ignoreRecord: true),
                         Select::make('type')
                             ->options(DocumentCategoryType::class)
                             ->required(),
                         TextInput::make('format_number')
                             ->label('Numbering Format')
-                            ->placeholder('e.g., {SEQ}/{CAT}/MKI/{ROMAN_MONTH}/{Y}'),
+                            ->placeholder('{SEQ}/{CAT}/{CO}/{ROMAN_MONTH}/{Y}')
+                            ->helperText('{SEQ} nomor urut, {CAT} kode kategori, {CO} inisial perusahaan yang membuat dokumen, {ROMAN_MONTH}, {Y}.'),
                         Select::make('parent_id')
                             ->relationship('parent', 'name')
                             ->searchable()

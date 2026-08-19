@@ -386,7 +386,7 @@
     <header class="themeholy-header">
         <div class="header-row">
             <div class="header-logo">
-                <img src="{{ asset('images/logomki.png') }}" alt="{{ $companyName ?? config('app.name') }}">
+                <img src="{{ $companyLogoUrl ?? \App\Support\CompanyBrand::logoUrl() }}" alt="{{ $companyName ?? config('app.name') }}">
             </div>
             <div class="header-info">
                 <h1 class="big-title">{{ $title }}</h1>
@@ -404,16 +404,17 @@
             <b>Informasi Perusahaan :</b>
             <address>
                 {{ $companyName ?? config('app.name') }} <br>
-                Jl. Sintraman Jaya I No.2148, 20 Ilir D II, <br>
-                Kec. Kemuning, Kota Palembang, Sumatera Selatan 30137
+                {{ $companyAddress ?: 'Alamat belum diatur' }}
             </address>
         </div>
         <div>
             <b>Kontak :</b>
             <address>
-                Email: info@maknawedding.id <br>
-                Telp: +62 822-9796-2600 <br>
-                Website: https://paketpernikahan.co.id
+                Email: {{ $companyEmail ?: '-' }} <br>
+                Telp: {{ $companyPhone ?: '-' }}
+                @if (! empty($companyWebsite))
+                    <br>Website: {{ $companyWebsite }}
+                @endif
             </address>
         </div>
     </div>

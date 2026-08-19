@@ -2,14 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Company;
 use App\Models\Order;
 use App\Models\PaymentMethod;
+use App\Support\CompanyBrand;
+use App\Support\UserVisibility;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 class InvoiceOrderController extends Controller
@@ -95,10 +100,7 @@ class InvoiceOrderController extends Controller
             'expenses.vendor',
         ])->findOrFail($order->id);
 
-        $company = null;
-        if (\Illuminate\Support\Facades\Schema::hasTable('companies')) {
-            $company = \App\Models\Company::with('paymentMethod')->first();
-        }
+        $company = $this->resolveCompanyForOrder($order);
 
         $paymentDetails = 'Please contact us for payment details.';
         if ($company && $company->paymentMethod) {
@@ -114,9 +116,9 @@ class InvoiceOrderController extends Controller
             md5((string) ($company?->logo_url ?? ''));
 
         $logoBase64 = Cache::remember($logoCacheKey, 3600, function () use ($company): string {
-            $logoPath = $company && $company->logo_url
+            $logoPath = $company && $company->logo_url && Storage::disk('public')->exists($company->logo_url)
                 ? Storage::disk('public')->path($company->logo_url)
-                : public_path(config('invoice.logo', 'images/logo.png'));
+                : public_path(CompanyBrand::DEFAULT_LOGO);
 
             if (! is_string($logoPath) || ! file_exists($logoPath)) {
                 return '';
@@ -289,5 +291,24 @@ class InvoiceOrderController extends Controller
 
         return redirect()->route('invoice.show', $order)
             ->with('success', 'Payment recorded successfully!');
+    }
+
+    private function resolveCompanyForOrder(Order $order): ?Company
+    {
+        if (! Schema::hasTable('companies')) {
+            return null;
+        }
+
+        $order->loadMissing('user');
+
+        $companyId = UserVisibility::companyId(Auth::user())
+            ?: ($order->user?->company_id ? (int) $order->user->company_id : null)
+            ?: CompanyBrand::companyId();
+
+        if (! $companyId) {
+            return null;
+        }
+
+        return Company::query()->with('paymentMethod')->find($companyId);
     }
 }

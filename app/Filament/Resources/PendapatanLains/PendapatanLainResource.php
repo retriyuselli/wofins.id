@@ -65,7 +65,7 @@ class PendapatanLainResource extends BaseResource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
+        $query = parent::getEloquentQuery()
             ->with([
                 'vendor:id,name',
                 'paymentMethod:id,name',
@@ -73,6 +73,8 @@ class PendapatanLainResource extends BaseResource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+
+        return \App\Support\UserVisibility::constrainViaCompanyPaymentMethods($query);
     }
 
     public static function getNavigationBadge(): ?string

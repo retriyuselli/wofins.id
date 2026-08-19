@@ -791,7 +791,7 @@ Invoice Area
                             <div class="row align-items-center">
                                 <div class="col-auto">
                                     <div class="header-logo">
-                                        <a href="#"><img src="{{ asset('images/logomki.png') }}"
+                                        <a href="#"><img src="{{ $companyLogoUrl ?? \App\Support\CompanyBrand::logoUrl() }}"
                                                 alt="{{ $companyName ?? config('app.name') }}"></a>
                                     </div>
                                 </div>
@@ -807,8 +807,7 @@ Invoice Area
                                     <b style="color: black !important;">Informasi Perusahaan :</b>
                                     <address style="display: block !important; visibility: visible !important; color: black !important; font-style: normal !important; margin: 5px 0 !important; line-height: 1.3 !important;">
                                         {{ $companyName ?? config('app.name') }} <br>
-                                        Jl. Sintraman Jaya I No.2148, 20 Ilir D II, <br>
-                                        Kec. Kemuning, Kota Palembang, Sumatera Selatan 30137
+                                        {{ $companyAddress ?: 'Alamat belum diatur' }}
                                     </address>
                                 </div>
                             </div>
@@ -816,9 +815,11 @@ Invoice Area
                                 <div class="invoice-right" style="display: block !important; visibility: visible !important; color: black !important; text-align: right !important;">
                                     <b style="color: black !important;">Kontak :</b>
                                     <address style="display: block !important; visibility: visible !important; color: black !important; font-style: normal !important; margin: 5px 0 !important; line-height: 1.3 !important; text-align: right !important;">
-                                        Email: info@maknawedding.id <br>
-                                        Telp: +62 822-9796-2600 <br>
-                                        Website: https://maknakreatif.id
+                                        Email: {{ $companyEmail ?: '-' }} <br>
+                                        Telp: {{ $companyPhone ?: '-' }}
+                                        @if (! empty($companyWebsite))
+                                            <br>Website: {{ $companyWebsite }}
+                                        @endif
                                     </address>
                                 </div>
                             </div>

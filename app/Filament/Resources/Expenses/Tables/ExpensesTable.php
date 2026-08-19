@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Expenses\Tables;
 
+use App\Filament\Actions\GenerateWeddingExpensesAction;
 use App\Models\Expense;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
@@ -301,6 +302,11 @@ class ExpensesTable
                 ]),
             ])
             ->striped()
+            ->emptyStateHeading('Belum ada pengeluaran wedding')
+            ->emptyStateDescription('Generate dari Nota Dinas Detail sesuai order, atau tambah manual dari halaman order.')
+            ->emptyStateActions([
+                GenerateWeddingExpensesAction::make(),
+            ])
             ->defaultPaginationPageOption(10)
             ->paginationPageOptions([10, 25, 50]);
     }

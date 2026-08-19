@@ -98,6 +98,7 @@ class DocumentsTable
                 Action::make('create')
                     ->label('Buat Dokumen Baru')
                     ->url(fn (): string => DocumentResource::getUrl('create'))
+                    ->visible(fn (): bool => DocumentResource::canCreate())
                     ->icon('heroicon-o-plus')
                     ->button(),
             ]);

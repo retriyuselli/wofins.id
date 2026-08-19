@@ -14,8 +14,8 @@ class BankStatementOverview extends BaseWidget
 {
     protected function getStats(): array
     {
-        $statements = UserVisibility::constrainPlatformOnlyQuery(BankStatement::query());
-        $paymentMethods = UserVisibility::constrainPlatformOnlyQuery(PaymentMethod::query());
+        $statements = UserVisibility::constrainViaCompanyPaymentMethods(BankStatement::query());
+        $paymentMethods = UserVisibility::constrainCompanyQuery(PaymentMethod::query());
 
         // Ambil data bulan berjalan
         $currentMonth = Carbon::now();
@@ -150,7 +150,8 @@ class BankStatementOverview extends BaseWidget
     private function getNetFlowTrendData(): array
     {
         // Ambil data 7 hari terakhir untuk tren arus kas bersih
-        $statements = (clone UserVisibility::constrainPlatformOnlyQuery(BankStatement::query()))->where('period_start', '>=', Carbon::now()->subDays(7))
+        $statements = UserVisibility::constrainViaCompanyPaymentMethods(BankStatement::query())
+            ->where('period_start', '>=', Carbon::now()->subDays(7))
             ->orderBy('period_start')
             ->get();
 

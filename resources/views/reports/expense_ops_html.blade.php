@@ -27,16 +27,9 @@
     <div class="max-w-6xl mx-auto my-10 bg-white p-7 md:p-10 rounded-xl shadow-lg">
         <div class="text-center mb-8 pb-6 border-b border-gray-300" role="banner">
             @php
-                $logoPath = public_path('images/logomki.png'); // Sesuaikan path logo
-                $logoSrc = '';
-                if (file_exists($logoPath)) {
-                    $logoMime = mime_content_type($logoPath);
-                    if ($logoMime) {
-                        $logoSrc = 'data:' . $logoMime . ';base64,' . base64_encode(file_get_contents($logoPath));
-                    }
-                }
+                $logoSrc = $companyLogoUrl ?? \App\Support\CompanyBrand::logoUrl();
             @endphp
-            @if($logoSrc)<img src="{{ $logoSrc }}" alt="Nama Perusahaan Anda" class="max-h-10 mx-auto mb-4 block">@endif
+            @if($logoSrc)<img src="{{ $logoSrc }}" alt="{{ $companyName ?? config('app.name') }}" class="max-h-10 mx-auto mb-4 block">@endif
             
             <h1 class="text-2xl font-bold uppercase tracking-wider text-gray-700 mt-0 mb-2">
                 Laporan Pengeluaran Operasional Kantor
@@ -48,9 +41,12 @@
                     <br><small class="text-[0.65em] font-normal text-gray-600 normal-case">(Semua Periode)</small>
                 @endif
             </h1>
-            <p class="text-xs text-gray-500 mt-1">Jl. Sintraman Jaya I No. 2148, 20 Ilir D II, <br>
-                Kecamatan Kemuning, Kota Palembang, Sumatera Selatan 30137</p>
-            <p class="text-xs text-gray-500 mt-0">{{ $companyName ?? config('app.name') }} | maknawedding@gmail.com | +62 822-9796-2600</p>
+            <p class="text-xs text-gray-500 mt-1">{{ $companyAddress ?: 'Alamat belum diatur' }}</p>
+            <p class="text-xs text-gray-500 mt-0">
+                {{ $companyName ?? config('app.name') }}
+                @if (! empty($companyEmail)) | {{ $companyEmail }} @endif
+                @if (! empty($companyPhone)) | {{ $companyPhone }} @endif
+            </p>
         </div>
 
         <form action="{{ route('expense-ops.html-report') }}" method="GET" class="mb-6 p-5 bg-blue-50 rounded-md flex flex-wrap gap-4 items-center">

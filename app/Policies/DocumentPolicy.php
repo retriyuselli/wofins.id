@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Document;
+use App\Support\UserVisibility;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class DocumentPolicy
 {
@@ -19,7 +20,8 @@ class DocumentPolicy
 
     public function view(AuthUser $authUser, Document $document): bool
     {
-        return $authUser->can('View:Document');
+        return $authUser->can('View:Document')
+            && UserVisibility::ownsCompanyId($document->company_id !== null ? (int) $document->company_id : null);
     }
 
     public function create(AuthUser $authUser): bool
@@ -29,22 +31,26 @@ class DocumentPolicy
 
     public function update(AuthUser $authUser, Document $document): bool
     {
-        return $authUser->can('Update:Document');
+        return $authUser->can('Update:Document')
+            && UserVisibility::ownsCompanyId($document->company_id !== null ? (int) $document->company_id : null);
     }
 
     public function delete(AuthUser $authUser, Document $document): bool
     {
-        return $authUser->can('Delete:Document');
+        return $authUser->can('Delete:Document')
+            && UserVisibility::ownsCompanyId($document->company_id !== null ? (int) $document->company_id : null);
     }
 
     public function restore(AuthUser $authUser, Document $document): bool
     {
-        return $authUser->can('Restore:Document');
+        return $authUser->can('Restore:Document')
+            && UserVisibility::ownsCompanyId($document->company_id !== null ? (int) $document->company_id : null);
     }
 
     public function forceDelete(AuthUser $authUser, Document $document): bool
     {
-        return $authUser->can('ForceDelete:Document');
+        return $authUser->can('ForceDelete:Document')
+            && UserVisibility::ownsCompanyId($document->company_id !== null ? (int) $document->company_id : null);
     }
 
     public function forceDeleteAny(AuthUser $authUser): bool
@@ -59,7 +65,8 @@ class DocumentPolicy
 
     public function replicate(AuthUser $authUser, Document $document): bool
     {
-        return $authUser->can('Replicate:Document');
+        return $authUser->can('Replicate:Document')
+            && UserVisibility::ownsCompanyId($document->company_id !== null ? (int) $document->company_id : null);
     }
 
     public function reorder(AuthUser $authUser): bool

@@ -216,15 +216,7 @@
     <div class="container">
         <div class="report-title-header">
             @php
-                $logoPath = public_path('images/logomki.png');
-                $logoSrc = '';
-                if (file_exists($logoPath)) {
-                    // Embedding as base64 is generally more reliable for DomPDF
-                    $logoMime = mime_content_type($logoPath);
-                    if ($logoMime) {
-                        $logoSrc = 'data:' . $logoMime . ';base64,' . base64_encode(file_get_contents($logoPath));
-                    }
-                }
+                $logoSrc = \App\Support\CompanyBrand::logoDataUri();
             @endphp
             @if ($logoSrc)
                 <img src="{{ $logoSrc }}" alt="Logo Perusahaan" class="company-logo">
@@ -240,10 +232,12 @@
                     <br><small class="periode-text">(Semua Periode)</small>
                 @endif
             </h1>
-            <p class="company-address">Jl. Sintraman Jaya I No. 2148, 20 Ilir D II, Kec. Kemuning, Kota Palembang,
-                Sumatera Selatan 30137</p>
-            <p class="company-address" style="margin-top:0;">{{ $companyName ?? config('app.name') }} | maknawedding@gmail.com | +62
-                822-9796-2600</p>
+            <p class="company-address">{{ $companyAddress ?: 'Alamat belum diatur' }}</p>
+            <p class="company-address" style="margin-top:0;">
+                {{ $companyName ?? config('app.name') }}
+                @if (! empty($companyEmail)) | {{ $companyEmail }} @endif
+                @if (! empty($companyPhone)) | {{ $companyPhone }} @endif
+            </p>
         </div>
 
         {{-- Filter form is removed for PDF view --}}

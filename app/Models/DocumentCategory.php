@@ -14,6 +14,7 @@ class DocumentCategory extends Model
     use SoftDeletes, LogsActivity;
 
     protected $fillable = [
+        'company_id',
         'name',
         'code',
         'type',
@@ -25,7 +26,6 @@ class DocumentCategory extends Model
     protected $casts = [
         'is_approval_required' => 'boolean',
     ];
-
 
     public function getActivitylogOptions(): LogOptions
     {

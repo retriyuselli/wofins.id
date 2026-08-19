@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ExpenseOps\Tables;
 
 use App\Exports\ExpenseOpsExport;
+use App\Filament\Actions\GenerateExpenseOpsAction;
 use App\Models\ExpenseOps;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -302,12 +303,13 @@ class ExpenseOpsTable
                 ])->label('Aksi Massal'),
             ])
             ->emptyStateActions([
+                GenerateExpenseOpsAction::make(),
                 CreateAction::make()
                     ->label('Buat Pengeluaran Pertama')
                     ->icon('heroicon-o-plus-circle'),
             ])
             ->emptyStateHeading('Belum Ada Pengeluaran Operasional')
-            ->emptyStateDescription('Mulai dengan membuat pengeluaran operasional pertama Anda.')
+            ->emptyStateDescription('Generate dari Nota Dinas Detail operasional, atau tambah manual.')
             ->emptyStateIcon('heroicon-o-banknotes')
             ->poll('60s')
             ->striped()

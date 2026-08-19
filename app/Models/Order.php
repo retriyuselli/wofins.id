@@ -113,6 +113,11 @@ class Order extends Model
         return $this->hasMany(Expense::class);
     }
 
+    public function notaDinasDetails(): HasMany
+    {
+        return $this->hasMany(NotaDinasDetail::class);
+    }
+
     public function prospect()
     {
         return $this->belongsTo(Prospect::class);

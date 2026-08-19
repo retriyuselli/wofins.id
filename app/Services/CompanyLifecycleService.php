@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Category;
 use App\Models\Company;
 use App\Models\DataPribadi;
+use App\Models\Document;
 use App\Models\ExpenseOps;
 use App\Models\FixedAsset;
 use App\Models\Order;
@@ -182,6 +183,13 @@ class CompanyLifecycleService
 
                 if (Schema::hasTable('fixed_assets') && Schema::hasColumn('fixed_assets', 'company_id')) {
                     FixedAsset::withoutGlobalScopes()
+                        ->where('company_id', $companyId)
+                        ->get()
+                        ->each->delete();
+                }
+
+                if (Schema::hasTable('documents') && Schema::hasColumn('documents', 'company_id')) {
+                    Document::withoutGlobalScopes()
                         ->where('company_id', $companyId)
                         ->get()
                         ->each->delete();

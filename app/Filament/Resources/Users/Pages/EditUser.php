@@ -50,11 +50,10 @@ class EditUser extends EditRecord
                 $this->record->roles()->pluck('id')->all()
             );
 
-            // Tab Personal & Kepegawaian hanya SA — jangan biarkan diubah lewat request.
+            // Tab Personal & Kepegawaian hanya SA — jangan biarkan tanggal kerja diubah lewat request.
+            // Avatar & tanda tangan sudah di Informasi Dasar (boleh diubah company).
             $data['hire_date'] = $this->record->hire_date;
             $data['last_working_date'] = $this->record->last_working_date;
-            $data['avatar_url'] = $this->record->avatar_url;
-            $data['signature_url'] = $this->record->signature_url;
 
             if (UserVisibility::canManageJobStatuses()) {
                 $sanitized = UserVisibility::sanitizeJobStatusIds(

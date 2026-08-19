@@ -2,7 +2,9 @@
 
 namespace App\Observers;
 
+use App\Models\Company;
 use App\Models\Document;
+use App\Support\UserVisibility;
 use Illuminate\Support\Facades\Auth;
 
 class DocumentObserver
@@ -13,49 +15,57 @@ class DocumentObserver
             $document->created_by = Auth::id();
         }
 
-        if (empty($document->document_number) && $document->category) {
-            $document->document_number = $this->generateDocumentNumber($document);
+        if (empty($document->company_id)) {
+            $companyId = UserVisibility::companyId();
+            if ($companyId !== null) {
+                $document->company_id = $companyId;
+            }
+        }
+
+        if (empty($document->document_number) && $document->category_id) {
+            $document->loadMissing('category');
+            if ($document->category) {
+                $document->document_number = $this->generateDocumentNumber($document);
+            }
         }
     }
 
     protected function generateDocumentNumber(Document $document): string
     {
         $category = $document->category;
-        $format = $category->format_number ?? '{SEQ}/{CAT}/MKI/{ROMAN_MONTH}/{Y}';
+        $format = $category->format_number ?: '{SEQ}/{CAT}/{CO}/{ROMAN_MONTH}/{Y}';
 
-        // Replacements
+        $companyCode = 'DOC';
+        $companyId = $document->company_id ? (int) $document->company_id : UserVisibility::companyId();
+        if ($companyId) {
+            $company = Company::query()->find($companyId);
+            if ($company) {
+                $companyCode = $company->documentCode();
+            }
+        }
+
         $replacements = [
             '{Y}' => now()->year,
             '{M}' => now()->format('m'),
             '{ROMAN_MONTH}' => $this->getRomanMonth(now()->month),
             '{CAT}' => $category->code ?? 'DOC',
             '{DEPT}' => 'GEN',
+            '{CO}' => $companyCode,
         ];
 
         $number = str_replace(array_keys($replacements), array_values($replacements), $format);
 
-        // Sequence Handling
         if (str_contains($number, '{SEQ}')) {
-            $latestDocument = Document::where('category_id', $category->id)
-                ->whereYear('created_at', now()->year)
-                ->where('id', '!=', $document->id) // Exclude self if updating (though this is creating)
-                ->latest()
-                ->first();
+            $seqQuery = Document::withoutGlobalScope('tenant_company')
+                ->where('category_id', $category->id)
+                ->whereYear('created_at', now()->year);
 
-            $lastNumber = 0;
-            if ($latestDocument && $latestDocument->document_number) {
-                // Extract sequence assuming it's at the end or we parse it?
-                // Simple approach: Count documents in this category this year + 1
-                // Better approach: Regex to find the sequence part if possible, or just Count.
-                // For now, let's use Count + 1 as a fallback if we can't parse.
-                // Ideally we should store sequence separately, but for now:
-                $count = Document::where('category_id', $category->id)
-                    ->whereYear('created_at', now()->year)
-                    ->count();
-                $lastNumber = $count;
+            if ($document->company_id) {
+                $seqQuery->where('company_id', $document->company_id);
             }
 
-            $sequence = str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
+            $count = $seqQuery->count();
+            $sequence = str_pad($count + 1, 3, '0', STR_PAD_LEFT);
             $number = str_replace('{SEQ}', $sequence, $number);
         }
 
