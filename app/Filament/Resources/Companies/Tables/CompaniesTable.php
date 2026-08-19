@@ -3,16 +3,24 @@
 namespace App\Filament\Resources\Companies\Tables;
 
 use App\Filament\Resources\Companies\CompanyResource;
+use App\Models\Company;
+use App\Services\CompanyLifecycleService;
+use App\Support\ProFeatures;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
+use InvalidArgumentException;
+use Throwable;
 
 class CompaniesTable
 {
@@ -124,6 +132,51 @@ class CompaniesTable
                 ActionGroup::make([
                     ViewAction::make(),
                     EditAction::make(),
+                    Action::make('purge')
+                        ->label('Hapus permanen')
+                        ->icon('heroicon-o-trash')
+                        ->color('danger')
+                        ->visible(fn (): bool => ProFeatures::actorIsSuperAdmin())
+                        ->requiresConfirmation()
+                        ->modalHeading(fn (Company $record): string => 'Hapus permanen '.$record->company_name.'?')
+                        ->modalDescription('Soft-delete data operasional (order, vendor, produk, dll.), terminate user tim, lalu hapus company. Tidak bisa dibatalkan dengan mudah.')
+                        ->form(fn (Company $record): array => [
+                            TextInput::make('confirmation_name')
+                                ->label('Ketik nama perusahaan untuk konfirmasi')
+                                ->helperText('Harus sama persis: '.$record->company_name)
+                                ->required(),
+                        ])
+                        ->modalSubmitActionLabel('Hapus permanen')
+                        ->action(function (Company $record, array $data): void {
+                            try {
+                                $stats = app(CompanyLifecycleService::class)->purge(
+                                    $record,
+                                    (string) ($data['confirmation_name'] ?? ''),
+                                    Auth::user(),
+                                );
+
+                                Notification::make()
+                                    ->title('Perusahaan dihapus permanen')
+                                    ->body(
+                                        "User terminated: {$stats['users']} · Order: {$stats['orders']} · ".
+                                        "Vendor: {$stats['vendors']} · Produk: {$stats['products']}"
+                                    )
+                                    ->success()
+                                    ->send();
+                            } catch (InvalidArgumentException $e) {
+                                Notification::make()
+                                    ->title('Konfirmasi gagal')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            } catch (Throwable $e) {
+                                Notification::make()
+                                    ->title('Gagal menghapus')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
+                        }),
                 ]),
             ])
             ->toolbarActions([])

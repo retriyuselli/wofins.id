@@ -15,7 +15,6 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Auth;
 
 class DocumentsTable
 {
@@ -75,15 +74,7 @@ class DocumentsTable
             ->recordActions([
                 ActionGroup::make([
                     ViewAction::make(),
-                    EditAction::make()
-                        ->visible(function (): bool {
-                            $user = Auth::user();
-                            if (! $user instanceof \App\Models\User) {
-                                return false;
-                            }
-
-                            return $user->hasRole('super_admin');
-                        }),
+                    EditAction::make(),
                 ]),
             ])
             ->toolbarActions([

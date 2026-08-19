@@ -20,7 +20,7 @@ class ViewDocument extends ViewRecord
                 ->openUrlInNewTab(),
             Action::make('edit')
                 ->label('Edit')
-                ->visible(fn () => auth()->user()?->hasRole('super_admin'))
+                ->visible(fn ($record): bool => DocumentResource::canEdit($record))
                 ->url(fn ($record) => DocumentResource::getUrl('edit', ['record' => $record])),
         ];
     }
