@@ -194,6 +194,17 @@ class UsersTable
                     ->copyMessage('Email copied!')
                     ->icon('heroicon-o-envelope'),
 
+                TextColumn::make('company.company_name')
+                    ->label('Perusahaan')
+                    ->placeholder('—')
+                    ->searchable()
+                    ->sortable()
+                    ->wrap()
+                    ->description(fn (User $record): ?string => $record->company?->subscription_plan
+                        ? \App\Support\PricingPlans::shortLabel($record->company->subscription_plan)
+                        : null)
+                    ->toggleable(),
+
                 TextColumn::make('phone_number')
                     ->label('Telepon')
                     ->searchable()

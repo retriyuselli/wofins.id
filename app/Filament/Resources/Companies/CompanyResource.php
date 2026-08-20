@@ -86,4 +86,21 @@ class CompanyResource extends Resource
             'edit' => EditCompany::route('/{record}/edit'),
         ];
     }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return (string) static::getEloquentQuery()->count();
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return ProFeatures::actorIsSuperAdmin()
+            ? 'Total perusahaan di platform'
+            : 'Perusahaan Anda';
+    }
+
+    public static function getNavigationBadgeColor(): string|array|null
+    {
+        return 'primary';
+    }
 }

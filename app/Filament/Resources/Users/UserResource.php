@@ -60,6 +60,7 @@ class UserResource extends Resource
             ->with(['payrolls' => fn ($q) => $q->latest()])
             ->with('statuses')
             ->with('roles')
+            ->with('company:id,company_name,subscription_plan')
             ->withCount('roles');
 
         return UserVisibility::constrainUsersQuery($query);
