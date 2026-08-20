@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\StatusVendor;
+use App\Models\Concerns\BelongsToCompany;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,9 +16,11 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Vendor extends Model
 {
+    use BelongsToCompany;
     use SoftDeletes, LogsActivity;
 
     protected $fillable = [
+        'company_id',
         'created_by',
         'name',
         'phone',

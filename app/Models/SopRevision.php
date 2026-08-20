@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,9 +11,11 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class SopRevision extends Model
 {
+    use BelongsToCompany;
     use HasFactory, LogsActivity;
 
     protected $fillable = [
+        'company_id',
         'sop_id',
         'title',
         'description',

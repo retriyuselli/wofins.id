@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Vendors\Pages;
 
 use App\Filament\Resources\Vendors\VendorResource;
-use App\Filament\Resources\Vendors\Widgets\VendorOverview;
 use App\Support\CompanySubscription;
 use App\Support\UserVisibility;
 use Filament\Actions\Action;
@@ -37,12 +36,5 @@ class ListVendors extends ListRecords
                 : CompanySubscription::fullMessage(CompanySubscription::RESOURCE_VENDORS));
 
         return $actions;
-    }
-
-    protected function getHeaderWidgets(): array
-    {
-        return [
-            VendorOverview::class,
-        ];
     }
 }

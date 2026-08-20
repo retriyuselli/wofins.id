@@ -14,7 +14,6 @@ use App\Filament\Resources\Products\ProductResource;
 use App\Filament\Resources\BaseResource;
 use App\Models\Order;
 use App\Models\Product;
-use App\Models\User;
 use App\Support\CompanySubscription;
 use App\Support\UserVisibility;
 use Filament\Actions\Action;
@@ -30,7 +29,6 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Auth;
 
 class OrderResource extends BaseResource
 {
@@ -98,30 +96,20 @@ class OrderResource extends BaseResource
     }
 
     /**
-     * Soft-delete + isolasi tim: order milik AM dalam tim paket.
-     * Super admin / Finance / admin_am (staf platform) melihat semua.
+     * Soft-delete + isolasi per company.
      */
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()
-            ->withoutGlobalScopes([SoftDeletingScope::class])
-            ->with([
-                'prospect:id,name_event,date_lamaran,date_akad,date_resepsi',
-                'employee:id,name',
-                'user:id,name',
-                'items.product:id,name',
-            ]);
-
-        $user = Auth::user();
-
-        if (
-            UserVisibility::actorIsSuperAdmin()
-            || ($user instanceof User && $user->hasAnyRole(['Finance', 'admin_am']))
-        ) {
-            return $query;
-        }
-
-        return UserVisibility::constrainOwnedQuery($query, 'user_id');
+        return UserVisibility::constrainCompanyQuery(
+            parent::getEloquentQuery()
+                ->withoutGlobalScopes([SoftDeletingScope::class])
+                ->with([
+                    'prospect:id,name_event,date_lamaran,date_akad,date_resepsi',
+                    'employee:id,name',
+                    'user:id,name',
+                    'items.product:id,name',
+                ])
+        );
     }
 
     public static function getItemsRepeater(): Repeater
@@ -133,7 +121,7 @@ class OrderResource extends BaseResource
                     ->label('Product')
                     ->options(function () {
                         $query = Product::query()->where('stock', '>', 1);
-                        UserVisibility::constrainOwnedQuery($query, 'created_by');
+                        UserVisibility::constrainCompanyQuery($query);
 
                         return $query->pluck('name', 'id');
                     })

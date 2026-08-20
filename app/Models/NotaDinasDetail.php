@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -11,9 +12,11 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class NotaDinasDetail extends Model
 {
+    use BelongsToCompany;
     use SoftDeletes, LogsActivity;
 
     protected $fillable = [
+        'company_id',
         'nota_dinas_id',
         'nama_rekening',
         'vendor_id',

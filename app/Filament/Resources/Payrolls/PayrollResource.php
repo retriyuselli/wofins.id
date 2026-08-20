@@ -67,23 +67,13 @@ class PayrollResource extends BaseResource
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        return parent::getEloquentQuery()
-            ->with([
-                'employee:id,name,email,photo,position,user_id,company_id',
-                'user:id,name,email,department',
-                'user.status:id,status_name',
-            ])
-            ->where(function ($q) {
-                // Scope company via Employee (global scope Employee berlaku untuk non-SA).
-                $q->whereHas('employee')
-                    ->orWhere(function ($legacy) {
-                        // Legacy tanpa employee: hanya super_admin yang melihat lewat policy lain.
-                        if (\App\Support\ProFeatures::actorIsSuperAdmin()) {
-                            $legacy->whereNull('employee_id');
-                        } else {
-                            $legacy->whereRaw('1 = 0');
-                        }
-                    });
-            });
+        return \App\Support\UserVisibility::constrainCompanyQuery(
+            parent::getEloquentQuery()
+                ->with([
+                    'employee:id,name,email,photo,position,user_id,company_id',
+                    'user:id,name,email,department',
+                    'user.status:id,status_name',
+                ])
+        );
     }
 }

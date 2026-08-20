@@ -41,9 +41,8 @@ class PiutangResource extends BaseResource
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        return \App\Support\UserVisibility::constrainOwnedQuery(
-            parent::getEloquentQuery(),
-            'dibuat_oleh'
+        return \App\Support\UserVisibility::constrainCompanyQuery(
+            parent::getEloquentQuery()
         );
     }
 

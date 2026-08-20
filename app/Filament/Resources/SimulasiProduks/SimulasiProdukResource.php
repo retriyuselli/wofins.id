@@ -77,7 +77,7 @@ class SimulasiProdukResource extends BaseResource
 
     public static function getEloquentQuery(): Builder
     {
-        return \App\Support\UserVisibility::constrainOwnedQuery(
+        return \App\Support\UserVisibility::constrainCompanyQuery(
             parent::getEloquentQuery()
                 ->with([
                     'prospect:id,name_event',

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,9 +14,11 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Product extends Model
 {
+    use BelongsToCompany;
     use HasFactory, SoftDeletes, LogsActivity;
 
     protected $fillable = [
+        'company_id',
         'created_by',
         'name',
         'slug',

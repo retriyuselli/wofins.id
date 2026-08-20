@@ -35,20 +35,20 @@ class NotaDinasDetailResource extends BaseResource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()
-            ->with([
-                'order',
-                'notaDinas:id,no_nd,status',
-                'vendor:id,name',
-                'expenses:id,nota_dinas_detail_id',
-                'expenseOps:id,nota_dinas_detail_id',
-                'pengeluaranLains:id,nota_dinas_detail_id',
-            ])
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ]);
-
-        return \App\Support\UserVisibility::constrainNotaDinasDetailsQuery($query);
+        return \App\Support\UserVisibility::constrainCompanyQuery(
+            parent::getEloquentQuery()
+                ->with([
+                    'order',
+                    'notaDinas:id,no_nd,status',
+                    'vendor:id,name',
+                    'expenses:id,nota_dinas_detail_id',
+                    'expenseOps:id,nota_dinas_detail_id',
+                    'pengeluaranLains:id,nota_dinas_detail_id',
+                ])
+                ->withoutGlobalScopes([
+                    SoftDeletingScope::class,
+                ])
+        );
     }
 
     public static function table(Table $table): Table

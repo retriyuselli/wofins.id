@@ -43,32 +43,15 @@ class ProspectAppResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()
-            ->with([
-                'industry:id,industry_name',
-            ])
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ]);
-
-        if (\App\Support\UserVisibility::actorIsSuperAdmin()) {
-            return $query;
-        }
-
-        $actorId = \App\Support\UserVisibility::actorId();
-        $email = auth()->user()?->email;
-
-        return $query->where(function (Builder $q) use ($actorId, $email) {
-            if ($actorId) {
-                $q->where('user_id', $actorId);
-            }
-            if ($email) {
-                $q->orWhere('email', $email);
-            }
-            if (! $actorId && ! $email) {
-                $q->whereRaw('1 = 0');
-            }
-        });
+        return \App\Support\UserVisibility::constrainCompanyQuery(
+            parent::getEloquentQuery()
+                ->with([
+                    'industry:id,industry_name',
+                ])
+                ->withoutGlobalScopes([
+                    SoftDeletingScope::class,
+                ])
+        );
     }
 
     public static function getRelations(): array

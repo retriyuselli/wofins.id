@@ -4,6 +4,7 @@ namespace App\Filament\Resources\BankStatements\Pages;
 
 use App\Filament\Resources\BankStatements\BankStatementResource;
 use App\Imports\BankReconciliationImport;
+use App\Support\UserVisibility;
 use Exception;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
@@ -35,7 +36,7 @@ class CreateBankStatement extends CreateRecord
             session(['pending_reconciliation_file' => $data['reconciliation_file']]);
         }
 
-        return $data;
+        return UserVisibility::stampCompanyIdFromPaymentMethod($data);
     }
 
     protected function afterCreate(): void

@@ -54,13 +54,16 @@ class CreateVendor extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        return UserVisibility::stampTeamOwner($data, 'created_by');
+        $data = UserVisibility::stampTeamOwner($data, 'created_by');
+
+        return UserVisibility::stampCompanyId($data);
     }
 
     protected function handleRecordCreation(array $data): Vendor
     {
         try {
             $data = UserVisibility::stampTeamOwner($data, 'created_by');
+            $data = UserVisibility::stampCompanyId($data);
 
             if (empty($data['slug']) && ! empty($data['name'])) {
                 $data['slug'] = Str::slug((string) $data['name']);

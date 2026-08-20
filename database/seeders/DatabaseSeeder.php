@@ -75,7 +75,6 @@ class DatabaseSeeder extends Seeder
             SopSeeder::class,              // SOP (tergantung pada User, SopCategory).
             SopRevisionSeeder::class,      // Revisi SOP.
             SopPermissionSeeder::class,    // Izin khusus untuk SOP.
-            CompanyLogoSeeder::class,      // Logo perusahaan klien/partner.
             DocumentSeeder::class,         // Dokumen perusahaan (created_by tersebar ke semua user).
             DocumentRelationSeeder::class, // Approval, attachment, recipient per dokumen/user.
             EncryptExistingDataSeeder::class, // Enkripsi data sensitif yang sudah ada.

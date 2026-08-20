@@ -41,13 +41,13 @@ class BankStatementResource extends BaseResource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()
-            ->with([
-                'paymentMethod:id,name,bank_name,no_rekening',
-                'lastEditedBy:id,name',
-            ]);
-
-        return \App\Support\UserVisibility::constrainViaCompanyPaymentMethods($query);
+        return \App\Support\UserVisibility::constrainCompanyQuery(
+            parent::getEloquentQuery()
+                ->with([
+                    'paymentMethod:id,name,bank_name,no_rekening',
+                    'lastEditedBy:id,name',
+                ])
+        );
     }
 
     public static function getRelations(): array

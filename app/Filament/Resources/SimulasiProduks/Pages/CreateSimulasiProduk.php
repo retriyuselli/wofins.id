@@ -7,6 +7,7 @@ use App\Filament\Resources\SimulasiProduks\SimulasiProdukResource;
 use App\Models\Prospect;
 use App\Models\SimulasiProduk;
 use App\Support\CompanySubscription;
+use App\Support\UserVisibility;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 
@@ -45,6 +46,6 @@ class CreateSimulasiProduk extends CreateRecord
             $data['slug'] = SimulasiProduk::generateUniqueSlug($base);
         }
 
-        return $data;
+        return UserVisibility::stampCompanyId($data, 'user_id');
     }
 }

@@ -79,13 +79,13 @@ class ExpenseResource extends BaseResource
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        $query = parent::getEloquentQuery()
-            ->with([
-                'order.prospect:id,name_event',
-                'vendor:id,name',
-                'paymentMethod:id,bank_name,name,no_rekening',
-            ]);
-
-        return \App\Support\UserVisibility::constrainViaTeamOrders($query);
+        return \App\Support\UserVisibility::constrainCompanyQuery(
+            parent::getEloquentQuery()
+                ->with([
+                    'order.prospect:id,name_event',
+                    'vendor:id,name',
+                    'paymentMethod:id,bank_name,name,no_rekening',
+                ])
+        );
     }
 }

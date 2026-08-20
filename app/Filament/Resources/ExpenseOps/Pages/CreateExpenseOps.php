@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ExpenseOps\Pages;
 use App\Filament\Concerns\EnforcesSubscriptionQuota;
 use App\Filament\Resources\ExpenseOps\ExpenseOpsResource;
 use App\Support\CompanySubscription;
+use App\Support\UserVisibility;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 
@@ -28,5 +29,14 @@ class CreateExpenseOps extends CreateRecord
             ->body(CompanySubscription::summary(CompanySubscription::RESOURCE_EXPENSE_OPS))
             ->info()
             ->send();
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        return UserVisibility::stampCompanyIdFromPaymentMethod($data);
     }
 }

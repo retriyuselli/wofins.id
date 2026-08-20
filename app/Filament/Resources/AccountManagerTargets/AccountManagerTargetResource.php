@@ -130,14 +130,7 @@ class AccountManagerTargetResource extends BaseResource
                 ->orWhereRaw('(account_manager_targets.year * 100 + account_manager_targets.month) <= (YEAR(last_working_date) * 100 + MONTH(last_working_date))');
         });
 
-        $user = Auth::user();
-
-        // Non–super_admin: hanya target milik sendiri
-        if ($user && ! \App\Support\UserVisibility::actorIsSuperAdmin()) {
-            $query->where('user_id', $user->id);
-        }
-
-        return $query;
+        return \App\Support\UserVisibility::constrainCompanyQuery($query);
     }
 
     public static function form(Schema $schema): Schema

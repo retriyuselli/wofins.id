@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ProspectAppStatus;
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,6 +13,7 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class ProspectApp extends Model
 {
+    use BelongsToCompany;
     use HasFactory, SoftDeletes, LogsActivity;
 
     protected $fillable = [
@@ -88,11 +90,6 @@ class ProspectApp extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function company(): BelongsTo
-    {
-        return $this->belongsTo(Company::class);
     }
 
     public function industry(): BelongsTo

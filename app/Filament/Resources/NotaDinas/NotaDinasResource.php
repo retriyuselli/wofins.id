@@ -41,18 +41,18 @@ class NotaDinasResource extends BaseResource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()
-            ->with([
-                'pengirim:id,name',
-                'penerima:id,name',
-                'approver:id,name',
-            ])
-            ->withCount('details')
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ]);
-
-        return \App\Support\UserVisibility::constrainNotaDinasQuery($query);
+        return \App\Support\UserVisibility::constrainCompanyQuery(
+            parent::getEloquentQuery()
+                ->with([
+                    'pengirim:id,name',
+                    'penerima:id,name',
+                    'approver:id,name',
+                ])
+                ->withCount('details')
+                ->withoutGlobalScopes([
+                    SoftDeletingScope::class,
+                ])
+        );
     }
 
     public static function getRelations(): array

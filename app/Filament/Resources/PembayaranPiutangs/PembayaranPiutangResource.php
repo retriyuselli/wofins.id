@@ -46,14 +46,14 @@ class PembayaranPiutangResource extends BaseResource
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        $query = parent::getEloquentQuery()
-            ->with([
-                'piutang:id,nomor_piutang,nama_debitur,total_piutang,sudah_dibayar,sisa_piutang',
-                'paymentMethod:id,name',
-                'dikonfirmasiOleh:id,name',
-            ]);
-
-        return \App\Support\UserVisibility::constrainViaTeamPiutangs($query);
+        return \App\Support\UserVisibility::constrainCompanyQuery(
+            parent::getEloquentQuery()
+                ->with([
+                    'piutang:id,nomor_piutang,nama_debitur,total_piutang,sudah_dibayar,sisa_piutang',
+                    'paymentMethod:id,name',
+                    'dikonfirmasiOleh:id,name',
+                ])
+        );
     }
 
     public static function infolist(Schema $schema): Schema

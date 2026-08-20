@@ -9,6 +9,7 @@ use App\Filament\Resources\Blogs\Schemas\BlogForm;
 use App\Filament\Resources\Blogs\Tables\BlogsTable;
 use App\Filament\Resources\Blogs\Widgets\BlogStatsWidget;
 use App\Models\Blog;
+use App\Support\ProFeatures;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
@@ -39,6 +40,31 @@ class BlogResource extends Resource
     public static function table(Table $table): Table
     {
         return BlogsTable::configure($table);
+    }
+
+    public static function canViewAny(): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::canViewAny();
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::shouldRegisterNavigation();
+    }
+
+    public static function canCreate(): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::canCreate();
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::canEdit($record);
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::canDelete($record);
     }
 
     public static function getRelations(): array

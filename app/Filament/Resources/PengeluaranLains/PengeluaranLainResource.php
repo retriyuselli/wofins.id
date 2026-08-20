@@ -116,13 +116,13 @@ class PengeluaranLainResource extends BaseResource
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        $query = parent::getEloquentQuery()
-            ->with([
-                'vendor:id,name',
-                'paymentMethod:id,name,no_rekening',
-                'notaDinas:id,status',
-            ]);
-
-        return \App\Support\UserVisibility::constrainViaCompanyPaymentMethods($query);
+        return \App\Support\UserVisibility::constrainCompanyQuery(
+            parent::getEloquentQuery()
+                ->with([
+                    'vendor:id,name',
+                    'paymentMethod:id,name,no_rekening',
+                    'notaDinas:id,status',
+                ])
+        );
     }
 }

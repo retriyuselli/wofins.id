@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Auth;
@@ -12,9 +13,11 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class SimulasiProduk extends Model
 {
+    use BelongsToCompany;
     use SoftDeletes, LogsActivity;
 
     protected $fillable = [
+        'company_id',
         'prospect_id',
         'product_id',
         'slug',

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,10 +12,12 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class PendapatanLain extends Model
 {
+    use BelongsToCompany;
     use HasFactory,
         SoftDeletes, LogsActivity;
 
     protected $fillable = [
+        'company_id',
         'name',
         'vendor_id',
         'payment_method_id',

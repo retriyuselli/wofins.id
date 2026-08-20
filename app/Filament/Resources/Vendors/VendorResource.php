@@ -80,13 +80,13 @@ class VendorResource extends BaseResource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()
-            ->with(['category', 'parent'])
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ]);
-
-        return \App\Support\UserVisibility::constrainOwnedQuery($query, 'created_by');
+        return \App\Support\UserVisibility::constrainCompanyQuery(
+            parent::getEloquentQuery()
+                ->with(['category', 'parent'])
+                ->withoutGlobalScopes([
+                    SoftDeletingScope::class,
+                ])
+        );
     }
 
     public static function getGloballySearchableAttributes(): array

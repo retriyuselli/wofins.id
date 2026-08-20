@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -375,9 +376,17 @@ class UserVisibility
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
-    public static function stampCompanyId(array $data): array
+    public static function stampCompanyId(array $data, ?string $fromUserColumn = null): array
     {
         if (static::actorIsSuperAdmin()) {
+            if (empty($data['company_id']) && $fromUserColumn && ! empty($data[$fromUserColumn])) {
+                $fromId = (int) $data[$fromUserColumn];
+                $fromCompany = User::query()->whereKey($fromId)->value('company_id');
+                if ($fromCompany) {
+                    $data['company_id'] = (int) $fromCompany;
+                }
+            }
+
             return $data;
         }
 
@@ -388,6 +397,50 @@ class UserVisibility
         }
 
         return $data;
+    }
+
+    /**
+     * Stempel company_id dari payment_method terkait (SA: isi jika kosong).
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    public static function stampCompanyIdFromPaymentMethod(array $data, string $column = 'payment_method_id'): array
+    {
+        if (! empty($data['company_id'])) {
+            return static::stampCompanyId($data);
+        }
+
+        $pmId = isset($data[$column]) ? (int) $data[$column] : 0;
+        if ($pmId > 0 && Schema::hasTable('payment_methods') && Schema::hasColumn('payment_methods', 'company_id')) {
+            $fromPm = DB::table('payment_methods')->where('id', $pmId)->value('company_id');
+            if ($fromPm) {
+                $data['company_id'] = (int) $fromPm;
+            }
+        }
+
+        if (empty($data['company_id']) && ! empty($data['order_id']) && Schema::hasColumn('orders', 'company_id')) {
+            $fromOrder = DB::table('orders')->where('id', (int) $data['order_id'])->value('company_id');
+            if ($fromOrder) {
+                $data['company_id'] = (int) $fromOrder;
+            }
+        }
+
+        if (empty($data['company_id']) && ! empty($data['piutang_id']) && Schema::hasColumn('piutangs', 'company_id')) {
+            $fromPiutang = DB::table('piutangs')->where('id', (int) $data['piutang_id'])->value('company_id');
+            if ($fromPiutang) {
+                $data['company_id'] = (int) $fromPiutang;
+            }
+        }
+
+        if (empty($data['company_id']) && ! empty($data['nota_dinas_id']) && Schema::hasColumn('nota_dinas', 'company_id')) {
+            $fromNd = DB::table('nota_dinas')->where('id', (int) $data['nota_dinas_id'])->value('company_id');
+            if ($fromNd) {
+                $data['company_id'] = (int) $fromNd;
+            }
+        }
+
+        return static::stampCompanyId($data);
     }
 
     /**

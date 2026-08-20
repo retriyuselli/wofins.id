@@ -15,6 +15,6 @@ class CreateNotaDinas extends CreateRecord
     {
         $data['pengirim_id'] = $data['pengirim_id'] ?? Auth::id() ?? UserVisibility::teamRootId();
 
-        return $data;
+        return UserVisibility::stampCompanyId($data, 'pengirim_id');
     }
 }

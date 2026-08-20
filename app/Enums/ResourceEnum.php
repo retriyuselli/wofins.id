@@ -12,7 +12,6 @@ enum ResourceEnum: string implements HasLabel
     case BlogResource = 'BlogResource';
     case CategoryResource = 'CategoryResource';
     case CompanyResource = 'CompanyResource';
-    case CompanyLogoResource = 'CompanyLogoResource';
     case DataPembayaranResource = 'DataPembayaranResource';
     case DataPribadiResource = 'DataPribadiResource';
     case DocumentCategoryResource = 'DocumentCategoryResource';
@@ -52,7 +51,6 @@ enum ResourceEnum: string implements HasLabel
             self::BlogResource => 'Blog',
             self::CategoryResource => 'Category',
             self::CompanyResource => 'Company',
-            self::CompanyLogoResource => 'Company Logo',
             self::DataPembayaranResource => 'Data Pembayaran',
             self::DataPribadiResource => 'Data Pribadi',
             self::DocumentCategoryResource => 'Document Category',

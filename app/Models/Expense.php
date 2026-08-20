@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToCompany;
 use Exception;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,9 +14,11 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Expense extends Model
 {
+    use BelongsToCompany;
     use HasFactory, SoftDeletes, LogsActivity;
 
     protected $fillable = [
+        'company_id',
         'order_id',
         'note',
         'date_expense',

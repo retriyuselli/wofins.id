@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
@@ -9,9 +10,11 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Documentation extends Model
 {
+    use BelongsToCompany;
     use LogsActivity;
 
     protected $fillable = [
+        'company_id',
         'documentation_category_id',
         'title',
         'slug',

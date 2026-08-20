@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToCompany;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -12,9 +13,11 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class NotaDinas extends Model
 {
+    use BelongsToCompany;
     use SoftDeletes, LogsActivity;
 
     protected $fillable = [
+        'company_id',
         'no_nd',
         'kategori_nd',
         'tanggal',

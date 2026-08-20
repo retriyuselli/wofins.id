@@ -693,36 +693,6 @@ class DocumentationSeeder extends Seeder
             ]
         );
 
-        Documentation::updateOrCreate(
-            ['slug' => 'manajemen-logo-mitra'],
-            [
-                'documentation_category_id' => $adminCategory->id,
-                'title' => 'Manajemen Logo Mitra/Perusahaan',
-                'content' => '
-<h2>Logo Mitra & Klien</h2>
-<p>Menu <strong>Logo Perusahaan</strong> digunakan untuk mengelola daftar logo partner, klien, atau media partner yang pernah bekerjasama.</p>
-
-<h3>Fungsi:</h3>
-<ul>
-    <li>Menampilkan logo-logo ini di halaman depan website (Landing Page) bagian "Trusted By" atau "Our Partners".</li>
-    <li>Sebagai database portofolio kerjasama.</li>
-</ul>
-
-<h3>Cara Upload:</h3>
-<ol>
-    <li>Masuk menu <strong>Logo Perusahaan</strong>.</li>
-    <li>Upload gambar logo (pastikan dimensi seragam agar rapi di website).</li>
-    <li>Isi Nama Mitra.</li>
-    <li>Aktifkan status "Active" agar tampil di website.</li>
-</ol>
-                ',
-                'is_published' => true,
-                'keywords' => 'logo, mitra, partner, website, frontend',
-                'related_resource' => 'CompanyLogoResource',
-                'order' => 4,
-            ]
-        );
-
         // ==========================================
         // 7. KATEGORI: MANAJEMEN SDM & AKSES
         // ==========================================

@@ -43,11 +43,13 @@ class SopResource extends BaseResource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ])
-            ->with(['category', 'creator', 'updater']);
+        return \App\Support\UserVisibility::constrainCompanyQuery(
+            parent::getEloquentQuery()
+                ->withoutGlobalScopes([
+                    SoftDeletingScope::class,
+                ])
+                ->with(['category', 'creator', 'updater'])
+        );
     }
 
     public static function getRelations(): array

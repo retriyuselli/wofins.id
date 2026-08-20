@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\OrderStatus;
+use App\Models\Concerns\BelongsToCompany;
 use App\Services\OrderFinance;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,6 +17,7 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Order extends Model
 {
+    use BelongsToCompany;
     use HasFactory, SoftDeletes, LogsActivity;
 
     public static function computeGrandTotalFromValues($totalPrice, $penambahan, $promo, $pengurangan)
@@ -24,6 +26,7 @@ class Order extends Model
     }
 
     protected $fillable = [
+        'company_id',
         'prospect_id',
         'slug',
         'name',

@@ -79,20 +79,20 @@ class ProductResource extends BaseResource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()
-            ->with([
-                'items.vendor:id,name,harga_publish,harga_vendor,description',
-                'penambahanHarga.vendor:id,name,harga_publish,harga_vendor,description',
-                'category:id,name',
-                'parent:id,name',
-            ])
-            ->withCount([
-                'orders as unique_orders_count',
-            ])
-            // Bonus: Ini juga akan mengaktifkan kolom 'Total Sold'
-            ->withSum('orderItems as total_quantity_sold', 'quantity');
-
-        return \App\Support\UserVisibility::constrainOwnedQuery($query, 'created_by');
+        return \App\Support\UserVisibility::constrainCompanyQuery(
+            parent::getEloquentQuery()
+                ->with([
+                    'items.vendor:id,name,harga_publish,harga_vendor,description',
+                    'penambahanHarga.vendor:id,name,harga_publish,harga_vendor,description',
+                    'category:id,name',
+                    'parent:id,name',
+                ])
+                ->withCount([
+                    'orders as unique_orders_count',
+                ])
+                // Bonus: Ini juga akan mengaktifkan kolom 'Total Sold'
+                ->withSum('orderItems as total_quantity_sold', 'quantity')
+        );
     }
 
     protected function mutateFormDataBeforeCreate(array $data): array

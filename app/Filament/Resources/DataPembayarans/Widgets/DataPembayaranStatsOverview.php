@@ -20,7 +20,7 @@ class DataPembayaranStatsOverview extends BaseWidget
         $startOfMonth = Carbon::now()->startOfMonth();
         $endOfMonth = Carbon::now()->endOfMonth();
 
-        $base = UserVisibility::constrainViaTeamOrders(DataPembayaran::query());
+        $base = UserVisibility::constrainCompanyQuery(DataPembayaran::query());
 
         $totalPembayaranHariIni = (clone $base)->whereDate('tgl_bayar', $today)->sum('nominal');
         $totalPembayaranMingguIni = (clone $base)->whereBetween('tgl_bayar', [$startOfWeek, $endOfWeek])->sum('nominal');

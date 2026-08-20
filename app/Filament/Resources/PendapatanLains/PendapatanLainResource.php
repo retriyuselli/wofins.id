@@ -65,16 +65,16 @@ class PendapatanLainResource extends BaseResource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()
-            ->with([
-                'vendor:id,name',
-                'paymentMethod:id,name',
-            ])
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ]);
-
-        return \App\Support\UserVisibility::constrainViaCompanyPaymentMethods($query);
+        return \App\Support\UserVisibility::constrainCompanyQuery(
+            parent::getEloquentQuery()
+                ->with([
+                    'vendor:id,name',
+                    'paymentMethod:id,name',
+                ])
+                ->withoutGlobalScopes([
+                    SoftDeletingScope::class,
+                ])
+        );
     }
 
     public static function getNavigationBadge(): ?string

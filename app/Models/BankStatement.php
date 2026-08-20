@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -12,9 +13,11 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class BankStatement extends Model
 {
+    use BelongsToCompany;
     use SoftDeletes, LogsActivity;
 
     protected $fillable = [
+        'company_id',
         'payment_method_id',
         'period_start',
         'period_end',

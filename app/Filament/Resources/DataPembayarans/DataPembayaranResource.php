@@ -92,7 +92,7 @@ class DataPembayaranResource extends BaseResource
                 SoftDeletingScope::class,
             ]);
 
-        return \App\Support\UserVisibility::constrainViaTeamOrders($query);
+        return \App\Support\UserVisibility::constrainCompanyQuery($query);
     }
 
     public static function getNavigationBadge(): ?string

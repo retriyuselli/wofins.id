@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Products\Pages;
 
 use App\Filament\Resources\Products\ProductResource;
-use App\Filament\Resources\Products\Widgets\ProductOverview;
 use App\Filament\Resources\SimulasiProduks\SimulasiProdukResource;
 use App\Support\CompanySubscription;
 use App\Support\UserVisibility;
@@ -49,12 +48,5 @@ class ListProducts extends ListRecords
             ->openUrlInNewTab();
 
         return $actions;
-    }
-
-    protected function getHeaderWidgets(): array
-    {
-        return [
-            ProductOverview::class,
-        ];
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToCompany;
 use App\Models\Concerns\BelongsToHrEmployee;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,10 +11,12 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Payroll extends Model
 {
+    use BelongsToCompany;
     use BelongsToHrEmployee;
     use HasFactory, LogsActivity;
 
     protected $fillable = [
+        'company_id',
         'employee_id',
         'user_id',
         'period_month',

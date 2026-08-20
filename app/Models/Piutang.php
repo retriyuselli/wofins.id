@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\JenisPiutang;
 use App\Enums\StatusPiutang;
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,9 +14,11 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Piutang extends Model
 {
+    use BelongsToCompany;
     use HasFactory, LogsActivity;
 
     protected $fillable = [
+        'company_id',
         'nomor_piutang',
         'jenis_piutang',
         'dibuat_oleh',

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\NotaDinasDetails\Pages;
 
 use App\Filament\Resources\NotaDinasDetails\NotaDinasDetailResource;
+use App\Support\UserVisibility;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\CreateRecord;
 
@@ -24,5 +25,14 @@ class CreateNotaDinasDetail extends CreateRecord
                 ->modalSubmitAction(false)
                 ->modalCancelActionLabel('Tutup'),
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        return UserVisibility::stampCompanyIdFromPaymentMethod($data);
     }
 }

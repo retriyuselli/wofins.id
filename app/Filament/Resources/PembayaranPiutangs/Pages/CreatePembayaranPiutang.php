@@ -5,6 +5,7 @@ namespace App\Filament\Resources\PembayaranPiutangs\Pages;
 use App\Filament\Concerns\EnforcesSubscriptionQuota;
 use App\Filament\Resources\PembayaranPiutangs\PembayaranPiutangResource;
 use App\Support\CompanySubscription;
+use App\Support\UserVisibility;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 
@@ -33,6 +34,15 @@ class CreatePembayaranPiutang extends CreateRecord
             ->body(CompanySubscription::summary(CompanySubscription::RESOURCE_PEMBAYARAN_PIUTANGS))
             ->info()
             ->send();
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        return UserVisibility::stampCompanyIdFromPaymentMethod($data);
     }
 
     protected function getCreatedNotification(): ?Notification

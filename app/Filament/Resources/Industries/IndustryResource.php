@@ -8,9 +8,11 @@ use App\Filament\Resources\Industries\Pages\ListIndustries;
 use App\Filament\Resources\Industries\Schemas\IndustryForm;
 use App\Filament\Resources\Industries\Tables\IndustriesTable;
 use App\Models\Industry;
+use App\Support\ProFeatures;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class IndustryResource extends Resource
 {
@@ -30,6 +32,31 @@ class IndustryResource extends Resource
     public static function table(Table $table): Table
     {
         return IndustriesTable::configure($table);
+    }
+
+    public static function canViewAny(): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::canViewAny();
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::shouldRegisterNavigation();
+    }
+
+    public static function canCreate(): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::canCreate();
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::canEdit($record);
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::canDelete($record);
     }
 
     public static function getRelations(): array

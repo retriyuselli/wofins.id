@@ -36,6 +36,8 @@ class CreateProduct extends CreateRecord
     {
         $data['slug'] = Str::slug($data['name']);
 
-        return UserVisibility::stampTeamOwner($data, 'created_by');
+        $data = UserVisibility::stampTeamOwner($data, 'created_by');
+
+        return UserVisibility::stampCompanyId($data);
     }
 }

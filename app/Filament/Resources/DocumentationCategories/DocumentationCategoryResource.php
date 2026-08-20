@@ -9,6 +9,7 @@ use App\Models\DocumentationCategory;
 use App\Filament\Resources\BaseResource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 use BackedEnum;
 
@@ -30,6 +31,11 @@ class DocumentationCategoryResource extends BaseResource
     public static function table(Table $table): Table
     {
         return DocumentationCategoriesTable::configure($table);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return \App\Support\UserVisibility::constrainCompanyQuery(parent::getEloquentQuery());
     }
 
     public static function getPages(): array

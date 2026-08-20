@@ -34,7 +34,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->font('Poppins')
+            ->font('Noto Sans')
             // Login hanya lewat frontend (/login) — jangan sediakan /admin/login
             ->maxContentWidth(Width::Full);
 

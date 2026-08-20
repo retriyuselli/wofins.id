@@ -2,20 +2,28 @@
 
 namespace App\Services;
 
+use App\Models\AccountManagerTarget;
+use App\Models\BankStatement;
 use App\Models\Category;
 use App\Models\Company;
 use App\Models\DataPribadi;
 use App\Models\Document;
+use App\Models\Documentation;
+use App\Models\DocumentationCategory;
 use App\Models\ExpenseOps;
 use App\Models\FixedAsset;
+use App\Models\NotaDinas;
 use App\Models\Order;
 use App\Models\PaymentMethod;
 use App\Models\PendapatanLain;
 use App\Models\PengeluaranLain;
+use App\Models\Piutang;
 use App\Models\Product;
 use App\Models\Prospect;
 use App\Models\ProspectApp;
 use App\Models\SimulasiProduk;
+use App\Models\Sop;
+use App\Models\SopCategory;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Support\CompanySubscription;
@@ -134,11 +142,21 @@ class CompanyLifecycleService
                     ->all();
 
                 if ($userIds !== []) {
-                    $stats['orders'] = $this->softDeleteByIds(Order::class, 'user_id', $userIds);
-                    $stats['prospects'] = $this->softDeleteByIds(Prospect::class, 'user_id', $userIds);
-                    $stats['simulasi'] = $this->softDeleteByIds(SimulasiProduk::class, 'user_id', $userIds);
-                    $stats['vendors'] = $this->softDeleteByIds(Vendor::class, 'created_by', $userIds);
-                    $stats['products'] = $this->softDeleteByIds(Product::class, 'created_by', $userIds);
+                    $stats['orders'] = Schema::hasColumn('orders', 'company_id')
+                        ? $this->softDeleteByCompanyId(Order::class, $companyId)
+                        : $this->softDeleteByIds(Order::class, 'user_id', $userIds);
+                    $stats['prospects'] = Schema::hasColumn('prospects', 'company_id')
+                        ? $this->softDeleteByCompanyId(Prospect::class, $companyId)
+                        : $this->softDeleteByIds(Prospect::class, 'user_id', $userIds);
+                    $stats['simulasi'] = Schema::hasColumn('simulasi_produks', 'company_id')
+                        ? $this->softDeleteByCompanyId(SimulasiProduk::class, $companyId)
+                        : $this->softDeleteByIds(SimulasiProduk::class, 'user_id', $userIds);
+                    $stats['vendors'] = Schema::hasColumn('vendors', 'company_id')
+                        ? $this->softDeleteByCompanyId(Vendor::class, $companyId)
+                        : $this->softDeleteByIds(Vendor::class, 'created_by', $userIds);
+                    $stats['products'] = Schema::hasColumn('products', 'company_id')
+                        ? $this->softDeleteByCompanyId(Product::class, $companyId)
+                        : $this->softDeleteByIds(Product::class, 'created_by', $userIds);
 
                     // Expense / DataPembayaran ikut soft-delete lewat Order::deleting
 
@@ -151,6 +169,15 @@ class CompanyLifecycleService
                             'expire_date' => now(),
                         ]);
                 }
+
+                $this->softDeleteByCompanyId(Piutang::class, $companyId);
+                $this->softDeleteByCompanyId(NotaDinas::class, $companyId);
+                $this->softDeleteByCompanyId(Sop::class, $companyId);
+                $this->softDeleteByCompanyId(SopCategory::class, $companyId);
+                $this->softDeleteByCompanyId(Documentation::class, $companyId);
+                $this->softDeleteByCompanyId(DocumentationCategory::class, $companyId);
+                $this->softDeleteByCompanyId(AccountManagerTarget::class, $companyId);
+                $this->softDeleteByCompanyId(BankStatement::class, $companyId);
 
                 $paymentMethodIds = [];
                 if (Schema::hasTable('payment_methods') && Schema::hasColumn('payment_methods', 'company_id')) {
@@ -268,6 +295,35 @@ class CompanyLifecycleService
      * @param  class-string  $modelClass
      * @param  list<int>  $ids
      */
+    private function softDeleteByCompanyId(string $modelClass, int $companyId): int
+    {
+        if ($companyId <= 0 || ! class_exists($modelClass)) {
+            return 0;
+        }
+
+        /** @var \Illuminate\Database\Eloquent\Model $model */
+        $model = new $modelClass;
+        $table = $model->getTable();
+
+        if (! Schema::hasTable($table) || ! Schema::hasColumn($table, 'company_id')) {
+            return 0;
+        }
+
+        $count = 0;
+
+        $modelClass::withoutGlobalScopes()
+            ->where('company_id', $companyId)
+            ->orderBy($model->getKeyName())
+            ->chunkById(100, function ($rows) use (&$count): void {
+                foreach ($rows as $row) {
+                    $row->delete();
+                    $count++;
+                }
+            });
+
+        return $count;
+    }
+
     private function softDeleteByIds(string $modelClass, string $column, array $ids): int
     {
         if ($ids === [] || ! class_exists($modelClass)) {
