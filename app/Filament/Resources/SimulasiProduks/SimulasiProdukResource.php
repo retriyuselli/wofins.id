@@ -84,6 +84,7 @@ class SimulasiProdukResource extends BaseResource
                     'prospect.latestOrder',
                     'product:id,name,price,product_price',
                     'user:id,name',
+                    'company:id,company_name',
                 ])
         );
     }

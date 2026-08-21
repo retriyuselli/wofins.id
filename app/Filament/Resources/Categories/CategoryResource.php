@@ -74,7 +74,9 @@ class CategoryResource extends BaseResource
 
     public static function getEloquentQuery(): Builder
     {
-        return UserVisibility::constrainCompanyQuery(parent::getEloquentQuery());
+        return UserVisibility::constrainCompanyQuery(
+            parent::getEloquentQuery()->with(['company:id,company_name'])
+        );
     }
 
     public static function getNavigationBadge(): ?string

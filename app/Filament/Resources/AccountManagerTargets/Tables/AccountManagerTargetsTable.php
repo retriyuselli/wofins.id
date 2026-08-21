@@ -4,6 +4,7 @@ namespace App\Filament\Resources\AccountManagerTargets\Tables;
 
 use App\Models\AccountManagerTarget;
 use App\Models\Order;
+use App\Support\ProFeatures;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -33,6 +34,14 @@ class AccountManagerTargetsTable
                     ->label('Account Manager')
                     ->sortable()
                     ->searchable(),
+                TextColumn::make('company.company_name')
+                    ->label('Perusahaan')
+                    ->placeholder('—')
+                    ->searchable()
+                    ->sortable()
+                    ->wrap()
+                    ->visible(fn (): bool => ProFeatures::actorIsSuperAdmin())
+                    ->toggleable(),
                 TextColumn::make('year')
                     ->label('Tahun')
                     ->sortable(),

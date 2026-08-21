@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Prospects\Tables;
 use App\Enums\OrderStatus;
 use App\Filament\Resources\Prospects\ProspectResource;
 use App\Models\Prospect;
+use App\Support\ProFeatures;
 use Carbon\Carbon;
 use Exception;
 use Filament\Actions\Action;
@@ -91,6 +92,15 @@ class ProspectsTable
                     ->searchable()
                     ->sortable()
                     ->description(fn (?Prospect $record): string => $record ? "Venue: {$record->venue}" : ''),
+
+                TextColumn::make('company.company_name')
+                    ->label('Perusahaan')
+                    ->placeholder('—')
+                    ->searchable()
+                    ->sortable()
+                    ->wrap()
+                    ->visible(fn (): bool => ProFeatures::actorIsSuperAdmin())
+                    ->toggleable(),
 
                 TextColumn::make('name_cpp')
                     ->label('Nama Pengantin Pria')

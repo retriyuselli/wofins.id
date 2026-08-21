@@ -4,6 +4,7 @@ namespace App\Filament\Resources\SimulasiProduks\Tables;
 
 use App\Enums\OrderStatus;
 use App\Models\SimulasiProduk;
+use App\Support\ProFeatures;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -41,6 +42,14 @@ class SimulasiProduksTable
                     ->description(fn (SimulasiProduk $record): string => $record->product
                         ? Str::title(Str::lower((string) ($record->product->name ?? '')))
                         : Str::title(Str::lower(Str::limit($record->notes ?? '', 30)))),
+                TextColumn::make('company.company_name')
+                    ->label('Perusahaan')
+                    ->placeholder('—')
+                    ->searchable()
+                    ->sortable()
+                    ->wrap()
+                    ->visible(fn (): bool => ProFeatures::actorIsSuperAdmin())
+                    ->toggleable(),
                 TextColumn::make('order_status_display')
                     ->label('Status Pesanan')
                     ->badge()

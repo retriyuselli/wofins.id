@@ -82,7 +82,7 @@ class VendorResource extends BaseResource
     {
         return \App\Support\UserVisibility::constrainCompanyQuery(
             parent::getEloquentQuery()
-                ->with(['category', 'parent'])
+                ->with(['category', 'parent', 'company:id,company_name'])
                 ->withoutGlobalScopes([
                     SoftDeletingScope::class,
                 ])

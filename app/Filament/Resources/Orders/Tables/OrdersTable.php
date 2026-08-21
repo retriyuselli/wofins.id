@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Orders\Tables;
 use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\User;
+use App\Support\ProFeatures;
 use App\Support\UserVisibility;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -55,6 +56,14 @@ class OrdersTable
                         'danger' => OrderStatus::Cancelled->value,
                         'primary' => OrderStatus::Done->value,
                     ]),
+                TextColumn::make('company.company_name')
+                    ->label('Perusahaan')
+                    ->placeholder('—')
+                    ->searchable()
+                    ->sortable()
+                    ->wrap()
+                    ->visible(fn (): bool => ProFeatures::actorIsSuperAdmin())
+                    ->toggleable(),
                 TextColumn::make('payment_status')
                     ->label('Pembayaran')
                     ->getStateUsing(function (Order $record): string {

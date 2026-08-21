@@ -63,7 +63,7 @@ class ProspectResource extends BaseResource
     {
         return \App\Support\UserVisibility::constrainCompanyQuery(
             parent::getEloquentQuery()
-                ->with(['user:id,name', 'latestOrder'])
+                ->with(['user:id,name', 'latestOrder', 'company:id,company_name'])
                 ->withoutGlobalScopes([
                     SoftDeletingScope::class,
                 ])

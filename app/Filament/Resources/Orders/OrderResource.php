@@ -108,6 +108,7 @@ class OrderResource extends BaseResource
                     'employee:id,name',
                     'user:id,name',
                     'items.product:id,name',
+                    'company:id,company_name',
                 ])
         );
     }

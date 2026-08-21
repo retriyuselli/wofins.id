@@ -64,7 +64,7 @@ class DataPribadiResource extends BaseResource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ])
-            ->with(['company']);
+            ->with(['company:id,company_name']);
 
         return \App\Support\UserVisibility::constrainCompanyQuery($query);
     }

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Vendors\Tables;
 
 use App\Models\Vendor;
+use App\Support\ProFeatures;
 use Carbon\Carbon;
 use Exception;
 use Filament\Actions\Action;
@@ -40,7 +41,7 @@ class VendorsTable
         return $table
             // Query utama dari VendorResource::getEloquentQuery() (sudah di-scope tim)
             ->modifyQueryUsing(fn (Builder $query) => $query
-                ->with(['category', 'parent'])
+                ->with(['category', 'parent', 'company:id,company_name'])
                 ->withCount([
                     'productVendors',
                     'expenses',
@@ -58,6 +59,15 @@ class VendorsTable
                     ->formatStateUsing(fn ($state): string => $state ? Str::title($state) : '-')
                     ->copyMessage('Vendor copied')
                     ->description(fn (Vendor $record): string => Str::title($record->category?->name ?? '-')),
+
+                TextColumn::make('company.company_name')
+                    ->label('Perusahaan')
+                    ->placeholder('—')
+                    ->searchable()
+                    ->sortable()
+                    ->wrap()
+                    ->visible(fn (): bool => ProFeatures::actorIsSuperAdmin())
+                    ->toggleable(),
 
                 TextColumn::make('parent.name')
                     ->label('Vendor Induk')

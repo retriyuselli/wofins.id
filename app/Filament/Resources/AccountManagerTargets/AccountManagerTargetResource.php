@@ -120,7 +120,7 @@ class AccountManagerTargetResource extends BaseResource
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery()
-            ->with(['user'])
+            ->with(['user', 'company:id,company_name'])
             ->orderBy('year', 'desc')
             ->orderBy('month', 'desc');
 

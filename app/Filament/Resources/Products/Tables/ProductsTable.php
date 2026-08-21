@@ -6,6 +6,7 @@ use App\Exports\ProductExport;
 use App\Filament\Resources\Products\ProductResource;
 use App\Models\Product;
 use App\Models\User;
+use App\Support\ProFeatures;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
@@ -74,6 +75,15 @@ class ProductsTable
 
                         return 'Rp. '.number_format((int) $priceValue, 0, '.', ',');
                     }),
+
+                TextColumn::make('company.company_name')
+                    ->label('Perusahaan')
+                    ->placeholder('—')
+                    ->searchable()
+                    ->sortable()
+                    ->wrap()
+                    ->visible(fn (): bool => ProFeatures::actorIsSuperAdmin())
+                    ->toggleable(),
 
                 TextColumn::make('slug')
                     ->toggleable(isToggledHiddenByDefault: true)
