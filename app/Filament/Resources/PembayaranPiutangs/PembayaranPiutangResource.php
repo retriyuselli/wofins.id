@@ -52,6 +52,7 @@ class PembayaranPiutangResource extends BaseResource
                     'piutang:id,nomor_piutang,nama_debitur,total_piutang,sudah_dibayar,sisa_piutang',
                     'paymentMethod:id,name',
                     'dikonfirmasiOleh:id,name',
+                    'company:id,company_name',
                 ])
         );
     }

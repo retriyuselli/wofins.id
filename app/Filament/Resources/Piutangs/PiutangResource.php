@@ -42,7 +42,7 @@ class PiutangResource extends BaseResource
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
         return \App\Support\UserVisibility::constrainCompanyQuery(
-            parent::getEloquentQuery()
+            parent::getEloquentQuery()->with(['company:id,company_name'])
         );
     }
 

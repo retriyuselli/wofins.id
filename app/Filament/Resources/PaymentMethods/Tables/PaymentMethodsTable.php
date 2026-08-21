@@ -37,12 +37,12 @@ class PaymentMethodsTable
             })
             ->columns([
                 TextColumn::make('company.company_name')
-                    ->label('Company')
+                    ->label('Perusahaan')
                     ->searchable()
                     ->sortable()
                     ->toggleable()
                     ->visible(fn (): bool => ProFeatures::actorIsSuperAdmin())
-                    ->placeholder('— platform —'),
+                    ->placeholder('—'),
                 IconColumn::make('is_cash')
                     ->label('Tunai')
                     ->boolean()

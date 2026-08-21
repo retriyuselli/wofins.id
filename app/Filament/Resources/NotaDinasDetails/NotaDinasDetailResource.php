@@ -44,6 +44,7 @@ class NotaDinasDetailResource extends BaseResource
                     'expenses:id,nota_dinas_detail_id',
                     'expenseOps:id,nota_dinas_detail_id',
                     'pengeluaranLains:id,nota_dinas_detail_id',
+                    'company:id,company_name',
                 ])
                 ->withoutGlobalScopes([
                     SoftDeletingScope::class,

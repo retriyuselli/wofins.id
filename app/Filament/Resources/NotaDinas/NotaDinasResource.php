@@ -47,6 +47,7 @@ class NotaDinasResource extends BaseResource
                     'pengirim:id,name',
                     'penerima:id,name',
                     'approver:id,name',
+                    'company:id,company_name',
                 ])
                 ->withCount('details')
                 ->withoutGlobalScopes([

@@ -80,7 +80,7 @@ class PaymentMethodResource extends BaseResource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()->with(['company']);
+        $query = parent::getEloquentQuery()->with(['company:id,company_name']);
 
         // Super admin: semua. Tenant: hanya rekening milik company-nya.
         if (ProFeatures::actorIsSuperAdmin()) {

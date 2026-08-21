@@ -6,6 +6,7 @@ use App\Enums\JenisPiutang;
 use App\Enums\StatusPiutang;
 use App\Filament\Resources\Piutangs\PiutangResource;
 use App\Models\Piutang;
+use App\Support\ProFeatures;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -29,6 +30,15 @@ class PiutangsTable
                     ->searchable()
                     ->sortable()
                     ->weight(FontWeight::Bold),
+
+                TextColumn::make('company.company_name')
+                    ->label('Perusahaan')
+                    ->placeholder('—')
+                    ->searchable()
+                    ->sortable()
+                    ->wrap()
+                    ->visible(fn (): bool => ProFeatures::actorIsSuperAdmin())
+                    ->toggleable(),
 
                 TextColumn::make('jenis_piutang')
                     ->label('Jenis')

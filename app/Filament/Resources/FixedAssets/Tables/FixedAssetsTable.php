@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\FixedAssets\Tables;
 
 use App\Models\FixedAsset;
+use App\Support\ProFeatures;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
@@ -35,6 +36,15 @@ class FixedAssetsTable
                     ->sortable()
                     ->weight(FontWeight::Bold)
                     ->copyable(),
+
+                TextColumn::make('company.company_name')
+                    ->label('Perusahaan')
+                    ->placeholder('—')
+                    ->searchable()
+                    ->sortable()
+                    ->wrap()
+                    ->visible(fn (): bool => ProFeatures::actorIsSuperAdmin())
+                    ->toggleable(),
 
                 TextColumn::make('asset_name')
                     ->label('Nama Aset')

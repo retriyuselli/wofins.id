@@ -6,6 +6,7 @@ use App\Filament\Resources\NotaDinas\Pages\ViewNd;
 use App\Filament\Resources\NotaDinas\NotaDinasResource;
 use App\Models\NotaDinas;
 use App\Models\User;
+use App\Support\ProFeatures;
 use Exception;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -38,6 +39,14 @@ class NotaDinasTable
                     ->label('Nomor ND')
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('company.company_name')
+                    ->label('Perusahaan')
+                    ->placeholder('—')
+                    ->searchable()
+                    ->sortable()
+                    ->wrap()
+                    ->visible(fn (): bool => ProFeatures::actorIsSuperAdmin())
+                    ->toggleable(),
                 TextColumn::make('kategori_nd')
                     ->label('Kategori')
                     ->badge()

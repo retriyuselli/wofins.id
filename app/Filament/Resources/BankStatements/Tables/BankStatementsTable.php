@@ -4,6 +4,7 @@ namespace App\Filament\Resources\BankStatements\Tables;
 
 use App\Filament\Resources\BankStatements\BankStatementResource;
 use App\Models\BankStatement;
+use App\Support\ProFeatures;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -117,6 +118,14 @@ class BankStatementsTable
                     })
                     ->alignCenter()
                     ->sortable(false),
+                TextColumn::make('company.company_name')
+                    ->label('Perusahaan')
+                    ->placeholder('—')
+                    ->searchable()
+                    ->sortable()
+                    ->wrap()
+                    ->visible(fn (): bool => ProFeatures::actorIsSuperAdmin())
+                    ->toggleable(),
                 TextColumn::make('paymentMethod.no_rekening')
                     ->label('No. Rekening / Pemilik')
                     ->searchable()

@@ -46,6 +46,7 @@ class BankStatementResource extends BaseResource
                 ->with([
                     'paymentMethod:id,name,bank_name,no_rekening',
                     'lastEditedBy:id,name',
+                    'company:id,company_name',
                 ])
         );
     }

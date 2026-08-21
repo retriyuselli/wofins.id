@@ -8,6 +8,7 @@ use App\Filament\Resources\NotaDinasDetails\NotaDinasDetailResource;
 use App\Models\NotaDinasDetail;
 use App\Models\PengeluaranLain;
 use App\Models\User;
+use App\Support\ProFeatures;
 use Exception;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -96,6 +97,14 @@ class NotaDinasDetailsTable
                     ->searchable()
                     ->sortable()
                     ->copyable(),
+                TextColumn::make('company.company_name')
+                    ->label('Perusahaan')
+                    ->placeholder('—')
+                    ->searchable()
+                    ->sortable()
+                    ->wrap()
+                    ->visible(fn (): bool => ProFeatures::actorIsSuperAdmin())
+                    ->toggleable(),
                 TextColumn::make('vendor.name')
                     ->label('Vendor')
                     ->searchable()
