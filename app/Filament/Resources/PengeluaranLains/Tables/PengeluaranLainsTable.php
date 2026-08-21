@@ -4,6 +4,7 @@ namespace App\Filament\Resources\PengeluaranLains\Tables;
 
 use App\Filament\Actions\GeneratePengeluaranLainAction;
 use App\Models\PengeluaranLain;
+use App\Support\ProFeatures;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
@@ -44,6 +45,15 @@ class PengeluaranLainsTable
                     ->formatStateUsing(fn (string $state): string => Str::title($state))
                     ->tooltip('Expense Name')
                     ->description(fn (PengeluaranLain $record): ?string => Str::limit($record->note, 50))
+                    ->toggleable(),
+
+                TextColumn::make('company.company_name')
+                    ->label('Perusahaan')
+                    ->placeholder('—')
+                    ->searchable()
+                    ->sortable()
+                    ->wrap()
+                    ->visible(fn (): bool => ProFeatures::actorIsSuperAdmin())
                     ->toggleable(),
 
                 TextColumn::make('vendor.name')

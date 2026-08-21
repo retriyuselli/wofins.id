@@ -70,6 +70,7 @@ class PendapatanLainResource extends BaseResource
                 ->with([
                     'vendor:id,name',
                     'paymentMethod:id,name',
+                    'company:id,company_name',
                 ])
                 ->withoutGlobalScopes([
                     SoftDeletingScope::class,

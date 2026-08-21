@@ -4,6 +4,7 @@ namespace App\Filament\Resources\DataPembayarans\Tables;
 
 use App\Enums\OrderStatus;
 use App\Models\DataPembayaran;
+use App\Support\ProFeatures;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
@@ -38,6 +39,15 @@ class DataPembayaransTable
                     ->label('Project')
                     ->sortable()
                     ->copyable(),
+
+                TextColumn::make('company.company_name')
+                    ->label('Perusahaan')
+                    ->placeholder('—')
+                    ->searchable()
+                    ->sortable()
+                    ->wrap()
+                    ->visible(fn (): bool => ProFeatures::actorIsSuperAdmin())
+                    ->toggleable(),
 
                 TextColumn::make('tgl_bayar')
                     ->label('Payment Date')

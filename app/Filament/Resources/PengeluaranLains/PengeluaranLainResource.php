@@ -122,6 +122,7 @@ class PengeluaranLainResource extends BaseResource
                     'vendor:id,name',
                     'paymentMethod:id,name,no_rekening',
                     'notaDinas:id,status',
+                    'company:id,company_name',
                 ])
         );
     }

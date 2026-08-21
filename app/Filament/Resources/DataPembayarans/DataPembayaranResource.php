@@ -87,7 +87,7 @@ class DataPembayaranResource extends BaseResource
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery()
-            ->with(['paymentMethod', 'order'])
+            ->with(['paymentMethod', 'order', 'company:id,company_name'])
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);

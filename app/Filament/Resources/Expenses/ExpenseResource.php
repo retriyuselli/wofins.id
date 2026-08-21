@@ -85,6 +85,7 @@ class ExpenseResource extends BaseResource
                     'order.prospect:id,name_event',
                     'vendor:id,name',
                     'paymentMethod:id,bank_name,name,no_rekening',
+                    'company:id,company_name',
                 ])
         );
     }

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Expenses\Tables;
 
 use App\Filament\Actions\GenerateWeddingExpensesAction;
 use App\Models\Expense;
+use App\Support\ProFeatures;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -37,6 +38,15 @@ class ExpensesTable
                     ->copyMessage('Project copied')
                     ->description(fn (Expense $record): ?string => Str::limit($record->note, 50))
                     ->formatStateUsing(fn ($state) => $state ?? 'No Project'),
+
+                TextColumn::make('company.company_name')
+                    ->label('Perusahaan')
+                    ->placeholder('—')
+                    ->searchable()
+                    ->sortable()
+                    ->wrap()
+                    ->visible(fn (): bool => ProFeatures::actorIsSuperAdmin())
+                    ->toggleable(),
 
                 TextColumn::make('vendor.name')
                     ->searchable()

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\PendapatanLains\Tables;
 
 use App\Models\PendapatanLain;
 use App\Models\Vendor;
+use App\Support\ProFeatures;
 use Carbon\Carbon;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -44,6 +45,15 @@ class PendapatanLainsTable
                     ->searchable()
                     ->sortable()
                     ->description(fn (PendapatanLain $record): ?string => Str::limit($record->keterangan, 50)),
+
+                TextColumn::make('company.company_name')
+                    ->label('Perusahaan')
+                    ->placeholder('—')
+                    ->searchable()
+                    ->sortable()
+                    ->wrap()
+                    ->visible(fn (): bool => ProFeatures::actorIsSuperAdmin())
+                    ->toggleable(),
 
                 TextColumn::make('vendor.name')
                     ->label('Vendor')
