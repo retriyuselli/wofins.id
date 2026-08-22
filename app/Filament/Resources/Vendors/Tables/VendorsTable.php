@@ -213,13 +213,7 @@ class VendorsTable
                 SelectFilter::make('parent_id')
                     ->label('Vendor Induk')
                     ->options(function () {
-                        $query = Vendor::query()
-                            ->whereNull('parent_id')
-                            ->whereIn('status', ['vendor', 'master'])
-                            ->orderBy('name');
-                        \App\Support\UserVisibility::constrainOwnedQuery($query, 'created_by');
-
-                        return $query->pluck('name', 'id');
+                        return \App\Filament\Resources\Vendors\Schemas\VendorForm::parentVendorOptions();
                     })
                     ->searchable()
                     ->preload()
@@ -717,7 +711,15 @@ class VendorsTable
                             $newVendor->name = $record->name.' Copy';
                             $newSlug = Str::slug($newVendor->name);
                             $suffix = 1;
-                            while (Vendor::where('slug', $newSlug)->exists()) {
+                            while (
+                                Vendor::query()
+                                    ->where('slug', $newSlug)
+                                    ->when(
+                                        $newVendor->company_id,
+                                        fn ($q) => $q->where('company_id', $newVendor->company_id)
+                                    )
+                                    ->exists()
+                            ) {
                                 $newSlug = Str::slug($newVendor->name.'-copy-'.($suffix++));
                             }
                             $newVendor->slug = $newSlug;

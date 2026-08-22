@@ -72,17 +72,7 @@ class VendorForm
                                             ->placeholder('— (Vendor Induk)')
                                             ->helperText('Kosongkan jika ini vendor induk.')
                                             ->options(function (?Vendor $record) {
-                                                $query = Vendor::query()
-                                                    ->whereNull('parent_id')
-                                                    ->whereIn('status', ['vendor', 'master'])
-                                                    ->when(
-                                                        $record?->exists,
-                                                        fn ($q) => $q->whereKeyNot($record->getKey())
-                                                    )
-                                                    ->orderBy('name');
-                                                \App\Support\UserVisibility::constrainOwnedQuery($query, 'created_by');
-
-                                                return $query->pluck('name', 'id');
+                                                return self::parentVendorOptions($record);
                                             })
                                             ->searchable()
                                             ->preload()
@@ -94,7 +84,11 @@ class VendorForm
                                                 return $value === 'product';
                                             }),
                                         Select::make('category_id')
-                                            ->relationship('category', 'name')
+                                            ->relationship(
+                                                'category',
+                                                'name',
+                                                fn ($query) => UserVisibility::constrainCompanyQuery($query)
+                                            )
                                             ->searchable()
                                             ->preload()
                                             ->required()
@@ -454,5 +448,26 @@ class VendorForm
         }
 
         return $record->usage_status === 'In Use' || $record->children()->exists();
+    }
+
+    /**
+     * @return array<int|string, string>
+     */
+    public static function parentVendorOptions(?Vendor $record = null): array
+    {
+        $query = Vendor::query()
+            ->whereNull('parent_id')
+            ->whereIn('status', ['vendor', 'master'])
+            ->when($record?->exists, fn ($q) => $q->whereKeyNot($record->getKey()))
+            ->orderBy('name');
+
+        $companyId = $record?->company_id ?? UserVisibility::companyId();
+        if ($companyId) {
+            $query->where('company_id', $companyId);
+        } elseif (! ProFeatures::actorIsSuperAdmin()) {
+            $query->whereRaw('1 = 0');
+        }
+
+        return $query->pluck('name', 'id')->all();
     }
 }

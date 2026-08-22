@@ -69,7 +69,13 @@ class CreateVendor extends CreateRecord
                 $data['slug'] = Str::slug((string) $data['name']);
             }
             if (! empty($data['slug'])) {
-                $exists = Vendor::where('slug', $data['slug'])->exists();
+                $exists = Vendor::query()
+                    ->where('slug', $data['slug'])
+                    ->when(
+                        ! empty($data['company_id']),
+                        fn ($q) => $q->where('company_id', $data['company_id'])
+                    )
+                    ->exists();
                 if ($exists) {
                     Notification::make()
                         ->danger()

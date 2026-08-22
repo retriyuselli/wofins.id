@@ -52,8 +52,13 @@ class EditVendor extends EditRecord
             $data['slug'] = Str::slug((string) $data['name']);
         }
         if (! empty($data['slug'])) {
-            $exists = \App\Models\Vendor::where('slug', $data['slug'])
-                ->where('id', '!=', $this->getRecord()->id)
+            $exists = \App\Models\Vendor::query()
+                ->where('slug', $data['slug'])
+                ->whereKeyNot($this->getRecord()->id)
+                ->when(
+                    $this->getRecord()->company_id,
+                    fn ($q) => $q->where('company_id', $this->getRecord()->company_id)
+                )
                 ->exists();
 
             if ($exists) {

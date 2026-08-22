@@ -120,10 +120,12 @@ class VendorResource extends BaseResource
 
     public static function getRecordRouteBindingEloquentQuery(): Builder
     {
-        return parent::getRecordRouteBindingEloquentQuery()
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ]);
+        return UserVisibility::constrainCompanyQuery(
+            parent::getRecordRouteBindingEloquentQuery()
+                ->withoutGlobalScopes([
+                    SoftDeletingScope::class,
+                ])
+        );
     }
 
     public static function getEloquentQuery(): Builder
