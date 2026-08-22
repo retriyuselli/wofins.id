@@ -3,7 +3,8 @@
 namespace App\Filament\Resources\Vendors\Schemas;
 
 use App\Models\Vendor;
-use App\Models\User;
+use App\Support\ProFeatures;
+use App\Support\UserVisibility;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
@@ -20,7 +21,6 @@ use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\RawJs;
-use Illuminate\Support\Facades\Auth;
 
 class VendorForm
 {
@@ -33,7 +33,7 @@ class VendorForm
                         Tab::make('Informasi Dasar')
                             ->schema([
                                 Placeholder::make('vendor_locked_notice')
-                                    ->content('⚠️ Vendor ini sedang digunakan atau memiliki child vendor. Beberapa field dikunci untuk menjaga konsistensi data. Silahkan hubungi super_admin jika ingin melakukan perubahan.')
+                                    ->content('⚠️ Vendor ini sedang digunakan atau memiliki vendor turunan. Beberapa field struktur dikunci untuk menjaga konsistensi data.')
                                     ->columnSpanFull()
                                     ->visible(fn (?Vendor $record): bool => self::isLocked($record)),
                                 Grid::make()
@@ -438,14 +438,18 @@ class VendorForm
             ]);
     }
 
-    private static function isLocked(?Vendor $record): bool
+    public static function isLocked(?Vendor $record): bool
     {
         if (! $record) {
             return false;
         }
 
-        $user = Auth::user();
-        if ($user instanceof User && $user->hasRole('super_admin')) {
+        if (ProFeatures::actorIsSuperAdmin()) {
+            return false;
+        }
+
+        $companyId = $record->company_id;
+        if (UserVisibility::ownsCompanyId($companyId !== null ? (int) $companyId : null)) {
             return false;
         }
 

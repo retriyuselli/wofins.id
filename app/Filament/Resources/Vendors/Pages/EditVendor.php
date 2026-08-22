@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\Vendors\Pages;
 
 use App\Filament\Resources\Vendors\VendorResource;
-use App\Models\User;
+use App\Filament\Resources\Vendors\Schemas\VendorForm;
 use Exception;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -13,7 +13,6 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -24,11 +23,7 @@ class EditVendor extends EditRecord
     protected function mutateFormDataBeforeSave(array $data): array
     {
         $record = $this->getRecord();
-        $actor = Auth::user();
-        $isSuperAdmin = $actor instanceof User && $actor->hasRole('super_admin');
-        $locked = $record
-            && ($record->usage_status === 'In Use' || $record->children()->exists())
-            && ! $isSuperAdmin;
+        $locked = VendorForm::isLocked($record);
         if ($locked) {
             if (array_key_exists('status', $data)) {
                 $data['status'] = $record->getRawOriginal('status');
