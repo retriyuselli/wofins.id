@@ -38,7 +38,17 @@ class CompanyBrand
             return;
         }
 
-        Cookie::queue(cookie(self::COOKIE, (string) $id, 60 * 24 * 180));
+        static::rememberCompanyId($id);
+    }
+
+    public static function rememberCompanyId(int $companyId): void
+    {
+        if ($companyId < 1) {
+            return;
+        }
+
+        Cookie::queue(cookie(self::COOKIE, (string) $companyId, 60 * 24 * 180));
+        static::$memo = null;
     }
 
     public static function forgetCache(?int $companyId = null): void

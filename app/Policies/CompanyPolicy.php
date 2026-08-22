@@ -4,67 +4,74 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Company;
+use App\Policies\Concerns\ChecksCompanyOwnership;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class CompanyPolicy
 {
+    use ChecksCompanyOwnership;
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
-        return $authUser->can('ViewAny:Company');
+        return $authUser->can("ViewAny:Company");
     }
 
     public function view(AuthUser $authUser, Company $company): bool
     {
-        return $authUser->can('View:Company');
+        return $authUser->can("View:Company")
+            && $this->ownsRecordCompany($company);
     }
 
     public function create(AuthUser $authUser): bool
     {
-        return $authUser->can('Create:Company');
+        return $authUser->can("Create:Company");
     }
 
     public function update(AuthUser $authUser, Company $company): bool
     {
-        return $authUser->can('Update:Company');
+        return $authUser->can("Update:Company")
+            && $this->ownsRecordCompany($company);
     }
 
     public function delete(AuthUser $authUser, Company $company): bool
     {
-        return $authUser->can('Delete:Company');
+        return $authUser->can("Delete:Company")
+            && $this->ownsRecordCompany($company);
     }
 
     public function restore(AuthUser $authUser, Company $company): bool
     {
-        return $authUser->can('Restore:Company');
+        return $authUser->can("Restore:Company")
+            && $this->ownsRecordCompany($company);
     }
 
     public function forceDelete(AuthUser $authUser, Company $company): bool
     {
-        return $authUser->can('ForceDelete:Company');
+        return $authUser->can("ForceDelete:Company")
+            && $this->ownsRecordCompany($company);
     }
 
     public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $authUser->can('ForceDeleteAny:Company');
+        return $authUser->can("ForceDeleteAny:Company");
     }
 
     public function restoreAny(AuthUser $authUser): bool
     {
-        return $authUser->can('RestoreAny:Company');
+        return $authUser->can("RestoreAny:Company");
     }
 
     public function replicate(AuthUser $authUser, Company $company): bool
     {
-        return $authUser->can('Replicate:Company');
+        return $authUser->can("Replicate:Company")
+            && $this->ownsRecordCompany($company);
     }
 
     public function reorder(AuthUser $authUser): bool
     {
-        return $authUser->can('Reorder:Company');
+        return $authUser->can("Reorder:Company");
     }
-
 }

@@ -97,6 +97,10 @@
             <h1 class="page-title display-6 mt-3 mb-0">Formulir Data Konsumen</h1>
         </div>
 
+        @error('company')
+            <div class="alert alert-warning" role="alert">{{ $message }}</div>
+        @enderror
+
         <form action="{{ route('prospect.store') }}" method="POST">
             @csrf
 

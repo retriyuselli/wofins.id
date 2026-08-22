@@ -220,13 +220,18 @@ class UserVisibility
     }
 
     /**
-     * Agregat global (seluruh company platform): SA + staf Finance / admin_am.
-     * Pemilik paket hanya melihat agregat timnya.
+     * Agregat global (seluruh company platform): hanya SA,
+     * atau staf Finance / admin_am platform tanpa company_id.
+     * User (termasuk Finance) yang punya company_id tetap terisolasi ke tenant-nya.
      */
     public static function actorSeesGlobalAggregates(): bool
     {
         if (static::actorIsSuperAdmin()) {
             return true;
+        }
+
+        if (static::companyId() !== null) {
+            return false;
         }
 
         $user = Auth::user();
@@ -236,11 +241,22 @@ class UserVisibility
             && $user->hasAnyRole(['Finance', 'admin_am']);
     }
 
-    /** Key cache agar widget tidak campur angka global vs tim. */
+    /**
+     * Key cache agar widget tidak campur angka antar company / SA / tim.
+     * - Super admin: global (seluruh platform)
+     * - User bertenant: c{company_id} (Finance/admin_am dalam company tetap terpisah dari SA)
+     * - Legacy tanpa company: t{teamRootId}
+     */
     public static function cacheScopeKey(): string
     {
-        if (static::actorSeesGlobalAggregates()) {
+        if (static::actorIsSuperAdmin()) {
             return 'global';
+        }
+
+        $companyId = static::companyId();
+
+        if ($companyId !== null) {
+            return 'c'.$companyId;
         }
 
         return 't'.(static::teamRootId() ?? 0);

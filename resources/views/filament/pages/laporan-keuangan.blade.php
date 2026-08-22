@@ -4,9 +4,28 @@
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm ring-1 ring-gray-950/5">
             <div class="p-4 sm:p-6">
                 <form wire:submit.prevent="filter" class="space-y-6">
+                    <div
+                        class="rounded-lg border border-primary-200 bg-primary-50 px-4 py-3 text-sm text-primary-900 dark:border-primary-800 dark:bg-primary-950/40 dark:text-primary-100">
+                        <span class="font-medium">Perusahaan:</span>
+                        {{ $this->companyLabel() }}
+                    </div>
+
                     {{-- Baris 1: Range Tanggal --}}
                     <div class="grid grid-cols-12 gap-4 items-start">
-                        <div class="col-span-12">
+                        @if (\App\Support\ProFeatures::actorIsSuperAdmin())
+                            <div class="col-span-12 sm:col-span-4">
+                                <label for="filter_company_id"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Perusahaan</label>
+                                <select id="filter_company_id" wire:model.defer="filter_company_id"
+                                    class="block w-full h-10 rounded-lg border-gray-300 text-sm shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-primary-500 focus:border-primary-500">
+                                    <option value="">Semua perusahaan</option>
+                                    @foreach ($this->companyOptions as $id => $name)
+                                        <option value="{{ $id }}">{{ $name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endif
+                        <div class="col-span-12 {{ \App\Support\ProFeatures::actorIsSuperAdmin() ? 'sm:col-span-8' : '' }}">
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Rentang
                                 Tanggal</label>
 

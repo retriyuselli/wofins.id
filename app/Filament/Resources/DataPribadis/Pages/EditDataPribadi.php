@@ -13,7 +13,12 @@ class EditDataPribadi extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->label('Hapus')
+                ->requiresConfirmation()
+                ->modalHeading('Hapus crew freelance?')
+                ->modalDescription('Data akan dipindah ke sampah. Company Anda bisa memulihkannya dari filter terhapus.')
+                ->modalSubmitActionLabel('Ya, hapus'),
         ];
     }
 }

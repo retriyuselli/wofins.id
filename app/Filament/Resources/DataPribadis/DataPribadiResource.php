@@ -9,9 +9,12 @@ use App\Filament\Resources\DataPribadis\Schemas\DataPribadiForm;
 use App\Filament\Resources\DataPribadis\Tables\DataPribadisTable;
 use App\Models\DataPribadi;
 use App\Filament\Resources\BaseResource;
+use App\Support\ProFeatures;
+use App\Support\UserVisibility;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class DataPribadiResource extends BaseResource
@@ -56,6 +59,51 @@ class DataPribadiResource extends BaseResource
             'create' => CreateDataPribadi::route('/create'),
             'edit' => EditDataPribadi::route('/{record}/edit'),
         ];
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return static::canViewAny();
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return static::companyUserOwnsCrew($record);
+    }
+
+    public static function canRestore(Model $record): bool
+    {
+        return static::companyUserOwnsCrew($record);
+    }
+
+    public static function canRestoreAny(): bool
+    {
+        return static::canViewAny();
+    }
+
+    public static function canForceDelete(Model $record): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::canForceDelete($record);
+    }
+
+    public static function canForceDeleteAny(): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::canForceDeleteAny();
+    }
+
+    private static function companyUserOwnsCrew(Model $record): bool
+    {
+        if (! $record instanceof DataPribadi) {
+            return false;
+        }
+
+        if (ProFeatures::actorIsSuperAdmin()) {
+            return true;
+        }
+
+        $companyId = $record->company_id;
+
+        return UserVisibility::ownsCompanyId($companyId !== null ? (int) $companyId : null);
     }
 
     public static function getEloquentQuery(): Builder

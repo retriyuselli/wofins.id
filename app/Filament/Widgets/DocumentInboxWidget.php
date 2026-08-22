@@ -35,8 +35,10 @@ class DocumentInboxWidget extends BaseWidget
             return false;
         }
 
+        $scope = \App\Support\UserVisibility::cacheScopeKey();
+
         return Cache::remember(
-            'dashboard:document_inbox:exists:'.$userId,
+            'dashboard:document_inbox:exists:'.$scope.':'.$userId,
             60,
             fn () => Document::query()
                 ->where('status', '!=', 'draft')

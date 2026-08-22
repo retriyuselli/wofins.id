@@ -50,10 +50,6 @@ class Document extends Model
                 return;
             }
 
-            if (! auth()->check()) {
-                return;
-            }
-
             if (ProFeatures::actorIsSuperAdmin()) {
                 return;
             }

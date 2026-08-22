@@ -63,6 +63,8 @@
     <div class="report-header">
         <h1 style="margin: 0; font-size: 18px; color: #333;">Laporan Laba Rugi Klien</h1>
         <div class="filter-info">
+            <strong>Perusahaan:</strong> {{ $companyLabel ?? '—' }}
+            |
             <strong>Periode Filter:</strong>
             @if($filterStartDate || $filterEndDate)
                 {{ $filterStartDate ? \Carbon\Carbon::parse($filterStartDate)->format('d M Y') : 'Awal' }} -

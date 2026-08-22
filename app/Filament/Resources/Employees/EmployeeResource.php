@@ -11,6 +11,7 @@ use App\Filament\Resources\Employees\Tables\EmployeesTable;
 use App\Filament\Resources\Employees\Widgets\EmployeeOverviewWidget;
 use App\Models\Employee;
 use App\Filament\Resources\BaseResource;
+use App\Support\UserVisibility;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -53,7 +54,7 @@ class EmployeeResource extends BaseResource
         $modelClass = static::getModel();
 
         return Cache::remember(
-            'nav:employees:active_count',
+            'nav:employees:active_count:'.UserVisibility::cacheScopeKey(),
             60,
             fn (): int => (int) $modelClass::query()
                 ->where('date_of_join', '<=', now())

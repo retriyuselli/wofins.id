@@ -2,12 +2,14 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\Company;
 use App\Models\DataPembayaran;
 use App\Models\Expense;
 use App\Models\ExpenseOps;
 use App\Models\Order;
 use App\Models\PendapatanLain;
 use App\Models\PengeluaranLain;
+use App\Support\ProFeatures;
 use App\Support\UserVisibility;
 use Barryvdh\DomPDF\Facade\Pdf;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
@@ -15,12 +17,15 @@ use Exception;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class LaporanKeuangan extends Page
 {
@@ -31,6 +36,8 @@ class LaporanKeuangan extends Page
     protected string $view = 'filament.pages.laporan-keuangan';
 
     protected static string|\UnitEnum|null $navigationGroup = 'Keuangan';
+
+    protected static ?string $title = 'Laporan Keuangan';
 
     public $transaksi = [];
 
@@ -48,6 +55,68 @@ class LaporanKeuangan extends Page
 
     public $filter_keyword = '';
 
+    public ?int $filter_company_id = null;
+
+    public function updatedFilterCompanyId(mixed $value): void
+    {
+        $this->filter_company_id = $value === '' || $value === null ? null : (int) $value;
+    }
+
+    public function getSubheading(): string|Htmlable|null
+    {
+        return 'Perusahaan: '.$this->companyLabel();
+    }
+
+    /**
+     * @return array<int|string, string>
+     */
+    public function getCompanyOptionsProperty(): array
+    {
+        return Company::query()
+            ->orderBy('company_name')
+            ->pluck('company_name', 'id')
+            ->all();
+    }
+
+    public function companyLabel(): string
+    {
+        if (ProFeatures::actorIsSuperAdmin()) {
+            if ($this->filter_company_id) {
+                return (string) (Company::query()->whereKey($this->filter_company_id)->value('company_name') ?? '—');
+            }
+
+            return 'Semua perusahaan';
+        }
+
+        $companyId = UserVisibility::companyId();
+
+        if ($companyId === null) {
+            return '—';
+        }
+
+        return (string) (Company::query()->whereKey($companyId)->value('company_name') ?? '—');
+    }
+
+    /**
+     * @template TModel of \Illuminate\Database\Eloquent\Model
+     *
+     * @param  Builder<TModel>  $query
+     * @return Builder<TModel>
+     */
+    protected function applyReportCompanyFilter(Builder $query): Builder
+    {
+        if (! ProFeatures::actorIsSuperAdmin() || ! $this->filter_company_id) {
+            return $query;
+        }
+
+        $table = $query->getModel()->getTable();
+
+        if (! Schema::hasColumn($table, 'company_id')) {
+            return $query;
+        }
+
+        return $query->where($table.'.company_id', $this->filter_company_id);
+    }
     public function mount()
     {
         // Set tanggal awal dan akhir ke bulan berjalan
@@ -73,8 +142,10 @@ class LaporanKeuangan extends Page
                     $endDate = $this->tanggal_akhir ?? now()->endOfMonth()->toDateString();
 
                     // Query orders using All Event dates (Lamaran, Akad, Reception)
-                    $query = UserVisibility::constrainOrdersQuery(
-                        Order::with(['prospect', 'dataPembayaran', 'expenses'])
+                    $query = $this->applyReportCompanyFilter(
+                        UserVisibility::constrainOrdersQuery(
+                            Order::with(['prospect', 'dataPembayaran', 'expenses'])
+                        )
                     )
                         ->whereHas('prospect', function ($prospectQuery) use ($startDate, $endDate) {
                             $prospectQuery->where(function ($dateQuery) use ($startDate, $endDate) {
@@ -117,21 +188,27 @@ class LaporanKeuangan extends Page
                     });
 
                     // Get additional expenses data (ExpenseOps and PengeluaranLain)
-                    $expenseOps = UserVisibility::constrainExpenseOpsQuery(
-                        ExpenseOps::with('vendor')->whereBetween('date_expense', [$startDate, $endDate])
+                    $expenseOps = $this->applyReportCompanyFilter(
+                        UserVisibility::constrainExpenseOpsQuery(
+                            ExpenseOps::with('vendor')->whereBetween('date_expense', [$startDate, $endDate])
+                        )
                     )
                         ->orderBy('date_expense', 'desc')
                         ->get();
 
-                    $pengeluaranLain = UserVisibility::constrainViaCompanyPaymentMethods(
-                        PengeluaranLain::with('vendor')->whereBetween('date_expense', [$startDate, $endDate])
+                    $pengeluaranLain = $this->applyReportCompanyFilter(
+                        UserVisibility::constrainViaCompanyPaymentMethods(
+                            PengeluaranLain::with('vendor')->whereBetween('date_expense', [$startDate, $endDate])
+                        )
                     )
                         ->orderBy('date_expense', 'desc')
                         ->get();
 
                     // Get pendapatan lain data
-                    $pendapatanLain = UserVisibility::constrainViaCompanyPaymentMethods(
-                        PendapatanLain::with('vendor')->whereBetween('tgl_bayar', [$startDate, $endDate])
+                    $pendapatanLain = $this->applyReportCompanyFilter(
+                        UserVisibility::constrainViaCompanyPaymentMethods(
+                            PendapatanLain::with('vendor')->whereBetween('tgl_bayar', [$startDate, $endDate])
+                        )
                     )
                         ->orderBy('tgl_bayar', 'desc')
                         ->get();
@@ -159,6 +236,7 @@ class LaporanKeuangan extends Page
                         'totalPendapatanLain' => $totalPendapatanLain,
                         'filterStartDate' => $startDate,
                         'filterEndDate' => $endDate,
+                        'companyLabel' => $this->companyLabel(),
                         'generatedDate' => now()->format('d M Y H:i'),
                     ];
 
@@ -187,8 +265,10 @@ class LaporanKeuangan extends Page
         $startDate = $this->tanggal_awal ?? now()->startOfMonth()->toDateString();
         $endDate = $this->tanggal_akhir ?? now()->endOfMonth()->toDateString();
 
-        $query = UserVisibility::constrainOrdersQuery(
-            Order::with(['prospect', 'dataPembayaran', 'expenses'])
+        $query = $this->applyReportCompanyFilter(
+            UserVisibility::constrainOrdersQuery(
+                Order::with(['prospect', 'dataPembayaran', 'expenses'])
+            )
         )
             ->whereHas('prospect', function ($prospectQuery) use ($startDate, $endDate) {
                 $prospectQuery->where(function ($dateQuery) use ($startDate, $endDate) {
@@ -241,20 +321,26 @@ class LaporanKeuangan extends Page
             : 0;
 
         $expenseOps = $includeOps
-            ? UserVisibility::constrainExpenseOpsQuery(
-                ExpenseOps::with('vendor')->whereBetween('date_expense', [$startDate, $endDate])
+            ? $this->applyReportCompanyFilter(
+                UserVisibility::constrainExpenseOpsQuery(
+                    ExpenseOps::with('vendor')->whereBetween('date_expense', [$startDate, $endDate])
+                )
             )->orderBy('date_expense', 'desc')->get()
             : collect([]);
 
         $pengeluaranLain = $includePengeluaranLain
-            ? UserVisibility::constrainViaCompanyPaymentMethods(
-                PengeluaranLain::with('vendor')->whereBetween('date_expense', [$startDate, $endDate])
+            ? $this->applyReportCompanyFilter(
+                UserVisibility::constrainViaCompanyPaymentMethods(
+                    PengeluaranLain::with('vendor')->whereBetween('date_expense', [$startDate, $endDate])
+                )
             )->orderBy('date_expense', 'desc')->get()
             : collect([]);
 
         $pendapatanLain = $includePendapatanLain
-            ? UserVisibility::constrainViaCompanyPaymentMethods(
-                PendapatanLain::with('vendor')->whereBetween('tgl_bayar', [$startDate, $endDate])
+            ? $this->applyReportCompanyFilter(
+                UserVisibility::constrainViaCompanyPaymentMethods(
+                    PendapatanLain::with('vendor')->whereBetween('tgl_bayar', [$startDate, $endDate])
+                )
             )->orderBy('tgl_bayar', 'desc')->get()
             : collect([]);
 
@@ -278,6 +364,7 @@ class LaporanKeuangan extends Page
             'filterStartDate' => $startDate,
             'filterEndDate' => $endDate,
             'generatedDate' => now()->format('d M Y H:i'),
+            'companyLabel' => $this->companyLabel(),
             'filterJenis' => $filters,
             'includeMasukWedding' => $includeMasukWedding,
             'includeKeluarWedding' => $includeKeluarWedding,
@@ -421,8 +508,10 @@ class LaporanKeuangan extends Page
         $start = $this->tanggal_awal;
         $end = $this->tanggal_akhir;
 
-        $uangMasuk = UserVisibility::constrainViaTeamOrders(
-            DataPembayaran::whereBetween('tgl_bayar', [$start, $end])
+        $uangMasuk = $this->applyReportCompanyFilter(
+            UserVisibility::constrainViaTeamOrders(
+                DataPembayaran::whereBetween('tgl_bayar', [$start, $end])
+            )
         )
             ->select(
                 DB::raw('tgl_bayar as tanggal'),
@@ -450,8 +539,10 @@ class LaporanKeuangan extends Page
                 ) as payment_method_details')
             );
 
-        $pengeluaranWedding = UserVisibility::constrainViaTeamOrders(
-            Expense::whereBetween('date_expense', [$start, $end])
+        $pengeluaranWedding = $this->applyReportCompanyFilter(
+            UserVisibility::constrainViaTeamOrders(
+                Expense::whereBetween('date_expense', [$start, $end])
+            )
         )
             ->select(
                 DB::raw('date_expense as tanggal'),
@@ -484,8 +575,10 @@ class LaporanKeuangan extends Page
                 ) as payment_method_details')
             );
 
-        $pengeluaranOps = UserVisibility::constrainExpenseOpsQuery(
-            ExpenseOps::whereBetween('date_expense', [$start, $end])
+        $pengeluaranOps = $this->applyReportCompanyFilter(
+            UserVisibility::constrainExpenseOpsQuery(
+                ExpenseOps::whereBetween('date_expense', [$start, $end])
+            )
         )
             ->select(
                 DB::raw('date_expense as tanggal'),
@@ -503,8 +596,10 @@ class LaporanKeuangan extends Page
                 ) as payment_method_details')
             );
 
-        $pendapatanLain = UserVisibility::constrainViaCompanyPaymentMethods(
-            PendapatanLain::whereBetween('tgl_bayar', [$start, $end])
+        $pendapatanLain = $this->applyReportCompanyFilter(
+            UserVisibility::constrainViaCompanyPaymentMethods(
+                PendapatanLain::whereBetween('tgl_bayar', [$start, $end])
+            )
         )
             ->select(
                 DB::raw('tgl_bayar as tanggal'),
@@ -522,8 +617,10 @@ class LaporanKeuangan extends Page
                 ) as payment_method_details')
             );
 
-        $pengeluaranLain = UserVisibility::constrainViaCompanyPaymentMethods(
-            PengeluaranLain::whereBetween('date_expense', [$start, $end])
+        $pengeluaranLain = $this->applyReportCompanyFilter(
+            UserVisibility::constrainViaCompanyPaymentMethods(
+                PengeluaranLain::whereBetween('date_expense', [$start, $end])
+            )
         )
             ->select(
                 DB::raw('date_expense as tanggal'),
@@ -631,6 +728,7 @@ class LaporanKeuangan extends Page
         $this->filter_jenis = [];
         $this->filter_status = [];
         $this->filter_keyword = '';
+        $this->filter_company_id = null;
         $this->tanggal_awal = now()->startOfMonth()->toDateString();
         $this->tanggal_akhir = now()->endOfMonth()->toDateString();
 
@@ -695,6 +793,7 @@ class LaporanKeuangan extends Page
             'tanggal_akhir' => $this->tanggal_akhir,
             'filter_jenis' => $this->filter_jenis,
             'filter_keyword' => $this->filter_keyword,
+            'filter_company_id' => $this->filter_company_id,
         ];
 
         $url = route('laporan-keuangan.download-pdf', $params);
@@ -714,6 +813,8 @@ class LaporanKeuangan extends Page
         $instance->tanggal_akhir = $request->get('tanggal_akhir', now()->endOfMonth()->toDateString());
         $instance->filter_jenis = $request->get('filter_jenis', []);
         $instance->filter_keyword = $request->get('filter_keyword', '');
+        $companyId = $request->get('filter_company_id');
+        $instance->filter_company_id = $companyId !== null && $companyId !== '' ? (int) $companyId : null;
 
         // Dapatkan data berdasarkan filter yang sedang aktif
         $transaksi = $instance->getTransaksiGabungan();
@@ -776,6 +877,7 @@ class LaporanKeuangan extends Page
             'tanggal_akhir' => $instance->tanggal_akhir,
             'filter_jenis' => $instance->filter_jenis,
             'filter_keyword' => $instance->filter_keyword,
+            'company_label' => $instance->companyLabel(),
             'total_masuk' => $totalMasuk,
             'total_keluar' => $totalKeluar,
             'saldo_akhir' => $saldoAkhir,

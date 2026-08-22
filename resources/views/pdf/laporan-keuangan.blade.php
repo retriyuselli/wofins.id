@@ -404,6 +404,7 @@
 <body>
     <div class="header">
         <h1>LAPORAN KEUANGAN</h1>
+        <p>Perusahaan: {{ $company_label ?? '—' }}</p>
         <p>Periode: {{ \Carbon\Carbon::parse($tanggal_awal)->format('d F Y') }} -
             {{ \Carbon\Carbon::parse($tanggal_akhir)->format('d F Y') }}</p>
         <p>Digenerate pada: {{ $generated_at }}</p>
@@ -412,6 +413,9 @@
     <div class="filter-info">
         <h3>Filter Yang Diterapkan:</h3>
         <div class="filter-row">
+            <div class="filter-item">
+                <strong>Perusahaan:</strong> {{ $company_label ?? '—' }}
+            </div>
             <div class="filter-item">
                 <strong>Periode:</strong> {{ \Carbon\Carbon::parse($tanggal_awal)->format('d/m/Y') }} -
                 {{ \Carbon\Carbon::parse($tanggal_akhir)->format('d/m/Y') }}

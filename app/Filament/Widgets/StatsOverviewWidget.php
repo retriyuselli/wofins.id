@@ -2,10 +2,8 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\Employee;
 use App\Models\ExpenseOps;
 use App\Models\Order;
-use App\Models\Prospect;
 use App\Support\UserVisibility;
 use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Carbon\Carbon;
@@ -15,7 +13,6 @@ use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 
 class StatsOverviewWidget extends BaseWidget
 {
@@ -157,26 +154,6 @@ class StatsOverviewWidget extends BaseWidget
         return UserVisibility::constrainOrdersQuery(Order::query());
     }
 
-    private function calculateNewProspects(?string $start = null, ?string $end = null): int
-    {
-        $query = UserVisibility::constrainOwnedQuery(Prospect::query(), 'user_id');
-
-        return $query
-            ->when($start, fn ($q) => $q->whereDate('created_at', '>=', $start))
-            ->when($end, fn ($q) => $q->whereDate('created_at', '<=', $end))
-            ->count();
-    }
-
-    private function calculateNewEmployees(?string $start = null, ?string $end = null): int
-    {
-        $query = UserVisibility::constrainOwnedQuery(Employee::query(), 'user_id');
-
-        return $query
-            ->when($start, fn ($q) => $q->whereDate('created_at', '>=', $start))
-            ->when($end, fn ($q) => $q->whereDate('created_at', '<=', $end))
-            ->count();
-    }
-
     private function calculateNewOrders(?string $start = null, ?string $end = null): int
     {
         return $this->ordersQuery()
@@ -211,66 +188,5 @@ class StatsOverviewWidget extends BaseWidget
             ->when($start, fn ($q) => $q->whereDate('date_expense', '>=', $start))
             ->when($end, fn ($q) => $q->whereDate('date_expense', '<=', $end))
             ->sum('amount') ?? 0;
-    }
-
-    private function calculateMonthlyRevenue(): int
-    {
-        return $this->ordersQuery()
-            ->whereMonth('closing_date', now()->month)
-            ->whereYear('closing_date', now()->year)
-            ->selectRaw('SUM(total_price + penambahan - pengurangan - promo) as total_revenue')
-            ->value('total_revenue') ?? 0;
-    }
-
-    private function calculateMonthlyExpenses(): int
-    {
-        return Order::with('items.product')
-            ->whereMonth('created_at', now()->month)
-            ->whereYear('created_at', now()->year)
-            ->get()
-            ->sum(function ($order) {
-                return $order->items->sum(function ($item) {
-                    return $item->product->cost_price * $item->quantity;
-                });
-            });
-    }
-
-    private function getRevenueChartData(): array
-    {
-        return Order::select(
-            DB::raw('DATE(closing_date) as date'),
-            DB::raw('SUM(total_price + penambahan - pengurangan - promo) as total')
-        )
-            ->groupBy('date')
-            ->orderBy('date', 'desc')
-            ->limit(7)
-            ->pluck('total', 'date')
-            ->toArray();
-    }
-
-    private function getProfitChartData(): array
-    {
-        return Order::with('items.product')
-            ->select('created_at')
-            ->orderBy('created_at', 'desc')
-            ->limit(7)
-            ->get()
-            ->groupBy(function ($date) {
-                return Carbon::parse($date->created_at)->format('Y-m-d');
-            })
-            ->map(function ($orders) {
-                $revenue = $orders->sum(function ($order) {
-                    return $order->total_price + $order->penambahan - $order->pengurangan - $order->promo;
-                });
-
-                $expenses = $orders->sum(function ($order) {
-                    return $order->items->sum(function ($item) {
-                        return $item->product->cost_price * $item->quantity;
-                    });
-                });
-
-                return $revenue - $expenses;
-            })
-            ->toArray();
     }
 }

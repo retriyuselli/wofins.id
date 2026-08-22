@@ -8,7 +8,9 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
 use App\Support\ProFeatures;
@@ -80,14 +82,29 @@ class DataPribadisTable
                 ActionGroup::make([
                     ViewAction::make(),
                     EditAction::make(),
-                    DeleteAction::make(),
+                    DeleteAction::make()
+                        ->label('Hapus')
+                        ->requiresConfirmation()
+                        ->modalHeading('Hapus crew freelance?')
+                        ->modalDescription('Data akan dipindah ke sampah. Company Anda bisa memulihkannya dari filter terhapus.')
+                        ->modalSubmitActionLabel('Ya, hapus')
+                        ->successNotificationTitle('Crew dihapus'),
+                    RestoreAction::make()
+                        ->label('Pulihkan'),
+                    ForceDeleteAction::make()
+                        ->label('Hapus permanen')
+                        ->requiresConfirmation(),
                 ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
-                    RestoreBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->label('Hapus')
+                        ->requiresConfirmation(),
+                    RestoreBulkAction::make()
+                        ->label('Pulihkan'),
+                    ForceDeleteBulkAction::make()
+                        ->label('Hapus permanen'),
                 ]),
             ])
             ->defaultSort('created_at', 'desc')

@@ -6,6 +6,7 @@ use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Support\PricingPlans;
 use App\Support\ProFeatures;
+use App\Support\UserVisibility;
 use Barryvdh\DomPDF\Facade\Pdf;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Pages\Page;
@@ -60,7 +61,9 @@ class NetCashFlowReport extends Page
         // Default to processing if invalid status provided
         $statusEnum = OrderStatus::tryFrom($this->status) ?? OrderStatus::Processing;
 
-        $this->orders = Order::where('status', $statusEnum)
+        $this->orders = UserVisibility::constrainOrdersQuery(
+            Order::where('status', $statusEnum)
+        )
             ->with(['dataPembayaran', 'expenses', 'prospect', 'user', 'employee', 'items.product.parent'])
             ->get()
             ->map(function ($order) {

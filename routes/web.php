@@ -467,7 +467,7 @@ Route::middleware(array_merge($frontAuthVerified, ['role.required']))->group(fun
     })->name('dashboard');
 });
 
-// Route untuk Prospect (Original)
+// Route untuk Prospect (form internal / konteks company)
 Route::get('/prospect', [ProspectController::class, 'create'])
     ->name('prospect.form');
 

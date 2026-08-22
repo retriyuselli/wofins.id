@@ -11,7 +11,10 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * Isolasi multi-tenant lewat kolom company_id.
- * Super admin: tanpa filter. Non-SA: hanya company login.
+ * Super admin: tanpa filter.
+ * Non-SA login: hanya company login.
+ * Guest / tanpa company: kosong (jangan expose lintas tenant).
+ * Konten platform publik: pakai scopePlatformPublic() (company_id null).
  */
 trait BelongsToCompany
 {
@@ -21,10 +24,6 @@ trait BelongsToCompany
             $table = $builder->getModel()->getTable();
 
             if (! Schema::hasColumn($table, 'company_id')) {
-                return;
-            }
-
-            if (! auth()->check()) {
                 return;
             }
 
@@ -61,6 +60,20 @@ trait BelongsToCompany
                 $model->company_id = $companyId;
             }
         });
+    }
+
+    /**
+     * Katalog / help publik platform (bukan data tenant).
+     *
+     * @param  Builder<\Illuminate\Database\Eloquent\Model>  $query
+     * @return Builder<\Illuminate\Database\Eloquent\Model>
+     */
+    public function scopePlatformPublic(Builder $query): Builder
+    {
+        $table = $query->getModel()->getTable();
+
+        return $query->withoutGlobalScope('tenant_company')
+            ->whereNull($table.'.company_id');
     }
 
     public function company(): BelongsTo

@@ -2,12 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Company;
 use App\Models\Prospect;
+use App\Models\User;
+use App\Support\CompanyBrand;
+use App\Support\UserVisibility;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\View\View;
 
 class ProspectController extends Controller
 {
-    public function create()
+    public function create(): View
     {
         return view('prospect');
     }
@@ -27,16 +33,78 @@ class ProspectController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        // Set user_id to null for public form submissions
-        $validated['user_id'] = null;
+        $companyId = $this->resolveProspectCompanyId();
 
-        Prospect::create($validated);
+        if ($companyId === null) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->withErrors([
+                    'company' => 'Form prospek hanya bisa dikirim dari konteks perusahaan yang valid.',
+                ]);
+        }
 
-        return redirect()->route('prospect.form')->with('success', 'Your prospect has been submitted.');
+        $validated['user_id'] = $this->resolveDefaultOwnerUserId((int) $companyId);
+        $validated['company_id'] = (int) $companyId;
+
+        Prospect::withoutGlobalScope('tenant_company')->create($validated);
+
+        return redirect()
+            ->route('prospect.success')
+            ->with('success', 'Data prospek berhasil dikirim.');
     }
 
-    public function success()
+    public function success(): View
     {
         return view('prospect-success');
+    }
+
+    private function resolveDefaultOwnerUserId(int $companyId): ?int
+    {
+        if (! Schema::hasTable('users') || ! Schema::hasColumn('users', 'company_id')) {
+            return null;
+        }
+
+        $ownerId = User::query()
+            ->where('company_id', $companyId)
+            ->where(function ($q) {
+                $q->whereNull('created_by')->orWhere('created_by', 0);
+            })
+            ->orderBy('id')
+            ->value('id');
+
+        if ($ownerId) {
+            return (int) $ownerId;
+        }
+
+        $anyId = User::query()
+            ->where('company_id', $companyId)
+            ->orderBy('id')
+            ->value('id');
+
+        return $anyId ? (int) $anyId : null;
+    }
+
+    private function resolveProspectCompanyId(): ?int
+    {
+        $companyId = UserVisibility::companyId();
+        if ($companyId !== null) {
+            return $companyId;
+        }
+
+        $brandId = CompanyBrand::companyId();
+        if ($brandId === null || ! Schema::hasTable('companies')) {
+            return null;
+        }
+
+        $exists = Company::query()
+            ->whereKey($brandId)
+            ->when(
+                Schema::hasColumn('companies', 'is_active'),
+                fn ($q) => $q->where('is_active', true)
+            )
+            ->exists();
+
+        return $exists ? $brandId : null;
     }
 }

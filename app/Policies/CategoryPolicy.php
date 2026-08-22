@@ -4,67 +4,74 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Category;
+use App\Policies\Concerns\ChecksCompanyOwnership;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class CategoryPolicy
 {
+    use ChecksCompanyOwnership;
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
-        return $authUser->can('ViewAny:Category');
+        return $authUser->can("ViewAny:Category");
     }
 
     public function view(AuthUser $authUser, Category $category): bool
     {
-        return $authUser->can('View:Category');
+        return $authUser->can("View:Category")
+            && $this->ownsRecordCompany($category);
     }
 
     public function create(AuthUser $authUser): bool
     {
-        return $authUser->can('Create:Category');
+        return $authUser->can("Create:Category");
     }
 
     public function update(AuthUser $authUser, Category $category): bool
     {
-        return $authUser->can('Update:Category');
+        return $authUser->can("Update:Category")
+            && $this->ownsRecordCompany($category);
     }
 
     public function delete(AuthUser $authUser, Category $category): bool
     {
-        return $authUser->can('Delete:Category');
+        return $authUser->can("Delete:Category")
+            && $this->ownsRecordCompany($category);
     }
 
     public function restore(AuthUser $authUser, Category $category): bool
     {
-        return $authUser->can('Restore:Category');
+        return $authUser->can("Restore:Category")
+            && $this->ownsRecordCompany($category);
     }
 
     public function forceDelete(AuthUser $authUser, Category $category): bool
     {
-        return $authUser->can('ForceDelete:Category');
+        return $authUser->can("ForceDelete:Category")
+            && $this->ownsRecordCompany($category);
     }
 
     public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $authUser->can('ForceDeleteAny:Category');
+        return $authUser->can("ForceDeleteAny:Category");
     }
 
     public function restoreAny(AuthUser $authUser): bool
     {
-        return $authUser->can('RestoreAny:Category');
+        return $authUser->can("RestoreAny:Category");
     }
 
     public function replicate(AuthUser $authUser, Category $category): bool
     {
-        return $authUser->can('Replicate:Category');
+        return $authUser->can("Replicate:Category")
+            && $this->ownsRecordCompany($category);
     }
 
     public function reorder(AuthUser $authUser): bool
     {
-        return $authUser->can('Reorder:Category');
+        return $authUser->can("Reorder:Category");
     }
-
 }
