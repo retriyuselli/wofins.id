@@ -11,9 +11,12 @@ use App\Filament\Resources\Vendors\Tables\VendorsTable;
 use App\Filament\Resources\BaseResource;
 use App\Models\Vendor;
 use App\Support\CompanySubscription;
+use App\Support\ProFeatures;
+use App\Support\UserVisibility;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class VendorResource extends BaseResource
@@ -68,6 +71,51 @@ class VendorResource extends BaseResource
             'view' => ViewVendor::route('/{record}'),
             'edit' => EditVendor::route('/{record}/edit'),
         ];
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return static::canViewAny();
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return static::companyUserOwnsVendor($record);
+    }
+
+    public static function canRestore(Model $record): bool
+    {
+        return static::companyUserOwnsVendor($record);
+    }
+
+    public static function canRestoreAny(): bool
+    {
+        return static::canViewAny();
+    }
+
+    public static function canForceDelete(Model $record): bool
+    {
+        return static::companyUserOwnsVendor($record);
+    }
+
+    public static function canForceDeleteAny(): bool
+    {
+        return static::canViewAny();
+    }
+
+    private static function companyUserOwnsVendor(Model $record): bool
+    {
+        if (! $record instanceof Vendor) {
+            return false;
+        }
+
+        if (ProFeatures::actorIsSuperAdmin()) {
+            return true;
+        }
+
+        $companyId = $record->company_id;
+
+        return UserVisibility::ownsCompanyId($companyId !== null ? (int) $companyId : null);
     }
 
     public static function getRecordRouteBindingEloquentQuery(): Builder

@@ -308,8 +308,14 @@ class EditVendor extends EditRecord
                         ->send();
                 }),
 
-            ForceDeleteAction::make(),
-            RestoreAction::make(),
+            ForceDeleteAction::make()
+                ->label('Hapus permanen')
+                ->requiresConfirmation()
+                ->modalHeading('Hapus permanen vendor ini?')
+                ->modalDescription('Vendor milik company Anda akan dihapus selamanya dan tidak bisa dikembalikan.')
+                ->modalSubmitActionLabel('Ya, hapus permanen'),
+            RestoreAction::make()
+                ->label('Pulihkan'),
         ];
     }
 }

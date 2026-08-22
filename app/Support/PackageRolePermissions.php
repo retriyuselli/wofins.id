@@ -94,6 +94,11 @@ class PackageRolePermissions
             $perms[] = "{$ability}:DataPribadi";
         }
 
+        // Vendor: hapus/pulihkan/hapus permanen milik company sendiri
+        foreach (['Restore', 'ForceDelete', 'RestoreAny', 'ForceDeleteAny'] as $ability) {
+            $perms[] = "{$ability}:Vendor";
+        }
+
         return array_values(array_unique($perms));
     }
 

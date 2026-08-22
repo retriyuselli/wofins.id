@@ -731,8 +731,13 @@ class VendorsTable
                         })
                         ->requiresConfirmation(),
                     ForceDeleteAction::make()
-                        ->requiresConfirmation(),
-                    RestoreAction::make(),
+                        ->label('Hapus permanen')
+                        ->requiresConfirmation()
+                        ->modalHeading('Hapus permanen vendor ini?')
+                        ->modalDescription('Vendor milik company Anda akan dihapus selamanya dan tidak bisa dikembalikan.')
+                        ->modalSubmitActionLabel('Ya, hapus permanen'),
+                    RestoreAction::make()
+                        ->label('Pulihkan'),
                 ])->icon('heroicon-m-ellipsis-vertical')
                     ->tooltip('Actions'),
             ])
@@ -814,8 +819,12 @@ class VendorsTable
                             }
                         }),
                     ForceDeleteBulkAction::make()
-                        ->requiresConfirmation(),
-                    RestoreBulkAction::make(),
+                        ->label('Hapus permanen')
+                        ->requiresConfirmation()
+                        ->modalHeading('Hapus permanen vendor terpilih?')
+                        ->modalDescription('Vendor milik company Anda akan dihapus selamanya dan tidak bisa dikembalikan.'),
+                    RestoreBulkAction::make()
+                        ->label('Pulihkan'),
                 ]),
             ])
             ->emptyStateIcon('heroicon-o-building-storefront')

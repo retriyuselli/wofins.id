@@ -38,30 +38,46 @@ class VendorPolicy
 
     public function delete(AuthUser $authUser, Vendor $vendor): bool
     {
-        return $authUser->can("Delete:Vendor")
+        return $this->canManageOwnVendor($authUser)
             && $this->ownsRecordCompany($vendor);
+    }
+
+    public function deleteAny(AuthUser $authUser): bool
+    {
+        return $this->canManageOwnVendor($authUser);
     }
 
     public function restore(AuthUser $authUser, Vendor $vendor): bool
     {
-        return $authUser->can("Restore:Vendor")
+        return $this->canManageOwnVendor($authUser)
             && $this->ownsRecordCompany($vendor);
+    }
+
+    public function restoreAny(AuthUser $authUser): bool
+    {
+        return $this->canManageOwnVendor($authUser);
     }
 
     public function forceDelete(AuthUser $authUser, Vendor $vendor): bool
     {
-        return $authUser->can("ForceDelete:Vendor")
+        return $this->canManageOwnVendor($authUser)
             && $this->ownsRecordCompany($vendor);
     }
 
     public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $authUser->can("ForceDeleteAny:Vendor");
+        return $this->canManageOwnVendor($authUser);
     }
 
-    public function restoreAny(AuthUser $authUser): bool
+    /**
+     * Company user yang bisa membuka modul vendor boleh hapus permanen datanya sendiri.
+     */
+    private function canManageOwnVendor(AuthUser $authUser): bool
     {
-        return $authUser->can("RestoreAny:Vendor");
+        return $authUser->can('Delete:Vendor')
+            || $authUser->can('Update:Vendor')
+            || $authUser->can('ViewAny:Vendor')
+            || $authUser->can('ForceDelete:Vendor');
     }
 
     public function replicate(AuthUser $authUser, Vendor $vendor): bool
