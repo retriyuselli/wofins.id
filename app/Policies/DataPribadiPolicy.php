@@ -60,13 +60,13 @@ class DataPribadiPolicy
 
     public function forceDelete(AuthUser $authUser, DataPribadi $dataPribadi): bool
     {
-        return $authUser->can('ForceDelete:DataPribadi')
+        return $this->canManageOwnCrew($authUser)
             && $this->ownsRecordCompany($dataPribadi);
     }
 
     public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $authUser->can('ForceDeleteAny:DataPribadi');
+        return $this->canManageOwnCrew($authUser);
     }
 
     /**

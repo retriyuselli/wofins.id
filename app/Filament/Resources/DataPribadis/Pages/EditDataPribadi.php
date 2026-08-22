@@ -4,6 +4,8 @@ namespace App\Filament\Resources\DataPribadis\Pages;
 
 use App\Filament\Resources\DataPribadis\DataPribadiResource;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\RestoreAction;
 use Filament\Resources\Pages\EditRecord;
 
 class EditDataPribadi extends EditRecord
@@ -19,6 +21,14 @@ class EditDataPribadi extends EditRecord
                 ->modalHeading('Hapus crew freelance?')
                 ->modalDescription('Data akan dipindah ke sampah. Company Anda bisa memulihkannya dari filter terhapus.')
                 ->modalSubmitActionLabel('Ya, hapus'),
+            RestoreAction::make()
+                ->label('Pulihkan'),
+            ForceDeleteAction::make()
+                ->label('Hapus permanen')
+                ->requiresConfirmation()
+                ->modalHeading('Hapus permanen crew ini?')
+                ->modalDescription('Data crew company Anda akan dihapus selamanya dan tidak bisa dikembalikan.')
+                ->modalSubmitActionLabel('Ya, hapus permanen'),
         ];
     }
 }

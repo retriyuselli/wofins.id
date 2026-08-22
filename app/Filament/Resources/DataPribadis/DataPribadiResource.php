@@ -83,12 +83,12 @@ class DataPribadiResource extends BaseResource
 
     public static function canForceDelete(Model $record): bool
     {
-        return ProFeatures::actorIsSuperAdmin() && parent::canForceDelete($record);
+        return static::companyUserOwnsCrew($record);
     }
 
     public static function canForceDeleteAny(): bool
     {
-        return ProFeatures::actorIsSuperAdmin() && parent::canForceDeleteAny();
+        return static::canViewAny();
     }
 
     private static function companyUserOwnsCrew(Model $record): bool

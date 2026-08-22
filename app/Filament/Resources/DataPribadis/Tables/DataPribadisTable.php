@@ -93,7 +93,10 @@ class DataPribadisTable
                         ->label('Pulihkan'),
                     ForceDeleteAction::make()
                         ->label('Hapus permanen')
-                        ->requiresConfirmation(),
+                        ->requiresConfirmation()
+                        ->modalHeading('Hapus permanen crew ini?')
+                        ->modalDescription('Data crew company Anda akan dihapus selamanya dan tidak bisa dikembalikan.')
+                        ->modalSubmitActionLabel('Ya, hapus permanen'),
                 ]),
             ])
             ->toolbarActions([
@@ -104,7 +107,10 @@ class DataPribadisTable
                     RestoreBulkAction::make()
                         ->label('Pulihkan'),
                     ForceDeleteBulkAction::make()
-                        ->label('Hapus permanen'),
+                        ->label('Hapus permanen')
+                        ->requiresConfirmation()
+                        ->modalHeading('Hapus permanen crew terpilih?')
+                        ->modalDescription('Data crew company Anda akan dihapus selamanya dan tidak bisa dikembalikan.'),
                 ]),
             ])
             ->defaultSort('created_at', 'desc')
