@@ -24,6 +24,10 @@ class Company extends Model
         static::saved(function (Company $company) {
             \App\Support\CompanySubscription::forgetCache($company->id);
             \App\Support\CompanyBrand::forgetCache($company->id);
+
+            if ($company->wasChanged('subscription_plan')) {
+                \App\Support\PackageRolePermissions::syncPengunjungRole();
+            }
         });
 
         static::deleted(function (Company $company) {

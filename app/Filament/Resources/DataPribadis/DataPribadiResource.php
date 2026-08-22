@@ -27,6 +27,8 @@ class DataPribadiResource extends BaseResource
 
     protected static ?string $navigationLabel = 'Crew Freelance';
 
+    protected static ?int $navigationSort = 3;
+
     protected static ?string $modelLabel = 'crew freelance';
 
     protected static ?string $pluralModelLabel = 'crew freelance';
@@ -34,6 +36,35 @@ class DataPribadiResource extends BaseResource
     protected static ?string $recordTitleAttribute = 'nama_lengkap';
 
     protected static bool $isGloballySearchable = false;
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::canViewAny();
+    }
+
+    public static function canViewAny(): bool
+    {
+        if (! \App\Support\PlanResourceGate::allowsAccessTo(static::class)) {
+            return false;
+        }
+
+        $user = auth()->user();
+        if (! $user) {
+            return false;
+        }
+
+        if (ProFeatures::actorIsSuperAdmin()) {
+            return true;
+        }
+
+        if (UserVisibility::companyId()) {
+            return $user->can('ViewAny:DataPribadi')
+                || (method_exists($user, 'hasRole') && $user->hasRole('pengunjung'))
+                || parent::canViewAny();
+        }
+
+        return parent::canViewAny();
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -119,7 +150,11 @@ class DataPribadiResource extends BaseResource
 
     public static function getNavigationBadge(): ?string
     {
-        return (string) static::getEloquentQuery()->count();
+        try {
+            return (string) static::getEloquentQuery()->count();
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     public static function getNavigationBadgeColor(): string|array|null

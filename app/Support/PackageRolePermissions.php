@@ -89,6 +89,23 @@ class PackageRolePermissions
             $perms[] = "{$ability}:Company";
         }
 
+        // Crew freelance: hapus/pulihkan/hapus permanen milik company sendiri
+        foreach (['Restore', 'ForceDelete', 'RestoreAny', 'ForceDeleteAny'] as $ability) {
+            $perms[] = "{$ability}:DataPribadi";
+        }
+
         return array_values(array_unique($perms));
+    }
+
+    public static function syncPengunjungRole(): void
+    {
+        foreach (static::forStarter() as $permission) {
+            \Spatie\Permission\Models\Permission::findOrCreate($permission, 'web');
+        }
+
+        $role = \Spatie\Permission\Models\Role::findOrCreate('pengunjung', 'web');
+        $role->syncPermissions(static::forStarter());
+
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
     }
 }
