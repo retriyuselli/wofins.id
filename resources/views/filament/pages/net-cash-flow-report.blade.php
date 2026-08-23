@@ -80,9 +80,17 @@
 
         <div class="overflow-x-auto">
             <table class="w-full border-collapse border border-gray-300 text-sm">
+                @php
+                    $showCompany = $showCompany ?? \App\Support\ProFeatures::actorIsSuperAdmin();
+                    $totalColspan = $showCompany ? 5 : 4;
+                    $emptyColspan = $showCompany ? 8 : 7;
+                @endphp
                 <thead>
                     <tr class="bg-gray-100">
                         <th class="border border-gray-300 p-3 text-left font-semibold text-gray-700 w-10">No</th>
+                        @if ($showCompany)
+                            <th class="border border-gray-300 p-3 text-left font-semibold text-gray-700">Perusahaan</th>
+                        @endif
                         <th class="border border-gray-300 p-3 text-left font-semibold text-gray-700">Nama Project /
                             Order</th>
                         <th class="border border-gray-300 p-3 text-left font-semibold text-gray-700">Account Manager
@@ -98,6 +106,11 @@
                     @forelse($orders as $index => $order)
                         <tr class="hover:bg-gray-50 {{ $loop->even ? 'bg-gray-50' : '' }}">
                             <td class="border border-gray-300 p-3 text-center">{{ $loop->iteration }}</td>
+                            @if ($showCompany)
+                                <td class="border border-gray-300 p-3">
+                                    {{ $order->company?->company_name ?? $order->user?->company?->company_name ?? '—' }}
+                                </td>
+                            @endif
                             <td class="border border-gray-300 p-3">
                                 <div class="font-medium text-gray-900">{{ $order->name }}</div>
                                 <div class="text-gray-500 text-xs">
@@ -126,7 +139,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="border border-gray-300 p-8 text-center text-gray-500">
+                            <td colspan="{{ $emptyColspan }}" class="border border-gray-300 p-8 text-center text-gray-500">
                                 Tidak ada data order dengan status ini.
                             </td>
                         </tr>
@@ -134,7 +147,7 @@
                 </tbody>
                 <tfoot>
                     <tr class="bg-gray-200 font-bold">
-                        <td colspan="4" class="border border-gray-300 p-3 text-right">TOTAL</td>
+                        <td colspan="{{ $totalColspan }}" class="border border-gray-300 p-3 text-right">TOTAL</td>
                         <td class="border border-gray-300 p-3 text-right text-green-700">
                             {{ number_format($totalPaymentsAll, 0, ',', '.') }}</td>
                         <td class="border border-gray-300 p-3 text-right text-red-700">

@@ -9,6 +9,7 @@ use App\Models\ExpenseOps; // Pastikan path model ini benar
 use App\Models\Order;
 use App\Models\PaymentMethod;
 use App\Models\NotaDinasDetail;
+use App\Support\ProFeatures;
 use App\Support\UserVisibility;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -505,7 +506,15 @@ class ReportController extends Controller
 
         $orders = UserVisibility::constrainOrdersQuery(
             Order::where('status', $statusEnum)
-                ->with(['dataPembayaran', 'expenses', 'prospect', 'user', 'employee', 'items.product.parent'])
+                ->with([
+                    'dataPembayaran',
+                    'expenses',
+                    'prospect',
+                    'user.company:id,company_name',
+                    'employee',
+                    'items.product.parent',
+                    'company:id,company_name',
+                ])
         )
             ->get()
             ->map(function ($order) {
@@ -534,6 +543,7 @@ class ReportController extends Controller
             'totalExpensesAll' => $totalExpensesAll,
             'totalNetCashFlowAll' => $totalNetCashFlowAll,
             'pageTitle' => $pageTitle,
+            'showCompany' => ProFeatures::actorIsSuperAdmin(),
         ]);
 
         return $pdf->stream('Laporan_Net_Cash_Flow_'.now()->format('Y-m-d_H-i').'.pdf');

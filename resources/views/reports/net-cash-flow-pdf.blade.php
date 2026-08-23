@@ -183,10 +183,18 @@
         </tr>
     </table>
 
+    @php
+        $showCompany = $showCompany ?? false;
+        $totalColspan = $showCompany ? 5 : 4;
+        $emptyColspan = $showCompany ? 8 : 7;
+    @endphp
     <table>
         <thead>
             <tr>
                 <th style="width: 25px;" class="text-center">No</th>
+                @if ($showCompany)
+                    <th>Perusahaan</th>
+                @endif
                 <th>Nama Project / Order</th>
                 <th>Account Manager</th>
                 <th>Event Manager</th>
@@ -199,6 +207,9 @@
             @forelse($orders as $index => $order)
                 <tr>
                     <td class="text-center">{{ $loop->iteration }}</td>
+                    @if ($showCompany)
+                        <td>{{ $order->company?->company_name ?? $order->user?->company?->company_name ?? '—' }}</td>
+                    @endif
                     <td>
                         <div class="font-medium">{{ $order->name }}</div>
                         <div class="text-gray text-xs">
@@ -227,7 +238,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" class="text-center text-gray" style="padding: 20px;">
+                    <td colspan="{{ $emptyColspan }}" class="text-center text-gray" style="padding: 20px;">
                         Tidak ada data order dengan status ini.
                     </td>
                 </tr>
@@ -235,7 +246,7 @@
         </tbody>
         <tfoot>
             <tr style="background-color: #e5e7eb; font-weight: bold;">
-                <td colspan="4" class="text-right">TOTAL</td>
+                <td colspan="{{ $totalColspan }}" class="text-right">TOTAL</td>
                 <td class="text-right text-green">
                     {{ number_format($totalPaymentsAll, 0, ',', '.') }}
                 </td>

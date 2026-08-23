@@ -64,7 +64,15 @@ class NetCashFlowReport extends Page
         $this->orders = UserVisibility::constrainOrdersQuery(
             Order::where('status', $statusEnum)
         )
-            ->with(['dataPembayaran', 'expenses', 'prospect', 'user', 'employee', 'items.product.parent'])
+            ->with([
+                'dataPembayaran',
+                'expenses',
+                'prospect',
+                'user.company:id,company_name',
+                'employee',
+                'items.product.parent',
+                'company:id,company_name',
+            ])
             ->get()
             ->map(function ($order) {
                 $totalPayments = $order->dataPembayaran->sum('nominal');
@@ -99,6 +107,7 @@ class NetCashFlowReport extends Page
             'totalExpensesAll' => $this->totalExpensesAll,
             'totalNetCashFlowAll' => $this->totalNetCashFlowAll,
             'pageTitle' => $this->pageTitle,
+            'showCompany' => ProFeatures::actorIsSuperAdmin(),
         ]);
 
         return response()->streamDownload(function () use ($pdf) {
