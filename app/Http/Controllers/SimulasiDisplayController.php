@@ -104,16 +104,19 @@ class SimulasiDisplayController extends Controller
         $tahun = $createdAt->year;
 
         $company = $this->resolveCompanyForDocument($record);
+        $companyId = $company?->id ?: ($record->company_id ? (int) $record->company_id : null);
 
-        $sequenceQuery = SimulasiProduk::query()
-            ->whereYear('created_at', $record->created_at->year)
+        $sequenceQuery = SimulasiProduk::withoutGlobalScope('tenant_company')
+            ->whereYear('created_at', $createdAt->year)
             ->where('id', '<=', $record->id);
 
-        if ($company?->id) {
-            $sequenceQuery->whereHas('user', fn ($q) => $q->where('company_id', $company->id));
+        if ($companyId) {
+            $sequenceQuery->where('company_id', $companyId);
+        } else {
+            $sequenceQuery->whereKey($record->id);
         }
 
-        $sequence = $sequenceQuery->count();
+        $sequence = max(1, $sequenceQuery->count());
         $sequenceFormatted = str_pad((string) $sequence, 3, '0', STR_PAD_LEFT);
 
         $inisialWo = $company?->inisial_wo ?: 'MW';
@@ -128,8 +131,10 @@ class SimulasiDisplayController extends Controller
         }
 
         $financeQuery = User::role('Finance');
-        if ($company?->id) {
-            $financeQuery->where('company_id', $company->id);
+        if ($companyId) {
+            $financeQuery->where('company_id', $companyId);
+        } else {
+            $financeQuery->whereRaw('1 = 0');
         }
         $financeUser = $financeQuery->first();
 
@@ -183,9 +188,9 @@ class SimulasiDisplayController extends Controller
      */
     protected function resolveCompanyForDocument(SimulasiProduk $record): ?Company
     {
-        $record->loadMissing('user.company.paymentMethod');
+        $record->loadMissing(['company.paymentMethod', 'user.company.paymentMethod']);
 
-        $company = $record->user?->company;
+        $company = $record->company ?: $record->user?->company;
         if ($company) {
             $company->loadMissing('paymentMethod');
 

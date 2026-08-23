@@ -190,5 +190,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('viewLogViewer', function (?User $user): bool {
             return $user !== null && $user->hasRole('super_admin');
         });
+
+        Gate::after(function ($user, string $ability, $result, array $arguments): ?bool {
+            return \App\Support\CompanyRecordAuthorization::after($user, $ability, $result, $arguments);
+        });
     }
 }

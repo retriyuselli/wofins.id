@@ -11,6 +11,7 @@ use App\Filament\Resources\SimulasiProduks\Tables\SimulasiProduksTable;
 use App\Filament\Resources\BaseResource;
 use App\Models\SimulasiProduk;
 use App\Support\CompanySubscription;
+use App\Support\ProFeatures;
 use App\Support\Rupiah;
 use App\Support\UserVisibility;
 use Filament\Schemas\Components\Utilities\Get;
@@ -18,6 +19,8 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class SimulasiProdukResource extends BaseResource
 {
@@ -75,10 +78,58 @@ class SimulasiProdukResource extends BaseResource
         ];
     }
 
+    public static function canDeleteAny(): bool
+    {
+        return static::canViewAny();
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return static::companyUserOwnsSimulasi($record);
+    }
+
+    public static function canRestore(Model $record): bool
+    {
+        return static::companyUserOwnsSimulasi($record);
+    }
+
+    public static function canRestoreAny(): bool
+    {
+        return static::canViewAny();
+    }
+
+    public static function canForceDelete(Model $record): bool
+    {
+        return static::companyUserOwnsSimulasi($record);
+    }
+
+    public static function canForceDeleteAny(): bool
+    {
+        return static::canViewAny();
+    }
+
+    private static function companyUserOwnsSimulasi(Model $record): bool
+    {
+        if (! $record instanceof SimulasiProduk) {
+            return false;
+        }
+
+        if (ProFeatures::actorIsSuperAdmin()) {
+            return true;
+        }
+
+        $companyId = $record->company_id;
+
+        return UserVisibility::ownsCompanyId($companyId !== null ? (int) $companyId : null);
+    }
+
     public static function getEloquentQuery(): Builder
     {
-        return \App\Support\UserVisibility::constrainCompanyQuery(
+        return UserVisibility::constrainCompanyQuery(
             parent::getEloquentQuery()
+                ->withoutGlobalScopes([
+                    SoftDeletingScope::class,
+                ])
                 ->with([
                     'prospect:id,name_event',
                     'prospect.latestOrder',

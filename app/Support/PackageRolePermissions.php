@@ -78,25 +78,23 @@ class PackageRolePermissions
     {
         $perms = ['view_products', 'view_orders', 'view_prospects'];
 
+        $lifecycleSkip = ['User', 'Category', 'Status', 'DocumentCategory'];
+
         foreach (static::starterModels() as $model) {
             foreach (static::abilities() as $ability) {
                 $perms[] = "{$ability}:{$model}";
+            }
+
+            if (! in_array($model, $lifecycleSkip, true)) {
+                foreach (['Restore', 'ForceDelete', 'RestoreAny', 'ForceDeleteAny'] as $ability) {
+                    $perms[] = "{$ability}:{$model}";
+                }
             }
         }
 
         // Company milik sendiri: lihat & ubah profil; buat/hapus hanya super_admin.
         foreach (['ViewAny', 'View', 'Update'] as $ability) {
             $perms[] = "{$ability}:Company";
-        }
-
-        // Crew freelance: hapus/pulihkan/hapus permanen milik company sendiri
-        foreach (['Restore', 'ForceDelete', 'RestoreAny', 'ForceDeleteAny'] as $ability) {
-            $perms[] = "{$ability}:DataPribadi";
-        }
-
-        // Vendor: hapus/pulihkan/hapus permanen milik company sendiri
-        foreach (['Restore', 'ForceDelete', 'RestoreAny', 'ForceDeleteAny'] as $ability) {
-            $perms[] = "{$ability}:Vendor";
         }
 
         return array_values(array_unique($perms));

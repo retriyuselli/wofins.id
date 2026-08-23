@@ -60,6 +60,16 @@ class DocumentCategoryResource extends BaseResource
         return ProFeatures::actorIsSuperAdmin() && parent::canDeleteAny();
     }
 
+    public static function canForceDelete(Model $record): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::canForceDelete($record);
+    }
+
+    public static function canForceDeleteAny(): bool
+    {
+        return ProFeatures::actorIsSuperAdmin() && parent::canForceDeleteAny();
+    }
+
     public static function getRelations(): array
     {
         return [

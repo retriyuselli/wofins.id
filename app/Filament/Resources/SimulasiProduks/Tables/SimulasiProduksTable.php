@@ -183,16 +183,29 @@ class SimulasiProduksTable
                         ->color('success')
                         ->url(fn (SimulasiProduk $record) => route('simulasi.show', $record))
                         ->openUrlInNewTab(),
-                    DeleteAction::make(),
-                    RestoreAction::make(),
-                    ForceDeleteAction::make(),
+                    DeleteAction::make()
+                        ->label('Hapus'),
+                    RestoreAction::make()
+                        ->label('Pulihkan'),
+                    ForceDeleteAction::make()
+                        ->label('Hapus permanen')
+                        ->requiresConfirmation()
+                        ->modalHeading('Hapus permanen simulasi ini?')
+                        ->modalDescription('Simulasi milik company Anda akan dihapus selamanya dan tidak bisa dikembalikan.')
+                        ->modalSubmitActionLabel('Ya, hapus permanen'),
                 ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                    RestoreBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->label('Hapus'),
+                    RestoreBulkAction::make()
+                        ->label('Pulihkan'),
+                    ForceDeleteBulkAction::make()
+                        ->label('Hapus permanen')
+                        ->requiresConfirmation()
+                        ->modalHeading('Hapus permanen simulasi terpilih?')
+                        ->modalDescription('Simulasi milik company Anda akan dihapus selamanya dan tidak bisa dikembalikan.'),
                 ]),
             ])
             ->emptyStateHeading('No Simulations Found')

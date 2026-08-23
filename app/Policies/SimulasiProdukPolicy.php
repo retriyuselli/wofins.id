@@ -38,30 +38,43 @@ class SimulasiProdukPolicy
 
     public function delete(AuthUser $authUser, SimulasiProduk $simulasiProduk): bool
     {
-        return $authUser->can("Delete:SimulasiProduk")
+        return $this->canManageOwnSimulasi($authUser)
             && $this->ownsRecordCompany($simulasiProduk);
+    }
+
+    public function deleteAny(AuthUser $authUser): bool
+    {
+        return $this->canManageOwnSimulasi($authUser);
     }
 
     public function restore(AuthUser $authUser, SimulasiProduk $simulasiProduk): bool
     {
-        return $authUser->can("Restore:SimulasiProduk")
+        return $this->canManageOwnSimulasi($authUser)
             && $this->ownsRecordCompany($simulasiProduk);
+    }
+
+    public function restoreAny(AuthUser $authUser): bool
+    {
+        return $this->canManageOwnSimulasi($authUser);
     }
 
     public function forceDelete(AuthUser $authUser, SimulasiProduk $simulasiProduk): bool
     {
-        return $authUser->can("ForceDelete:SimulasiProduk")
+        return $this->canManageOwnSimulasi($authUser)
             && $this->ownsRecordCompany($simulasiProduk);
     }
 
     public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $authUser->can("ForceDeleteAny:SimulasiProduk");
+        return $this->canManageOwnSimulasi($authUser);
     }
 
-    public function restoreAny(AuthUser $authUser): bool
+    private function canManageOwnSimulasi(AuthUser $authUser): bool
     {
-        return $authUser->can("RestoreAny:SimulasiProduk");
+        return $authUser->can('Delete:SimulasiProduk')
+            || $authUser->can('Update:SimulasiProduk')
+            || $authUser->can('ViewAny:SimulasiProduk')
+            || $authUser->can('ForceDelete:SimulasiProduk');
     }
 
     public function replicate(AuthUser $authUser, SimulasiProduk $simulasiProduk): bool

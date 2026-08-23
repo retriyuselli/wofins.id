@@ -7,6 +7,8 @@ use App\Models\Prospect;
 use App\Models\SimulasiProduk;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\RestoreAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 
@@ -17,7 +19,16 @@ class EditSimulasiProduk extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->label('Hapus'),
+            RestoreAction::make()
+                ->label('Pulihkan'),
+            ForceDeleteAction::make()
+                ->label('Hapus permanen')
+                ->requiresConfirmation()
+                ->modalHeading('Hapus permanen simulasi ini?')
+                ->modalDescription('Simulasi milik company Anda akan dihapus selamanya dan tidak bisa dikembalikan.')
+                ->modalSubmitActionLabel('Ya, hapus permanen'),
             Action::make('refresh_from_product')
                 ->label('Refresh dari Produk')
                 ->icon('heroicon-o-arrow-path')
