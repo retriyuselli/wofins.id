@@ -57,6 +57,22 @@ class CompanyResource extends Resource
         return $query->whereKey($companyId);
     }
 
+    public static function canViewAny(): bool
+    {
+        if (ProFeatures::actorIsSuperAdmin()) {
+            return true;
+        }
+
+        // Pemilik/tim WO harus selalu bisa buka profil perusahaannya.
+        // Ganti paket (Professional → Business) tidak boleh menghilangkan menu ini.
+        return UserVisibility::companyId() !== null;
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::canViewAny();
+    }
+
     public static function canCreate(): bool
     {
         return ProFeatures::actorIsSuperAdmin() && parent::canCreate();
