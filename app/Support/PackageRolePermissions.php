@@ -100,6 +100,7 @@ class PackageRolePermissions
         // Halaman laporan (Shield page permission) — Starter/Pro/Business
         $perms[] = 'View:LaporanKeuangan';
         $perms[] = 'page_LaporanKeuangan';
+        $perms[] = 'ViewAny:BankStatement';
 
         return array_values(array_unique($perms));
     }

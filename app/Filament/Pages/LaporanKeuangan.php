@@ -42,16 +42,8 @@ class LaporanKeuangan extends Page
 
     public static function canAccess(): bool
     {
-        if (ProFeatures::actorIsSuperAdmin()) {
-            return true;
-        }
-
-        if (! ProFeatures::allows(PricingPlans::FEATURE_BASIC_FINANCE)) {
-            return false;
-        }
-
         // Tenant WO: tampilkan meski permission Shield belum ter-sync setelah ganti paket.
-        if (UserVisibility::companyId() !== null) {
+        if (ProFeatures::tenantAllows(PricingPlans::FEATURE_BASIC_FINANCE)) {
             return true;
         }
 

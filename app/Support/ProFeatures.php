@@ -41,6 +41,19 @@ class ProFeatures
     }
 
     /**
+     * Tenant WO: fitur paket aktif + punya company_id.
+     * Dipakai agar menu tetap tampil setelah SA ganti paket tanpa sync Shield.
+     */
+    public static function tenantAllows(string $feature): bool
+    {
+        if (static::actorIsSuperAdmin()) {
+            return true;
+        }
+
+        return static::allows($feature) && UserVisibility::companyId() !== null;
+    }
+
+    /**
      * @deprecated Gunakan allows() — dipertahankan untuk kompatibilitas singkat.
      */
     public static function enabled(): bool

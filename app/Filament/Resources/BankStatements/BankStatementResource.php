@@ -13,6 +13,8 @@ use App\Filament\Resources\BankStatements\Tables\BankStatementsTable;
 use App\Filament\Resources\BankStatements\Widgets\BankStatementOverview;
 use App\Models\BankStatement;
 use App\Filament\Resources\BaseResource;
+use App\Support\PricingPlans;
+use App\Support\ProFeatures;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -93,7 +95,7 @@ class BankStatementResource extends BaseResource
         ];
     }
 
-    public static function canAccess(): bool
+    public static function canViewAny(): bool
     {
         $user = Auth::user();
 
@@ -101,12 +103,21 @@ class BankStatementResource extends BaseResource
             return false;
         }
 
-        // Plan gate via BaseResource::canViewAny (canAccess default = canViewAny).
-        // Di sini tetap cek permission eksplisit.
-        if (! static::canViewAny()) {
-            return false;
+        // Professional/Business: tampilkan meski Shield belum ter-sync setelah ganti paket.
+        if (ProFeatures::tenantAllows(PricingPlans::FEATURE_RECONCILIATION)) {
+            return true;
         }
 
         return Gate::allows('ViewAny:BankStatement');
+    }
+
+    public static function canAccess(): bool
+    {
+        return static::canViewAny();
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::canViewAny();
     }
 }
