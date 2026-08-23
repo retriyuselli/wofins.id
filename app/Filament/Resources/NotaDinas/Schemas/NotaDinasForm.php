@@ -66,7 +66,12 @@ class NotaDinasForm
                             ->validationMessages([
                                 'unique' => 'Nomor ND ini sudah dipakai di perusahaan Anda.',
                             ])
-                            ->placeholder('ND/BIS/001/2024')
+                            ->placeholder(fn (): string => 'ND/'.NotaDinas::woInitialFor(UserVisibility::companyId()).'/BIS/001/'.date('Y'))
+                            ->helperText(function (): string {
+                                $inisial = NotaDinas::woInitialFor(UserVisibility::companyId());
+
+                                return "Terisi otomatis dengan inisial WO perusahaan ({$inisial}). Format: ND/{$inisial}/kategori/urutan/tahun. Ubah inisial di Administrasi → Perusahaan.";
+                            })
                             ->maxLength(255)
                             ->default(function () {
                                 return NotaDinas::generateNomorND('BIS');

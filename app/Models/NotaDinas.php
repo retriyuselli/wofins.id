@@ -74,7 +74,8 @@ class NotaDinas extends Model
 
     /**
      * Generate nomor nota dinas otomatis berdasarkan kategori, tahun, dan company.
-     * Format: ND/[KATEGORI]/[NOMOR_URUT]/[TAHUN]
+     * Format baru: ND/[INISIAL_WO]/[KATEGORI]/[NOMOR_URUT]/[TAHUN]
+     * Format lama (masih dihitung urutannya): ND/[KATEGORI]/[NOMOR_URUT]/[TAHUN]
      * Urutan unik per company — bukan global platform.
      */
     public static function generateNomorND($kategori = 'BIS', $tahun = null, ?int $companyId = null)
@@ -83,18 +84,21 @@ class NotaDinas extends Model
             $tahun = date('Y');
         }
 
-        // Validasi kategori
         $validKategori = ['BIS', 'OPS', 'LAIN'];
         if (! in_array(strtoupper($kategori), $validKategori)) {
-            $kategori = 'BIS'; // default
+            $kategori = 'BIS';
         }
 
         $kategori = strtoupper($kategori);
         $companyId ??= UserVisibility::companyId();
+        $inisial = static::woInitialFor($companyId);
 
         $query = self::withoutGlobalScope('tenant_company')
             ->withTrashed()
-            ->where('no_nd', 'LIKE', "ND/{$kategori}/%/{$tahun}");
+            ->where(function ($q) use ($inisial, $kategori, $tahun) {
+                $q->where('no_nd', 'like', "ND/{$inisial}/{$kategori}/%/{$tahun}")
+                    ->orWhere('no_nd', 'like', "ND/{$kategori}/%/{$tahun}");
+            });
 
         if ($companyId !== null) {
             $query->where('company_id', $companyId);
@@ -102,23 +106,52 @@ class NotaDinas extends Model
             $query->whereNull('company_id');
         }
 
-        $lastNumber = $query->orderBy('no_nd', 'desc')->first();
-
-        $nextNumber = 1;
-
-        if ($lastNumber) {
-            // Extract nomor urut dari format ND/BIS/001/2024
-            $parts = explode('/', $lastNumber->no_nd);
-            if (count($parts) >= 3) {
-                $currentNumber = intval($parts[2]);
-                $nextNumber = $currentNumber + 1;
+        $maxSeq = 0;
+        foreach ($query->get(['no_nd']) as $row) {
+            $seq = static::seqFromNoNd((string) $row->no_nd, $kategori, (string) $tahun);
+            if ($seq !== null) {
+                $maxSeq = max($maxSeq, $seq);
             }
         }
 
-        // Format nomor dengan leading zeros (3 digit)
-        $formattedNumber = str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+        $formattedNumber = str_pad((string) ($maxSeq + 1), 3, '0', STR_PAD_LEFT);
 
-        return "ND/{$kategori}/{$formattedNumber}/{$tahun}";
+        return "ND/{$inisial}/{$kategori}/{$formattedNumber}/{$tahun}";
+    }
+
+    public static function woInitialFor(?int $companyId): string
+    {
+        if ($companyId) {
+            $company = Company::query()->find($companyId);
+            if ($company) {
+                return $company->woInitial();
+            }
+        }
+
+        return 'MW';
+    }
+
+    /**
+     * Nomor urut dari ND/INISIAL/KATEGORI/SEQ/TAHUN atau ND/KATEGORI/SEQ/TAHUN.
+     */
+    public static function seqFromNoNd(string $noNd, string $kategori, string $tahun): ?int
+    {
+        $parts = explode('/', $noNd);
+        $kategori = strtoupper($kategori);
+
+        if (count($parts) === 5
+            && strtoupper((string) ($parts[2] ?? '')) === $kategori
+            && (string) ($parts[4] ?? '') === $tahun) {
+            return (int) $parts[3];
+        }
+
+        if (count($parts) === 4
+            && strtoupper((string) ($parts[1] ?? '')) === $kategori
+            && (string) ($parts[3] ?? '') === $tahun) {
+            return (int) $parts[2];
+        }
+
+        return null;
     }
 
     /**

@@ -189,6 +189,20 @@ class Company extends Model
     }
 
     /**
+     * Inisial WO untuk nomor dokumen (ND, proyek). Fallback ke kode nama, lalu MW.
+     */
+    public function woInitial(): string
+    {
+        $raw = strtoupper((string) preg_replace('/[^A-Za-z0-9]/', '', (string) ($this->inisial_wo ?: '')));
+
+        if ($raw !== '') {
+            return $raw;
+        }
+
+        return $this->documentCode();
+    }
+
+    /**
      * Kode singkat untuk nomor surat (inisial nama company, maks 3 huruf).
      */
     public function documentCode(): string
