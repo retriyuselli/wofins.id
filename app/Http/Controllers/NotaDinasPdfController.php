@@ -7,7 +7,6 @@ use App\Models\NotaDinas;
 use App\Support\CompanyBrand;
 use App\Support\UserVisibility;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -81,11 +80,10 @@ class NotaDinasPdfController extends Controller
             return null;
         }
 
-        $authCompanyId = UserVisibility::companyId(Auth::user());
-        if ($authCompanyId) {
-            $loggedInCompany = Company::query()->find($authCompanyId);
-            if ($loggedInCompany) {
-                return $loggedInCompany;
+        if ($notaDinas->company_id) {
+            $ownedCompany = Company::query()->find($notaDinas->company_id);
+            if ($ownedCompany) {
+                return $ownedCompany;
             }
         }
 

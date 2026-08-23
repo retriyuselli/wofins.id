@@ -33,6 +33,6 @@ class CreateNotaDinasDetail extends CreateRecord
      */
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        return UserVisibility::stampCompanyIdFromPaymentMethod($data);
+        return UserVisibility::stampCompanyId($data);
     }
 }

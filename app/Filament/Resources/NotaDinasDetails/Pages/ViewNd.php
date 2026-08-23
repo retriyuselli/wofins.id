@@ -3,7 +3,9 @@
 namespace App\Filament\Resources\NotaDinasDetails\Pages;
 
 use App\Filament\Resources\NotaDinasDetails\NotaDinasDetailResource;
+use App\Filament\Resources\NotaDinas\NotaDinasResource;
 use App\Models\NotaDinas;
+use App\Support\UserVisibility;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
@@ -25,16 +27,18 @@ class ViewNd extends Page
 
     public function mount(int|string $record): void
     {
-        // Load NotaDinas dengan semua detail-nya
-        $this->notaDinas = NotaDinas::with([
-            'pengirim',
-            'penerima',
-            'approver',
-            'details.vendor',
-            'details.order.prospect',
-        ])->findOrFail($record);
+        $this->notaDinas = NotaDinasResource::getEloquentQuery()
+            ->with([
+                'pengirim',
+                'penerima',
+                'approver',
+                'details.vendor',
+                'details.order.prospect',
+            ])
+            ->findOrFail($record);
 
-        // Get all details untuk nota dinas ini
+        abort_unless(UserVisibility::ownsCompanyId($this->notaDinas->company_id !== null ? (int) $this->notaDinas->company_id : null), 403);
+
         $this->notaDinasDetails = $this->notaDinas->details;
     }
 

@@ -29,11 +29,12 @@ class CurrentMonthReport extends Page
 
     protected function getViewData(): array
     {
-        $details = NotaDinasDetail::with([
-            'notaDinas:id,no_nd,status',
-            'vendor:id,name',
-            'order:id,name',
-        ])
+        $details = NotaDinasDetailResource::getEloquentQuery()
+            ->with([
+                'notaDinas:id,no_nd,status',
+                'vendor:id,name',
+                'order:id,name',
+            ])
             ->whereYear('created_at', $this->year)
             ->whereMonth('created_at', $this->month)
             ->orderBy('created_at', 'desc')

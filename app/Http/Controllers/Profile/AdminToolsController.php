@@ -17,6 +17,7 @@ use App\Models\Sop;
 use App\Models\User;
 use App\Support\UserVisibility;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Spatie\Permission\Models\Role;
 
 class AdminToolsController extends Controller
@@ -353,6 +354,8 @@ class AdminToolsController extends Controller
 
     public function notaDinasShow(NotaDinas $notaDinas, Request $request)
     {
+        Gate::authorize('view', $notaDinas);
+
         $q = trim((string) $request->get('q', ''));
         $statusInvoice = trim((string) $request->get('status_invoice', ''));
 
