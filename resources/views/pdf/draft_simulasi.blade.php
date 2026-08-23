@@ -284,7 +284,7 @@
                 <p><b>Date Akad :</b> {{ $simulasi->prospect->date_akad ? $simulasi->prospect->date_akad->format('d F Y') : 'N/A' }}</p>
                 <p><b>Date Resepsi :</b> {{ $simulasi->prospect->date_resepsi ? $simulasi->prospect->date_resepsi->format('d F Y') : 'N/A' }}</p>
                 <p><b>Valid Until :</b> {{ $simulasi->created_at ? $simulasi->created_at->addDays(4)->format('d F Y') : 'N/A' }}</p>
-                <p><b>Penawaran :</b> 00{{ $simulasi->id }}</p>
+                <p><b>Penawaran :</b> {{ $simulasi->penawaran_number }}</p>
             </td>
         </tr>
     </table>

@@ -18,6 +18,7 @@ class SimulasiProduk extends Model
 
     protected $fillable = [
         'company_id',
+        'penawaran_seq',
         'prospect_id',
         'product_id',
         'slug',
@@ -54,6 +55,11 @@ class SimulasiProduk extends Model
         static::creating(function ($model) {
             if (! $model->user_id) {
                 $model->user_id = Auth::id();
+            }
+
+            if (empty($model->penawaran_seq)) {
+                $companyId = $model->company_id ? (int) $model->company_id : null;
+                $model->penawaran_seq = static::nextPenawaranSeq($companyId);
             }
         });
 
@@ -99,6 +105,26 @@ class SimulasiProduk extends Model
     public function prospect()
     {
         return $this->belongsTo(Prospect::class);
+    }
+
+    public static function nextPenawaranSeq(?int $companyId): int
+    {
+        $query = static::withoutGlobalScopes()->withTrashed();
+
+        if ($companyId === null) {
+            $query->whereNull('company_id');
+        } else {
+            $query->where('company_id', $companyId);
+        }
+
+        return (int) $query->max('penawaran_seq') + 1;
+    }
+
+    public function getPenawaranNumberAttribute(): string
+    {
+        $seq = (int) ($this->penawaran_seq ?: $this->id);
+
+        return str_pad((string) $seq, 3, '0', STR_PAD_LEFT);
     }
 
     public static function generateUniqueSlug(string $base, ?int $ignoreId = null): string

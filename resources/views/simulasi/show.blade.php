@@ -482,7 +482,7 @@ Invoice Area
                                                         {{ $simulasi->created_at->addDays(4)->format('d F Y') }}
                                                     </p>
                                                     <p style="margin-bottom: 2px;"><b>Penawaran : </b>
-                                                        00{{ $simulasi->id }}</p>
+                                                        {{ $simulasi->penawaran_number }}</p>
                                                 </div>
                                             </div>
                                         </div>
