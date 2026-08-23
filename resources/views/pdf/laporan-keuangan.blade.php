@@ -478,10 +478,17 @@
         </tr>
     </table>
 
+    @php
+        $showCompany = $show_company ?? false;
+        $emptyColspan = $showCompany ? 9 : 8;
+    @endphp
     <table>
         <thead>
             <tr>
                 <th class="text-center">Tanggal</th>
+                @if ($showCompany)
+                    <th>Perusahaan</th>
+                @endif
                 <th>Jenis</th>
                 <th>Deskripsi</th>
                 <th>Vendor</th>
@@ -495,6 +502,9 @@
             @forelse($transaksi as $item)
                 <tr>
                     <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d/m/Y') }}</td>
+                    @if ($showCompany)
+                        <td>{{ $item->company_name ?? '—' }}</td>
+                    @endif
                     <td>{{ $item->jenis }}</td>
                     <td>{{ $item->deskripsi }}</td>
                     <td>{{ $item->vendor_name ?? '-' }}</td>
@@ -505,7 +515,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" class="no-data">
+                    <td colspan="{{ $emptyColspan }}" class="no-data">
                         Tidak ada data transaksi yang sesuai dengan filter yang diterapkan.
                     </td>
                 </tr>

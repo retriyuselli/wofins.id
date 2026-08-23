@@ -128,6 +128,28 @@ class LaporanKeuangan extends Page
 
         return $query->where($table.'.company_id', $this->filter_company_id);
     }
+
+    public function showCompanyColumn(): bool
+    {
+        return ProFeatures::actorIsSuperAdmin();
+    }
+
+    /**
+     * Subquery nama company untuk UNION laporan (kolom Super Admin).
+     */
+    protected function companyNameSelect(string $table): \Illuminate\Contracts\Database\Query\Expression
+    {
+        if (! Schema::hasColumn($table, 'company_id') || ! Schema::hasColumn('companies', 'company_name')) {
+            return DB::raw('NULL as company_name');
+        }
+
+        return DB::raw('(
+            SELECT company_name
+            FROM companies
+            WHERE companies.id = '.$table.'.company_id
+            LIMIT 1
+        ) as company_name');
+    }
     public function mount()
     {
         // Set tanggal awal dan akhir ke bulan berjalan
@@ -547,7 +569,8 @@ class LaporanKeuangan extends Page
                     FROM payment_methods
                     WHERE payment_methods.id = data_pembayarans.payment_method_id
                     LIMIT 1
-                ) as payment_method_details')
+                ) as payment_method_details'),
+                $this->companyNameSelect('data_pembayarans')
             );
 
         $pengeluaranWedding = $this->applyReportCompanyFilter(
@@ -583,7 +606,8 @@ class LaporanKeuangan extends Page
                     FROM payment_methods
                     WHERE payment_methods.id = expenses.payment_method_id
                     LIMIT 1
-                ) as payment_method_details')
+                ) as payment_method_details'),
+                $this->companyNameSelect('expenses')
             );
 
         $pengeluaranOps = $this->applyReportCompanyFilter(
@@ -604,7 +628,8 @@ class LaporanKeuangan extends Page
                     FROM payment_methods
                     WHERE payment_methods.id = expense_ops.payment_method_id
                     LIMIT 1
-                ) as payment_method_details')
+                ) as payment_method_details'),
+                $this->companyNameSelect('expense_ops')
             );
 
         $pendapatanLain = $this->applyReportCompanyFilter(
@@ -625,7 +650,8 @@ class LaporanKeuangan extends Page
                     FROM payment_methods
                     WHERE payment_methods.id = pendapatan_lains.payment_method_id
                     LIMIT 1
-                ) as payment_method_details')
+                ) as payment_method_details'),
+                $this->companyNameSelect('pendapatan_lains')
             );
 
         $pengeluaranLain = $this->applyReportCompanyFilter(
@@ -646,7 +672,8 @@ class LaporanKeuangan extends Page
                     FROM payment_methods
                     WHERE payment_methods.id = pengeluaran_lains.payment_method_id
                     LIMIT 1
-                ) as payment_method_details')
+                ) as payment_method_details'),
+                $this->companyNameSelect('pengeluaran_lains')
             );
 
         $all = $uangMasuk
@@ -889,6 +916,7 @@ class LaporanKeuangan extends Page
             'filter_jenis' => $instance->filter_jenis,
             'filter_keyword' => $instance->filter_keyword,
             'company_label' => $instance->companyLabel(),
+            'show_company' => $instance->showCompanyColumn(),
             'total_masuk' => $totalMasuk,
             'total_keluar' => $totalKeluar,
             'saldo_akhir' => $saldoAkhir,

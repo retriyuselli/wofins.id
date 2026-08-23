@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToCompany;
+use App\Support\UserVisibility;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -72,10 +73,11 @@ class NotaDinas extends Model
     }
 
     /**
-     * Generate nomor nota dinas otomatis berdasarkan kategori dan tahun
+     * Generate nomor nota dinas otomatis berdasarkan kategori, tahun, dan company.
      * Format: ND/[KATEGORI]/[NOMOR_URUT]/[TAHUN]
+     * Urutan unik per company — bukan global platform.
      */
-    public static function generateNomorND($kategori = 'BIS', $tahun = null)
+    public static function generateNomorND($kategori = 'BIS', $tahun = null, ?int $companyId = null)
     {
         if (! $tahun) {
             $tahun = date('Y');
@@ -88,11 +90,19 @@ class NotaDinas extends Model
         }
 
         $kategori = strtoupper($kategori);
+        $companyId ??= UserVisibility::companyId();
 
-        // Cari nomor urut terakhir untuk kategori dan tahun yang sama
-        $lastNumber = self::where('no_nd', 'LIKE', "ND/{$kategori}/%/{$tahun}")
-            ->orderBy('no_nd', 'desc')
-            ->first();
+        $query = self::withoutGlobalScope('tenant_company')
+            ->withTrashed()
+            ->where('no_nd', 'LIKE', "ND/{$kategori}/%/{$tahun}");
+
+        if ($companyId !== null) {
+            $query->where('company_id', $companyId);
+        } else {
+            $query->whereNull('company_id');
+        }
+
+        $lastNumber = $query->orderBy('no_nd', 'desc')->first();
 
         $nextNumber = 1;
 

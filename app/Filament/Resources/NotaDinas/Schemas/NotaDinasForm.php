@@ -4,6 +4,7 @@ namespace App\Filament\Resources\NotaDinas\Schemas;
 
 use App\Models\NotaDinas;
 use App\Models\User;
+use App\Support\UserVisibility;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -15,6 +16,7 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rules\Unique;
 
 class NotaDinasForm
 {
@@ -47,7 +49,23 @@ class NotaDinasForm
                             ->label('Nomor ND')
                             ->required()
                             ->readOnly()
-                            ->unique(table: 'nota_dinas', column: 'no_nd', ignoreRecord: true)
+                            ->unique(
+                                table: 'nota_dinas',
+                                column: 'no_nd',
+                                ignoreRecord: true,
+                                modifyRuleUsing: function (Unique $rule) {
+                                    $companyId = UserVisibility::companyId();
+
+                                    if ($companyId === null) {
+                                        return $rule->whereNull('company_id');
+                                    }
+
+                                    return $rule->where('company_id', $companyId);
+                                }
+                            )
+                            ->validationMessages([
+                                'unique' => 'Nomor ND ini sudah dipakai di perusahaan Anda.',
+                            ])
                             ->placeholder('ND/BIS/001/2024')
                             ->maxLength(255)
                             ->default(function () {

@@ -349,11 +349,18 @@
     </div>
 
     {{-- Table --}}
+    @php
+        $showCompany = $this->showCompanyColumn();
+        $emptyColspan = $showCompany ? 10 : 9;
+    @endphp
     <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-xl shadow-sm ring-1 ring-gray-950/5">
         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                 <tr>
                     <th scope="col" class="px-6 py-3">Tanggal</th>
+                    @if ($showCompany)
+                        <th scope="col" class="px-6 py-3">Perusahaan</th>
+                    @endif
                     <th scope="col" class="px-6 py-3">Jenis</th>
                     <th scope="col" class="px-6 py-3">Status</th>
                     <th scope="col" class="px-6 py-3">Deskripsi</th>
@@ -371,6 +378,11 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             {{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}
                         </td>
+                        @if ($showCompany)
+                            <td class="px-6 py-4 text-xs font-medium text-gray-700 dark:text-gray-200">
+                                {{ $item->company_name ?? '—' }}
+                            </td>
+                        @endif
                         <td class="px-6 py-4">
                             <span @class([
                                 'inline-flex items-center px-2 py-1 rounded-md text-xs font-medium',
@@ -429,7 +441,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8">
+                        <td colspan="{{ $emptyColspan }}">
                             <div class="flex flex-col items-center justify-center text-center py-12">
                                 <div class="mb-4">
                                     <x-heroicon-o-circle-stack class="w-12 h-12 text-gray-400" />
