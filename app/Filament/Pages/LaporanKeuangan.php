@@ -9,6 +9,7 @@ use App\Models\ExpenseOps;
 use App\Models\Order;
 use App\Models\PendapatanLain;
 use App\Models\PengeluaranLain;
+use App\Support\PricingPlans;
 use App\Support\ProFeatures;
 use App\Support\UserVisibility;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -38,6 +39,24 @@ class LaporanKeuangan extends Page
     protected static string|\UnitEnum|null $navigationGroup = 'Keuangan';
 
     protected static ?string $title = 'Laporan Keuangan';
+
+    public static function canAccess(): bool
+    {
+        if (ProFeatures::actorIsSuperAdmin()) {
+            return true;
+        }
+
+        if (! ProFeatures::allows(PricingPlans::FEATURE_BASIC_FINANCE)) {
+            return false;
+        }
+
+        // Tenant WO: tampilkan meski permission Shield belum ter-sync setelah ganti paket.
+        if (UserVisibility::companyId() !== null) {
+            return true;
+        }
+
+        return parent::canAccess();
+    }
 
     public $transaksi = [];
 
