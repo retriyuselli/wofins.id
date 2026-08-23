@@ -70,20 +70,18 @@
                     <div class="relative z-10">
                         <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--wf-gold-soft)]">Form undangan</p>
                         <h2 class="text-lg font-bold text-white mt-1">{{ $labelCompany }}</h2>
-                        <p class="text-sm text-white/70 mt-1">Isi profil, kontak, dan peran Anda di lapangan.</p>
+                        <p class="text-sm text-white/70 mt-1">Isi profil dan peran Anda di lapangan.</p>
                     </div>
                 </div>
 
                 <form action="{{ route('crew.invite.store', ['token' => $token]) }}" method="POST"
-                      enctype="multipart/form-data" class="p-6 space-y-8">
+                      class="p-6 space-y-8">
                     @csrf
 
                     <div class="flex flex-wrap gap-2">
                         <template x-for="item in [
                             { id: 'profil', label: 'Profil', icon: 'fa-user' },
-                            { id: 'kontak', label: 'Kontak', icon: 'fa-phone' },
                             { id: 'detail', label: 'Detail', icon: 'fa-briefcase' },
-                            { id: 'motivasi', label: 'Motivasi', icon: 'fa-quote-left' },
                         ]" :key="item.id">
                             <button type="button"
                                     @click="tab = item.id"
@@ -116,9 +114,6 @@
                                    placeholder="contoh@email.com"
                                    class="wf-field">
                         </div>
-                    </div>
-
-                    <div x-show="tab === 'kontak'" x-cloak class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label for="nomor_telepon" class="block text-sm font-semibold text-[var(--wf-navy)]">Nomor Telepon / WA</label>
                             <div class="flex">
@@ -136,18 +131,18 @@
                                    max="{{ date('Y-m-d') }}"
                                    class="wf-field">
                         </div>
+                        <div>
+                            <label for="jenis_kelamin" class="block text-sm font-semibold text-[var(--wf-navy)]">Jenis Kelamin</label>
+                            <select id="jenis_kelamin" name="jenis_kelamin" class="wf-field">
+                                <option value="">Pilih jenis kelamin</option>
+                                <option value="Laki-laki" @selected(old('jenis_kelamin') === 'Laki-laki')>Laki-laki</option>
+                                <option value="Perempuan" @selected(old('jenis_kelamin') === 'Perempuan')>Perempuan</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div x-show="tab === 'detail'" x-cloak class="space-y-4">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label for="jenis_kelamin" class="block text-sm font-semibold text-[var(--wf-navy)]">Jenis Kelamin</label>
-                                <select id="jenis_kelamin" name="jenis_kelamin" class="wf-field">
-                                    <option value="">Pilih jenis kelamin</option>
-                                    <option value="Laki-laki" @selected(old('jenis_kelamin') === 'Laki-laki')>Laki-laki</option>
-                                    <option value="Perempuan" @selected(old('jenis_kelamin') === 'Perempuan')>Perempuan</option>
-                                </select>
-                            </div>
                             <div>
                                 <label for="pekerjaan" class="block text-sm font-semibold text-[var(--wf-navy)]">Peran / Keahlian</label>
                                 <input type="text" id="pekerjaan" name="pekerjaan"
@@ -155,35 +150,21 @@
                                        placeholder="Contoh: Decorator / MUA / Runner"
                                        class="wf-field">
                             </div>
-                        </div>
-
-                        <div>
-                            <label for="alamat" class="block text-sm font-semibold text-[var(--wf-navy)]">Alamat</label>
-                            <textarea id="alamat" name="alamat" rows="3" class="wf-field"
-                                      placeholder="Kota / alamat singkat">{{ old('alamat') }}</textarea>
-                        </div>
-
-                        <div>
-                            <label for="foto" class="block text-sm font-semibold text-[var(--wf-navy)]">Foto (opsional)</label>
-                            <input type="file" id="foto" name="foto" accept="image/*"
-                                   class="wf-field"
-                                   onchange="previewCrewFoto(this)">
-                            <p class="mt-1 text-xs text-[var(--wf-muted)]">Maks. 1MB · JPG/PNG</p>
-                            <img id="foto-preview" src="#" alt="Pratinjau"
-                                 class="mt-3 hidden h-28 w-28 rounded-xl object-cover border border-[var(--wf-line)]">
-                        </div>
-                    </div>
-
-                    <div x-show="tab === 'motivasi'" x-cloak class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label for="motivasi_kerja" class="block text-sm font-semibold text-[var(--wf-navy)]">Pengalaman / Motivasi</label>
-                            <textarea id="motivasi_kerja" name="motivasi_kerja" rows="4" class="wf-field"
-                                      placeholder="Ceritakan pengalaman wedding Anda">{{ old('motivasi_kerja') }}</textarea>
-                        </div>
-                        <div>
-                            <label for="pelatihan" class="block text-sm font-semibold text-[var(--wf-navy)]">Pelatihan / Sertifikasi</label>
-                            <textarea id="pelatihan" name="pelatihan" rows="4" class="wf-field"
-                                      placeholder="Opsional">{{ old('pelatihan') }}</textarea>
+                            <div>
+                                <label for="alamat" class="block text-sm font-semibold text-[var(--wf-navy)]">Alamat</label>
+                                <textarea id="alamat" name="alamat" rows="3" class="wf-field"
+                                          placeholder="Kota / alamat singkat">{{ old('alamat') }}</textarea>
+                            </div>
+                            <div>
+                                <label for="motivasi_kerja" class="block text-sm font-semibold text-[var(--wf-navy)]">Pengalaman / Motivasi</label>
+                                <textarea id="motivasi_kerja" name="motivasi_kerja" rows="4" class="wf-field"
+                                          placeholder="Ceritakan pengalaman wedding Anda">{{ old('motivasi_kerja') }}</textarea>
+                            </div>
+                            <div>
+                                <label for="pelatihan" class="block text-sm font-semibold text-[var(--wf-navy)]">Pelatihan / Sertifikasi</label>
+                                <textarea id="pelatihan" name="pelatihan" rows="4" class="wf-field"
+                                          placeholder="Opsional">{{ old('pelatihan') }}</textarea>
+                            </div>
                         </div>
                     </div>
 
@@ -200,30 +181,3 @@
     @include('front.partials.wf-footer')
 </div>
 @endsection
-
-@push('scripts')
-<script>
-    function previewCrewFoto(input) {
-        const preview = document.getElementById('foto-preview');
-        const file = input.files?.[0];
-        if (!file) {
-            preview.classList.add('hidden');
-            preview.src = '#';
-            return;
-        }
-        if (file.size > 1024 * 1024) {
-            alert('Ukuran file terlalu besar! Maksimal 1MB.');
-            input.value = '';
-            preview.classList.add('hidden');
-            preview.src = '#';
-            return;
-        }
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            preview.src = e.target.result;
-            preview.classList.remove('hidden');
-        };
-        reader.readAsDataURL(file);
-    }
-</script>
-@endpush
