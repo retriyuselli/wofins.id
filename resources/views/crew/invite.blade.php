@@ -6,8 +6,13 @@
 @include('front.partials.wf-front-base-styles')
 <style>
     [x-cloak] { display: none !important; }
-    .wf-field {
+    .wf-field,
+    select.wf-field {
+        display: block;
         width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        min-height: 2.75rem;
         margin-top: 0.35rem;
         border-radius: 0.75rem;
         border: 1px solid var(--wf-line);
@@ -15,6 +20,14 @@
         padding: 0.65rem 0.9rem;
         font-size: 0.925rem;
         color: var(--wf-ink);
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    select.wf-field {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2364748b' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        padding-right: 2.25rem;
     }
     .wf-field:focus {
         outline: none;
@@ -131,9 +144,9 @@
                                    max="{{ date('Y-m-d') }}"
                                    class="wf-field">
                         </div>
-                        <div>
+                        <div class="w-full min-w-0">
                             <label for="jenis_kelamin" class="block text-sm font-semibold text-[var(--wf-navy)]">Jenis Kelamin</label>
-                            <select id="jenis_kelamin" name="jenis_kelamin" class="wf-field">
+                            <select id="jenis_kelamin" name="jenis_kelamin" class="wf-field w-full">
                                 <option value="">Pilih jenis kelamin</option>
                                 <option value="Laki-laki" @selected(old('jenis_kelamin') === 'Laki-laki')>Laki-laki</option>
                                 <option value="Perempuan" @selected(old('jenis_kelamin') === 'Perempuan')>Perempuan</option>
