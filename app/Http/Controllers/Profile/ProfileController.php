@@ -59,6 +59,7 @@ class ProfileController extends Controller
             PricingPlans::FEATURE_FIXED_ASSETS => 'Fixed assets',
             PricingPlans::FEATURE_NOTA_DINAS => 'Nota dinas',
             PricingPlans::FEATURE_DOCUMENTS => 'Dokumen & SOP',
+            PricingPlans::FEATURE_CREW_FREELANCE => 'Crew freelance',
             PricingPlans::FEATURE_RECONCILIATION => 'Rekonsiliasi & arus kas bersih',
             PricingPlans::FEATURE_PAYROLL => 'Payroll',
             PricingPlans::FEATURE_ADVANCED_REPORTS => 'Laporan lanjutan (kinerja AM)',

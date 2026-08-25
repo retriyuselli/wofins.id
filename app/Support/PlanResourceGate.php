@@ -22,8 +22,8 @@ class PlanResourceGate
             \App\Filament\Resources\SimulasiProduks\SimulasiProdukResource::class => PricingPlans::FEATURE_SIMULASI,
             \App\Filament\Resources\Products\ProductResource::class => PricingPlans::FEATURE_PROJECTS,
             \App\Filament\Resources\Vendors\VendorResource::class => PricingPlans::FEATURE_PROJECTS,
-            // Crew freelance company (bukan data pribadi akun user / HRIS karyawan)
-            \App\Filament\Resources\DataPribadis\DataPribadiResource::class => PricingPlans::FEATURE_PROJECTS,
+            // Crew freelance (Business+)
+            \App\Filament\Resources\DataPribadis\DataPribadiResource::class => PricingPlans::FEATURE_CREW_FREELANCE,
             // Kategori: tanpa gate paket / kuota — mutate hanya super_admin (CategoryResource + CategoryPolicy)
 
             // Keuangan dasar

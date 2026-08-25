@@ -438,7 +438,7 @@
         ['Apakah ada paket Custom?', 'Ya. Jika kebutuhan Anda di luar paket Starter, Professional, atau Business, pilih paket Custom dan hubungi pengembang untuk diskusi scope serta harga.'],
         ['Apakah ada paket Enterprise?', 'Paket Enterprise adalah solusi terpisah di luar aplikasi WOFINS standar ini. Hubungi pengembang jika kebutuhan Anda melebihi paket Business.'],
         ['Bagaimana dengan kategori?', 'Master kategori dikelola admin platform (super admin). Tim WO tetap bisa memakai kategori yang sudah disediakan.'],
-        ['Apa itu crew freelance?', 'Data crew freelance milik company (bukan akun pengguna). Semua paket bisa menambah crew dan membagikan link undangan agar crew mengisi sendiri tanpa makan kuota pengguna.'],
+        ['Apa itu crew freelance?', 'Data crew freelance milik company (bukan akun pengguna). Fitur ini hanya di paket Business: tambah crew dan bagikan link undangan agar crew mengisi sendiri tanpa makan kuota pengguna.'],
         ['Apakah data saya aman?', 'Ya. Akses berbasis peran, riwayat aktivitas, approval, backup terpusat, dan audit trail membantu menjaga keamanan data bisnis Anda.'],
         ['Apakah ada masa uji coba?', 'Kami sediakan demo gratis dan konsultasi kebutuhan agar Anda bisa menilai kesesuaian WOFINS sebelum berlangganan.'],
         ['Bagaimana proses onboarding?', 'Setelah paket dipilih, tim kami membantu setup perusahaan, pengguna, dan alur kerja inti agar tim Anda siap memakai sistem.'],

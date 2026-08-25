@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Company;
 use App\Models\DataPribadi;
+use App\Support\PricingPlans;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -17,7 +18,7 @@ class PublicCrewInviteController extends Controller
     {
         $company = Company::findByCrewInviteToken($token);
 
-        if ($company === null) {
+        if ($company === null || ! static::companyAllowsCrewFreelance($company)) {
             return response()->view('crew.unavailable', status: 404);
         }
 
@@ -31,7 +32,7 @@ class PublicCrewInviteController extends Controller
     {
         $company = Company::findByCrewInviteToken($token);
 
-        if ($company === null) {
+        if ($company === null || ! static::companyAllowsCrewFreelance($company)) {
             return response()->view('crew.unavailable', status: 404);
         }
 
@@ -79,7 +80,7 @@ class PublicCrewInviteController extends Controller
     {
         $company = Company::findByCrewInviteToken($token);
 
-        if ($company === null) {
+        if ($company === null || ! static::companyAllowsCrewFreelance($company)) {
             return response()->view('crew.unavailable', status: 404);
         }
 
@@ -87,5 +88,13 @@ class PublicCrewInviteController extends Controller
             'company' => $company,
             'token' => $token,
         ]);
+    }
+
+    private static function companyAllowsCrewFreelance(Company $company): bool
+    {
+        return PricingPlans::allows(
+            $company->subscription_plan,
+            PricingPlans::FEATURE_CREW_FREELANCE
+        );
     }
 }

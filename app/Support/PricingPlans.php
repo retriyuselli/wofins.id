@@ -29,6 +29,8 @@ class PricingPlans
 
     public const FEATURE_DOCUMENTS = 'documents';
 
+    public const FEATURE_CREW_FREELANCE = 'crew_freelance';
+
     /**
      * Paket layanan WOFINS — sumber tunggal untuk halaman Harga,
      * formulir pendaftaran, kontak, email, Filament, dan feature gate.
@@ -185,10 +187,6 @@ class PricingPlans
                         'tip' => 'Catat dan kelola aset tetap perusahaan: nilai perolehan, depresiasi, serta status aset.',
                     ],
                     [
-                        'label' => 'Crew Freelance + Link Undangan',
-                        'tip' => 'Undang crew lewat link khusus. Mereka mengisi data sendiri, tanpa perlu akun pengguna tambahan.',
-                    ],
-                    [
                         'label' => 'Rekonsiliasi Rekening Koran',
                         'tip' => 'Import rekening koran, cocokkan transaksi, lalu unduh hasil rekonsiliasi. Termasuk laporan arus kas bersih (Net Cash Flow).',
                     ],
@@ -258,6 +256,10 @@ class PricingPlans
                         'tip' => 'Termasuk simulasi wedding, draft kontrak kerja, fixed assets, rekonsiliasi & arus kas bersih, payroll, dan seluruh kapasitas Professional.',
                     ],
                     [
+                        'label' => 'Crew Freelance + Link Undangan',
+                        'tip' => 'Undang crew lewat link khusus. Mereka mengisi data sendiri, tanpa perlu akun pengguna tambahan.',
+                    ],
+                    [
                         'label' => 'Dokumen & SOP',
                         'tip' => 'Simpan dokumen resmi, SOP perusahaan, dan knowledge base tim dalam satu tempat.',
                     ],
@@ -285,6 +287,7 @@ class PricingPlans
                     self::FEATURE_FIXED_ASSETS,
                     self::FEATURE_NOTA_DINAS,
                     self::FEATURE_DOCUMENTS,
+                    self::FEATURE_CREW_FREELANCE,
                     self::FEATURE_RECONCILIATION,
                     self::FEATURE_PAYROLL,
                     self::FEATURE_ADVANCED_REPORTS,
@@ -556,7 +559,7 @@ class PricingPlans
             array_merge(['Vendor'], $quota('vendor_limit')),
             array_merge(['Produk'], $quota('product_limit')),
             ['Kategori', 'Dikelola Admin', 'Dikelola Admin', 'Dikelola Admin'],
-            ['Crew Freelance', true, true, true],
+            ['Crew Freelance', false, false, true],
             array_merge(['Proyek Wedding'], $quota('order_limit')),
             array_merge(['Prospek'], $quota('prospect_limit')),
             array_merge(['Simulasi'], $quota('simulasi_limit')),

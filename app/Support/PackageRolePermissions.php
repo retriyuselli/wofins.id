@@ -5,9 +5,9 @@ namespace App\Support;
 /**
  * Permission Shield untuk role pemilik paket (pengunjung).
  * CRUD diizinkan di permission; menu/aksi tetap digating PlanResourceGate:
- * - Starter: proyek + keuangan dasar + crew freelance
+ * - Starter: proyek + keuangan dasar
  * - Professional+: nota dinas, rekonsiliasi, payroll, simulasi (gate terpisah)
- * - Business+: dokumen/SOP, laporan kinerja AM, dll.
+ * - Business+: crew freelance, dokumen/SOP, laporan kinerja AM, dll.
  * Absensi/cuti/portal ESS tidak di-seed (fitur tidak ditawarkan di paket).
  */
 class PackageRolePermissions

@@ -748,6 +748,7 @@ class CompanySubscription
         $businessOnly = [
             PricingPlans::FEATURE_DOCUMENTS,
             PricingPlans::FEATURE_ADVANCED_REPORTS,
+            PricingPlans::FEATURE_CREW_FREELANCE,
         ];
 
         $target = in_array($feature, $businessOnly, true)

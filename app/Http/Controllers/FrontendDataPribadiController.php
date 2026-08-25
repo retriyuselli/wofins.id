@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Company;
 use App\Models\DataPribadi;
+use App\Support\CompanySubscription;
+use App\Support\PricingPlans;
 use App\Support\ProFeatures;
 use App\Support\UserVisibility;
 use Illuminate\Http\RedirectResponse;
@@ -16,6 +18,8 @@ class FrontendDataPribadiController extends Controller
 {
     public function create(): View
     {
+        $this->ensureCrewFreelanceAllowed();
+
         return view('data-pribadi.create', [
             'tenantCompanyName' => $this->tenantCompanyName(),
         ]);
@@ -23,6 +27,8 @@ class FrontendDataPribadiController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $this->ensureCrewFreelanceAllowed();
+
         $companyId = UserVisibility::companyId();
 
         if (! ProFeatures::actorIsSuperAdmin() && $companyId === null) {
@@ -83,6 +89,8 @@ class FrontendDataPribadiController extends Controller
 
     public function index(Request $request): View
     {
+        $this->ensureCrewFreelanceAllowed();
+
         $query = UserVisibility::constrainCompanyQuery(DataPribadi::query());
 
         if ($request->filled('search')) {
@@ -100,9 +108,20 @@ class FrontendDataPribadiController extends Controller
 
     public function success(): View
     {
+        $this->ensureCrewFreelanceAllowed();
+
         return view('data-pribadi.success', [
             'tenantCompanyName' => $this->tenantCompanyName(),
         ]);
+    }
+
+    private function ensureCrewFreelanceAllowed(): void
+    {
+        abort_unless(
+            ProFeatures::allows(PricingPlans::FEATURE_CREW_FREELANCE),
+            403,
+            CompanySubscription::upgradeMessage(PricingPlans::FEATURE_CREW_FREELANCE)
+        );
     }
 
     private function tenantCompanyName(): string
