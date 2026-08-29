@@ -120,6 +120,20 @@
             box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.15);
         }
 
+        .wf-input:read-only,
+        .wf-input[readonly] {
+            background: var(--wf-cream);
+            color: var(--wf-muted);
+            cursor: not-allowed;
+            caret-color: transparent;
+        }
+
+        .wf-input:read-only:focus,
+        .wf-input[readonly]:focus {
+            border-color: var(--wf-line);
+            box-shadow: none;
+        }
+
         .wf-modal-backdrop {
             background: rgba(7, 21, 38, 0.55);
             backdrop-filter: blur(4px);
@@ -151,6 +165,7 @@
 
     $prefillName = $authUser?->name ?: $prospect?->full_name;
     $prefillEmail = $authUser?->email ?: $prospect?->email;
+    $emailLocked = filled($authUser?->email);
     $prefillPhone = $authUser?->phone_number ?: $prospect?->phone;
     $prefillCompany = $prospect?->company_name;
 
@@ -361,12 +376,13 @@
                             <div class="grid sm:grid-cols-2 gap-4">
                                 <div>
                                     <label for="contact_email" class="block text-sm font-semibold text-[var(--wf-navy)] mb-1.5">Email *</label>
-                                    <input id="contact_email" name="email" type="email" class="wf-input {{ $prefillEmail ? 'bg-[var(--wf-cream)] text-[var(--wf-muted)] cursor-not-allowed' : '' }}" required
-                                           value="{{ old('email', $prefillEmail) }}"
+                                    <input id="contact_email" name="email" type="email" class="wf-input" required
+                                           value="{{ $emailLocked ? $authUser->email : old('email', $prefillEmail) }}"
                                            placeholder="email@domain.com"
-                                           @if ($prefillEmail) readonly @endif>
-                                    @if ($prefillEmail)
-                                        <p class="mt-1 text-xs text-[var(--wf-muted)]">Email mengikuti akun Anda.</p>
+                                           autocomplete="{{ $emailLocked ? 'off' : 'email' }}"
+                                           @if ($emailLocked) readonly tabindex="-1" aria-readonly="true" @endif>
+                                    @if ($emailLocked)
+                                        <p class="mt-1 text-xs text-[var(--wf-muted)]">Email mengikuti akun Anda dan tidak dapat diubah.</p>
                                     @endif
                                 </div>
                                 <div>

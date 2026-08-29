@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Front;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\CompanyBrand;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -142,13 +142,38 @@ class AuthController extends Controller
 
     /**
      * Proses tautan verifikasi dari email.
+     * Tidak wajib login: klik dari kotak masuk tetap memverifikasi, lalu minta user masuk.
      */
-    public function verifyEmail(EmailVerificationRequest $request)
+    public function verifyEmail(Request $request, string $id, string $hash)
     {
-        $request->fulfill();
+        $user = User::findOrFail($id);
 
-        return $this->redirectAfterAuth($request->user())
-            ->with('success', 'Email berhasil diverifikasi.');
+        if (! hash_equals(sha1($user->getEmailForVerification()), $hash)) {
+            abort(403, 'Tautan verifikasi tidak valid.');
+        }
+
+        if (! $user->hasVerifiedEmail()) {
+            $user->markEmailAsVerified();
+            event(new Verified($user));
+        }
+
+        if (Auth::check()) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+
+        return redirect()
+            ->route('verification.success')
+            ->with('verified', true);
+    }
+
+    /**
+     * Halaman sukses setelah klik tautan verifikasi.
+     */
+    public function showVerified()
+    {
+        return view('front.auth.email-verified');
     }
 
     /**

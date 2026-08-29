@@ -1,8 +1,6 @@
-@extends('layouts.app')
+<?php $__env->startSection('title', 'Verifikasi Email — WOFINS'); ?>
 
-@section('title', 'Verifikasi Email — WOFINS')
-
-@push('styles')
+<?php $__env->startPush('styles'); ?>
 <style>
         :root {
             --wf-navy: #0b1f3a;
@@ -64,15 +62,15 @@
             transform: translateY(-1px);
         }
     </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
-@php
+<?php $__env->startSection('content'); ?>
+<?php
     $user = Auth::user();
-@endphp
+?>
 
 <div class="wf-verify-page">
-    @include('front.partials.wf-nav')
+    <?php echo $__env->make('front.partials.wf-nav', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
         <div class="bg-white border border-[var(--wf-line)] rounded-[1.25rem] overflow-hidden shadow-[0_18px_40px_-28px_rgba(11,31,58,0.28)]">
@@ -81,24 +79,24 @@
                 <h1 class="mt-1 text-xl sm:text-2xl font-bold text-white tracking-tight">Verifikasi email Anda</h1>
                 <p class="mt-2 text-sm text-white/65">
                     Kami sudah mengirim tautan verifikasi ke
-                    <span class="text-white font-semibold">{{ $user?->email }}</span>.
+                    <span class="text-white font-semibold"><?php echo e($user?->email); ?></span>.
                 </p>
             </div>
 
             <div class="p-6 sm:p-8 space-y-6">
-                @if (session('status') === 'verification-link-sent')
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(session('status') === 'verification-link-sent'): ?>
                     <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
                         <p class="text-sm text-emerald-800 font-medium">
                             Tautan verifikasi baru telah dikirim. Periksa kotak masuk atau folder spam.
                         </p>
                     </div>
-                @endif
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-                @if (session('info'))
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(session('info')): ?>
                     <div class="rounded-2xl border border-sky-200 bg-sky-50 p-4">
-                        <p class="text-sm text-sky-800">{{ session('info') }}</p>
+                        <p class="text-sm text-sky-800"><?php echo e(session('info')); ?></p>
                     </div>
-                @endif
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
                 <div class="rounded-2xl border border-[var(--wf-line)] bg-[var(--wf-cream)] p-5">
                     <div class="flex gap-3">
@@ -118,14 +116,14 @@
                 </div>
 
                 <div class="flex flex-col sm:flex-row gap-3">
-                    <form method="POST" action="{{ route('verification.send') }}" class="flex-1">
-                        @csrf
+                    <form method="POST" action="<?php echo e(route('verification.send')); ?>" class="flex-1">
+                        <?php echo csrf_field(); ?>
                         <button type="submit" class="wf-btn-gold w-full inline-flex items-center justify-center px-5 py-3 text-sm">
                             Kirim ulang email
                         </button>
                     </form>
-                    <form method="POST" action="{{ route('logout') }}" class="flex-1">
-                        @csrf
+                    <form method="POST" action="<?php echo e(route('logout')); ?>" class="flex-1">
+                        <?php echo csrf_field(); ?>
                         <button type="submit" class="wf-btn-ghost w-full inline-flex items-center justify-center px-5 py-3 text-sm">
                             Keluar
                         </button>
@@ -140,4 +138,6 @@
         </div>
     </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/application/wofins/resources/views/front/auth/verify-email.blade.php ENDPATH**/ ?>

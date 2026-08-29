@@ -1,4 +1,4 @@
-<?php $__env->startSection('title', 'Masuk — WOFINS'); ?>
+<?php $__env->startSection('title', 'Daftar — WOFINS'); ?>
 
 <?php $__env->startPush('styles'); ?>
 <?php echo $__env->make('front.partials.wf-front-base-styles', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
@@ -130,46 +130,41 @@
         <div class="wf-auth-main">
         <div class="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid lg:grid-cols-2 rounded-3xl overflow-hidden border border-[var(--wf-line)] bg-white shadow-[0_24px_60px_-28px_rgba(11,31,58,0.35)]">
-                <div class="wf-auth-panel relative min-h-[220px] lg:min-h-[560px] text-white"
+                <div class="wf-auth-panel relative min-h-[220px] lg:min-h-[620px] text-white order-1 lg:order-none"
                      style="background: linear-gradient(145deg, #071526 0%, #0b1f3a 55%, #14335a 100%);">
                     <?php echo $__env->make('front.partials.wf-deco-shapes', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
-                    <div class="absolute inset-0 opacity-25">
-                        <img src="<?php echo e(route('brand.login-image')); ?>" alt="" class="w-full h-full object-cover" loading="lazy" decoding="async">
-                    </div>
                     <div class="relative z-10 h-full flex flex-col justify-end p-8 sm:p-10">
-                        <p class="text-xs font-bold tracking-[0.2em] uppercase text-[var(--wf-gold)]">WOFINS</p>
+                        <p class="text-xs font-bold tracking-[0.2em] uppercase text-[var(--wf-gold)]">Mulai gratis</p>
                         <h2 class="mt-3 text-2xl sm:text-3xl font-bold leading-tight">
-                            Kelola keuangan wedding organizer dengan lebih rapi
+                            Buat akun dan mulai kelola operasional WO Anda
                         </h2>
-                        <p class="mt-3 text-sm text-white/75 max-w-sm">
-                            Proyek, rekonsiliasi, payroll, dan laporan — dalam satu sistem.
-                        </p>
+                        <ul class="mt-5 space-y-2.5 text-sm text-white/80">
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = ['Satu dashboard untuk tim WO', 'Keuangan & rekonsiliasi terintegrasi', 'Absensi dan dokumen lebih tertib']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $point): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                                <li class="flex items-start gap-2.5">
+                                    <span class="mt-0.5 w-5 h-5 rounded-full bg-[rgba(201,162,39,0.2)] text-[var(--wf-gold)] inline-flex items-center justify-center text-[0.6rem] shrink-0">
+                                        <i class="fa-solid fa-check"></i>
+                                    </span>
+                                    <?php echo e($point); ?>
+
+                                </li>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                        </ul>
                     </div>
                 </div>
 
                 <div class="p-6 sm:p-10 flex items-center">
                     <div class="w-full max-w-md mx-auto">
-                        <h1 class="text-3xl font-bold text-[var(--wf-navy)]">Masuk</h1>
-                        <p class="mt-1 text-sm text-[var(--wf-muted)]">Masuk ke akun WOFINS Anda.</p>
+                        <h1 class="text-3xl font-bold text-[var(--wf-navy)]">Daftar</h1>
+                        <p class="mt-1 text-sm text-[var(--wf-muted)]">Buat akun WOFINS baru.</p>
 
-                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(session('status')): ?>
-                            <div class="mt-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200">
-                                <p class="text-sm text-emerald-700"><?php echo e(session('status')); ?></p>
-                            </div>
-                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(session('success')): ?>
-                            <div class="mt-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200">
-                                <p class="text-sm text-emerald-700"><?php echo e(session('success')); ?></p>
-                            </div>
-                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                         <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(session('error')): ?>
                             <div class="mt-4 p-3 rounded-xl bg-red-50 border border-red-200">
                                 <p class="text-sm text-red-700"><?php echo e(session('error')); ?></p>
                             </div>
                         <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(session('warning')): ?>
-                            <div class="mt-4 p-3 rounded-xl bg-amber-50 border border-amber-200">
-                                <p class="text-sm text-amber-800"><?php echo e(session('warning')); ?></p>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($errors->any()): ?>
+                            <div class="mt-4 p-3 rounded-xl bg-red-50 border border-red-200">
+                                <p class="text-sm text-red-700">Periksa kembali data yang diisi.</p>
                             </div>
                         <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
@@ -188,7 +183,7 @@
                                         <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>
                                         <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 01-4.084 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/>
                                     </svg>
-                                    Masuk dengan Google
+                                    Daftar dengan Google
                                 </a>
                             <?php else: ?>
                                 <button type="button" disabled
@@ -200,20 +195,37 @@
                                         <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>
                                         <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 01-4.084 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/>
                                     </svg>
-                                    Masuk dengan Google
+                                    Daftar dengan Google
                                 </button>
                                 <p class="text-xs text-center text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
-                                    Login Google belum aktif — isi <code class="font-semibold">GOOGLE_CLIENT_ID</code> &amp; <code class="font-semibold">GOOGLE_CLIENT_SECRET</code> di <code>.env</code>, lalu <code>php artisan config:clear</code>.
+                                    Login Google belum aktif — isi <code class="font-semibold">GOOGLE_CLIENT_ID</code> &amp; <code class="font-semibold">GOOGLE_CLIENT_SECRET</code> di <code>.env</code>.
                                 </p>
                             <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                             <div class="wf-auth-divider">atau email</div>
                         </div>
 
-                        <form class="mt-4 space-y-5" action="<?php echo e(route('front.login.submit')); ?>" method="POST">
+                        <form class="mt-4 space-y-4" action="<?php echo e(route('front.register.submit')); ?>" method="POST">
                             <?php echo csrf_field(); ?>
                             <div>
-                                <label for="email-address" class="block text-sm font-semibold text-[var(--wf-navy)] mb-1.5">Email</label>
-                                <input id="email-address" name="email" type="email" autocomplete="username" autofocus required
+                                <label for="name" class="block text-sm font-semibold text-[var(--wf-navy)] mb-1.5">Nama lengkap</label>
+                                <input id="name" name="name" type="text" autocomplete="name" required autofocus
+                                    class="wf-auth-input"
+                                    placeholder="Nama Anda" value="<?php echo e(old('name')); ?>">
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <p class="mt-1 text-sm text-red-600"><?php echo e($message); ?></p>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            </div>
+
+                            <div>
+                                <label for="email" class="block text-sm font-semibold text-[var(--wf-navy)] mb-1.5">Email</label>
+                                <input id="email" name="email" type="email" autocomplete="email" required
                                     class="wf-auth-input"
                                     placeholder="nama@email.com" value="<?php echo e(old('email')); ?>">
                                 <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['email'];
@@ -232,9 +244,9 @@ unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendB
                                 <label for="password" class="block text-sm font-semibold text-[var(--wf-navy)] mb-1.5">Password</label>
                                 <div class="relative">
                                     <input id="password" name="password" :type="show ? 'text' : 'password'"
-                                        autocomplete="current-password" required
+                                        autocomplete="new-password" required
                                         class="wf-auth-input pr-11"
-                                        placeholder="Masukkan password">
+                                        placeholder="Minimal 8 karakter">
                                     <button type="button" @click="show = !show"
                                         class="absolute inset-y-0 right-3 flex items-center text-[var(--wf-muted)] hover:text-[var(--wf-navy)]">
                                         <i class="fa-solid" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
@@ -252,30 +264,32 @@ endif;
 unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                             </div>
 
-                            <div class="flex items-center justify-between gap-3">
-                                <label class="inline-flex items-center gap-2 text-sm text-[var(--wf-muted)] cursor-pointer">
-                                    <input type="checkbox" name="remember" value="1"
-                                        class="rounded border-[var(--wf-line)] text-[var(--wf-navy)] focus:ring-[var(--wf-gold)]">
-                                    Ingat saya
-                                </label>
-                                <a href="<?php echo e(route('front.password.request')); ?>"
-                                    class="text-sm font-semibold text-[var(--wf-navy)] hover:text-[var(--wf-gold)]">
-                                    Lupa password?
+                            <div x-data="{ show: false }">
+                                <label for="password_confirmation" class="block text-sm font-semibold text-[var(--wf-navy)] mb-1.5">Konfirmasi password</label>
+                                <div class="relative">
+                                    <input id="password_confirmation" name="password_confirmation"
+                                        :type="show ? 'text' : 'password'" autocomplete="new-password" required
+                                        class="wf-auth-input pr-11"
+                                        placeholder="Ulangi password">
+                                    <button type="button" @click="show = !show"
+                                        class="absolute inset-y-0 right-3 flex items-center text-[var(--wf-muted)] hover:text-[var(--wf-navy)]">
+                                        <i class="fa-solid" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="pt-2 space-y-3">
+                                <button type="submit" class="wf-btn-navy w-full inline-flex items-center justify-center px-5 py-3.5 text-sm">
+                                    Buat akun
+                                </button>
+                                <a href="<?php echo e(wofins_route('front.login')); ?>"
+                                    class="wf-btn-ghost w-full inline-flex items-center justify-center px-5 py-3 text-sm">
+                                    Sudah punya akun? Masuk
                                 </a>
                             </div>
 
-                            <button type="submit" class="wf-btn-navy w-full inline-flex items-center justify-center px-5 py-3.5 text-sm">
-                                Masuk
-                            </button>
-
-                            <p class="text-center text-sm text-[var(--wf-muted)]">
-                                Belum punya akun?
-                                <a href="<?php echo e(wofins_route('front.register')); ?>" class="font-bold text-[var(--wf-navy)] hover:text-[var(--wf-gold)]">Daftar sekarang</a>
-                            </p>
-                            <p class="text-center text-xs text-[var(--wf-muted)]">
-                                Butuh demo?
-                                <a href="<?php echo e(route('kontak')); ?>" class="font-semibold text-[var(--wf-navy)] hover:text-[var(--wf-gold)]">Hubungi kami</a>
-                                ·
+                            <p class="text-center text-xs text-[var(--wf-muted)] pt-1">
+                                Butuh bantuan?
                                 <a href="mailto:support@wofins.id" class="font-semibold text-[var(--wf-navy)] hover:text-[var(--wf-gold)]">support@wofins.id</a>
                             </p>
                         </form>
@@ -287,4 +301,4 @@ unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendB
     </div>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/application/wofins/resources/views/front/auth/login.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/application/wofins/resources/views/front/auth/register.blade.php ENDPATH**/ ?>

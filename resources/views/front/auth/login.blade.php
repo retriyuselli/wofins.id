@@ -159,6 +159,11 @@
                                 <p class="text-sm text-emerald-700">{{ session('status') }}</p>
                             </div>
                         @endif
+                        @if (session('success'))
+                            <div class="mt-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+                                <p class="text-sm text-emerald-700">{{ session('success') }}</p>
+                            </div>
+                        @endif
                         @if (session('error'))
                             <div class="mt-4 p-3 rounded-xl bg-red-50 border border-red-200">
                                 <p class="text-sm text-red-700">{{ session('error') }}</p>
