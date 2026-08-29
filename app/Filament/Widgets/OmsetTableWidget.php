@@ -62,6 +62,11 @@ class OmsetTableWidget extends BaseWidget
                     ->orderBy('year', 'desc')
                     ->orderBy('month', 'desc')
             )
+            ->modelLabel('omset')
+            ->pluralModelLabel('omset')
+            ->emptyStateHeading('Belum ada omset penjualan')
+            ->emptyStateDescription('Data muncul setelah ada project dengan tanggal closing.')
+            ->emptyStateIcon('heroicon-o-banknotes')
             ->columns([
                 TextColumn::make('year')
                     ->label('Tahun')

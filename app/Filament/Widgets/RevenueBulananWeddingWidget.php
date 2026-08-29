@@ -62,6 +62,11 @@ class RevenueBulananWeddingWidget extends BaseWidget
                     ->orderBy('year', 'desc')
                     ->orderBy('month', 'desc')
             )
+            ->modelLabel('revenue')
+            ->pluralModelLabel('revenue')
+            ->emptyStateHeading('Belum ada revenue wedding')
+            ->emptyStateDescription('Data muncul setelah ada project dengan tanggal resepsi.')
+            ->emptyStateIcon('heroicon-o-chart-bar')
             ->columns([
                 TextColumn::make('year')
                     ->label('Tahun')
