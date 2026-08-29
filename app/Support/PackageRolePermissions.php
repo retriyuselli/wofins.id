@@ -30,7 +30,8 @@ class PackageRolePermissions
             'Product',
             'Vendor',
             'Category',
-            // Crew freelance (bukan HRIS)
+            // Crew freelance: permission di-seed ke pengunjung, menu tetap digating
+            // PlanResourceGate → FEATURE_CREW_FREELANCE (Business saja)
             'DataPribadi',
             // Keuangan dasar
             'Expense',

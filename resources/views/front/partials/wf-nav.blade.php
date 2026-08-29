@@ -115,6 +115,83 @@
         color: var(--wf-navy);
         background: rgba(201, 162, 39, 0.08);
     }
+
+    .wf-brand {
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+    }
+
+    .wf-brand-mark {
+        position: relative;
+        display: inline-block;
+        overflow: visible;
+    }
+
+    .wf-brand-word {
+        display: inline-flex;
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        line-height: 1;
+        color: var(--wf-navy);
+    }
+
+    .wf-brand-letter {
+        display: inline-block;
+        animation: wf-brand-in 0.55s cubic-bezier(.22, 1, .36, 1) both;
+        animation-delay: calc(var(--i) * 70ms);
+        transition: transform .25s ease, color .25s ease;
+    }
+
+    .wf-brand-wo {
+        display: inline-flex;
+        animation: wf-brand-wo-swing 1.7s ease-in-out 0.7s infinite;
+    }
+
+    .wf-brand-letter.is-wo {
+        color: var(--wf-gold);
+    }
+
+    .wf-brand:hover .wf-brand-letter {
+        transform: translateY(-2px);
+    }
+
+    .wf-brand:hover .wf-brand-letter.is-wo {
+        color: var(--wf-gold-soft);
+    }
+
+    .wf-brand:hover .wf-brand-letter:nth-child(even) {
+        transition-delay: 40ms;
+    }
+
+    @keyframes wf-brand-in {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes wf-brand-wo-swing {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-6px); }
+        75% { transform: translateX(5px); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .wf-brand-letter,
+        .wf-brand-wo {
+            animation: none !important;
+        }
+
+        .wf-brand:hover .wf-brand-letter {
+            transform: none;
+        }
+    }
 </style>
 
 <header
@@ -130,8 +207,19 @@
 >
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex h-16 items-center justify-between gap-4">
-            <a href="{{ wofins_route('home') }}" class="flex items-center gap-2 shrink-0">
-                <span class="text-2xl font-bold text-[var(--wf-navy)] tracking-wide">WOFINS</span>
+            <a href="{{ wofins_route('home') }}" class="wf-brand shrink-0" aria-label="WOFINS">
+                <span class="wf-brand-mark">
+                    <span class="wf-brand-word" aria-hidden="true">
+                        <span class="wf-brand-wo">
+                            @foreach (str_split('WO') as $i => $letter)
+                                <span class="wf-brand-letter is-wo" style="--i: {{ $i }}">{{ $letter }}</span>
+                            @endforeach
+                        </span>
+                        @foreach (str_split('FINS') as $i => $letter)
+                            <span class="wf-brand-letter" style="--i: {{ $i + 2 }}">{{ $letter }}</span>
+                        @endforeach
+                    </span>
+                </span>
             </a>
 
             <nav class="hidden lg:flex items-center gap-1 text-sm font-semibold" aria-label="Menu utama">

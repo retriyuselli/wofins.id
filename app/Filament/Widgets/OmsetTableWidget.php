@@ -3,8 +3,9 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Order;
+use App\Support\PricingPlans;
+use App\Support\ProFeatures;
 use App\Support\UserVisibility;
-use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -12,14 +13,20 @@ use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class OmsetTableWidget extends BaseWidget
 {
-    use HasWidgetShield;
+    protected static ?string $heading = 'Omset penjualan per bulan';
 
-    protected static ?string $heading = 'Tabel Closing per-Bulan';
+    protected static ?int $sort = 9;
 
-    protected static ?int $sort = 20;
+    protected int|string|array $columnSpan = 'full';
+
+    public static function canView(): bool
+    {
+        return Auth::check() && ProFeatures::allows(PricingPlans::FEATURE_PROJECTS);
+    }
 
     public function table(Table $table): Table
     {

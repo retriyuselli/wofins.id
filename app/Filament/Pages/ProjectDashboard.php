@@ -8,7 +8,8 @@ use App\Filament\Widgets\ComingSoonResepsiWidget;
 use App\Filament\Widgets\DashboardKeuangan;
 use App\Filament\Widgets\DocumentInboxWidget;
 use App\Filament\Widgets\EventManager;
-use App\Filament\Widgets\StatsOverviewWidget;
+use App\Filament\Widgets\OmsetTableWidget;
+use App\Filament\Widgets\PenjualanOverviewWidget;
 use App\Filament\Widgets\SubscriptionQuotaWidget;
 use BackedEnum;
 use Filament\Forms\Components\DatePicker;
@@ -56,9 +57,10 @@ class ProjectDashboard extends Page
         return [
             AccountWidget::class,
             SubscriptionQuotaWidget::class,
+            PenjualanOverviewWidget::class,
+            OmsetTableWidget::class,
             DocumentInboxWidget::class,
             DashboardKeuangan::class,
-            StatsOverviewWidget::class,
             EventManager::class,
             AccountManagerWidget::class,
             ComingSoonAkadWidget::class,

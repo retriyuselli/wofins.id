@@ -713,9 +713,10 @@ class CompanySubscription
 
     public static function allows(string $feature): bool
     {
-        // Belum ada paket Starter/Pro/Business: jangan kunci fitur (instalasi lama)
+        // Belum pilih paket: perlakukan sebagai Starter — jangan buka fitur Business/Pro.
+        // (Dulu return true = semua fitur terbuka, termasuk Crew Freelance.)
         if (! static::hasConfiguredPlan()) {
-            return true;
+            return PricingPlans::allows(self::DEFAULT_PLAN, $feature);
         }
 
         return PricingPlans::allows(static::planKey(), $feature);

@@ -173,7 +173,7 @@
 <div class="note">
     <strong>Tanpa kuota paket:</strong>
     Kategori dikelola admin platform (create/update/delete hanya super admin).
-    Crew freelance tersedia di semua paket — bukan akun user, bisa diisi lewat link undangan publik.
+    Crew freelance hanya di paket Business — bukan akun user, bisa diisi lewat link undangan publik.
 </div>
 
 <h2>3. Perbandingan fitur</h2>
