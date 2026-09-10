@@ -348,7 +348,9 @@
             font-weight: 600;
             color: var(--wf-ink);
             white-space: normal;
-            min-width: 180px;
+            min-width: 8.5rem;
+            max-width: 11rem;
+            word-break: break-word;
         }
 
         .wf-compare tr:last-child td {
@@ -433,10 +435,9 @@
 
     $faqs = [
         ['Apakah ada biaya instalasi?', 'Tidak. Semua paket WOFINS tanpa biaya instalasi. Anda hanya membayar biaya berlangganan sesuai paket yang dipilih.'],
-        ['Apa yang termasuk domain gratis?', 'Paket Business sudah termasuk domain (.com / .id sesuai ketersediaan) selama masa berlangganan aktif, dengan syarat berlangganan minimal 1 tahun. Detail setup dibantu tim kami saat onboarding.'],
+        ['Apa yang termasuk domain gratis?', 'Domain dan hosting gratis hanya di paket Enterprise, dengan syarat berlangganan minimal 2 tahun. Setup dibantu tim pengembang saat onboarding.'],
         ['Bisakah saya upgrade paket nanti?', 'Bisa. Anda dapat upgrade kapan saja; selisih biaya akan disesuaikan dengan sisa masa aktif langganan.'],
-        ['Apakah ada paket Custom?', 'Ya. Jika kebutuhan Anda di luar paket Starter, Professional, atau Business, pilih paket Custom dan hubungi pengembang untuk diskusi scope serta harga.'],
-        ['Apakah ada paket Enterprise?', 'Paket Enterprise adalah solusi terpisah di luar aplikasi WOFINS standar ini. Hubungi pengembang jika kebutuhan Anda melebihi paket Business.'],
+        ['Apakah ada paket Enterprise?', 'Ya. Paket Enterprise Rp 333.333/bulan dengan minimal berlangganan 2 tahun (Rp 8 juta). Termasuk fitur Business, kuota lebih longgar, domain, hosting, dan kustomisasi alur. Hubungi pengembang untuk aktivasi.'],
         ['Bagaimana dengan kategori?', 'Master kategori dikelola admin platform (super admin). Tim WO tetap bisa memakai kategori yang sudah disediakan.'],
         ['Apa itu crew freelance?', 'Data crew freelance milik company (bukan akun pengguna). Fitur ini hanya di paket Business: tambah crew dan bagikan link undangan agar crew mengisi sendiri tanpa makan kuota pengguna.'],
         ['Apakah data saya aman?', 'Ya. Akses berbasis peran, riwayat aktivitas, approval, backup terpusat, dan audit trail membantu menjaga keamanan data bisnis Anda.'],
@@ -467,7 +468,7 @@
                     Pilih Paket yang Sesuai dengan Kebutuhan Wedding Organizer Anda
                 </h1>
                 <p class="mt-4 text-[var(--wf-muted)] max-w-2xl mx-auto">
-                    Paket WOFINS dirancang fleksibel — dari WO yang baru merapikan operasional hingga tim Business, plus paket Custom sesuai kebutuhan.
+                    Paket WOFINS dirancang fleksibel — dari WO yang baru merapikan operasional hingga tim Business, plus paket Enterprise sesuai kebutuhan.
                 </p>
                 <div class="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm font-semibold text-[var(--wf-navy)]">
                     @foreach (['Tanpa biaya instalasi', 'Update & support gratis', 'Aman & terpercaya'] as $benefit)
@@ -554,48 +555,85 @@
                             </div>
 
                             <div class="mb-5">
-                                @if ($plan['has_price'])
-                                    {{-- 1 bulan --}}
-                                    <div class="flex items-end gap-1" x-show="billing === 'monthly'" x-cloak>
+                                @if ($plan['has_price'] && ($plan['min_billing'] ?? '') === 'biennial')
+                                    <div class="flex flex-wrap items-end gap-1 min-w-0" x-show="billing !== 'quadrennial'" x-cloak>
                                         <span class="text-sm font-semibold text-[var(--wf-muted)] mb-1">Rp</span>
-                                        <span class="text-4xl font-extrabold text-[var(--wf-navy)] leading-none">{{ $plan['monthly_display'] }}</span>
+                                        <span class="text-4xl font-extrabold text-[var(--wf-navy)] leading-none break-all">{{ $plan['biennial_monthly_display'] }}</span>
                                         <span class="text-sm text-[var(--wf-muted)] mb-1">/ bulan</span>
                                     </div>
-                                    <div class="mt-2 text-xs text-[var(--wf-muted)]" x-show="billing === 'monthly'" x-cloak>
+                                    <div class="mt-2 text-xs text-[var(--wf-muted)] break-words" x-show="billing !== 'quadrennial'" x-cloak>
+                                        Dibayar 24 bulan Rp {{ $plan['biennial_total_display'] }}
+                                    </div>
+
+                                    <div class="flex flex-wrap items-end gap-1 min-w-0" x-show="billing === 'quadrennial'" x-cloak>
+                                        <span class="text-sm font-semibold text-[var(--wf-muted)] mb-1">Rp</span>
+                                        <span class="text-4xl font-extrabold text-[var(--wf-navy)] leading-none break-all">{{ $plan['quadrennial_monthly_display'] }}</span>
+                                        <span class="text-sm text-[var(--wf-muted)] mb-1">/ bulan</span>
+                                    </div>
+                                    <div class="mt-2 text-xs text-[var(--wf-muted)] break-words" x-show="billing === 'quadrennial'" x-cloak>
+                                        Dibayar 48 bulan Rp {{ $plan['quadrennial_total_display'] }}
+                                    </div>
+                                    <div class="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--wf-navy)] break-words">
+                                        <i class="fa-solid fa-lock text-[10px] shrink-0" aria-hidden="true"></i>
+                                        <span>Terkunci: minimal 2 tahun</span>
+                                    </div>
+                                @elseif ($plan['has_price'])
+                                    {{-- 1 bulan --}}
+                                    <div class="flex flex-wrap items-end gap-1 min-w-0" x-show="billing === 'monthly'" x-cloak>
+                                        @if (! empty($plan['price_prefix']))
+                                            <span class="text-sm font-semibold text-[var(--wf-muted)] mb-1 w-full sm:w-auto">{{ $plan['price_prefix'] }}</span>
+                                        @endif
+                                        <span class="text-sm font-semibold text-[var(--wf-muted)] mb-1">Rp</span>
+                                        <span class="text-4xl font-extrabold text-[var(--wf-navy)] leading-none break-all">{{ $plan['monthly_display'] }}</span>
+                                        <span class="text-sm text-[var(--wf-muted)] mb-1">/ bulan</span>
+                                    </div>
+                                    <div class="mt-2 text-xs text-[var(--wf-muted)] break-words" x-show="billing === 'monthly'" x-cloak>
                                         Ditagih bulanan
                                     </div>
 
                                     {{-- 12 bulan --}}
-                                    <div class="flex items-end gap-1" x-show="billing === 'annual'" x-cloak>
+                                    <div class="flex flex-wrap items-end gap-1 min-w-0" x-show="billing === 'annual'" x-cloak>
+                                        @if (! empty($plan['price_prefix']))
+                                            <span class="text-sm font-semibold text-[var(--wf-muted)] mb-1 w-full sm:w-auto">{{ $plan['price_prefix'] }}</span>
+                                        @endif
                                         <span class="text-sm font-semibold text-[var(--wf-muted)] mb-1">Rp</span>
-                                        <span class="text-4xl font-extrabold text-[var(--wf-navy)] leading-none">{{ $plan['annual_monthly_display'] }}</span>
+                                        <span class="text-4xl font-extrabold text-[var(--wf-navy)] leading-none break-all">{{ $plan['annual_monthly_display'] }}</span>
                                         <span class="text-sm text-[var(--wf-muted)] mb-1">/ bulan</span>
                                     </div>
-                                    <div class="mt-2 text-xs text-[var(--wf-muted)]" x-show="billing === 'annual'" x-cloak>
+                                    <div class="mt-2 text-xs text-[var(--wf-muted)] break-words" x-show="billing === 'annual'" x-cloak>
                                         Dibayar 12 bulan Rp {{ $plan['annual_total_display'] }}
                                     </div>
 
                                     {{-- 24 bulan --}}
-                                    <div class="flex items-end gap-1" x-show="billing === 'biennial'" x-cloak>
+                                    <div class="flex flex-wrap items-end gap-1 min-w-0" x-show="billing === 'biennial'" x-cloak>
+                                        @if (! empty($plan['price_prefix']))
+                                            <span class="text-sm font-semibold text-[var(--wf-muted)] mb-1 w-full sm:w-auto">{{ $plan['price_prefix'] }}</span>
+                                        @endif
                                         <span class="text-sm font-semibold text-[var(--wf-muted)] mb-1">Rp</span>
-                                        <span class="text-4xl font-extrabold text-[var(--wf-navy)] leading-none">{{ $plan['biennial_monthly_display'] }}</span>
+                                        <span class="text-4xl font-extrabold text-[var(--wf-navy)] leading-none break-all">{{ $plan['biennial_monthly_display'] }}</span>
                                         <span class="text-sm text-[var(--wf-muted)] mb-1">/ bulan</span>
                                     </div>
-                                    <div class="mt-2 text-xs text-[var(--wf-muted)]" x-show="billing === 'biennial'" x-cloak>
+                                    <div class="mt-2 text-xs text-[var(--wf-muted)] break-words" x-show="billing === 'biennial'" x-cloak>
                                         Dibayar 24 bulan Rp {{ $plan['biennial_total_display'] }}
                                     </div>
 
                                     {{-- 48 bulan --}}
-                                    <div class="flex items-end gap-1" x-show="billing === 'quadrennial'" x-cloak>
+                                    <div class="flex flex-wrap items-end gap-1 min-w-0" x-show="billing === 'quadrennial'" x-cloak>
+                                        @if (! empty($plan['price_prefix']))
+                                            <span class="text-sm font-semibold text-[var(--wf-muted)] mb-1 w-full sm:w-auto">{{ $plan['price_prefix'] }}</span>
+                                        @endif
                                         <span class="text-sm font-semibold text-[var(--wf-muted)] mb-1">Rp</span>
-                                        <span class="text-4xl font-extrabold text-[var(--wf-navy)] leading-none">{{ $plan['quadrennial_monthly_display'] }}</span>
+                                        <span class="text-4xl font-extrabold text-[var(--wf-navy)] leading-none break-all">{{ $plan['quadrennial_monthly_display'] }}</span>
                                         <span class="text-sm text-[var(--wf-muted)] mb-1">/ bulan</span>
                                     </div>
-                                    <div class="mt-2 text-xs text-[var(--wf-muted)]" x-show="billing === 'quadrennial'" x-cloak>
+                                    <div class="mt-2 text-xs text-[var(--wf-muted)] break-words" x-show="billing === 'quadrennial'" x-cloak>
                                         Dibayar 48 bulan Rp {{ $plan['quadrennial_total_display'] }}
                                     </div>
+                                    @if (! empty($plan['pricing_note']))
+                                        <div class="mt-1 text-xs text-[var(--wf-muted)] break-words">{{ $plan['pricing_note'] }}</div>
+                                    @endif
                                 @else
-                                    <p class="text-3xl font-extrabold text-[var(--wf-navy)] leading-tight">Custom</p>
+                                    <p class="text-3xl font-extrabold text-[var(--wf-navy)] leading-tight">Enterprise</p>
                                     <p class="mt-2 text-xs text-[var(--wf-muted)]">Harga & scope hubungi pengembang</p>
                                 @endif
                             </div>
@@ -629,7 +667,7 @@
                                     Menunggu tinjauan pesanan
                                 </span>
                             @elseif (! empty($plan['cta_url']) || ! ($plan['selectable'] ?? true))
-                                <a href="{{ $plan['cta_url'] ?? 'https://wa.me/6281373183794?text='.rawurlencode('Halo, saya ingin konsultasi paket Custom WOFINS.') }}"
+                                <a href="{{ $plan['cta_url'] ?? 'https://wa.me/6281373183794?text='.rawurlencode('Halo, saya ingin konsultasi paket Enterprise WOFINS.') }}"
                                    target="_blank"
                                    rel="noopener noreferrer"
                                    class="{{ $plan['cta_class'] }} w-full inline-flex items-center justify-center px-4 py-3 text-sm text-center">

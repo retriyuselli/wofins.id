@@ -73,54 +73,93 @@ class PaymentMethod extends Model
 
     public function orders(): HasMany
     {
-        return $this->hasMany(Order::class);
+        return $this->isolateHasManyToCompany($this->hasMany(Order::class));
     }
 
     public function payments(): HasMany
     {
-        return $this->hasMany(DataPembayaran::class);
+        return $this->isolateHasManyToCompany($this->hasMany(DataPembayaran::class));
     }
 
     public function expenses(): HasMany
     {
-        return $this->hasMany(Expense::class, 'payment_method_id');
+        return $this->isolateHasManyToCompany($this->hasMany(Expense::class, 'payment_method_id'));
     }
 
     public function expenseOps(): HasMany
     {
-        return $this->hasMany(ExpenseOps::class, 'payment_method_id');
+        return $this->isolateHasManyToCompany($this->hasMany(ExpenseOps::class, 'payment_method_id'));
     }
 
     public function pendapatanLains(): HasMany
     {
-        return $this->hasMany(PendapatanLain::class, 'payment_method_id');
+        return $this->isolateHasManyToCompany($this->hasMany(PendapatanLain::class, 'payment_method_id'));
     }
 
     public function pengeluaranLains(): HasMany
     {
-        return $this->hasMany(PengeluaranLain::class, 'payment_method_id');
+        return $this->isolateHasManyToCompany($this->hasMany(PengeluaranLain::class, 'payment_method_id'));
     }
 
     /**
-     * Hitung saldo akhir rekening berdasarkan formula:
-     * Saldo Akhir = Saldo Awal + Total Uang Masuk - Total Uang Keluar
+     * Mutasi rekening hanya dari company yang sama dengan rekening.
+     */
+    private function isolateHasManyToCompany(HasMany $relation): HasMany
+    {
+        if (! $this->company_id) {
+            return $relation;
+        }
+
+        $table = $relation->getRelated()->getTable();
+
+        if (! Schema::hasColumn($table, 'company_id')) {
+            return $relation;
+        }
+
+        return $relation->where($table.'.company_id', $this->company_id);
+    }
+
+    /**
+     * Tanggal mulai hitung mutasi (Y-m-d), atau null = semua transaksi.
      *
-     * Catatan: Hanya transaksi pada/setelah opening_balance_date yang dihitung
+     * Tanggal pembukuan hanya memotong mutasi jika saldo awal > 0
+     * (saldo awal sudah mewakili posisi kas sebelum tanggal itu).
+     * Jika saldo awal 0 / tanggal kosong, semua pembayaran harus masuk ke saldo —
+     * kalau tidak, widget periode menampilkan Masuk 5jt sementara saldo tetap 0.
+     */
+    public function transactionCutoffDate(): ?string
+    {
+        if ((int) $this->opening_balance === 0 || ! $this->opening_balance_date) {
+            return null;
+        }
+
+        return $this->opening_balance_date->toDateString();
+    }
+
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder<\Illuminate\Database\Eloquent\Model>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<\Illuminate\Database\Eloquent\Model>
+     */
+    public function applyOpeningCutoff($query, string $dateColumn)
+    {
+        $cutoff = $this->transactionCutoffDate();
+
+        if ($cutoff) {
+            $query->whereDate($dateColumn, '>=', $cutoff);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Hitung saldo akhir rekening:
+     * Saldo Akhir = Saldo Awal + Total Uang Masuk - Total Uang Keluar
      */
     public function getSaldoAttribute(): float
     {
-        $startDate = $this->opening_balance_date;
-
-        // Validasi tanggal pembukuan
-        if (! $startDate) {
-            return (float) $this->opening_balance;
-        }
-
-        $totalMasuk = $this->getTotalUangMasuk($startDate);
-        $totalKeluar = $this->getTotalUangKeluar($startDate);
-
-        // Formula: Saldo Awal + Uang Masuk - Uang Keluar
-        return (float) $this->opening_balance + $totalMasuk - $totalKeluar;
+        return (float) $this->opening_balance
+            + $this->getTotalUangMasuk()
+            - $this->getTotalUangKeluar();
     }
 
     /**
@@ -128,17 +167,17 @@ class PaymentMethod extends Model
      */
     public function getTotalUangMasuk($startDate = null): float
     {
-        $startDate = $startDate ?? $this->opening_balance_date;
+        $cutoff = $startDate !== null
+            ? $this->normalizeCutoffDate($startDate)
+            : $this->transactionCutoffDate();
 
-        // 1. Uang masuk dari pembayaran wedding (DataPembayaran)
         $totalMasukWedding = $this->payments()
-            ->when($startDate, fn ($query) => $query->where('tgl_bayar', '>=', $startDate))
+            ->when($cutoff, fn ($query) => $query->whereDate('tgl_bayar', '>=', $cutoff))
             ->whereNull('deleted_at')
             ->sum('nominal') ?? 0;
 
-        // 2. Uang masuk dari sumber lain (PendapatanLain)
         $totalMasukLain = $this->pendapatanLains()
-            ->when($startDate, fn ($query) => $query->where('tgl_bayar', '>=', $startDate))
+            ->when($cutoff, fn ($query) => $query->whereDate('tgl_bayar', '>=', $cutoff))
             ->whereNull('deleted_at')
             ->sum('nominal') ?? 0;
 
@@ -150,27 +189,39 @@ class PaymentMethod extends Model
      */
     public function getTotalUangKeluar($startDate = null): float
     {
-        $startDate = $startDate ?? $this->opening_balance_date;
+        $cutoff = $startDate !== null
+            ? $this->normalizeCutoffDate($startDate)
+            : $this->transactionCutoffDate();
 
-        // 1. Uang keluar untuk biaya wedding (Expense)
         $totalKeluarWedding = $this->expenses()
-            ->when($startDate, fn ($query) => $query->where('date_expense', '>=', $startDate))
+            ->when($cutoff, fn ($query) => $query->whereDate('date_expense', '>=', $cutoff))
             ->whereNull('deleted_at')
             ->sum('amount') ?? 0;
 
-        // 2. Uang keluar untuk operasional (ExpenseOps)
         $totalKeluarOps = $this->expenseOps()
-            ->when($startDate, fn ($query) => $query->where('date_expense', '>=', $startDate))
+            ->when($cutoff, fn ($query) => $query->whereDate('date_expense', '>=', $cutoff))
             ->whereNull('deleted_at')
             ->sum('amount') ?? 0;
 
-        // 3. Uang keluar untuk keperluan lain (PengeluaranLain)
         $totalKeluarLain = $this->pengeluaranLains()
-            ->when($startDate, fn ($query) => $query->where('date_expense', '>=', $startDate))
+            ->when($cutoff, fn ($query) => $query->whereDate('date_expense', '>=', $cutoff))
             ->whereNull('deleted_at')
             ->sum('amount') ?? 0;
 
         return (float) ($totalKeluarWedding + $totalKeluarOps + $totalKeluarLain);
+    }
+
+    private function normalizeCutoffDate(mixed $startDate): ?string
+    {
+        if ($startDate instanceof \DateTimeInterface) {
+            return $startDate->format('Y-m-d');
+        }
+
+        if (is_string($startDate) && $startDate !== '') {
+            return $startDate;
+        }
+
+        return null;
     }
 
     /**
@@ -202,36 +253,36 @@ class PaymentMethod extends Model
      */
     public function getSaldoBreakdown(): array
     {
-        $startDate = $this->opening_balance_date;
+        $cutoff = $this->transactionCutoffDate();
 
         return [
             'saldo_awal' => $this->opening_balance,
-            'tanggal_pembukuan' => $startDate?->format('Y-m-d'),
+            'tanggal_pembukuan' => $cutoff,
             'uang_masuk' => [
                 'wedding' => $this->payments()
-                    ->when($startDate, fn ($query) => $query->where('tgl_bayar', '>=', $startDate))
+                    ->when($cutoff, fn ($query) => $query->whereDate('tgl_bayar', '>=', $cutoff))
                     ->whereNull('deleted_at')
                     ->sum('nominal') ?? 0,
                 'lainnya' => $this->pendapatanLains()
-                    ->when($startDate, fn ($query) => $query->where('tgl_bayar', '>=', $startDate))
+                    ->when($cutoff, fn ($query) => $query->whereDate('tgl_bayar', '>=', $cutoff))
                     ->whereNull('deleted_at')
                     ->sum('nominal') ?? 0,
-                'total' => $this->getTotalUangMasuk($startDate),
+                'total' => $this->getTotalUangMasuk(),
             ],
             'uang_keluar' => [
                 'wedding' => $this->expenses()
-                    ->when($startDate, fn ($query) => $query->where('date_expense', '>=', $startDate))
+                    ->when($cutoff, fn ($query) => $query->whereDate('date_expense', '>=', $cutoff))
                     ->whereNull('deleted_at')
                     ->sum('amount') ?? 0,
                 'operasional' => $this->expenseOps()
-                    ->when($startDate, fn ($query) => $query->where('date_expense', '>=', $startDate))
+                    ->when($cutoff, fn ($query) => $query->whereDate('date_expense', '>=', $cutoff))
                     ->whereNull('deleted_at')
                     ->sum('amount') ?? 0,
                 'lainnya' => $this->pengeluaranLains()
-                    ->when($startDate, fn ($query) => $query->where('date_expense', '>=', $startDate))
+                    ->when($cutoff, fn ($query) => $query->whereDate('date_expense', '>=', $cutoff))
                     ->whereNull('deleted_at')
                     ->sum('amount') ?? 0,
-                'total' => $this->getTotalUangKeluar($startDate),
+                'total' => $this->getTotalUangKeluar(),
             ],
             'saldo_akhir' => $this->saldo,
             'perubahan' => $this->perubahan_saldo,

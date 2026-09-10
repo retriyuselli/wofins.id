@@ -125,6 +125,10 @@ class PricingPlans
                         'label' => 'Laporan Keuangan Dasar',
                         'tip' => 'Lihat ringkasan keuangan proyek dan operasional. Rekonsiliasi bank tersedia di paket Professional.',
                     ],
+                    [
+                        'label' => 'Support Jam Kerja',
+                        'tip' => 'Bantuan via saluran standar pada jam kerja. Antrian lebih cepat tersedia di Professional dan Business.',
+                    ],
                 ],
                 'feature_keys' => [
                     self::FEATURE_PROJECTS,
@@ -136,7 +140,7 @@ class PricingPlans
             [
                 'key' => 'professional',
                 'name' => 'Professional',
-                'desc' => 'Kendalikan proyek wedding, kas, nota dinas, dan rekonsiliasi bank dalam satu alur kerja harian.',
+                'desc' => 'Untuk WO solo yang butuh simulasi klien, rekonsiliasi bank, dan payroll — satu akun pemilik.',
                 'price' => '180.000',
                 'unit' => null,
                 'price_monthly' => 180_000,
@@ -167,8 +171,8 @@ class PricingPlans
                 'check' => '',
                 'features' => [
                     [
-                        'label' => '1 Pengguna',
-                        'tip' => 'Satu akun login untuk Anda sebagai pemilik. Cocok jika operasional masih dikelola sendiri.',
+                        'label' => '1 Pengguna (Pemilik)',
+                        'tip' => 'Satu akun login untuk pemilik. Tim 2 orang atau lebih naik ke paket Business.',
                     ],
                     [
                         'label' => 'Semua Kemampuan Starter',
@@ -195,12 +199,8 @@ class PricingPlans
                         'tip' => 'Kelola gaji dan slip digital untuk tim inti (master Employee + payroll).',
                     ],
                     [
-                        'label' => 'Support Prioritas',
-                        'tip' => 'Antrian bantuan lebih cepat dari Starter, termasuk dampingan saat setup awal.',
-                    ],
-                    [
-                        'label' => 'Siap Upgrade Ke Business',
-                        'tip' => 'Butuh dokumen & SOP, laporan kinerja AM, atau domain? Naik ke Business — data Anda tetap aman.',
+                        'label' => 'Support Prioritas (1 Hari Kerja)',
+                        'tip' => 'Antrian lebih cepat dari Starter, target respon 1 hari kerja, termasuk dampingan setup awal.',
                     ],
                 ],
                 'feature_keys' => [
@@ -217,7 +217,7 @@ class PricingPlans
             [
                 'key' => 'business',
                 'name' => 'Business',
-                'desc' => 'Untuk WO dengan banyak proyek dan tim lintas fungsi.',
+                'desc' => 'Untuk WO dengan banyak proyek dan tim lintas fungsi (hingga 3 pengguna).',
                 'price' => '295.000',
                 'unit' => null,
                 'price_monthly' => 295_000,
@@ -264,10 +264,6 @@ class PricingPlans
                         'tip' => 'Simpan dokumen resmi, SOP perusahaan, dan knowledge base tim dalam satu tempat.',
                     ],
                     [
-                        'label' => 'Domain Gratis (Wajib Minimal 1 Tahun)',
-                        'tip' => 'Termasuk domain (.com / .id sesuai ketersediaan) selama masa berlangganan Business aktif. Syarat: berlangganan minimal 1 tahun.',
-                    ],
-                    [
                         'label' => 'Laporan Lanjutan',
                         'tip' => 'Kinerja AM: pantau target bulanan versus closing/pencapaian penjualan dari data Account Manager Target.',
                     ],
@@ -276,8 +272,8 @@ class PricingPlans
                         'tip' => 'Dampingan go-live dan training agar seluruh tim siap memakai sistem.',
                     ],
                     [
-                        'label' => 'Support WhatsApp',
-                        'tip' => 'Bantuan langsung via WhatsApp selama masa berlangganan aktif.',
+                        'label' => 'Support WhatsApp Prioritas',
+                        'tip' => 'Bantuan langsung via WhatsApp dengan prioritas di atas Professional, selama masa berlangganan aktif.',
                     ],
                 ],
                 'feature_keys' => [
@@ -295,17 +291,19 @@ class PricingPlans
                 'selectable' => true,
             ],
             [
-                'key' => 'custom',
-                'name' => 'Custom',
-                'desc' => 'Solusi disesuaikan kebutuhan WO Anda — hubungi pengembang.',
-                'price' => null,
+                'key' => 'enterprise',
+                'name' => 'Enterprise',
+                'desc' => 'Hosting, domain, dan kustomisasi alur — minimal berlangganan 2 tahun.',
+                'price' => '333.333',
                 'unit' => null,
-                'price_monthly' => 0,
-                'price_semiannual' => null,
-                'price_annual' => null,
-                'price_biennial' => null,
-                'price_triennial' => null,
-                'price_quadrennial' => null,
+                'price_monthly' => 333_333,
+                'price_semiannual' => 2_000_000,
+                'price_annual' => 4_000_000,
+                'price_biennial' => 8_000_000,
+                'price_triennial' => 12_000_000,
+                'price_quadrennial' => 16_000_000,
+                'min_billing' => 'biennial',
+                'pricing_note' => 'Minimal berlangganan 2 tahun',
                 'seat_limit' => null,
                 'vendor_limit' => null,
                 'product_limit' => null,
@@ -325,30 +323,58 @@ class PricingPlans
                 'popular' => false,
                 'cta' => 'Hubungi Pengembang',
                 'cta_class' => 'wf-btn-ghost',
-                'cta_url' => 'https://wa.me/6281373183794?text='.rawurlencode('Halo, saya ingin konsultasi paket Custom WOFINS.'),
+                'cta_url' => 'https://wa.me/6281373183794?text='.rawurlencode('Halo, saya tertarik paket Enterprise WOFINS Rp 333.333/bulan, minimal 2 tahun (Rp 8 juta). Mohon info lebih lanjut.'),
                 'check' => 'navy',
                 'features' => [
                     [
-                        'label' => 'Kuota & Modul Sesuai Kebutuhan',
-                        'tip' => 'Jumlah pengguna, proyek, dan modul disesuaikan setelah diskusi dengan pengembang.',
+                        'label' => 'Semua Fitur Starter, Professional & Business',
+                        'tip' => 'Termasuk manajemen proyek, simulasi, invoice, keuangan, nota dinas, rekonsiliasi, payroll, dokumen, SOP, crew freelance, dan laporan lanjutan.',
                     ],
                     [
-                        'label' => 'Integrasi & Kustomisasi',
-                        'tip' => 'Penyesuaian alur kerja, laporan, atau integrasi khusus jika diperlukan.',
+                        'label' => 'Kuota Unlimited',
+                        'tip' => 'Pengguna, vendor, produk, proyek, prospek, simulasi, rekening, aset, piutang, dan transaksi tanpa batas.',
                     ],
                     [
-                        'label' => 'Onboarding & Pendampingan',
-                        'tip' => 'Setup dan training disesuaikan dengan skala dan proses internal tim Anda.',
+                        'label' => 'Domain Gratis',
+                        'tip' => 'Domain (.com / .id sesuai ketersediaan) termasuk selama masa berlangganan Enterprise aktif. Syarat: minimal 2 tahun.',
+                    ],
+                    [
+                        'label' => 'Hosting Gratis',
+                        'tip' => 'Hosting aplikasi WOFINS termasuk selama masa berlangganan aktif. Setup dibantu tim pengembang.',
+                    ],
+                    [
+                        'label' => 'SSL & Backup Terpusat',
+                        'tip' => 'Sertifikat SSL dan cadangan data berkala agar akses aman dan data bisnis terlindungi.',
+                    ],
+                    [
+                        'label' => 'Integrasi & Kustomisasi Alur',
+                        'tip' => 'Penyesuaian workflow, laporan, atau integrasi khusus sesuai proses internal WO Anda.',
+                    ],
+                    [
+                        'label' => 'Onboarding, Training & Pendampingan',
+                        'tip' => 'Setup go-live, training tim, dan pendampingan operasional sesuai skala perusahaan.',
                     ],
                     [
                         'label' => 'Support Langsung Pengembang',
-                        'tip' => 'Diskusi kebutuhan dan penawaran harga langsung dengan tim pengembang WOFINS.',
+                        'tip' => 'Prioritas bantuan dan diskusi kebutuhan langsung dengan tim pengembang WOFINS.',
                     ],
                 ],
-                'feature_keys' => [],
+                'feature_keys' => [
+                    self::FEATURE_PROJECTS,
+                    self::FEATURE_SIMULASI,
+                    self::FEATURE_BASIC_FINANCE,
+                    self::FEATURE_FIXED_ASSETS,
+                    self::FEATURE_NOTA_DINAS,
+                    self::FEATURE_DOCUMENTS,
+                    self::FEATURE_CREW_FREELANCE,
+                    self::FEATURE_RECONCILIATION,
+                    self::FEATURE_PAYROLL,
+                    self::FEATURE_ADVANCED_REPORTS,
+                    self::FEATURE_ROLE_MANAGEMENT,
+                    self::FEATURE_MULTI_APPROVAL,
+                ],
                 'selectable' => false,
             ],
-            // Enterprise tidak ditawarkan di aplikasi ini — produk terpisah.
         ];
     }
 
@@ -359,6 +385,12 @@ class PricingPlans
     {
         if (! filled($key)) {
             return null;
+        }
+
+        $key = str_replace('-', '_', strtolower(trim($key)));
+
+        if ($key === 'custom') {
+            $key = 'enterprise';
         }
 
         foreach (static::all() as $plan) {
@@ -410,6 +442,19 @@ class PricingPlans
      */
     public static function resolveBillingPrice(array $plan, string $billing): array
     {
+        $rank = [
+            'monthly' => 1,
+            'semiannual' => 2,
+            'annual' => 3,
+            'biennial' => 4,
+            'triennial' => 5,
+            'quadrennial' => 6,
+        ];
+        $minBilling = (string) ($plan['min_billing'] ?? '');
+        if ($minBilling !== '' && ($rank[$billing] ?? 0) < ($rank[$minBilling] ?? 0)) {
+            $billing = $minBilling;
+        }
+
         $monthly = (int) ($plan['price_monthly'] ?? 0);
         $semiannual = (int) ($plan['price_semiannual'] ?? ($monthly * 6));
         $annual = (int) ($plan['price_annual'] ?? ($monthly * 12));
@@ -530,64 +575,19 @@ class PricingPlans
      */
     public static function compareRows(): array
     {
-        $starter = static::find('starter') ?? [];
-        $pro = static::find('professional') ?? [];
-        $business = static::find('business') ?? [];
-
-        $fmt = static function (?int $limit): string {
-            if ($limit === null) {
-                return 'Tersedia';
-            }
-
-            if ($limit <= 0) {
-                return '—';
-            }
-
-            return 'Hingga '.number_format($limit, 0, ',', '.');
-        };
-
-        $quota = static function (string $key) use ($starter, $pro, $business, $fmt): array {
-            return [
-                $fmt(isset($starter[$key]) ? (int) $starter[$key] : null),
-                $fmt(isset($pro[$key]) ? (int) $pro[$key] : null),
-                $fmt(isset($business[$key]) ? (int) $business[$key] : null),
-            ];
-        };
-
         return [
-            array_merge(['Jumlah Pengguna'], $quota('seat_limit')),
-            array_merge(['Vendor'], $quota('vendor_limit')),
-            array_merge(['Produk'], $quota('product_limit')),
-            ['Kategori', 'Dikelola Admin', 'Dikelola Admin', 'Dikelola Admin'],
-            ['Crew Freelance', false, false, true],
-            array_merge(['Proyek Wedding'], $quota('order_limit')),
-            array_merge(['Prospek'], $quota('prospect_limit')),
-            array_merge(['Simulasi'], $quota('simulasi_limit')),
-            array_merge(['Rekening Bank/Kas'], $quota('payment_method_limit')),
-            array_merge(['Aset Tetap'], $quota('fixed_asset_limit')),
-            array_merge(['Piutang'], $quota('piutang_limit')),
-            array_merge(['Pembayaran Piutang'], $quota('pembayaran_piutang_limit')),
-            array_merge(['Pendapatan Wedding'], $quota('data_pembayaran_limit')),
-            array_merge(['Pengeluaran Wedding'], $quota('expense_limit')),
-            array_merge(['Pengeluaran Operasional'], $quota('expense_ops_limit')),
-            array_merge(['Pendapatan Lain'], $quota('pendapatan_lain_limit')),
-            array_merge(['Pengeluaran Lain'], $quota('pengeluaran_lain_limit')),
-            ['Manajemen Proyek', true, true, true],
+            ['Jumlah Pengguna', '1 (pemilik)', '1 (pemilik)', 'Hingga 3'],
+            ['Invoice, proyek, kas, nota dinas', true, true, true],
             ['Simulasi Wedding', false, true, true],
             ['Draft Kontrak Kerja', false, true, true],
-            ['Invoice Proyek', true, true, true],
-            ['Keuangan Dasar', true, true, true],
-            ['Nota Dinas Digital', true, true, true],
+            ['Rekonsiliasi & Arus Kas', false, true, true],
+            ['Payroll + Master Karyawan', false, true, true],
             ['Fixed Assets', false, true, true],
-            ['Rekonsiliasi Rekening', false, true, true],
-            ['Arus Kas Bersih', false, true, true],
-            ['Payroll', false, true, true],
-            ['Master Karyawan (Employee)', false, true, true],
+            ['Crew Freelance', false, false, true],
             ['Dokumen & SOP', false, false, true],
-            ['Domain', false, false, 'Gratis'],
-            ['Laporan Lanjutan (Kinerja AM)', false, false, true],
-            ['Onboarding & Training', false, false, true],
-            ['Support', 'Standar', 'Prioritas', 'WhatsApp'],
+            ['Laporan Kinerja AM', false, false, true],
+            ['Onboarding & Training Tim', false, false, true],
+            ['Support', 'Jam kerja', 'Prioritas 1 hari', 'WhatsApp prioritas'],
         ];
     }
 
@@ -680,7 +680,6 @@ class PricingPlans
             'hastana' => 'Paket Hastana',
             'non_hastana' => 'Paket Non Hastana',
             'lain_lain' => 'Lain-lain',
-            'enterprise' => 'Enterprise (produk terpisah)',
             default => filled($key) ? ucfirst((string) $key) : '—',
         };
     }
@@ -845,9 +844,8 @@ class PricingPlans
 
         return match ($key) {
             'hastana', 'non_hastana', 'nonhastana' => 'professional', // legacy → Professional
-            'starter', 'professional', 'business' => $key,
-            'custom' => null, // hubungi pengembang — tidak dipilih via form/checkout
-            'enterprise' => null, // produk terpisah — tidak ditawarkan di app ini
+            'starter', 'professional', 'business', 'enterprise' => $key,
+            'custom' => 'enterprise',
             'lain_lain' => null,
             default => static::find($key) ? $key : null,
         };

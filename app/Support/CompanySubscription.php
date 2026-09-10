@@ -123,7 +123,7 @@ class CompanySubscription
     {
         $key = static::company()?->subscription_plan;
 
-        return PricingPlans::find($key) !== null;
+        return in_array((string) $key, PricingPlans::selectableKeys(), true);
     }
 
     public static function planKey(): string
@@ -131,11 +131,11 @@ class CompanySubscription
         $company = static::company();
         $key = $company?->subscription_plan;
 
-        if (PricingPlans::find($key)) {
-            return $key;
+        if (in_array((string) $key, PricingPlans::selectableKeys(), true)) {
+            return (string) $key;
         }
 
-        // Nilai lama "enterprise" atau kosong: belum dikonfigurasi di app ini
+        // Nilai lama "enterprise"/custom atau kosong: belum dikonfigurasi di app ini
         return (string) config('wofins.default_subscription_plan', self::DEFAULT_PLAN);
     }
 

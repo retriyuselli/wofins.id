@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Vendors\Pages;
 
+use App\Filament\Actions\ImportVendorAction;
 use App\Filament\Resources\Vendors\VendorResource;
 use App\Support\CompanySubscription;
 use App\Support\UserVisibility;
@@ -26,6 +27,8 @@ class ListVendors extends ListRecords
                 ->disabled()
                 ->extraAttributes(['class' => 'pointer-events-none']);
         }
+
+        $actions[] = ImportVendorAction::make();
 
         $actions[] = CreateAction::make()
             ->icon('heroicon-o-plus')

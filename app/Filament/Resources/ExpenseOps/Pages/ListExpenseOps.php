@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ExpenseOps\Pages;
 
 use App\Filament\Actions\GenerateExpenseOpsAction;
+use App\Filament\Actions\ImportExpenseOpsAction;
 use App\Filament\Resources\ExpenseOps\ExpenseOpsResource;
 use App\Filament\Resources\ExpenseOps\Widgets\ExpenseOpsOverview;
 use App\Support\CompanySubscription;
@@ -20,6 +21,7 @@ class ListExpenseOps extends ListRecords
     {
         $actions = [
             GenerateExpenseOpsAction::make(),
+            ImportExpenseOpsAction::make(),
         ];
 
         if (UserVisibility::canViewTeamSeatSummary()) {

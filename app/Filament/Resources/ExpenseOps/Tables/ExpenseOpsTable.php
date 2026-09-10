@@ -4,6 +4,7 @@ namespace App\Filament\Resources\ExpenseOps\Tables;
 
 use App\Exports\ExpenseOpsExport;
 use App\Filament\Actions\GenerateExpenseOpsAction;
+use App\Filament\Actions\ImportExpenseOpsAction;
 use App\Models\ExpenseOps;
 use App\Support\ProFeatures;
 use Filament\Actions\Action;
@@ -314,12 +315,13 @@ class ExpenseOpsTable
             ])
             ->emptyStateActions([
                 GenerateExpenseOpsAction::make(),
+                ImportExpenseOpsAction::make(),
                 CreateAction::make()
                     ->label('Buat Pengeluaran Pertama')
                     ->icon('heroicon-o-plus-circle'),
             ])
             ->emptyStateHeading('Belum Ada Pengeluaran Operasional')
-            ->emptyStateDescription('Generate dari Nota Dinas Detail operasional, atau tambah manual.')
+            ->emptyStateDescription('Generate dari Nota Dinas, impor Excel, atau tambah manual.')
             ->emptyStateIcon('heroicon-o-banknotes')
             ->poll('60s')
             ->striped()

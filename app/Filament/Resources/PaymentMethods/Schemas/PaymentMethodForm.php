@@ -8,6 +8,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\RawJs;
 
@@ -49,7 +50,7 @@ class PaymentMethodForm
                             ->required(),
                     ])->columns(2),
                 Section::make('Saldo Awal')
-                    ->description('Isi jika rekening ini memiliki saldo sebelum dicatat di sistem. Saldo ini akan menjadi titik awal perhitungan.')
+                    ->description('Isi hanya jika rekening ini sudah punya saldo sebelum dicatat di WOFINS. Jika saldo awal 0, semua pembayaran (termasuk yang tanggalnya sebelum hari ini) masuk ke saldo rekening.')
                     ->schema([
                         TextInput::make('opening_balance')
                             ->label('Saldo Awal (Opening Balance)')
@@ -61,9 +62,10 @@ class PaymentMethodForm
                             ->stripCharacters(','),
                         DatePicker::make('opening_balance_date')
                             ->label('Tanggal Saldo Awal')
-                            ->default(now())
+                            ->helperText('Wajib diisi jika saldo awal > 0. Kosongkan jika rekening mulai dari nol agar semua transaksi dihitung.')
                             ->native(false)
-                            ->displayFormat('d M Y'),
+                            ->displayFormat('d M Y')
+                            ->required(fn (Get $get): bool => (int) preg_replace('/[^\d]/', '', (string) $get('opening_balance')) > 0),
                     ])->columns(2),
             ]);
     }

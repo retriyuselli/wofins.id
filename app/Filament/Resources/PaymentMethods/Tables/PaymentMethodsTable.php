@@ -135,28 +135,12 @@ class PaymentMethodsTable
                 Filter::make('saldo_positif')
                     ->label('Saldo Positif')
                     ->query(function (Builder $query): Builder {
-                        return $query->whereRaw('
-                            (opening_balance + 
-                            COALESCE((SELECT SUM(nominal) FROM data_pembayarans WHERE payment_method_id = payment_methods.id AND tgl_bayar >= opening_balance_date AND deleted_at IS NULL), 0) +
-                            COALESCE((SELECT SUM(nominal) FROM pendapatan_lains WHERE payment_method_id = payment_methods.id AND tgl_bayar >= opening_balance_date AND deleted_at IS NULL), 0) -
-                            COALESCE((SELECT SUM(amount) FROM expenses WHERE payment_method_id = payment_methods.id AND date_expense >= opening_balance_date AND deleted_at IS NULL), 0) -
-                            COALESCE((SELECT SUM(amount) FROM expense_ops WHERE payment_method_id = payment_methods.id AND date_expense >= opening_balance_date AND deleted_at IS NULL), 0) -
-                            COALESCE((SELECT SUM(amount) FROM pengeluaran_lains WHERE payment_method_id = payment_methods.id AND date_expense >= opening_balance_date AND deleted_at IS NULL), 0)
-                            ) > 0
-                        ');
+                        return $query->whereRaw(self::saldoSql().' > 0');
                     }),
                 Filter::make('saldo_negatif')
                     ->label('Saldo Negatif')
                     ->query(function (Builder $query): Builder {
-                        return $query->whereRaw('
-                            (opening_balance + 
-                            COALESCE((SELECT SUM(nominal) FROM data_pembayarans WHERE payment_method_id = payment_methods.id AND tgl_bayar >= opening_balance_date AND deleted_at IS NULL), 0) +
-                            COALESCE((SELECT SUM(nominal) FROM pendapatan_lains WHERE payment_method_id = payment_methods.id AND tgl_bayar >= opening_balance_date AND deleted_at IS NULL), 0) -
-                            COALESCE((SELECT SUM(amount) FROM expenses WHERE payment_method_id = payment_methods.id AND date_expense >= opening_balance_date AND deleted_at IS NULL), 0) -
-                            COALESCE((SELECT SUM(amount) FROM expense_ops WHERE payment_method_id = payment_methods.id AND date_expense >= opening_balance_date AND deleted_at IS NULL), 0) -
-                            COALESCE((SELECT SUM(amount) FROM pengeluaran_lains WHERE payment_method_id = payment_methods.id AND date_expense >= opening_balance_date AND deleted_at IS NULL), 0)
-                            ) < 0
-                        ');
+                        return $query->whereRaw(self::saldoSql().' < 0');
                     }),
             ])
             ->recordActions([
@@ -318,5 +302,33 @@ class PaymentMethodsTable
             ->paginationPageOptions([10, 25, 50])
             ->striped()
             ->description('Kelola semua rekening bank dan kas tunai. Saldo dihitung otomatis berdasarkan transaksi masuk dan keluar.');
+    }
+
+    /**
+     * Rumus saldo SQL mengikuti PaymentMethod::getSaldoAttribute().
+     * Saldo awal 0 / tanggal pembukuan kosong → semua mutasi dihitung.
+     */
+    private static function saldoSql(): string
+    {
+        $includes = static function (string $table, string $column): string {
+            return "(
+                payment_methods.opening_balance = 0
+                OR payment_methods.opening_balance_date IS NULL
+                OR {$table}.{$column} >= payment_methods.opening_balance_date
+            ) AND (
+                payment_methods.company_id IS NULL
+                OR {$table}.company_id = payment_methods.company_id
+            )";
+        };
+
+        return '
+            (COALESCE(payment_methods.opening_balance, 0)
+            + COALESCE((SELECT SUM(nominal) FROM data_pembayarans WHERE payment_method_id = payment_methods.id AND deleted_at IS NULL AND '.$includes('data_pembayarans', 'tgl_bayar').'), 0)
+            + COALESCE((SELECT SUM(nominal) FROM pendapatan_lains WHERE payment_method_id = payment_methods.id AND deleted_at IS NULL AND '.$includes('pendapatan_lains', 'tgl_bayar').'), 0)
+            - COALESCE((SELECT SUM(amount) FROM expenses WHERE payment_method_id = payment_methods.id AND deleted_at IS NULL AND '.$includes('expenses', 'date_expense').'), 0)
+            - COALESCE((SELECT SUM(amount) FROM expense_ops WHERE payment_method_id = payment_methods.id AND deleted_at IS NULL AND '.$includes('expense_ops', 'date_expense').'), 0)
+            - COALESCE((SELECT SUM(amount) FROM pengeluaran_lains WHERE payment_method_id = payment_methods.id AND deleted_at IS NULL AND '.$includes('pengeluaran_lains', 'date_expense').'), 0)
+            )
+        ';
     }
 }

@@ -101,11 +101,7 @@ class PaymentMethod extends ViewRecord
     private function getPendapatanLain($record)
     {
         return $record->pendapatanLains()
-            ->when($record->opening_balance_date, function ($query) use ($record) {
-                $date = $this->parseDate($record->opening_balance_date);
-
-                return $date ? $query->where('tgl_bayar', '>=', $date) : $query;
-            })
+            ->tap(fn ($query) => $record->applyOpeningCutoff($query, 'tgl_bayar'))
             ->whereNull('deleted_at')
             ->orderBy('tgl_bayar', 'desc')
             ->get();
@@ -114,11 +110,7 @@ class PaymentMethod extends ViewRecord
     private function getDataPembayaran($record)
     {
         return $record->payments()
-            ->when($record->opening_balance_date, function ($query) use ($record) {
-                $date = $this->parseDate($record->opening_balance_date);
-
-                return $date ? $query->where('tgl_bayar', '>=', $date) : $query;
-            })
+            ->tap(fn ($query) => $record->applyOpeningCutoff($query, 'tgl_bayar'))
             ->whereNull('deleted_at')
             ->with('order')
             ->orderBy('tgl_bayar', 'desc')
@@ -128,11 +120,7 @@ class PaymentMethod extends ViewRecord
     private function getExpenses($record)
     {
         return $record->expenses()
-            ->when($record->opening_balance_date, function ($query) use ($record) {
-                $date = $this->parseDate($record->opening_balance_date);
-
-                return $date ? $query->where('date_expense', '>=', $date) : $query;
-            })
+            ->tap(fn ($query) => $record->applyOpeningCutoff($query, 'date_expense'))
             ->whereNull('deleted_at')
             ->orderBy('date_expense', 'desc')
             ->get();
@@ -141,11 +129,7 @@ class PaymentMethod extends ViewRecord
     private function getExpenseOps($record)
     {
         return $record->expenseOps()
-            ->when($record->opening_balance_date, function ($query) use ($record) {
-                $date = $this->parseDate($record->opening_balance_date);
-
-                return $date ? $query->where('date_expense', '>=', $date) : $query;
-            })
+            ->tap(fn ($query) => $record->applyOpeningCutoff($query, 'date_expense'))
             ->whereNull('deleted_at')
             ->orderBy('date_expense', 'desc')
             ->get();
@@ -154,11 +138,7 @@ class PaymentMethod extends ViewRecord
     private function getPengeluaranLain($record)
     {
         return $record->pengeluaranLains()
-            ->when($record->opening_balance_date, function ($query) use ($record) {
-                $date = $this->parseDate($record->opening_balance_date);
-
-                return $date ? $query->where('date_expense', '>=', $date) : $query;
-            })
+            ->tap(fn ($query) => $record->applyOpeningCutoff($query, 'date_expense'))
             ->whereNull('deleted_at')
             ->orderBy('date_expense', 'desc')
             ->get();
@@ -176,7 +156,7 @@ class PaymentMethod extends ViewRecord
 
     private function getMonthlyFinancialData($record): array
     {
-        $startDate = $this->parseDate($record->opening_balance_date) ?? now()->subYear();
+        $startDate = $this->parseDate($record->transactionCutoffDate()) ?? now()->subYear()->startOfMonth();
         $endDate = $startDate->copy()->addMonths(11)->endOfMonth();
 
         $paymentsAgg = $record->payments()

@@ -71,31 +71,31 @@ class PaymentMethodStatsWidget extends BaseWidget
         $years = collect();
 
         // Get years from DataPembayaran
-        $paymentYears = UserVisibility::constrainViaTeamOrders(DataPembayaran::query())
+        $paymentYears = UserVisibility::constrainCompanyQuery(DataPembayaran::query())
             ->select(DB::raw('YEAR(tgl_bayar) as year'))
             ->distinct()
             ->whereNotNull('tgl_bayar')
             ->pluck('year');
 
-        $incomeYears = UserVisibility::constrainViaCompanyPaymentMethods(PendapatanLain::query())
+        $incomeYears = UserVisibility::constrainCompanyQuery(PendapatanLain::query())
             ->select(DB::raw('YEAR(tgl_bayar) as year'))
             ->distinct()
             ->whereNotNull('tgl_bayar')
             ->pluck('year');
 
-        $expenseYears = UserVisibility::constrainViaTeamOrders(Expense::query())
+        $expenseYears = UserVisibility::constrainCompanyQuery(Expense::query())
             ->select(DB::raw('YEAR(date_expense) as year'))
             ->distinct()
             ->whereNotNull('date_expense')
             ->pluck('year');
 
-        $expenseOpsYears = UserVisibility::constrainExpenseOpsQuery(ExpenseOps::query())
+        $expenseOpsYears = UserVisibility::constrainCompanyQuery(ExpenseOps::query())
             ->select(DB::raw('YEAR(date_expense) as year'))
             ->distinct()
             ->whereNotNull('date_expense')
             ->pluck('year');
 
-        $pengeluaranYears = UserVisibility::constrainViaCompanyPaymentMethods(PengeluaranLain::query())
+        $pengeluaranYears = UserVisibility::constrainCompanyQuery(PengeluaranLain::query())
             ->select(DB::raw('YEAR(date_expense) as year'))
             ->distinct()
             ->whereNotNull('date_expense')
@@ -161,57 +161,22 @@ class PaymentMethodStatsWidget extends BaseWidget
             $method->getSaldoAttribute(); // This will cache the saldo
         });
 
-        $stats = [];
-
-        // Cache saldo calculations
         $methodSaldos = $paymentMethods->mapWithKeys(function ($method) {
             return [$method->id => $method->saldo];
         });
-
-        // Summary: pembayaran/expense lewat order tim; ops & lain-lain lewat rekening company
-        $totalMasukSemua = (
-            UserVisibility::constrainViaTeamOrders(DataPembayaran::query())
-                ->whereYear('tgl_bayar', $year)
-                ->whereMonth('tgl_bayar', $month)
-                ->whereNull('deleted_at')
-                ->sum('nominal')
-        ) + (
-            UserVisibility::constrainViaCompanyPaymentMethods(PendapatanLain::query())
-                ->whereYear('tgl_bayar', $year)
-                ->whereMonth('tgl_bayar', $month)
-                ->whereNull('deleted_at')
-                ->sum('nominal')
-        );
-
-        $totalKeluarSemua = (
-            UserVisibility::constrainViaTeamOrders(Expense::query())
-                ->whereYear('date_expense', $year)
-                ->whereMonth('date_expense', $month)
-                ->whereNull('deleted_at')
-                ->sum('amount')
-        ) + (
-            UserVisibility::constrainExpenseOpsQuery(ExpenseOps::query())
-                ->whereYear('date_expense', $year)
-                ->whereMonth('date_expense', $month)
-                ->whereNull('deleted_at')
-                ->sum('amount')
-        ) + (
-            UserVisibility::constrainViaCompanyPaymentMethods(PengeluaranLain::query())
-                ->whereYear('date_expense', $year)
-                ->whereMonth('date_expense', $month)
-                ->whereNull('deleted_at')
-                ->sum('amount')
-        );
-
         $totalSaldoSemua = $methodSaldos->sum();
 
+        $totalMasukSemua = 0.0;
+        $totalKeluarSemua = 0.0;
         $stats = [];
         foreach ($paymentMethods as $method) {
             $currentSaldo = $methodSaldos[$method->id];
             $periodMasuk = $this->calculatePeriodIncome($method, $year, $month);
             $periodKeluar = $this->calculatePeriodExpense($method, $year, $month);
+            $totalMasukSemua += $periodMasuk;
+            $totalKeluarSemua += $periodKeluar;
             $netFlow = $periodMasuk - $periodKeluar;
-            $formattedSaldo = ' '.number_format($currentSaldo, 0, ',', '.');
+            $formattedSaldo = 'Rp '.number_format($currentSaldo, 0, ',', '.');
             $formattedNetFlow = 'Rp '.number_format($netFlow, 0, ',', '.');
             $color = $currentSaldo >= 0 ? 'success' : 'danger';
             $icon = $currentSaldo >= 0 ? 'heroicon-o-arrow-trending-up' : 'heroicon-o-arrow-trending-down';
@@ -260,7 +225,7 @@ class PaymentMethodStatsWidget extends BaseWidget
 
         array_unshift($stats, Stat::make(
             label: 'Total Saldo Semua Rekening',
-            value: ' '.number_format($totalSaldoSemua, 0, ',', '.')
+            value: 'Rp '.number_format($totalSaldoSemua, 0, ',', '.')
         )
             ->description($summaryDescription)
             ->descriptionIcon($summaryNetFlow >= 0 ? 'heroicon-o-arrow-trending-up' : 'heroicon-o-arrow-trending-down')

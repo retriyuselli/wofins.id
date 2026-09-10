@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Vendors\Tables;
 
+use App\Filament\Actions\ImportVendorAction;
 use App\Models\Vendor;
 use App\Support\ProFeatures;
 use Carbon\Carbon;
@@ -831,8 +832,9 @@ class VendorsTable
             ])
             ->emptyStateIcon('heroicon-o-building-storefront')
             ->emptyStateHeading('No vendors yet')
-            ->emptyStateDescription('Create your first vendor to get started.')
+            ->emptyStateDescription('Impor Excel atau buat vendor pertama. Data tetap terisolasi per company.')
             ->emptyStateActions([
+                ImportVendorAction::make(),
                 Action::make('create')
                     ->label('Create vendor')
                     ->url(route('filament.admin.resources.vendors.create'))

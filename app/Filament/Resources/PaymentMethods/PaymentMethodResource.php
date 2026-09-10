@@ -16,6 +16,7 @@ use App\Support\UserVisibility;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 
@@ -76,6 +77,16 @@ class PaymentMethodResource extends BaseResource
         }
 
         return Gate::allows('ViewAny:PaymentMethod');
+    }
+
+    public static function canView(Model $record): bool
+    {
+        return parent::canView($record) && static::companyOwnsOperationalRecord($record);
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return parent::canEdit($record) && static::companyOwnsOperationalRecord($record);
     }
 
     public static function getEloquentQuery(): Builder
