@@ -6,15 +6,23 @@ use App\Models\DataPembayaran;
 use App\Models\Expense;
 use App\Models\ExpenseOps;
 use App\Models\Order;
+use App\Models\OrderProduct;
 use App\Models\Piutang;
 use App\Models\PendapatanLain;
 use App\Models\PengeluaranLain;
+use App\Models\Product;
+use App\Models\Prospect;
 use App\Models\User;
+use App\Models\Vendor;
+use App\Enums\OrderStatus;
 use App\Enums\StatusPiutang;
+use App\Support\UserVisibility;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
+
 class FinanceSummaryService
 {
     /**
@@ -125,18 +133,14 @@ class FinanceSummaryService
     public function scopedOrdersQuery(User $user): Builder
     {
         $query = Order::query()->with([
-            'prospect:id,name_event,date_lamaran,date_akad,date_resepsi',
+            'prospect:id,name_event,name_cpp,name_cpw,venue,phone,address,date_lamaran,date_akad,date_resepsi',
             'user:id,name',
             'dataPembayaran:id,order_id,nominal,tgl_bayar,keterangan,payment_method_id',
             'dataPengeluaran:id,order_id,amount,date_expense,note,vendor_id,payment_stage',
             'expenses:id,order_id,amount,date_expense,note,vendor_id,payment_stage',
         ]);
 
-        if (! $this->isPrivileged($user)) {
-            $query->where('user_id', $user->id);
-        }
-
-        return $query;
+        return UserVisibility::constrainCompanyQuery($query);
     }
 
     /**
@@ -180,6 +184,185 @@ class FinanceSummaryService
         ];
     }
 
+    public function scopedProspectsQuery(): Builder
+    {
+        $query = Prospect::query()->with([
+            'user:id,name',
+            'latestOrder',
+        ]);
+
+        return UserVisibility::constrainCompanyQuery($query);
+    }
+
+    /**
+     * @return array{data: list<array<string, mixed>>, meta: array<string, int>}
+     */
+    public function prospects(?string $status = null, int $perPage = 20): array
+    {
+        $query = $this->scopedProspectsQuery()->latest('id');
+        $this->applyProspectStatusFilter($query, $status);
+
+        /** @var LengthAwarePaginator $paginator */
+        $paginator = $query->paginate(min(max($perPage, 1), 50));
+
+        $base = $this->scopedProspectsQuery();
+        $allCount = (clone $base)->count();
+        $warmCount = (clone $base)->doesntHave('orders')->count();
+
+        return [
+            'data' => collect($paginator->items())
+                ->map(fn (Prospect $prospect) => $this->prospectSummary($prospect))
+                ->values()
+                ->all(),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'all_count' => $allCount,
+                'warm_count' => $warmCount,
+                'with_order_count' => max(0, $allCount - $warmCount),
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function prospectDetail(int $id): ?array
+    {
+        /** @var Prospect|null $prospect */
+        $prospect = $this->scopedProspectsQuery()->find($id);
+
+        return $prospect ? $this->prospectSummary($prospect) : null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    public function storeProspect(User $user, array $data): array
+    {
+        $data['user_id'] = $user->id;
+        $data = UserVisibility::stampCompanyId($data, 'user_id');
+
+        $prospect = Prospect::query()->create($data);
+        $prospect->load(['user:id,name', 'latestOrder']);
+
+        return $this->prospectSummary($prospect);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>|null
+     */
+    public function updateProspect(int $id, array $data): ?array
+    {
+        /** @var Prospect|null $prospect */
+        $prospect = $this->scopedProspectsQuery()->find($id);
+
+        if (! $prospect) {
+            return null;
+        }
+
+        unset($data['user_id'], $data['company_id']);
+        $prospect->update($data);
+        $prospect->load(['user:id,name', 'latestOrder']);
+
+        return $this->prospectSummary($prospect);
+    }
+
+    public static function normalizeProspectPhone(string $phone): string
+    {
+        $digits = preg_replace('/\D+/', '', $phone) ?? '';
+
+        if (str_starts_with($digits, '62')) {
+            $digits = substr($digits, 2);
+        }
+
+        return ltrim($digits, '0');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function prospectSummary(Prospect $prospect): array
+    {
+        $order = $prospect->latestOrder;
+        $orderStatus = $order
+            ? $this->enumValue($order->status)
+            : 'no_order';
+
+        return [
+            'id' => $prospect->id,
+            'name_event' => $prospect->name_event,
+            'name_cpp' => $prospect->name_cpp,
+            'name_cpw' => $prospect->name_cpw,
+            'venue' => $prospect->venue,
+            'phone' => $prospect->phone,
+            'address' => $prospect->address,
+            'date_lamaran' => optional($prospect->date_lamaran)?->toDateString(),
+            'time_lamaran' => $this->formatClock($prospect->time_lamaran),
+            'date_akad' => optional($prospect->date_akad)?->toDateString(),
+            'time_akad' => $this->formatClock($prospect->time_akad),
+            'date_resepsi' => optional($prospect->date_resepsi)?->toDateString(),
+            'time_resepsi' => $this->formatClock($prospect->time_resepsi),
+            'total_penawaran' => (int) ($prospect->total_penawaran ?? 0),
+            'notes' => $prospect->notes,
+            'account_manager' => $prospect->user?->name,
+            'order_status' => $orderStatus ?: 'no_order',
+            'order' => $order ? [
+                'id' => $order->id,
+                'name' => $order->name ?: $prospect->name_event,
+                'number' => $order->number,
+                'status' => $this->enumValue($order->status),
+            ] : null,
+        ];
+    }
+
+    private function applyProspectStatusFilter(Builder $query, ?string $status): void
+    {
+        if (! $status) {
+            return;
+        }
+
+        match ($status) {
+            'no_order' => $query->doesntHave('orders'),
+            'has_order' => $query->has('orders'),
+            'pending', 'processing', 'done', 'cancelled' => $query->whereHas(
+                'orders',
+                fn (Builder $orders) => $orders->where('status', $status)
+            ),
+            default => null,
+        };
+    }
+
+    private function enumValue(mixed $value): ?string
+    {
+        if ($value instanceof \BackedEnum) {
+            return $value->value;
+        }
+
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return (string) $value;
+    }
+
+    private function formatClock(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::parse((string) $value)->format('H:i');
+        } catch (\Throwable) {
+            return (string) $value;
+        }
+    }
+
     /**
      * @return array<string, mixed>|null
      */
@@ -188,6 +371,9 @@ class FinanceSummaryService
         /** @var Order|null $order */
         $order = $this->scopedOrdersQuery($user)
             ->with([
+                'prospect',
+                'employee:id,name',
+                'items.product:id,name,slug,pax,price',
                 'dataPembayaran.paymentMethod:id,name,no_rekening',
                 'expenses.vendor:id,name',
             ])
@@ -199,8 +385,55 @@ class FinanceSummaryService
 
         $summary = $this->projectSummary($order);
         $finance = OrderFinance::for($order);
+        $prospect = $order->prospect;
+
+        $contractUrl = $this->publicFileUrl($order->doc_kontrak)
+            ? url('/api/v1/finance/projects/'.$order->id.'/contract')
+            : null;
+        $invoiceName = 'Invoice-'.($prospect?->name_event ?: $order->number ?: 'proyek').'.pdf';
 
         return array_merge($summary, [
+            'pax' => $order->pax,
+            'no_kontrak' => $order->no_kontrak,
+            'user_id' => $order->user_id,
+            'employee_id' => $order->employee_id,
+            'prospect_id' => $order->prospect_id,
+            'note' => $this->plainText($order->note),
+            'has_doc_kontrak' => $this->publicFileUrl($order->doc_kontrak) !== null,
+            'has_agreement_product' => $this->publicFileUrl($order->agreement_product) !== null,
+            'can_edit' => $this->actorCanEditOrder($user, $order),
+            'can_edit_reason' => $this->actorCanEditOrder($user, $order)
+                ? null
+                : 'Proyek sudah selesai. Hanya Super Admin yang dapat mengedit.',
+            'doc_kontrak_url' => $contractUrl,
+            'doc_kontrak_name' => $contractUrl
+                ? $this->publicFileName($order->doc_kontrak, 'Dokumen kontrak.pdf')
+                : null,
+            'invoice_url' => url('/api/v1/finance/projects/'.$order->id.'/invoice'),
+            'invoice_name' => $invoiceName,
+            'event_manager' => $order->employee?->name,
+            'prospect' => $prospect ? [
+                'id' => $prospect->id,
+                'name_event' => $prospect->name_event,
+                'name_cpp' => $prospect->name_cpp,
+                'name_cpw' => $prospect->name_cpw,
+                'venue' => $prospect->venue,
+                'phone' => $prospect->phone,
+                'address' => $prospect->address,
+                'date_lamaran' => optional($prospect->date_lamaran)?->toDateString(),
+                'date_akad' => optional($prospect->date_akad)?->toDateString(),
+                'date_resepsi' => optional($prospect->date_resepsi)?->toDateString(),
+            ] : $summary['prospect'],
+            'products' => $order->items->map(function (OrderProduct $item) {
+                return [
+                    'id' => $item->id,
+                    'product_id' => $item->product_id,
+                    'name' => $item->product?->name,
+                    'quantity' => (int) $item->quantity,
+                    'unit_price' => (int) $item->unit_price,
+                    'pax' => $item->product?->pax,
+                ];
+            })->values()->all(),
             'totals' => [
                 'grand_total' => $finance->grandTotal(),
                 'paid' => $finance->paymentsTotal(),
@@ -216,6 +449,9 @@ class FinanceSummaryService
                     'amount' => (int) $p->nominal,
                     'keterangan' => $p->keterangan,
                     'payment_method' => $this->formatPaymentMethod($p->paymentMethod),
+                    'payment_method_id' => $p->payment_method_id,
+                    'kategori_transaksi' => $p->kategori_transaksi ?: 'uang_masuk',
+                    'has_proof' => $this->latestStoredPath($p->image) !== null,
                 ];
             })->values()->all(),
             'expenses' => $order->expenses->map(function (Expense $e) {
@@ -229,6 +465,145 @@ class FinanceSummaryService
                 ];
             })->values()->all(),
         ]);
+    }
+
+    /**
+     * @return array{absolute: string, name: string}|null
+     */
+    public function projectContractFile(User $user, int $id): ?array
+    {
+        /** @var Order|null $order */
+        $order = $this->scopedOrdersQuery($user)->find($id);
+        $path = $this->firstStoredPath($order?->doc_kontrak);
+
+        if ($path === null) {
+            return null;
+        }
+
+        $absolute = Storage::disk('public')->path($path);
+        if (! is_file($absolute)) {
+            $publicPath = public_path('storage/'.$path);
+            $absolute = is_file($publicPath) ? $publicPath : null;
+        }
+
+        if ($absolute === null) {
+            return null;
+        }
+
+        return [
+            'absolute' => $absolute,
+            'name' => $this->publicFileName($order->doc_kontrak, 'Dokumen kontrak.pdf') ?? 'Dokumen kontrak.pdf',
+        ];
+    }
+
+    /**
+     * @return array{absolute: string, name: string, mime: string, mtime: int}|null
+     */
+    public function paymentProofFile(int $id): ?array
+    {
+        /** @var DataPembayaran|null $payment */
+        $payment = DataPembayaran::query()->find($id);
+        $path = $this->latestStoredPath($payment?->image);
+        $absolute = $this->absolutePublicPath($path);
+
+        if ($absolute === null || $path === null) {
+            return null;
+        }
+
+        $extension = strtolower((string) pathinfo($path, PATHINFO_EXTENSION));
+        $mime = match ($extension) {
+            'png' => 'image/png',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+            'pdf' => 'application/pdf',
+            default => 'image/jpeg',
+        };
+
+        return [
+            'absolute' => $absolute,
+            'name' => $this->publicFileName($path, 'Payment proof.jpg') ?? 'Payment proof.jpg',
+            'mime' => $mime,
+            'mtime' => (int) filemtime($absolute),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function productDetail(int $id): ?array
+    {
+        /** @var Product|null $product */
+        $product = Product::query()
+            ->with([
+                'category:id,name',
+                'items.vendor:id,name,pic_name,phone,address,category_id',
+                'items.vendor.category:id,name',
+                'pengurangans',
+            ])
+            ->find($id);
+
+        if (! $product) {
+            return null;
+        }
+
+        $pricing = ProductPricingCalculator::calculateForProduct($product);
+        $vendorLines = $product->items->map(fn ($item) => $this->productVendorLine($item))->values()->all();
+
+        return [
+            'id' => $product->id,
+            'name' => $product->name,
+            'slug' => $product->slug,
+            'pax' => $product->pax,
+            'category' => $product->category?->name,
+            'description' => $this->plainText($product->description),
+            'product_price' => (int) ($pricing['total_public_price'] ?? $product->product_price ?? 0),
+            'vendor_price' => (int) ($pricing['total_vendor_price'] ?? 0),
+            'pengurangan' => (int) ($pricing['total_discount_amount'] ?? $product->pengurangan ?? 0),
+            'price' => (int) ($pricing['final_publish'] ?? $product->price ?? 0),
+            'profit' => (int) ($pricing['profit_and_loss'] ?? 0),
+            'is_active' => (bool) $product->is_active,
+            'is_approved' => (bool) $product->is_approved,
+            'vendors' => $vendorLines,
+            'discounts' => $product->pengurangans->map(function ($row) {
+                return [
+                    'id' => $row->id,
+                    'description' => $row->description,
+                    'amount' => (int) $row->amount,
+                    'notes' => $this->plainText($row->notes),
+                ];
+            })->values()->all(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function vendorDetail(int $id): ?array
+    {
+        /** @var Vendor|null $vendor */
+        $vendor = Vendor::query()
+            ->with('category:id,name')
+            ->find($id);
+
+        if (! $vendor) {
+            return null;
+        }
+
+        $publish = (int) ($vendor->harga_publish ?? 0);
+        $modal = (int) ($vendor->harga_vendor ?? 0);
+
+        return [
+            'id' => $vendor->id,
+            'name' => $vendor->name,
+            'pic_name' => $vendor->pic_name,
+            'phone' => $vendor->phone,
+            'address' => $vendor->address,
+            'category' => $vendor->category?->name,
+            'description' => $this->plainText($vendor->description),
+            'harga_publish' => $publish,
+            'harga_vendor' => $modal,
+            'profit_amount' => (int) ($vendor->profit_amount ?? max(0, $publish - $modal)),
+        ];
     }
 
     /**
@@ -386,6 +761,114 @@ class FinanceSummaryService
     }
 
     /**
+     * @return array{view: string, data: array<string, mixed>, filename: string}
+     */
+    public function reportPdfPayload(User $user, string $from, string $to, string $mode = 'cash'): array
+    {
+        \App\Support\CompanyBrand::remember($user);
+
+        if ($mode === 'profit_loss') {
+            return [
+                'view' => 'pdf.profit_loss_report',
+                'data' => $this->profitLossPdfData($from, $to),
+                'filename' => 'laporan-laba-rugi-'.$from.'-'.$to.'.pdf',
+            ];
+        }
+
+        $summary = $this->reportSummary($from, $to, 'cash');
+
+        return [
+            'view' => 'pdf.cash_flow_report',
+            'data' => [
+                'filterStartDate' => $from,
+                'filterEndDate' => $to,
+                'generatedDate' => now()->format('d M Y H:i'),
+                'companyLabel' => \App\Support\CompanyBrand::name(),
+                'rows' => $summary['by_type'] ?? [],
+                'totalIn' => $summary['total_in'] ?? 0,
+                'totalOut' => $summary['total_out'] ?? 0,
+                'net' => $summary['net'] ?? 0,
+            ],
+            'filename' => 'laporan-arus-kas-'.$from.'-'.$to.'.pdf',
+        ];
+    }
+
+    /**
+     * @return array{export: \App\Exports\FinanceReportExport, filename: string}
+     */
+    public function reportExcelPayload(User $user, string $from, string $to, string $mode = 'cash'): array
+    {
+        $pdf = $this->reportPdfPayload($user, $from, $to, $mode);
+        $kind = $mode === 'profit_loss' ? 'laba-rugi' : 'arus-kas';
+
+        return [
+            'export' => new \App\Exports\FinanceReportExport($mode, $pdf['data']),
+            'filename' => 'laporan-'.$kind.'-'.$from.'-'.$to.'.xlsx',
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function profitLossPdfData(string $from, string $to): array
+    {
+        $orders = Order::query()
+            ->with(['prospect', 'dataPembayaran', 'expenses'])
+            ->whereHas('prospect', function (Builder $q) use ($from, $to) {
+                $q->where(function (Builder $inner) use ($from, $to) {
+                    $inner->whereBetween('date_lamaran', [$from, $to])
+                        ->orWhereBetween('date_akad', [$from, $to])
+                        ->orWhereBetween('date_resepsi', [$from, $to]);
+                });
+            })
+            ->get();
+
+        foreach ($orders as $order) {
+            if ($order->prospect && ! mb_check_encoding($order->prospect->name_event ?? '', 'UTF-8')) {
+                $order->prospect->name_event = iconv('UTF-8', 'UTF-8//IGNORE', $order->prospect->name_event ?? '') ?: '';
+            }
+        }
+
+        $totalPaymentsReceived = $orders->sum(function (Order $order) {
+            return $order->dataPembayaran->sum('nominal');
+        });
+        $totalOrderValue = $orders->sum('grand_total');
+        $totalActualExpenses = $orders->sum(function (Order $order) {
+            return $order->expenses->sum('amount');
+        });
+
+        $expenseOps = UserVisibility::constrainExpenseOpsQuery(
+            ExpenseOps::query()->with('vendor')->whereBetween('date_expense', [$from, $to])
+        )->orderByDesc('date_expense')->get();
+
+        $pengeluaranLain = UserVisibility::constrainViaCompanyPaymentMethods(
+            PengeluaranLain::query()->with('vendor')->whereBetween('date_expense', [$from, $to])
+        )->orderByDesc('date_expense')->get();
+
+        $pendapatanLain = UserVisibility::constrainViaCompanyPaymentMethods(
+            PendapatanLain::query()->with('vendor')->whereBetween('tgl_bayar', [$from, $to])
+        )->orderByDesc('tgl_bayar')->get();
+
+        return [
+            'orders' => $orders,
+            'totalIncome' => $totalPaymentsReceived,
+            'totalExpenses' => $totalOrderValue,
+            'sumAllOrdersPengeluaran' => $totalActualExpenses,
+            'netProfit' => $totalOrderValue - $totalActualExpenses,
+            'expenseOps' => $expenseOps,
+            'pengeluaranLain' => $pengeluaranLain,
+            'pendapatanLain' => $pendapatanLain,
+            'totalExpenseOps' => $expenseOps->sum('amount'),
+            'totalPengeluaranLain' => $pengeluaranLain->sum('amount'),
+            'totalPendapatanLain' => $pendapatanLain->sum('nominal'),
+            'filterStartDate' => $from,
+            'filterEndDate' => $to,
+            'generatedDate' => now()->format('d M Y H:i'),
+            'companyLabel' => \App\Support\CompanyBrand::name(),
+        ];
+    }
+
+    /**
      * @return Collection<int, array<string, mixed>>
      */
     protected function cashLedgerRows(string $from, string $to): Collection
@@ -407,6 +890,7 @@ class FinanceSummaryService
                     'payment_method' => $this->formatPaymentMethod($p->paymentMethod),
                     'source_table' => 'data_pembayarans',
                     'source_id' => $p->id,
+                    'proof_url' => $this->paymentProofUrl($p),
                 ];
             });
 
@@ -623,6 +1107,175 @@ class FinanceSummaryService
             'is_overdue' => $piutang->tanggal_jatuh_tempo
                 && $piutang->tanggal_jatuh_tempo->isPast()
                 && ! in_array($statusValue, [StatusPiutang::LUNAS->value, StatusPiutang::DIBATALKAN->value], true),
+        ];
+    }
+
+    private function plainText(?string $html): ?string
+    {
+        if ($html === null) {
+            return null;
+        }
+
+        $text = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $text = trim((string) preg_replace('/\s+/u', ' ', $text));
+
+        return $text === '' ? null : $text;
+    }
+
+    private function actorCanEditOrder(User $user, Order $order): bool
+    {
+        $status = $order->status instanceof OrderStatus
+            ? $order->status
+            : OrderStatus::tryFrom((string) $order->status);
+
+        if ($status === OrderStatus::Done) {
+            return $user->hasRole('super_admin');
+        }
+
+        return true;
+    }
+
+    private function paymentProofUrl(DataPembayaran $payment): ?string
+    {
+        $path = $this->latestStoredPath($payment->image);
+        $absolute = $this->absolutePublicPath($path);
+        if ($absolute === null) {
+            return null;
+        }
+
+        $version = (string) ((int) filemtime($absolute) ?: optional($payment->updated_at)?->timestamp ?: time());
+
+        return url('/api/v1/finance/payments/'.$payment->id.'/proof').'?v='.$version;
+    }
+
+    private function absolutePublicPath(?string $path): ?string
+    {
+        if ($path === null || $path === '') {
+            return null;
+        }
+
+        $absolute = Storage::disk('public')->path($path);
+        if (is_file($absolute)) {
+            return $absolute;
+        }
+
+        $publicPath = public_path('storage/'.$path);
+
+        return is_file($publicPath) ? $publicPath : null;
+    }
+
+    private function publicFileUrl(mixed $value): ?string
+    {
+        $path = $this->firstStoredPath($value);
+        if ($path === null) {
+            return null;
+        }
+
+        if (! Storage::disk('public')->exists($path) && ! is_file(public_path('storage/'.$path))) {
+            return null;
+        }
+
+        return url(Storage::url($path));
+    }
+
+    private function publicFileName(mixed $value, string $fallback): ?string
+    {
+        $path = $this->firstStoredPath($value);
+        if ($path === null) {
+            return null;
+        }
+
+        $name = basename($path);
+        if ($name === '' || $name === '.' || $name === '..') {
+            return $fallback;
+        }
+
+        if (preg_match('/^[0-9A-HJKMNP-TV-Z]{20,}\.[a-z0-9]+$/i', $name) === 1) {
+            return $fallback;
+        }
+
+        return $name;
+    }
+
+    private function firstStoredPath(mixed $value): ?string
+    {
+        return $this->storedPath($value, false);
+    }
+
+    private function latestStoredPath(mixed $value): ?string
+    {
+        return $this->storedPath($value, true);
+    }
+
+    private function storedPath(mixed $value, bool $latest): ?string
+    {
+        if (is_array($value)) {
+            if ($value === []) {
+                return null;
+            }
+
+            $pick = $latest ? end($value) : reset($value);
+
+            return (is_string($pick) || is_array($pick)) ? $this->storedPath($pick, $latest) : null;
+        }
+
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+        if ($trimmed === '' || $trimmed === '0') {
+            return null;
+        }
+
+        if (str_starts_with($trimmed, '[') || str_starts_with($trimmed, '{')) {
+            $decoded = json_decode($trimmed, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return $this->storedPath($decoded, $latest);
+            }
+        }
+
+        $path = ltrim(str_replace('\\', '/', $trimmed), '/');
+        if (str_starts_with($path, 'storage/')) {
+            $path = substr($path, strlen('storage/'));
+        }
+
+        return $path === '' ? null : $path;
+    }
+
+    /**
+     * @param  \App\Models\ProductVendor  $item
+     * @return array<string, mixed>
+     */
+    private function productVendorLine($item): array
+    {
+        $qty = max(1, (int) ($item->quantity ?? 1));
+        $hargaPublish = (int) ($item->harga_publish ?? 0);
+        $hargaVendor = (int) ($item->harga_vendor ?? 0);
+        $linePublic = (int) ($item->price_public ?: $hargaPublish * $qty);
+        $lineVendor = (int) ($item->total_price ?: $hargaVendor * $qty);
+
+        if ($hargaVendor > 0 && $hargaPublish !== $hargaVendor && $lineVendor === $linePublic) {
+            $lineVendor = $hargaVendor * $qty;
+        }
+
+        $vendor = $item->vendor;
+
+        return [
+            'id' => $item->id,
+            'vendor_id' => $item->vendor_id,
+            'name' => $vendor?->name,
+            'pic_name' => $vendor?->pic_name,
+            'phone' => $vendor?->phone,
+            'address' => $vendor?->address,
+            'category' => $vendor?->category?->name,
+            'quantity' => $qty,
+            'harga_publish' => $hargaPublish,
+            'harga_vendor' => $hargaVendor,
+            'line_public' => $linePublic,
+            'line_vendor' => $lineVendor,
+            'line_total' => $linePublic,
+            'description' => $this->plainText($item->description),
         ];
     }
 }

@@ -39,6 +39,16 @@ final class AppState: ObservableObject {
 
     func login(email: String, password: String) async throws {
         let response = try await api.login(email: email, password: password, deviceName: "ios-wofins")
+        applySession(response)
+    }
+
+    func loginWithGoogle() async throws {
+        let idToken = try await GoogleSignInService.shared.signIn()
+        let response = try await api.loginWithGoogle(idToken: idToken, deviceName: "ios-wofins-google")
+        applySession(response)
+    }
+
+    private func applySession(_ response: LoginResponse) {
         keychain.saveToken(response.token)
         api.token = response.token
         currentUser = response.user
@@ -52,6 +62,10 @@ final class AppState: ObservableObject {
         } catch {
             globalError = error.localizedDescription
         }
+    }
+
+    func allows(_ feature: PlanFeature) -> Bool {
+        currentUser?.allows(feature) ?? PlanFeature.starterDefaults.contains(feature)
     }
 
     func logout() async {

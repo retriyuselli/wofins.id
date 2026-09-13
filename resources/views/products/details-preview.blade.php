@@ -355,10 +355,22 @@
                                 @endif
                             </td>
                             <td class="border border-slate-300 px-4 text-[13px] py-3 text-right align-top">
-                                {{ number_format($item->total_price ?? $item->calculate_price_vendor ?? (($item->harga_vendor ?? 0) * max(1, (int) ($item->quantity ?? 1))), 0, ',', '.') }}
+                                @php
+                                    $qty = max(1, (int) ($item->quantity ?? 1));
+                                    $publicLine = (int) ($item->price_public ?? $item->calculate_price_public ?? (($item->harga_publish ?? 0) * $qty));
+                                    $vendorLine = (int) ($item->total_price ?? $item->calculate_price_vendor ?? (($item->harga_vendor ?? 0) * $qty));
+                                    if (
+                                        (int) ($item->harga_vendor ?? 0) > 0
+                                        && (int) ($item->harga_publish ?? 0) !== (int) ($item->harga_vendor ?? 0)
+                                        && $vendorLine === $publicLine
+                                    ) {
+                                        $vendorLine = (int) $item->harga_vendor * $qty;
+                                    }
+                                @endphp
+                                {{ number_format($vendorLine, 0, ',', '.') }}
                             </td>
                             <td class="border border-slate-300 px-4 py-3 text-[13px] text-right align-top">
-                                {{ number_format($item->price_public ?? $item->calculate_price_public ?? (($item->harga_publish ?? 0) * max(1, (int) ($item->quantity ?? 1))), 0, ',', '.') }}
+                                {{ number_format($publicLine, 0, ',', '.') }}
                             </td>
                         </tr>
                         @empty

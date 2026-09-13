@@ -18,7 +18,7 @@ class MeController extends Controller
      */
     public function show(Request $request): JsonResponse
     {
-        $user = $request->user()->loadMissing('roles');
+        $user = $request->user()->loadMissing(['roles', 'company']);
 
         return response()->json([
             'data' => new UserResource($user),
@@ -36,19 +36,24 @@ class MeController extends Controller
         $data = $request->validate([
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'email' => ['sometimes', 'required', 'string', 'email', 'max:255', 'unique:users,email,'.$user->id],
-            'phone_number' => ['nullable', 'string', 'max:20'],
+            'phone_number' => ['nullable', 'string', 'max:30'],
             'address' => ['nullable', 'string', 'max:500'],
-            'date_of_birth' => ['nullable', 'date'],
+            'date_of_birth' => ['nullable', 'date', 'before:'.now()->subYears(17)->toDateString()],
             'gender' => ['nullable', 'string', 'in:male,female'],
-            'emergency_contact' => ['nullable', 'string', 'max:255'],
+            'department' => ['nullable', 'string', 'in:bisnis,operasional'],
+            'emergency_contact' => ['nullable', 'string', 'max:1000'],
         ]);
+
+        if (array_key_exists('email', $data) && $data['email'] !== $user->email && ! $user->hasRole('super_admin')) {
+            unset($data['email']);
+        }
 
         $user->fill($data);
         $user->save();
 
         return response()->json([
             'message' => 'Profil berhasil diperbarui.',
-            'data' => new UserResource($user->fresh()->loadMissing('roles')),
+            'data' => new UserResource($user->fresh()->loadMissing(['roles', 'company'])),
         ]);
     }
 
@@ -74,7 +79,7 @@ class MeController extends Controller
 
         return response()->json([
             'message' => 'Avatar berhasil diperbarui.',
-            'data' => new UserResource($user->fresh()->loadMissing('roles')),
+            'data' => new UserResource($user->fresh()->loadMissing(['roles', 'company'])),
         ]);
     }
 

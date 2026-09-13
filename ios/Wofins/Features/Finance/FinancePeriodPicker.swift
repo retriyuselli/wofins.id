@@ -32,8 +32,10 @@ struct FinancePeriodSelection: Equatable {
         Self.iso.string(from: range.to)
     }
 
-    var label: String {
-        "\(fromString) → \(toString)"
+    var label: String { displayLabel }
+
+    var displayLabel: String {
+        MoneyFormat.dateRange(fromString, toString)
     }
 
     var range: (from: Date, to: Date) {
@@ -100,13 +102,12 @@ struct FinancePeriodPicker: View {
                 .foregroundStyle(WofinsTheme.muted)
 
             if selection.preset == .custom {
-                HStack {
+                VStack(alignment: .leading, spacing: 10) {
                     DatePicker("Dari", selection: $selection.customFrom, displayedComponents: .date)
-                        .labelsHidden()
+                        .font(.poppins(.caption))
                         .onChange(of: selection.customFrom) { _, _ in onChanged() }
-                    Text("–").foregroundStyle(WofinsTheme.muted)
                     DatePicker("Sampai", selection: $selection.customTo, displayedComponents: .date)
-                        .labelsHidden()
+                        .font(.poppins(.caption))
                         .onChange(of: selection.customTo) { _, _ in onChanged() }
                 }
             }

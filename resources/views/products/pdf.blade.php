@@ -330,12 +330,20 @@
                 <tbody>
                     @forelse($product->items ?? [] as $item)
                         @php
-                            $vendorLineTotal = $item->total_price
-                                ?? $item->calculate_price_vendor
-                                ?? (($item->harga_vendor ?? 0) * max(1, (int) ($item->quantity ?? 1)));
+                            $qty = max(1, (int) ($item->quantity ?? 1));
                             $publicLineTotal = $item->price_public
                                 ?? $item->calculate_price_public
-                                ?? (($item->harga_publish ?? 0) * max(1, (int) ($item->quantity ?? 1)));
+                                ?? (($item->harga_publish ?? 0) * $qty);
+                            $vendorLineTotal = $item->total_price
+                                ?? $item->calculate_price_vendor
+                                ?? (($item->harga_vendor ?? 0) * $qty);
+                            if (
+                                (int) ($item->harga_vendor ?? 0) > 0
+                                && (int) ($item->harga_publish ?? 0) !== (int) ($item->harga_vendor ?? 0)
+                                && (int) $vendorLineTotal === (int) $publicLineTotal
+                            ) {
+                                $vendorLineTotal = (int) $item->harga_vendor * $qty;
+                            }
                             $detailsNotes = \App\Support\ProductNotesFormatter::forPdf($item->description);
                         @endphp
                         <tr>

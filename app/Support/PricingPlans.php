@@ -32,6 +32,29 @@ class PricingPlans
     public const FEATURE_CREW_FREELANCE = 'crew_freelance';
 
     /**
+     * Semua kunci fitur yang bisa digating paket.
+     *
+     * @return list<string>
+     */
+    public static function featureKeys(): array
+    {
+        return [
+            self::FEATURE_PROJECTS,
+            self::FEATURE_BASIC_FINANCE,
+            self::FEATURE_NOTA_DINAS,
+            self::FEATURE_SIMULASI,
+            self::FEATURE_FIXED_ASSETS,
+            self::FEATURE_RECONCILIATION,
+            self::FEATURE_PAYROLL,
+            self::FEATURE_DOCUMENTS,
+            self::FEATURE_CREW_FREELANCE,
+            self::FEATURE_ADVANCED_REPORTS,
+            self::FEATURE_ROLE_MANAGEMENT,
+            self::FEATURE_MULTI_APPROVAL,
+        ];
+    }
+
+    /**
      * Paket layanan WOFINS — sumber tunggal untuk halaman Harga,
      * formulir pendaftaran, kontak, email, Filament, dan feature gate.
      *

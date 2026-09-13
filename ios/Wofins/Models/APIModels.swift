@@ -49,17 +49,135 @@ struct UserProfile: Decodable, Identifiable, Equatable {
     let department: String?
     let hire_date: String?
     let emergency_contact: String?
+    let notes: String?
     let status: String?
     let avatar_url: String?
     let roles: [String]?
     let expire_date: String?
+    let last_working_date: String?
     let is_expired: Bool?
     let is_expiring_soon: Bool?
     let days_until_expiration: Int?
 
+    let company: UserCompany?
+    let entitlements: PlanEntitlements?
+
     var roleLabel: String {
         roles?.joined(separator: ", ").capitalized ?? "Karyawan"
     }
+
+    var companyDisplayName: String {
+        let name = company?.name?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return name.isEmpty ? "WOFINS" : name
+    }
+
+    var isSuperAdmin: Bool {
+        roles?.contains("super_admin") == true
+    }
+
+    var genderLabel: String {
+        switch gender {
+        case "male": return "Laki-laki"
+        case "female": return "Perempuan"
+        default: return "—"
+        }
+    }
+
+    var departmentLabel: String {
+        switch department {
+        case "bisnis": return "Bisnis"
+        case "operasional": return "Operasional"
+        default: return department?.capitalized ?? "—"
+        }
+    }
+
+    var statusLabel: String {
+        switch status {
+        case "active": return "Aktif"
+        case "inactive": return "Tidak aktif"
+        case "terminated": return "Berhenti"
+        default: return status?.capitalized ?? "—"
+        }
+    }
+
+    func allows(_ feature: PlanFeature) -> Bool {
+        if isSuperAdmin { return true }
+        if let features = entitlements?.features, !features.isEmpty {
+            return features.contains(feature.rawValue)
+        }
+        return PlanFeature.starterDefaults.contains(feature)
+    }
+
+    var canManageTeam: Bool {
+        if isSuperAdmin { return true }
+        if allows(.roleManagement) { return true }
+        if let limit = entitlements?.seat_limit { return limit > 1 }
+        return false
+    }
+}
+
+enum PlanFeature: String, CaseIterable {
+    case projects
+    case basicFinance = "basic_finance"
+    case notaDinas = "nota_dinas"
+    case simulasi
+    case fixedAssets = "fixed_assets"
+    case reconciliation
+    case payroll
+    case documents
+    case crewFreelance = "crew_freelance"
+    case advancedReports = "advanced_reports"
+    case roleManagement = "role_management"
+    case multiApproval = "multi_approval"
+
+    static let starterDefaults: Set<PlanFeature> = [.projects, .basicFinance, .notaDinas]
+
+    var screenTitle: String {
+        switch self {
+        case .projects: return "Proyek"
+        case .basicFinance: return "Keuangan"
+        case .payroll: return "Kompensasi"
+        case .simulasi: return "Draft Kontrak"
+        case .reconciliation: return "Rekonsiliasi"
+        case .advancedReports: return "Laporan Lanjutan"
+        case .documents: return "Dokumen & SOP"
+        case .roleManagement: return "Tim & Hak Akses"
+        case .fixedAssets: return "Aset Tetap"
+        case .crewFreelance: return "Crew Freelance"
+        case .notaDinas: return "Nota Dinas"
+        case .multiApproval: return "Multi Approval"
+        }
+    }
+
+    func upgradeMessage(planLabel: String?) -> String {
+        let plan = planLabel ?? "paket saat ini"
+        switch self {
+        case .documents, .advancedReports, .crewFreelance:
+            return "Fitur ini tidak termasuk \(plan). Upgrade ke Business untuk membuka akses."
+        case .roleManagement:
+            return "Fitur ini tidak termasuk \(plan). Upgrade ke Enterprise untuk membuka akses."
+        case .projects, .basicFinance, .notaDinas:
+            return "Fitur ini tidak termasuk \(plan)."
+        default:
+            return "Fitur ini tidak termasuk \(plan). Upgrade ke Professional atau Business untuk membuka akses."
+        }
+    }
+}
+
+struct PlanEntitlements: Decodable, Equatable {
+    let plan: String?
+    let plan_label: String?
+    let features: [String]?
+    let seat_limit: Int?
+}
+
+struct UserCompany: Decodable, Equatable {
+    let id: Int
+    let name: String?
+    let inisial: String?
+    let logo_url: String?
+    let subscription_plan: String?
+    let subscription_label: String?
 }
 
 struct UpdateProfilePayload: Encodable {
@@ -69,7 +187,31 @@ struct UpdateProfilePayload: Encodable {
     var address: String?
     var date_of_birth: String?
     var gender: String?
+    var department: String?
     var emergency_contact: String?
+
+    enum CodingKeys: String, CodingKey {
+        case name
+        case email
+        case phone_number
+        case address
+        case date_of_birth
+        case gender
+        case department
+        case emergency_contact
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(name, forKey: .name)
+        try container.encodeIfPresent(email, forKey: .email)
+        try container.encode(phone_number, forKey: .phone_number)
+        try container.encode(address, forKey: .address)
+        try container.encode(date_of_birth, forKey: .date_of_birth)
+        try container.encode(gender, forKey: .gender)
+        try container.encode(department, forKey: .department)
+        try container.encode(emergency_contact, forKey: .emergency_contact)
+    }
 }
 
 struct NamedRef: Decodable, Equatable {
@@ -165,9 +307,252 @@ struct FinanceDashboardData: Decodable {
 struct FinanceProspectRef: Decodable, Equatable {
     let id: Int?
     let name_event: String?
+    let name_cpp: String?
+    let name_cpw: String?
+    let venue: String?
+    let phone: String?
+    let address: String?
     let date_lamaran: String?
     let date_akad: String?
     let date_resepsi: String?
+
+    var coupleLabel: String? {
+        let cpp = name_cpp?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let cpw = name_cpw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !cpp.isEmpty && !cpw.isEmpty { return "\(cpp) & \(cpw)" }
+        if !cpp.isEmpty { return cpp }
+        if !cpw.isEmpty { return cpw }
+        return nil
+    }
+}
+
+struct FinanceProspectOrderRef: Decodable, Identifiable, Equatable {
+    let id: Int
+    let name: String?
+    let number: String?
+    let status: String?
+}
+
+struct FinanceProspectItem: Decodable, Identifiable, Equatable {
+    let id: Int
+    let name_event: String?
+    let name_cpp: String?
+    let name_cpw: String?
+    let venue: String?
+    let phone: String?
+    let address: String?
+    let date_lamaran: String?
+    let time_lamaran: String?
+    let date_akad: String?
+    let time_akad: String?
+    let date_resepsi: String?
+    let time_resepsi: String?
+    let total_penawaran: Int?
+    let notes: String?
+    let account_manager: String?
+    let order_status: String?
+    let order: FinanceProspectOrderRef?
+
+    var displayName: String {
+        name_event ?? order?.name ?? "Prospek #\(id)"
+    }
+
+    var coupleLabel: String? {
+        let cpp = name_cpp?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let cpw = name_cpw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !cpp.isEmpty && !cpw.isEmpty { return "\(cpp) & \(cpw)" }
+        if !cpp.isEmpty { return cpp }
+        if !cpw.isEmpty { return cpw }
+        return nil
+    }
+}
+
+struct FinanceProspectMeta: Decodable {
+    let current_page: Int?
+    let last_page: Int?
+    let per_page: Int?
+    let total: Int?
+    let all_count: Int?
+    let warm_count: Int?
+    let with_order_count: Int?
+}
+
+struct FinanceProspectsResponse: Decodable {
+    let data: [FinanceProspectItem]
+    let meta: FinanceProspectMeta?
+}
+
+struct CreateProspectPayload: Encodable {
+    let name_event: String
+    let name_cpp: String
+    let name_cpw: String
+    let phone: String
+    let address: String
+    let venue: String
+    let total_penawaran: Int
+    let notes: String?
+    let date_lamaran: String?
+    let time_lamaran: String?
+    let date_akad: String?
+    let time_akad: String?
+    let date_resepsi: String?
+    let time_resepsi: String?
+}
+
+struct ProjectFormOptions: Decodable {
+    let number: String?
+    let number_prefix: String?
+    let contract_prefix: String?
+    let default_no_kontrak: String?
+    let default_pax: Int?
+    let current_user_id: Int?
+    let single_seat: Bool?
+    let can_create: Bool?
+    let quota_message: String?
+    let statuses: [ProjectFormStatusOption]
+    let prospects: [ProjectFormProspectOption]
+    let products: [ProjectFormProductOption]
+    let payment_methods: [ProjectFormPaymentMethodOption]
+    let account_managers: [ProjectFormUserOption]
+    let event_managers: [ProjectFormUserOption]
+}
+
+struct ProjectFormStatusOption: Decodable, Identifiable, Hashable {
+    var id: String { value }
+    let value: String
+    let label: String
+
+    init(value: String, label: String) {
+        self.value = value
+        self.label = label
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        value = try container.decode(String.self, forKey: .value)
+        label = try container.decode(String.self, forKey: .label)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case value, label
+    }
+}
+
+struct ProjectFormProspectOption: Decodable, Identifiable, Hashable {
+    let id: Int
+    let name_event: String?
+    let name_cpp: String?
+    let name_cpw: String?
+    let venue: String?
+
+    var title: String { name_event ?? "Prospek #\(id)" }
+}
+
+struct ProjectFormProductOption: Decodable, Identifiable, Hashable {
+    let id: Int
+    let name: String?
+    let product_price: Int?
+    let pengurangan: Int?
+    let penambahan_publish: Int?
+    let stock: Int?
+    let pax: Int?
+
+    var title: String { name ?? "Paket #\(id)" }
+    var unitPrice: Int { product_price ?? 0 }
+}
+
+struct ProjectFormPaymentMethodOption: Decodable, Identifiable, Hashable {
+    let id: Int
+    let name: String?
+    let label: String?
+
+    var title: String { label ?? name ?? "Metode #\(id)" }
+}
+
+struct ProjectFormUserOption: Decodable, Identifiable, Hashable {
+    let id: Int
+    let name: String?
+
+    var title: String { name ?? "User #\(id)" }
+}
+
+struct FinanceProjectProduct: Decodable, Identifiable {
+    let id: Int
+    let product_id: Int?
+    let name: String?
+    let quantity: Int?
+    let unit_price: Int?
+    let pax: Int?
+
+    var lineTotal: Int { (quantity ?? 0) * (unit_price ?? 0) }
+}
+
+struct FinanceProductVendor: Decodable, Identifiable {
+    let id: Int
+    let vendor_id: Int?
+    let name: String?
+    let pic_name: String?
+    let phone: String?
+    let address: String?
+    let category: String?
+    let quantity: Int?
+    let harga_publish: Int?
+    let harga_vendor: Int?
+    let line_public: Int?
+    let line_vendor: Int?
+    let line_total: Int?
+    let description: String?
+
+    var linePublicValue: Int {
+        if let line_public { return line_public }
+        if let line_total { return line_total }
+        return (harga_publish ?? 0) * max(1, quantity ?? 1)
+    }
+
+    var lineVendorValue: Int {
+        if let line_vendor, line_vendor != 0 { return line_vendor }
+        let unit = harga_vendor ?? 0
+        if unit != 0 { return unit * max(1, quantity ?? 1) }
+        return 0
+    }
+}
+
+struct FinanceProductDiscount: Decodable, Identifiable {
+    let id: Int
+    let description: String?
+    let amount: Int?
+    let notes: String?
+}
+
+struct FinanceProductDetail: Decodable, Identifiable {
+    let id: Int
+    let name: String?
+    let slug: String?
+    let pax: Int?
+    let category: String?
+    let description: String?
+    let product_price: Int?
+    let vendor_price: Int?
+    let pengurangan: Int?
+    let price: Int?
+    let profit: Int?
+    let is_active: Bool?
+    let is_approved: Bool?
+    let vendors: [FinanceProductVendor]?
+    let discounts: [FinanceProductDiscount]?
+}
+
+struct FinanceVendorDetail: Decodable, Identifiable {
+    let id: Int
+    let name: String?
+    let pic_name: String?
+    let phone: String?
+    let address: String?
+    let category: String?
+    let description: String?
+    let harga_publish: Int?
+    let harga_vendor: Int?
+    let profit_amount: Int?
 }
 
 struct FinanceProjectItem: Decodable, Identifiable, Equatable {
@@ -232,6 +617,9 @@ struct FinancePaymentItem: Decodable, Identifiable {
     let amount: Int?
     let keterangan: String?
     let payment_method: String?
+    let payment_method_id: Int?
+    let kategori_transaksi: String?
+    let has_proof: Bool?
 }
 
 struct FinanceExpenseItem: Decodable, Identifiable {
@@ -258,13 +646,45 @@ struct FinanceProjectDetail: Decodable, Identifiable {
     let expenses_total: Int?
     let net_cash_flow: Int?
     let gross_profit: Int?
+    let pax: Int?
+    let no_kontrak: String?
+    let user_id: Int?
+    let employee_id: Int?
+    let prospect_id: Int?
+    let note: String?
+    let has_doc_kontrak: Bool?
+    let has_agreement_product: Bool?
+    let can_edit: Bool?
+    let can_edit_reason: String?
+    let doc_kontrak_url: String?
+    let doc_kontrak_name: String?
+    let invoice_url: String?
+    let invoice_name: String?
+    let event_manager: String?
     let totals: FinanceProjectTotals?
+    let products: [FinanceProjectProduct]?
     let payments: [FinancePaymentItem]?
     let expenses: [FinanceExpenseItem]?
 
     var displayName: String {
         name ?? prospect?.name_event ?? number ?? "Proyek #\(id)"
     }
+
+    var statusLabel: String {
+        switch status {
+        case "pending": return "Akan Datang"
+        case "processing": return "Berjalan"
+        case "done": return "Selesai"
+        case "cancelled": return "Batal"
+        default: return status?.capitalized ?? "-"
+        }
+    }
+
+    var grandTotalValue: Int { totals?.grand_total ?? grand_total ?? 0 }
+    var paidValue: Int { totals?.paid ?? paid_amount ?? 0 }
+    var remainingValue: Int { totals?.remaining ?? remaining ?? 0 }
+    var expensesValue: Int { totals?.expenses ?? expenses_total ?? 0 }
+    var netCashValue: Int { totals?.net_cash ?? net_cash_flow ?? 0 }
 }
 
 struct FinanceTransactionItem: Decodable, Identifiable {
@@ -281,6 +701,7 @@ struct FinanceTransactionItem: Decodable, Identifiable {
     let running_balance: Int?
     let source_table: String?
     let source_id: Int?
+    let proof_url: String?
 
     var typeLabel: String {
         switch type {
@@ -335,6 +756,64 @@ enum MoneyFormat {
         formatter.maximumFractionDigits = 0
         formatter.locale = Locale(identifier: "id_ID")
         return formatter.string(from: NSNumber(value: number)) ?? "Rp\(number)"
+    }
+
+    static func dateRange(_ from: String, _ to: String) -> String {
+        let parsedFrom = parseISO(from)
+        let parsedTo = parseISO(to)
+        guard let parsedFrom, let parsedTo else {
+            return "\(from) – \(to)"
+        }
+        if parsedFrom == parsedTo {
+            return display.string(from: parsedFrom)
+        }
+        return "\(display.string(from: parsedFrom)) – \(display.string(from: parsedTo))"
+    }
+
+    private static func parseISO(_ value: String) -> Date? {
+        iso.date(from: value)
+    }
+
+    private static let iso: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(identifier: "Asia/Jakarta") ?? .current
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
+
+    private static let display: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "id_ID")
+        formatter.timeZone = TimeZone(identifier: "Asia/Jakarta") ?? .current
+        formatter.dateFormat = "d MMM yyyy"
+        return formatter
+    }()
+}
+
+enum PhoneFormat {
+    static func display(_ raw: String) -> String {
+        let digits = raw.filter(\.isNumber)
+        if digits.hasPrefix("62"), digits.count > 2 {
+            return "0" + digits.dropFirst(2)
+        }
+        if digits.hasPrefix("8"), !digits.hasPrefix("08") {
+            return "0" + digits
+        }
+        return raw
+    }
+
+    static func telURL(_ raw: String) -> URL? {
+        let digits = raw.filter(\.isNumber)
+        guard !digits.isEmpty else { return nil }
+        if digits.hasPrefix("0") {
+            return URL(string: "tel:+62\(digits.dropFirst())")
+        }
+        if digits.hasPrefix("62") {
+            return URL(string: "tel:+\(digits)")
+        }
+        return URL(string: "tel:+62\(digits)")
     }
 }
 
@@ -414,5 +893,131 @@ struct FinancePiutangDetail: Decodable, Identifiable {
 
     var displayName: String {
         nama_debitur ?? nomor ?? "Piutang #\(id)"
+    }
+}
+
+struct MobileModuleCatalogItem: Decodable, Identifiable, Hashable {
+    let key: String
+    let title: String
+    let subtitle: String?
+    let icon: String?
+    let group: String?
+    let group_label: String?
+    let feature: String?
+    let allowed: Bool?
+    let can_create: Bool?
+    let plan_badge: String?
+    let count: Int?
+
+    var id: String { key }
+
+    var isAllowed: Bool { allowed ?? false }
+    var canCreate: Bool { can_create ?? false }
+    var iconName: String { icon ?? "square.grid.2x2.fill" }
+    var groupTitle: String { group_label ?? group ?? "Modul" }
+
+    var planFeature: PlanFeature? {
+        guard let feature else { return nil }
+        return PlanFeature(rawValue: feature)
+    }
+
+    static func placeholder(
+        key: String,
+        title: String,
+        feature: String,
+        allowed: Bool,
+        badge: String? = nil,
+        icon: String = "square.grid.2x2.fill"
+    ) -> MobileModuleCatalogItem {
+        MobileModuleCatalogItem(
+            key: key,
+            title: title,
+            subtitle: nil,
+            icon: icon,
+            group: nil,
+            group_label: nil,
+            feature: feature,
+            allowed: allowed,
+            can_create: allowed,
+            plan_badge: allowed ? nil : badge,
+            count: nil
+        )
+    }
+}
+
+struct ModuleListResponse: Decodable {
+    let data: [ModuleRecord]
+    let meta: ModuleListMeta?
+}
+
+struct ModuleListMeta: Decodable {
+    let current_page: Int?
+    let last_page: Int?
+    let per_page: Int?
+    let total: Int?
+    let title: String?
+    let can_create: Bool?
+}
+
+struct ModuleRecord: Decodable, Identifiable {
+    let id: Int
+    let title: String?
+    let subtitle: String?
+    let amount: Int?
+    let status: String?
+    let date: String?
+    let fields: [ModuleFieldRow]?
+    let children: [ModuleRecord]?
+
+    var displayTitle: String { title?.isEmpty == false ? title! : "#\(id)" }
+}
+
+struct ModuleFieldRow: Decodable, Identifiable, Hashable {
+    let label: String
+    let value: String?
+
+    var id: String { label }
+}
+
+struct ModuleFormSchema: Decodable {
+    let title: String?
+    let can_create: Bool?
+    let fields: [ModuleFormField]?
+}
+
+struct ModuleFormField: Decodable, Identifiable, Hashable {
+    let name: String
+    let label: String
+    let type: String?
+    let required: Bool?
+    let placeholder: String?
+    let options: [ModuleFormOption]?
+
+    var id: String { name }
+    var isRequired: Bool { required ?? false }
+    var fieldType: String { type ?? "text" }
+}
+
+struct ModuleFormOption: Decodable, Identifiable, Hashable {
+    let value: String
+    let label: String
+    var id: String { value }
+}
+
+struct JSONDictionary: Encodable {
+    let values: [String: String]
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: RawKey.self)
+        for (key, value) in values {
+            try container.encode(value, forKey: RawKey(stringValue: key))
+        }
+    }
+
+    private struct RawKey: CodingKey {
+        var stringValue: String
+        init(stringValue: String) { self.stringValue = stringValue }
+        var intValue: Int? { nil }
+        init?(intValue: Int) { return nil }
     }
 }

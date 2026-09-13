@@ -50,7 +50,7 @@ struct LoginView: View {
                     }
                     .frame(maxWidth: .infinity)
                 }
-                .scrollDismissesKeyboard(.interactively)
+                .scrollDismissesKeyboard(.immediately)
                 .onTapGesture { dismissKeyboard() }
             }
         }
@@ -133,21 +133,7 @@ struct LoginView: View {
     }
 
     private var logoBadge: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color.white.opacity(0.12))
-                .frame(width: 52, height: 52)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(gold.opacity(0.55), lineWidth: 1.5)
-                )
-
-            Text("W")
-                .font(.poppins(size: 26, weight: .heavy))
-                .foregroundStyle(
-                    LinearGradient(colors: [.white, gold], startPoint: .topLeading, endPoint: .bottomTrailing)
-                )
-        }
+        WofinsBrandMark()
     }
 
     // MARK: - Form panel
@@ -277,6 +263,29 @@ struct LoginView: View {
             .padding(.top, 22)
 
             Button {
+                Task { await loginWithGoogle() }
+            } label: {
+                HStack(spacing: 10) {
+                    googleMark
+                    Text("Google")
+                        .font(.poppins(size: 15, weight: .semibold))
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 50)
+                .foregroundStyle(navy)
+                .background(Color.white)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(navy.opacity(0.18), lineWidth: 1.2)
+                )
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 14)
+            .disabled(isLoading)
+            .opacity(isLoading ? 0.65 : 1)
+
+            Button {
                 Task { await loginWithFaceID() }
             } label: {
                 HStack(spacing: 10) {
@@ -296,7 +305,8 @@ struct LoginView: View {
                 )
             }
             .buttonStyle(.plain)
-            .padding(.top, 14)
+            .padding(.top, 10)
+            .disabled(isLoading)
 
             if !faceNote.isEmpty {
                 Text(faceNote)
@@ -317,6 +327,24 @@ struct LoginView: View {
                 .padding(.top, 10)
                 .padding(.leading, 22)
         }
+    }
+
+    private var googleMark: some View {
+        Text("G")
+            .font(.poppins(size: 18, weight: .bold))
+            .foregroundStyle(
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.26, green: 0.52, blue: 0.96),
+                        Color(red: 0.20, green: 0.66, blue: 0.33),
+                        Color(red: 0.98, green: 0.74, blue: 0.02),
+                        Color(red: 0.92, green: 0.26, blue: 0.21),
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .frame(width: 22, height: 22)
     }
 
     private var securityBadge: some View {
@@ -364,6 +392,32 @@ struct LoginView: View {
                 UserDefaults.standard.removeObject(forKey: "wofins.savedEmail")
                 keychain.clearCredentials()
             }
+        } catch let error as URLError where error.code == .cannotConnectToHost || error.code == .timedOut || error.code == .networkConnectionLost {
+            errorMessage = "Tidak terhubung ke \(APIConfig.baseURL.absoluteString). Pastikan API Mac nyala & satu Wi‑Fi."
+        } catch {
+            let text = error.localizedDescription
+            if text.localizedCaseInsensitiveContains("could not connect")
+                || text.localizedCaseInsensitiveContains("failed to connect") {
+                errorMessage = "Tidak terhubung ke \(APIConfig.baseURL.absoluteString). Pastikan API Mac nyala & satu Wi‑Fi."
+            } else {
+                errorMessage = text
+            }
+        }
+    }
+
+    private func loginWithGoogle() async {
+        dismissKeyboard()
+        errorMessage = nil
+        faceNote = ""
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            try await appState.loginWithGoogle()
+            if rememberMe, let savedEmail = appState.currentUser?.email {
+                UserDefaults.standard.set(savedEmail, forKey: "wofins.savedEmail")
+            }
+        } catch let error as GoogleSignInError where error == .cancelled {
+            faceNote = error.localizedDescription
         } catch let error as URLError where error.code == .cannotConnectToHost || error.code == .timedOut || error.code == .networkConnectionLost {
             errorMessage = "Tidak terhubung ke \(APIConfig.baseURL.absoluteString). Pastikan API Mac nyala & satu Wi‑Fi."
         } catch {

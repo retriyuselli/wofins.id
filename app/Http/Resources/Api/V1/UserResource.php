@@ -28,7 +28,9 @@ class UserResource extends JsonResource
             'department' => $this->department,
             'hire_date' => optional($this->hire_date)?->toDateString(),
             'emergency_contact' => $this->emergency_contact,
+            'notes' => $this->notes,
             'status' => $this->status,
+            'last_working_date' => optional($this->last_working_date)?->toDateString(),
             'avatar_url' => $avatarPath
                 ? url(Storage::url($avatarPath))
                 : null,
@@ -37,6 +39,65 @@ class UserResource extends JsonResource
             'is_expired' => $this->isExpired(),
             'is_expiring_soon' => $this->isExpiringSoon(),
             'days_until_expiration' => $this->getDaysUntilExpiration(),
+            'company' => $this->companyPayload(),
+            'entitlements' => $this->entitlementsPayload(),
+        ];
+    }
+
+    /**
+     * @return array{plan: string, plan_label: string, features: list<string>, seat_limit: int|null}
+     */
+    private function entitlementsPayload(): array
+    {
+        $unlocked = \App\Support\ProFeatures::forceUnlocked()
+            || (method_exists($this->resource, 'hasRole') && $this->resource->hasRole('super_admin'));
+
+        $planKey = \App\Support\PricingPlans::normalizeKey($this->company?->subscription_plan)
+            ?? \App\Support\CompanySubscription::planKey();
+
+        $features = $unlocked
+            ? \App\Support\PricingPlans::featureKeys()
+            : array_values(array_filter(
+                \App\Support\PricingPlans::featureKeys(),
+                fn (string $feature) => \App\Support\PricingPlans::allows($planKey, $feature)
+            ));
+
+        $plan = \App\Support\PricingPlans::find($planKey);
+
+        return [
+            'plan' => $planKey,
+            'plan_label' => \App\Support\PricingPlans::shortLabel($planKey),
+            'features' => $features,
+            'seat_limit' => $unlocked ? null : ($plan['seat_limit'] ?? null),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function companyPayload(): ?array
+    {
+        $company = $this->company;
+
+        if (! $company) {
+            return null;
+        }
+
+        $logo = trim((string) ($company->logo_url ?? ''));
+        $logoUrl = null;
+        if ($logo !== '') {
+            $logoUrl = str_starts_with($logo, 'http://') || str_starts_with($logo, 'https://')
+                ? $logo
+                : url(Storage::url($logo));
+        }
+
+        return [
+            'id' => (int) $company->id,
+            'name' => $company->company_name,
+            'inisial' => $company->inisial_wo,
+            'logo_url' => $logoUrl,
+            'subscription_plan' => $company->subscription_plan,
+            'subscription_label' => \App\Support\PricingPlans::shortLabel($company->subscription_plan),
         ];
     }
 }

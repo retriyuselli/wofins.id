@@ -8,6 +8,10 @@ options:
 settings:
   BASE_CONFIGURATION_REFERENCE: ""
   BASE_URL: "http://127.0.0.1:8000"
+packages:
+  GoogleSignIn:
+    url: https://github.com/google/GoogleSignIn-iOS
+    from: 8.0.0
 schemes:
   Wofins:
     build:
@@ -42,12 +46,19 @@ targets:
         CODE_SIGN_STYLE: Automatic
         CODE_SIGN_IDENTITY: "Apple Development"
         BASE_URL: "http://127.0.0.1:8000"
+        GID_CLIENT_ID: "408651692876-pp16jkl7kdtdjh9g2htnu89amv05kjmr.apps.googleusercontent.com"
+        GID_SERVER_CLIENT_ID: "408651692876-pp16jkl7kdtdjh9g2htnu89amv05kjmr.apps.googleusercontent.com"
       configs:
         Debug:
           # Device fisik mengabaikan loopback di APIConfig.swift; nilai ini untuk Simulator.
           BASE_URL: "http://127.0.0.1:8000"
         Release:
-          BASE_URL: "https://wofins.id"
+          BASE_URL: "https://app.wofins.id"
+          GID_CLIENT_ID: "408651692876-ju4su29c4t3l08ee9kjajdmavkr0afj1.apps.googleusercontent.com"
+          GID_SERVER_CLIENT_ID: "408651692876-ju4su29c4t3l08ee9kjajdmavkr0afj1.apps.googleusercontent.com"
+    dependencies:
+      - package: GoogleSignIn
+        product: GoogleSignIn
     info:
       path: Wofins/Info.plist
       properties:
@@ -65,10 +76,17 @@ targets:
               NSIncludesSubdomains: true
             "127.0.0.1":
               NSExceptionAllowsInsecureHTTPLoads: true
-            "192.168.1.3":
+            "192.168.1.13":
               NSExceptionAllowsInsecureHTTPLoads: true
         NSLocalNetworkUsageDescription: Wofins perlu akses jaringan lokal untuk terhubung ke server development di Mac Anda.
         NSCameraUsageDescription: WOFINS membutuhkan kamera untuk foto bukti absensi.
+        NSPhotoLibraryUsageDescription: WOFINS memakai galeri untuk foto profil dan bukti pembayaran.
         NSLocationWhenInUseUsageDescription: WOFINS membutuhkan lokasi untuk memastikan absensi dilakukan di area kantor.
         NSFaceIDUsageDescription: WOFINS memakai Face ID untuk masuk kembali dengan aman.
         BASE_URL: "$(BASE_URL)"
+        GIDClientID: "$(GID_CLIENT_ID)"
+        GIDServerClientID: "$(GID_SERVER_CLIENT_ID)"
+        CFBundleURLTypes:
+          - CFBundleURLSchemes:
+              - com.googleusercontent.apps.408651692876-pp16jkl7kdtdjh9g2htnu89amv05kjmr
+              - com.googleusercontent.apps.408651692876-ju4su29c4t3l08ee9kjajdmavkr0afj1

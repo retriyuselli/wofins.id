@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct TransactionsView: View {
+struct LegacyTransactionsView: View {
     @EnvironmentObject private var appState: AppState
     @State private var tab = "cash"
     @State private var period = FinancePeriodSelection()
@@ -351,7 +351,7 @@ struct PiutangDetailView: View {
     }
 }
 
-struct ReportsView: View {
+struct LegacyReportsView: View {
     @EnvironmentObject private var appState: AppState
     @State private var mode = "cash"
     @State private var period = FinancePeriodSelection()

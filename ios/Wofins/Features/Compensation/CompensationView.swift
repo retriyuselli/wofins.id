@@ -8,24 +8,37 @@ struct CompensationView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    if isLoading && data == nil {
-                        ProgressView("Memuat kompensasi…")
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                    } else if let errorMessage, data == nil {
-                        Text(errorMessage).foregroundStyle(WofinsTheme.danger)
-                    } else if let data {
-                        payrollCard(data)
+            Group {
+                if appState.allows(.payroll) {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 16) {
+                            if isLoading && data == nil {
+                                ProgressView("Memuat kompensasi…")
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                            } else if let errorMessage, data == nil {
+                                Text(errorMessage).foregroundStyle(WofinsTheme.danger)
+                            } else if let data {
+                                payrollCard(data)
+                            }
+                        }
+                        .padding()
                     }
+                } else {
+                    PlanLockedView(feature: .payroll)
+                    Spacer()
                 }
-                .padding()
             }
             .background(WofinsTheme.background.ignoresSafeArea())
             .navigationTitle("Kompensasi")
-            .refreshable { await load() }
-            .task { await load() }
+            .refreshable {
+                guard appState.allows(.payroll) else { return }
+                await load()
+            }
+            .task {
+                guard appState.allows(.payroll) else { return }
+                await load()
+            }
         }
     }
 

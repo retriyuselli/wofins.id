@@ -66,8 +66,16 @@ class ProductPricingCalculator
             }
 
             $totalPrice = self::stripCurrency($item['total_price'] ?? 0);
-            if ($totalPrice <= 0 && $hargaVendor > 0) {
-                $totalPrice = $hargaVendor * $quantity;
+            $expectedVendorTotal = $hargaVendor > 0 ? $hargaVendor * $quantity : 0;
+            if ($totalPrice <= 0 && $expectedVendorTotal > 0) {
+                $totalPrice = $expectedVendorTotal;
+            } elseif (
+                $expectedVendorTotal > 0
+                && $hargaPublish !== $hargaVendor
+                && $totalPrice === $pricePublic
+            ) {
+                // total_price sering terisi salinan price_public; pakai harga vendor × qty.
+                $totalPrice = $expectedVendorTotal;
             }
 
             $items[$key]['quantity'] = $quantity;

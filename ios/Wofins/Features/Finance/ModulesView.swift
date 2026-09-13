@@ -1,0 +1,763 @@
+import SwiftUI
+
+struct ModulesHubView: View {
+    @EnvironmentObject private var appState: AppState
+    @State private var items: [MobileModuleCatalogItem] = []
+    @State private var isLoading = false
+    @State private var errorMessage: String?
+
+    private var grouped: [(String, [MobileModuleCatalogItem])] {
+        Dictionary(grouping: items, by: \.groupTitle)
+            .sorted { lhs, rhs in
+                order(lhs.key) < order(rhs.key)
+            }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            header
+            ScrollView(showsIndicators: false) {
+                LazyVStack(spacing: 16) {
+                    if isLoading && items.isEmpty {
+                        ProgressView("Memuat modul…")
+                            .frame(maxWidth: .infinity)
+                            .padding(24)
+                            .moduleSurface()
+                    } else if let errorMessage {
+                        Text(errorMessage)
+                            .font(.poppins(.caption))
+                            .foregroundStyle(WofinsTheme.danger)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(16)
+                            .moduleSurface()
+                    } else {
+                        ForEach(grouped, id: \.0) { group, rows in
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text(group)
+                                    .font(.poppins(.caption, weight: .semibold))
+                                    .foregroundStyle(WofinsTheme.muted)
+                                    .padding(.horizontal, 4)
+                                ForEach(rows) { item in
+                                    NavigationLink {
+                                        ModuleListView(item: item)
+                                    } label: {
+                                        moduleRow(item)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
+                .padding(.bottom, 28)
+            }
+            .refreshable { await load() }
+        }
+        .background(WofinsTheme.background.ignoresSafeArea())
+        .toolbar(.hidden, for: .navigationBar)
+        .task { await load() }
+    }
+
+    private var header: some View {
+        HStack(spacing: 12) {
+            WofinsCompactMark()
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Modul").font(.poppins(.headline, weight: .bold)).foregroundStyle(.white)
+                Text(appState.currentUser?.companyDisplayName ?? "Sesuai paket company")
+                    .font(.poppins(.caption))
+                    .foregroundStyle(.white.opacity(0.72))
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 8)
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(WofinsTheme.primary.ignoresSafeArea(edges: .top))
+    }
+
+    private func moduleRow(_ item: MobileModuleCatalogItem) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: item.iconName)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(item.isAllowed ? WofinsTheme.primary : WofinsTheme.muted)
+                .frame(width: 36, height: 36)
+                .background((item.isAllowed ? WofinsTheme.primary : WofinsTheme.muted).opacity(0.1), in: Circle())
+            VStack(alignment: .leading, spacing: 2) {
+                Text(item.title)
+                    .font(.poppins(.subheadline, weight: .semibold))
+                    .foregroundStyle(WofinsTheme.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+                Text(item.subtitle ?? "")
+                    .font(.poppins(.caption2))
+                    .foregroundStyle(WofinsTheme.muted)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+            if let badge = item.plan_badge, !item.isAllowed {
+                Text(badge)
+                    .font(.poppins(.caption2, weight: .semibold))
+                    .foregroundStyle(WofinsTheme.primary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(WofinsTheme.yellow.opacity(0.2), in: Capsule())
+            } else if let count = item.count {
+                Text("\(count)")
+                    .font(.poppins(.caption2, weight: .semibold))
+                    .foregroundStyle(WofinsTheme.muted)
+            }
+            Image(systemName: item.isAllowed ? "chevron.right" : "lock.fill")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(WofinsTheme.muted)
+        }
+        .padding(14)
+        .moduleSurface()
+    }
+
+    private func order(_ group: String) -> Int {
+        switch group {
+        case "Penjualan": return 0
+        case "Keuangan": return 1
+        case "Professional": return 2
+        case "Business": return 3
+        default: return 4
+        }
+    }
+
+    private func load() async {
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            items = try await appState.api.moduleCatalog()
+            errorMessage = nil
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+}
+
+struct ModuleListView: View {
+    @EnvironmentObject private var appState: AppState
+    let item: MobileModuleCatalogItem
+
+    @State private var records: [ModuleRecord] = []
+    @State private var meta: ModuleListMeta?
+    @State private var searchText = ""
+    @State private var isLoading = false
+    @State private var errorMessage: String?
+    @State private var showCreate = false
+
+    private var canCreateNow: Bool { meta?.can_create ?? item.canCreate }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            header
+            if item.isAllowed {
+                ScrollView(showsIndicators: false) {
+                    LazyVStack(spacing: 12) {
+                        searchBar
+                        if isLoading && records.isEmpty {
+                            ProgressView("Memuat…")
+                                .frame(maxWidth: .infinity)
+                                .padding(20)
+                                .moduleSurface()
+                        } else if let errorMessage {
+                            Text(errorMessage)
+                                .font(.poppins(.caption))
+                                .foregroundStyle(WofinsTheme.danger)
+                                .padding(16)
+                                .moduleSurface()
+                        } else if records.isEmpty {
+                            emptyState
+                        } else {
+                            ForEach(records) { record in
+                                NavigationLink {
+                                    ModuleDetailView(item: item, recordId: record.id)
+                                } label: {
+                                    recordRow(record)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
+                    .padding(.bottom, 28)
+                }
+                .refreshable { await load() }
+                .scrollDismissesKeyboard(.immediately)
+            } else if let feature = item.planFeature {
+                PlanLockedView(feature: feature, title: item.title)
+                Spacer()
+            } else {
+                PlanLockedView(feature: .projects, title: item.title)
+                Spacer()
+            }
+        }
+        .background(WofinsTheme.background.ignoresSafeArea())
+        .toolbar(.hidden, for: .navigationBar)
+        .task { await load() }
+        .sheet(isPresented: $showCreate) {
+            ModuleCreateView(item: item) {
+                Task { await load() }
+            }
+            .environmentObject(appState)
+            .presentationDetents([.large])
+        }
+    }
+
+    private var header: some View {
+        HStack(spacing: 12) {
+            WofinsCompactMark()
+            VStack(alignment: .leading, spacing: 2) {
+                Text(item.title).font(.poppins(.headline, weight: .bold)).foregroundStyle(.white).lineLimit(1)
+                Text("\(meta?.total ?? item.count ?? records.count) data · \(appState.currentUser?.companyDisplayName ?? "Company")")
+                    .font(.poppins(.caption))
+                    .foregroundStyle(.white.opacity(0.72))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+            .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+            if canCreateNow {
+                Button { showCreate = true } label: {
+                    Image(systemName: "plus")
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 40, height: 40)
+                        .background(.white.opacity(0.11), in: Circle())
+                }
+                .accessibilityLabel("Tambah \(item.title)")
+                .fixedSize()
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(WofinsTheme.primary.ignoresSafeArea(edges: .top))
+    }
+
+    private var searchBar: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "magnifyingglass").foregroundStyle(WofinsTheme.muted)
+            TextField("Cari \(item.title.lowercased())", text: $searchText)
+                .font(.poppins(.subheadline))
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .onSubmit { Task { await load() } }
+            if !searchText.isEmpty {
+                Button {
+                    searchText = ""
+                    Task { await load() }
+                } label: {
+                    Image(systemName: "xmark.circle.fill").foregroundStyle(WofinsTheme.muted)
+                }
+            }
+        }
+        .padding(.horizontal, 14)
+        .frame(height: 50)
+        .moduleSurface()
+    }
+
+    private var emptyState: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Belum ada data").font(.poppins(.subheadline, weight: .semibold)).foregroundStyle(WofinsTheme.ink)
+            Text("Data \(item.title.lowercased()) untuk company ini akan tampil di sini.")
+                .font(.poppins(.caption))
+                .foregroundStyle(WofinsTheme.muted)
+                .fixedSize(horizontal: false, vertical: true)
+            if canCreateNow {
+                Button("Tambah \(item.title)") { showCreate = true }
+                    .font(.poppins(.subheadline, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 44)
+                    .background(WofinsTheme.primary, in: RoundedRectangle(cornerRadius: 12))
+                    .padding(.top, 6)
+            }
+        }
+        .padding(16)
+        .moduleSurface()
+    }
+
+    private func recordRow(_ record: ModuleRecord) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(record.displayTitle)
+                    .font(.poppins(.subheadline, weight: .semibold))
+                    .foregroundStyle(WofinsTheme.ink)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.85)
+                if let subtitle = record.subtitle, !subtitle.isEmpty {
+                    Text(subtitle)
+                        .font(.poppins(.caption2))
+                        .foregroundStyle(WofinsTheme.muted)
+                        .lineLimit(2)
+                }
+                HStack(spacing: 8) {
+                    if let date = record.date {
+                        Text(date).font(.poppins(.caption2)).foregroundStyle(WofinsTheme.muted)
+                    }
+                    if let status = record.status, !status.isEmpty {
+                        Text(status.replacingOccurrences(of: "_", with: " "))
+                            .font(.poppins(.caption2, weight: .semibold))
+                            .foregroundStyle(WofinsTheme.primary)
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 3)
+                            .background(WofinsTheme.primary.opacity(0.08), in: Capsule())
+                    }
+                }
+            }
+            .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+            if let amount = record.amount {
+                Text(MoneyFormat.idr(amount))
+                    .font(.poppins(.caption, weight: .bold))
+                    .foregroundStyle(WofinsTheme.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+        }
+        .padding(14)
+        .moduleSurface()
+    }
+
+    private func load() async {
+        guard item.isAllowed else { return }
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            let response = try await appState.api.moduleList(key: item.key, query: searchText)
+            records = response.data
+            meta = response.meta
+            errorMessage = nil
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+}
+
+struct ModuleDetailView: View {
+    @EnvironmentObject private var appState: AppState
+    let item: MobileModuleCatalogItem
+    let recordId: Int
+
+    @State private var record: ModuleRecord?
+    @State private var isLoading = false
+    @State private var errorMessage: String?
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                WofinsCompactMark()
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(record?.displayTitle ?? item.title)
+                        .font(.poppins(.headline, weight: .bold))
+                        .foregroundStyle(.white)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.8)
+                    Text(item.title)
+                        .font(.poppins(.caption))
+                        .foregroundStyle(.white.opacity(0.72))
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 8)
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(WofinsTheme.primary.ignoresSafeArea(edges: .top))
+
+            ScrollView(showsIndicators: false) {
+                LazyVStack(alignment: .leading, spacing: 12) {
+                    if isLoading && record == nil {
+                        ProgressView("Memuat detail…").frame(maxWidth: .infinity).padding(24)
+                    } else if let errorMessage {
+                        Text(errorMessage).font(.poppins(.caption)).foregroundStyle(WofinsTheme.danger).padding(16).moduleSurface()
+                    } else if let record {
+                        if let amount = record.amount {
+                            Text(MoneyFormat.idr(amount))
+                                .font(.poppins(size: 24, weight: .bold))
+                                .foregroundStyle(WofinsTheme.primary)
+                                .padding(16)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .moduleSurface()
+                        }
+                        VStack(alignment: .leading, spacing: 0) {
+                            ForEach(Array((record.fields ?? []).enumerated()), id: \.offset) { index, field in
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(field.label)
+                                        .font(.poppins(.caption2))
+                                        .foregroundStyle(WofinsTheme.muted)
+                                    Text(field.value?.isEmpty == false ? field.value! : "—")
+                                        .font(.poppins(.subheadline))
+                                        .foregroundStyle(WofinsTheme.ink)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                                .padding(.vertical, 10)
+                                if index < (record.fields?.count ?? 0) - 1 {
+                                    Divider()
+                                }
+                            }
+                        }
+                        .padding(16)
+                        .moduleSurface()
+
+                        if let children = record.children, !children.isEmpty {
+                            Text("Rincian")
+                                .font(.poppins(.headline, weight: .bold))
+                                .foregroundStyle(WofinsTheme.primary)
+                            ForEach(children) { child in
+                                HStack(alignment: .top, spacing: 10) {
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text(child.displayTitle)
+                                            .font(.poppins(.subheadline, weight: .semibold))
+                                            .foregroundStyle(WofinsTheme.ink)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                        if let subtitle = child.subtitle {
+                                            Text(subtitle).font(.poppins(.caption2)).foregroundStyle(WofinsTheme.muted)
+                                        }
+                                    }
+                                    .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                                    if let amount = child.amount {
+                                        Text(MoneyFormat.idr(amount))
+                                            .font(.poppins(.caption, weight: .bold))
+                                            .foregroundStyle(WofinsTheme.ink)
+                                    }
+                                }
+                                .padding(14)
+                                .moduleSurface()
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
+                .padding(.bottom, 28)
+            }
+            .refreshable { await load() }
+        }
+        .background(WofinsTheme.background.ignoresSafeArea())
+        .toolbar(.hidden, for: .navigationBar)
+        .task { await load() }
+    }
+
+    private func load() async {
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            record = try await appState.api.moduleDetail(key: item.key, id: recordId)
+            errorMessage = nil
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+}
+
+struct ModuleCreateView: View {
+    @EnvironmentObject private var appState: AppState
+    @Environment(\.dismiss) private var dismiss
+    let item: MobileModuleCatalogItem
+    var onSaved: () -> Void
+
+    @State private var schema: ModuleFormSchema?
+    @State private var values: [String: String] = [:]
+    @State private var isLoading = false
+    @State private var isSaving = false
+    @State private var errorMessage: String?
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if isLoading && schema == nil {
+                    ProgressView("Menyiapkan form…")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if let errorMessage, schema == nil {
+                    Text(errorMessage)
+                        .font(.poppins(.caption))
+                        .foregroundStyle(WofinsTheme.danger)
+                        .padding()
+                } else {
+                    ScrollView(showsIndicators: false) {
+                        VStack(alignment: .leading, spacing: 14) {
+                            if let errorMessage {
+                                Text(errorMessage)
+                                    .font(.poppins(.caption))
+                                    .foregroundStyle(WofinsTheme.danger)
+                                    .padding(12)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(WofinsTheme.danger.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+                            }
+                            ForEach(schema?.fields ?? []) { field in
+                                fieldView(field)
+                            }
+                            Button(action: save) {
+                                if isSaving {
+                                    ProgressView().tint(.white)
+                                } else {
+                                    Text("Simpan")
+                                        .font(.poppins(.subheadline, weight: .semibold))
+                                }
+                            }
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .background(WofinsTheme.primary, in: RoundedRectangle(cornerRadius: 14))
+                            .disabled(isSaving)
+                        }
+                        .padding(16)
+                        .padding(.bottom, 28)
+                    }
+                    .scrollDismissesKeyboard(.immediately)
+                    .wofinsKeyboardDoneButton()
+                }
+            }
+            .background(WofinsTheme.background.ignoresSafeArea())
+            .navigationTitle(schema?.title ?? "Tambah \(item.title)")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Tutup") { dismiss() }
+                }
+            }
+            .task { await loadForm() }
+        }
+    }
+
+    @ViewBuilder
+    private func fieldView(_ field: ModuleFormField) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(field.label + (field.isRequired ? " *" : ""))
+                .font(.poppins(.caption, weight: .semibold))
+                .foregroundStyle(WofinsTheme.ink)
+            switch field.fieldType {
+            case "select":
+                Menu {
+                    ForEach(field.options ?? []) { option in
+                        Button(option.label) { values[field.name] = option.value }
+                    }
+                } label: {
+                    HStack {
+                        Text(selectedLabel(field) ?? "Pilih")
+                            .font(.poppins(.subheadline))
+                            .foregroundStyle(selectedLabel(field) == nil ? WofinsTheme.muted : WofinsTheme.ink)
+                            .lineLimit(1)
+                        Spacer()
+                        Image(systemName: "chevron.down").foregroundStyle(WofinsTheme.muted)
+                    }
+                    .padding(.horizontal, 12)
+                    .frame(minHeight: 46)
+                    .moduleSurface()
+                }
+            case "toggle":
+                Toggle("", isOn: toggleBinding(field.name))
+                    .labelsHidden()
+                    .tint(WofinsTheme.primary)
+            case "date":
+                DatePicker("", selection: dateBinding(field.name), displayedComponents: .date)
+                    .labelsHidden()
+                    .datePickerStyle(.compact)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            case "textarea":
+                TextField(field.placeholder ?? field.label, text: stringBinding(field.name), axis: .vertical)
+                    .font(.poppins(.subheadline))
+                    .lineLimit(3...6)
+                    .padding(12)
+                    .moduleSurface()
+            case "number":
+                TextField(field.placeholder ?? "0", text: stringBinding(field.name))
+                    .font(.poppins(.subheadline))
+                    .keyboardType(.numberPad)
+                    .padding(.horizontal, 12)
+                    .frame(height: 46)
+                    .moduleSurface()
+            case "email":
+                TextField(field.placeholder ?? field.label, text: stringBinding(field.name))
+                    .font(.poppins(.subheadline))
+                    .keyboardType(.emailAddress)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .padding(.horizontal, 12)
+                    .frame(height: 46)
+                    .moduleSurface()
+            default:
+                TextField(field.placeholder ?? field.label, text: stringBinding(field.name))
+                    .font(.poppins(.subheadline))
+                    .padding(.horizontal, 12)
+                    .frame(height: 46)
+                    .moduleSurface()
+            }
+        }
+    }
+
+    private func selectedLabel(_ field: ModuleFormField) -> String? {
+        guard let value = values[field.name], !value.isEmpty else { return nil }
+        return field.options?.first(where: { $0.value == value })?.label ?? value
+    }
+
+    private func stringBinding(_ name: String) -> Binding<String> {
+        Binding(
+            get: { values[name] ?? "" },
+            set: { values[name] = $0 }
+        )
+    }
+
+    private func toggleBinding(_ name: String) -> Binding<Bool> {
+        Binding(
+            get: { values[name] == "1" || values[name] == "true" },
+            set: { values[name] = $0 ? "1" : "0" }
+        )
+    }
+
+    private func dateBinding(_ name: String) -> Binding<Date> {
+        Binding(
+            get: {
+                let formatter = DateFormatter()
+                formatter.calendar = Calendar(identifier: .gregorian)
+                formatter.locale = Locale(identifier: "en_US_POSIX")
+                formatter.dateFormat = "yyyy-MM-dd"
+                if let raw = values[name], let date = formatter.date(from: raw) {
+                    return date
+                }
+                return Date()
+            },
+            set: { date in
+                let formatter = DateFormatter()
+                formatter.calendar = Calendar(identifier: .gregorian)
+                formatter.locale = Locale(identifier: "en_US_POSIX")
+                formatter.dateFormat = "yyyy-MM-dd"
+                values[name] = formatter.string(from: date)
+            }
+        )
+    }
+
+    private func loadForm() async {
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            let loaded = try await appState.api.moduleForm(key: item.key)
+            schema = loaded
+            var seed: [String: String] = [:]
+            let formatter = DateFormatter()
+            formatter.calendar = Calendar(identifier: .gregorian)
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            formatter.dateFormat = "yyyy-MM-dd"
+            for field in loaded.fields ?? [] {
+                if field.fieldType == "date" {
+                    seed[field.name] = formatter.string(from: Date())
+                } else if field.fieldType == "toggle" {
+                    seed[field.name] = "0"
+                }
+            }
+            values = seed
+            errorMessage = nil
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func save() {
+        guard !isSaving else { return }
+        isSaving = true
+        errorMessage = nil
+        let payload = values.filter { !$0.value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        Task {
+            defer { isSaving = false }
+            do {
+                _ = try await appState.api.createModule(key: item.key, values: payload)
+                onSaved()
+                dismiss()
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+        }
+    }
+}
+
+struct ModuleShortcutsView: View {
+    @EnvironmentObject private var appState: AppState
+    var keys: [String]? = nil
+    var title: String = "Modul"
+
+    @State private var items: [MobileModuleCatalogItem] = []
+
+    private var visible: [MobileModuleCatalogItem] {
+        guard let keys, !keys.isEmpty else { return items }
+        return items.filter { keys.contains($0.key) }
+    }
+
+    var body: some View {
+        if !visible.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text(title)
+                        .font(.poppins(.headline, weight: .bold))
+                        .foregroundStyle(WofinsTheme.primary)
+                    Spacer()
+                    NavigationLink {
+                        ModulesHubView()
+                    } label: {
+                        Text("Semua")
+                            .font(.poppins(.caption, weight: .semibold))
+                            .foregroundStyle(WofinsTheme.primary)
+                    }
+                }
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+                    ForEach(visible) { item in
+                        NavigationLink {
+                            ModuleListView(item: item)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Image(systemName: item.iconName)
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundStyle(item.isAllowed ? WofinsTheme.primary : WofinsTheme.muted)
+                                    Spacer()
+                                    if let badge = item.plan_badge, !item.isAllowed {
+                                        Text(badge)
+                                            .font(.poppins(.caption2, weight: .semibold))
+                                            .foregroundStyle(WofinsTheme.primary)
+                                    }
+                                }
+                                Text(item.title)
+                                    .font(.poppins(.caption, weight: .semibold))
+                                    .foregroundStyle(WofinsTheme.ink)
+                                    .lineLimit(2)
+                                    .minimumScaleFactor(0.85)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                Text(item.isAllowed ? "\(item.count ?? 0) data" : "Terkunci")
+                                    .font(.poppins(.caption2))
+                                    .foregroundStyle(WofinsTheme.muted)
+                            }
+                            .padding(12)
+                            .frame(maxWidth: .infinity, minHeight: 88, alignment: .topLeading)
+                            .moduleSurface()
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+            .task { await load() }
+        } else {
+            Color.clear.frame(height: 0).task { await load() }
+        }
+    }
+
+    private func load() async {
+        do {
+            items = try await appState.api.moduleCatalog()
+        } catch {
+            items = []
+        }
+    }
+}
+
+extension View {
+    func moduleSurface() -> some View {
+        background(WofinsTheme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay { RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(WofinsTheme.border.opacity(0.75)) }
+    }
+}

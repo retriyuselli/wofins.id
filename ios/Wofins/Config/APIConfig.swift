@@ -2,7 +2,7 @@ import Foundation
 
 enum APIConfig {
     /// Mac LAN IP untuk device fisik (ubah jika IP Mac berubah).
-    private static let deviceHostURL = URL(string: "http://192.168.1.3:8000")!
+    private static let deviceHostURL = URL(string: "http://192.168.1.13:8000")!
 
     static var baseURL: URL {
         #if targetEnvironment(simulator)
@@ -24,6 +24,19 @@ enum APIConfig {
         #else
         return "Device → \(baseURL.absoluteString)"
         #endif
+    }
+
+    /// Laravel `url()` often emits localhost; rewrite that host to the API the app actually uses.
+    static func mediaURL(from raw: String?) -> URL? {
+        guard let raw, !raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              let url = URL(string: raw) else { return nil }
+        guard isLoopback(url) else { return url }
+
+        var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        components?.scheme = baseURL.scheme
+        components?.host = baseURL.host
+        components?.port = baseURL.port
+        return components?.url ?? url
     }
 
     private static func resolvedPlistURL() -> URL? {
