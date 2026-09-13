@@ -1,5 +1,6 @@
 import LocalAuthentication
 import SwiftUI
+import UIKit
 
 struct LoginView: View {
     @EnvironmentObject private var appState: AppState
@@ -10,6 +11,8 @@ struct LoginView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var faceNote = ""
+    @State private var showPrivacy = false
+    @State private var selectedHost = APIConfig.selectedHost
     @FocusState private var focusedField: Field?
 
     private enum Field {
@@ -54,6 +57,9 @@ struct LoginView: View {
                 .onTapGesture { dismissKeyboard() }
             }
         }
+        .sheet(isPresented: $showPrivacy) {
+            PrivacyStatementView()
+        }
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
@@ -63,6 +69,7 @@ struct LoginView: View {
             }
         }
         .onAppear {
+            selectedHost = APIConfig.selectedHost
             if let saved = UserDefaults.standard.string(forKey: "wofins.savedEmail"), !saved.isEmpty {
                 email = saved
             }
@@ -71,6 +78,15 @@ struct LoginView: View {
 
     private func dismissKeyboard() {
         focusedField = nil
+    }
+
+    private func openForgotPassword() {
+        dismissKeyboard()
+        guard let url = APIConfig.websiteURL("/forgot-password") else {
+            errorMessage = "Halaman atur ulang password tidak tersedia."
+            return
+        }
+        UIApplication.shared.open(url)
     }
 
     // MARK: - Top banner (new design language)
@@ -144,10 +160,14 @@ struct LoginView: View {
                 .font(.poppins(size: 22, weight: .bold))
                 .foregroundStyle(navy)
 
-            Text("Gunakan email dan password Anda")
+            Text(selectedHost == .makna ? "Gunakan email akun Makna Finance" : "Gunakan email akun WOFINS Anda")
                 .font(.poppins(size: 13))
                 .foregroundStyle(muted)
                 .padding(.top, 6)
+                .fixedSize(horizontal: false, vertical: true)
+
+            hostPicker
+                .padding(.top, 16)
 
             if let errorMessage {
                 Text(errorMessage)
@@ -160,7 +180,7 @@ struct LoginView: View {
                     .padding(.top, 16)
             }
 
-            labeledField(title: "Email atau Username") {
+            labeledField(title: "Email") {
                 HStack(spacing: 12) {
                     Image(systemName: "envelope.fill")
                         .font(.poppins(size: 14))
@@ -214,9 +234,13 @@ struct LoginView: View {
 
                 Spacer()
 
-                Text("Lupa password?")
-                    .font(.poppins(size: 13, weight: .semibold))
-                    .foregroundStyle(navy)
+                Button(action: openForgotPassword) {
+                    Text("Lupa password?")
+                        .font(.poppins(size: 13, weight: .semibold))
+                        .foregroundStyle(navy)
+                }
+                .buttonStyle(.plain)
+                .disabled(isLoading)
             }
             .padding(.top, 18)
 
@@ -329,6 +353,57 @@ struct LoginView: View {
         }
     }
 
+    private var hostPicker: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Server")
+                .font(.poppins(size: 12, weight: .semibold))
+                .foregroundStyle(navy)
+
+            HStack(spacing: 8) {
+                ForEach(APIHostOption.allCases) { option in
+                    Button {
+                        applyHost(option)
+                    } label: {
+                        Text(option.title)
+                            .font(.poppins(size: 13, weight: .semibold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 44)
+                            .foregroundStyle(selectedHost == option ? Color.white : navy)
+                            .background(selectedHost == option ? navy : canvas)
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .stroke(selectedHost == option ? navy : line, lineWidth: 1)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isLoading)
+                    .accessibilityLabel(option.title)
+                    .accessibilityAddTraits(selectedHost == option ? .isSelected : [])
+                }
+            }
+            .frame(maxWidth: .infinity)
+
+            Text(selectedHost.subtitle)
+                .font(.poppins(size: 11))
+                .foregroundStyle(muted)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+    }
+
+    private func applyHost(_ option: APIHostOption) {
+        guard selectedHost != option else { return }
+        dismissKeyboard()
+        errorMessage = nil
+        password = ""
+        appState.selectAPIHost(option)
+        selectedHost = option
+    }
+
     private var googleMark: some View {
         Text("G")
             .font(.poppins(size: 18, weight: .bold))
@@ -348,13 +423,20 @@ struct LoginView: View {
     }
 
     private var securityBadge: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "checkmark.shield.fill")
-                .foregroundStyle(navy.opacity(0.55))
-            Text("Aplikasi aman dengan enkripsi end-to-end")
-                .font(.poppins(size: 11))
-                .foregroundStyle(muted)
+        VStack(spacing: 8) {
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: "checkmark.shield.fill")
+                    .foregroundStyle(navy.opacity(0.55))
+                Text("Koneksi memakai HTTPS. Sesi dilindungi token di perangkat ini — bukan enkripsi end-to-end.")
+                    .font(.poppins(size: 11))
+                    .foregroundStyle(muted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Button("Kebijakan privasi") { showPrivacy = true }
+                .font(.poppins(size: 12, weight: .semibold))
+                .foregroundStyle(navy)
         }
+        .padding(.horizontal, 12)
     }
 
     private func labeledField<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
@@ -393,15 +475,9 @@ struct LoginView: View {
                 keychain.clearCredentials()
             }
         } catch let error as URLError where error.code == .cannotConnectToHost || error.code == .timedOut || error.code == .networkConnectionLost {
-            errorMessage = "Tidak terhubung ke \(APIConfig.baseURL.absoluteString). Pastikan API Mac nyala & satu Wi‑Fi."
+            errorMessage = APIConfig.connectionErrorMessage
         } catch {
-            let text = error.localizedDescription
-            if text.localizedCaseInsensitiveContains("could not connect")
-                || text.localizedCaseInsensitiveContains("failed to connect") {
-                errorMessage = "Tidak terhubung ke \(APIConfig.baseURL.absoluteString). Pastikan API Mac nyala & satu Wi‑Fi."
-            } else {
-                errorMessage = text
-            }
+            APILoadFailure.assign(error, to: &errorMessage)
         }
     }
 
@@ -413,21 +489,16 @@ struct LoginView: View {
         defer { isLoading = false }
         do {
             try await appState.loginWithGoogle()
+            keychain.clearCredentials()
             if rememberMe, let savedEmail = appState.currentUser?.email {
                 UserDefaults.standard.set(savedEmail, forKey: "wofins.savedEmail")
             }
         } catch let error as GoogleSignInError where error == .cancelled {
             faceNote = error.localizedDescription
         } catch let error as URLError where error.code == .cannotConnectToHost || error.code == .timedOut || error.code == .networkConnectionLost {
-            errorMessage = "Tidak terhubung ke \(APIConfig.baseURL.absoluteString). Pastikan API Mac nyala & satu Wi‑Fi."
+            errorMessage = APIConfig.connectionErrorMessage
         } catch {
-            let text = error.localizedDescription
-            if text.localizedCaseInsensitiveContains("could not connect")
-                || text.localizedCaseInsensitiveContains("failed to connect") {
-                errorMessage = "Tidak terhubung ke \(APIConfig.baseURL.absoluteString). Pastikan API Mac nyala & satu Wi‑Fi."
-            } else {
-                errorMessage = text
-            }
+            APILoadFailure.assign(error, to: &errorMessage)
         }
     }
 
@@ -436,7 +507,7 @@ struct LoginView: View {
         errorMessage = nil
         faceNote = ""
 
-        guard let creds = keychain.readCredentials() else {
+        guard keychain.hasAnySavedCredentials else {
             faceNote = "Login sekali dulu, lalu Face ID bisa dipakai."
             return
         }
@@ -447,6 +518,20 @@ struct LoginView: View {
             faceNote = "Face ID tidak tersedia di perangkat ini."
             return
         }
+        context.localizedReason = "Masuk ke WOFINS dengan Face ID"
+
+        if let creds = keychain.readProtectedCredentials(context: context) {
+            email = creds.email
+            password = creds.password
+            rememberMe = true
+            await submit()
+            return
+        }
+
+        guard let legacy = keychain.readLegacyCredentials() else {
+            faceNote = "Login sekali dulu, lalu Face ID bisa dipakai."
+            return
+        }
 
         do {
             let ok = try await context.evaluatePolicy(
@@ -454,8 +539,9 @@ struct LoginView: View {
                 localizedReason: "Masuk ke WOFINS dengan Face ID"
             )
             guard ok else { return }
-            email = creds.email
-            password = creds.password
+            email = legacy.email
+            password = legacy.password
+            rememberMe = true
             await submit()
         } catch {
             faceNote = "Autentikasi Face ID dibatalkan."

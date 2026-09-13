@@ -1,0 +1,12 @@
+{
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/GTMAppAuth.build/Release-iphonesimulator/GTMAppAuth.build/DerivedSources/resource_bundle_accessor.swift" : {
+    "abi-baseline-json" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/GTMAppAuth.build/Release-iphonesimulator/GTMAppAuth.build/Objects-normal/x86_64/GTMAppAuth.abi.json",
+    "const-values" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/GTMAppAuth.build/Release-iphonesimulator/GTMAppAuth.build/Objects-normal/x86_64/GTMAppAuth-primary.swiftconstvalues",
+    "dependencies" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/GTMAppAuth.build/Release-iphonesimulator/GTMAppAuth.build/Objects-normal/x86_64/GTMAppAuth-primary.d",
+    "diagnostics" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/GTMAppAuth.build/Release-iphonesimulator/GTMAppAuth.build/Objects-normal/x86_64/GTMAppAuth-primary.dia",
+    "objc-header" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/GTMAppAuth.build/Release-iphonesimulator/GTMAppAuth.build/Objects-normal/x86_64/GTMAppAuth-Swift.h",
+    "swiftdoc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/GTMAppAuth.build/Release-iphonesimulator/GTMAppAuth.build/Objects-normal/x86_64/GTMAppAuth.swiftdoc",
+    "swiftmodule" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/GTMAppAuth.build/Release-iphonesimulator/GTMAppAuth.build/Objects-normal/x86_64/GTMAppAuth.swiftmodule",
+    "swiftsourceinfo" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/GTMAppAuth.build/Release-iphonesimulator/GTMAppAuth.build/Objects-normal/x86_64/GTMAppAuth.swiftsourceinfo"
+  }
+}

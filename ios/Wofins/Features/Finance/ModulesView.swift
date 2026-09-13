@@ -136,7 +136,7 @@ struct ModulesHubView: View {
             items = try await appState.api.moduleCatalog()
             errorMessage = nil
         } catch {
-            errorMessage = error.localizedDescription
+            APILoadFailure.assign(error, to: &errorMessage)
         }
     }
 }
@@ -151,6 +151,8 @@ struct ModuleListView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var showCreate = false
+    @State private var listPage = 1
+    @State private var isLoadingMore = false
 
     private var canCreateNow: Bool { meta?.can_create ?? item.canCreate }
 
@@ -183,13 +185,33 @@ struct ModuleListView: View {
                                 }
                                 .buttonStyle(.plain)
                             }
+                            if canLoadMore {
+                                Button {
+                                    Task { await load(reset: false) }
+                                } label: {
+                                    HStack {
+                                        if isLoadingMore {
+                                            ProgressView()
+                                        } else {
+                                            Text("Muat lebih banyak")
+                                                .font(.poppins(.subheadline, weight: .semibold))
+                                        }
+                                    }
+                                    .foregroundStyle(WofinsTheme.primary)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 44)
+                                    .background(WofinsTheme.primary.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+                                }
+                                .buttonStyle(.plain)
+                                .disabled(isLoadingMore)
+                            }
                         }
                     }
                     .padding(.horizontal, 16)
                     .padding(.top, 16)
                     .padding(.bottom, 28)
                 }
-                .refreshable { await load() }
+                .refreshable { await load(reset: true) }
                 .scrollDismissesKeyboard(.immediately)
             } else if let feature = item.planFeature {
                 PlanLockedView(feature: feature, title: item.title)
@@ -203,8 +225,16 @@ struct ModuleListView: View {
         .toolbar(.hidden, for: .navigationBar)
         .task { await load() }
         .sheet(isPresented: $showCreate) {
-            ModuleCreateView(item: item) {
-                Task { await load() }
+            Group {
+                if item.key == "simulasi" {
+                    SimulasiFormView {
+                        Task { await load() }
+                    }
+                } else {
+                    ModuleCreateView(item: item) {
+                        Task { await load() }
+                    }
+                }
             }
             .environmentObject(appState)
             .presentationDetents([.large])
@@ -334,17 +364,37 @@ struct ModuleListView: View {
         .moduleSurface()
     }
 
-    private func load() async {
+    private var canLoadMore: Bool {
+        ListPaging.canLoadMore(current: meta?.current_page, last: meta?.last_page)
+    }
+
+    private func load(reset: Bool = true) async {
         guard item.isAllowed else { return }
-        isLoading = true
-        defer { isLoading = false }
+        if reset {
+            isLoading = true
+            listPage = 1
+        } else {
+            guard canLoadMore, !isLoadingMore else { return }
+            isLoadingMore = true
+            listPage += 1
+        }
+        defer {
+            isLoading = false
+            isLoadingMore = false
+        }
         do {
-            let response = try await appState.api.moduleList(key: item.key, query: searchText)
-            records = response.data
+            let response = try await appState.api.moduleList(key: item.key, query: searchText, page: listPage)
+            if reset {
+                records = response.data
+            } else {
+                let existing = Set(records.map(\.id))
+                records.append(contentsOf: response.data.filter { !existing.contains($0.id) })
+            }
             meta = response.meta
             errorMessage = nil
         } catch {
-            errorMessage = error.localizedDescription
+            if !reset { listPage = max(1, listPage - 1) }
+            APILoadFailure.assign(error, to: &errorMessage)
         }
     }
 }
@@ -363,6 +413,7 @@ struct ModuleDetailView: View {
     @State private var showPdfPreview = false
     @State private var pdfPreviewURL: URL?
     @State private var shareItem: ModulePdfShareItem?
+    @State private var showEdit = false
 
     private var isSimulasi: Bool { item.key == "simulasi" }
     private var isBusy: Bool { isOpeningDraft || isSharingDraft }
@@ -392,6 +443,17 @@ struct ModuleDetailView: View {
                         .lineLimit(1)
                 }
                 .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                if record != nil {
+                    Button { showEdit = true } label: {
+                        Image(systemName: "slider.horizontal.3")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(width: 40, height: 40)
+                            .background(.white.opacity(0.11), in: Circle())
+                    }
+                    .accessibilityLabel(isSimulasi ? "Edit simulasi" : "Edit \(item.title)")
+                    .fixedSize()
+                }
                 if isSimulasi, record != nil {
                     Button {
                         Task { await openDraftKontrak() }
@@ -439,7 +501,7 @@ struct ModuleDetailView: View {
                                     Text(field.label)
                                         .font(.poppins(.caption2))
                                         .foregroundStyle(WofinsTheme.muted)
-                                    Text(field.value?.isEmpty == false ? field.value! : "—")
+                                    Text(field.displayText)
                                         .font(.poppins(.subheadline))
                                         .foregroundStyle(WofinsTheme.ink)
                                         .fixedSize(horizontal: false, vertical: true)
@@ -494,6 +556,21 @@ struct ModuleDetailView: View {
         .background(WofinsTheme.background.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .task { await load() }
+        .sheet(isPresented: $showEdit) {
+            Group {
+                if isSimulasi {
+                    SimulasiFormView(recordId: recordId) {
+                        Task { await load() }
+                    }
+                } else {
+                    ModuleCreateView(item: item, recordId: recordId) {
+                        Task { await load() }
+                    }
+                }
+            }
+            .environmentObject(appState)
+            .presentationDetents([.large])
+        }
         .fullScreenCover(isPresented: $showPdfPreview) {
             if let pdfPreviewURL {
                 ProjectDocumentView(
@@ -525,6 +602,23 @@ struct ModuleDetailView: View {
                 .font(.poppins(.caption2))
                 .foregroundStyle(WofinsTheme.muted)
                 .fixedSize(horizontal: false, vertical: true)
+            Button { showEdit = true } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "slider.horizontal.3")
+                    Text("Edit simulasi")
+                        .font(.poppins(.subheadline, weight: .semibold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
+                }
+                .foregroundStyle(WofinsTheme.primary)
+                .frame(maxWidth: .infinity)
+                .frame(height: 48)
+                .background(WofinsTheme.primary.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 14).stroke(WofinsTheme.primary.opacity(0.3))
+                }
+            }
+            .buttonStyle(.plain)
             Button {
                 Task { await openDraftKontrak() }
             } label: {
@@ -583,7 +677,7 @@ struct ModuleDetailView: View {
             record = try await appState.api.moduleDetail(key: item.key, id: recordId)
             errorMessage = nil
         } catch {
-            errorMessage = error.localizedDescription
+            APILoadFailure.assign(error, to: &errorMessage)
         }
     }
 
@@ -595,7 +689,7 @@ struct ModuleDetailView: View {
             pdfPreviewURL = try await cachedDraftPdf()
             showPdfPreview = true
         } catch {
-            actionMessage = error.localizedDescription
+            APILoadFailure.assign(error, to: &actionMessage)
         }
     }
 
@@ -607,7 +701,7 @@ struct ModuleDetailView: View {
             let url = try await cachedDraftPdf()
             shareItem = ModulePdfShareItem(url: url)
         } catch {
-            actionMessage = error.localizedDescription
+            APILoadFailure.assign(error, to: &actionMessage)
         }
     }
 
@@ -642,6 +736,7 @@ struct ModuleCreateView: View {
     @EnvironmentObject private var appState: AppState
     @Environment(\.dismiss) private var dismiss
     let item: MobileModuleCatalogItem
+    var recordId: Int? = nil
     var onSaved: () -> Void
 
     @State private var schema: ModuleFormSchema?
@@ -749,12 +844,21 @@ struct ModuleCreateView: View {
                     .padding(12)
                     .moduleSurface()
             case "number":
-                TextField(field.placeholder ?? "0", text: stringBinding(field.name))
-                    .font(.poppins(.subheadline))
-                    .keyboardType(.numberPad)
-                    .padding(.horizontal, 12)
-                    .frame(height: 46)
-                    .moduleSurface()
+                if field.usesThousandSeparator {
+                    TextField(field.placeholder ?? "0", text: MoneyFormat.groupedBinding(stringBinding(field.name)))
+                        .font(.poppins(.subheadline))
+                        .keyboardType(.numberPad)
+                        .padding(.horizontal, 12)
+                        .frame(height: 46)
+                        .moduleSurface()
+                } else {
+                    TextField(field.placeholder ?? "0", text: stringBinding(field.name))
+                        .font(.poppins(.subheadline))
+                        .keyboardType(.numberPad)
+                        .padding(.horizontal, 12)
+                        .frame(height: 46)
+                        .moduleSurface()
+                }
             case "email":
                 TextField(field.placeholder ?? field.label, text: stringBinding(field.name))
                     .font(.poppins(.subheadline))
@@ -819,24 +923,33 @@ struct ModuleCreateView: View {
         isLoading = true
         defer { isLoading = false }
         do {
-            let loaded = try await appState.api.moduleForm(key: item.key)
+            let loaded = try await appState.api.moduleForm(key: item.key, id: recordId)
             schema = loaded
-            var seed: [String: String] = [:]
+            var seed: [String: String] = loaded.defaults ?? [:]
             let formatter = DateFormatter()
             formatter.calendar = Calendar(identifier: .gregorian)
             formatter.locale = Locale(identifier: "en_US_POSIX")
             formatter.dateFormat = "yyyy-MM-dd"
             for field in loaded.fields ?? [] {
+                if seed[field.name] != nil { continue }
                 if field.fieldType == "date" {
                     seed[field.name] = formatter.string(from: Date())
                 } else if field.fieldType == "toggle" {
                     seed[field.name] = "0"
                 }
             }
+            if let recordId {
+                let detail = try await appState.api.moduleDetail(key: item.key, id: recordId)
+                if let stored = detail.values {
+                    for (key, value) in stored {
+                        seed[key] = value
+                    }
+                }
+            }
             values = seed
             errorMessage = nil
         } catch {
-            errorMessage = error.localizedDescription
+            APILoadFailure.assign(error, to: &errorMessage)
         }
     }
 
@@ -848,11 +961,15 @@ struct ModuleCreateView: View {
         Task {
             defer { isSaving = false }
             do {
-                _ = try await appState.api.createModule(key: item.key, values: payload)
+                if let recordId {
+                    _ = try await appState.api.updateModule(key: item.key, id: recordId, values: payload)
+                } else {
+                    _ = try await appState.api.createModule(key: item.key, values: payload)
+                }
                 onSaved()
                 dismiss()
             } catch {
-                errorMessage = error.localizedDescription
+                APILoadFailure.assign(error, to: &errorMessage)
             }
         }
     }
@@ -932,7 +1049,9 @@ struct ModuleShortcutsView: View {
         do {
             items = try await appState.api.moduleCatalog()
         } catch {
-            items = []
+            if !APILoadFailure.isCancellation(error) {
+                items = []
+            }
         }
     }
 }

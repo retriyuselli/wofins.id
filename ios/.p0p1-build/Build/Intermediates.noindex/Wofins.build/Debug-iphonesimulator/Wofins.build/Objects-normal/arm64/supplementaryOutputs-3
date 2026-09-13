@@ -1,0 +1,23 @@
+{
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Features/Finance/CreateProspectView.swift" : {
+    "const-values" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/CreateProspectView.swiftconstvalues",
+    "dependencies" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/CreateProspectView.d",
+    "diagnostics" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/CreateProspectView.dia",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/CreateProspectView.o",
+    "swift-dependencies" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/CreateProspectView.swiftdeps"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Features/Finance/DashboardView.swift" : {
+    "const-values" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/DashboardView.swiftconstvalues",
+    "dependencies" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/DashboardView.d",
+    "diagnostics" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/DashboardView.dia",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/DashboardView.o",
+    "swift-dependencies" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/DashboardView.swiftdeps"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Features/Finance/FinancePeriodPicker.swift" : {
+    "const-values" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/FinancePeriodPicker.swiftconstvalues",
+    "dependencies" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/FinancePeriodPicker.d",
+    "diagnostics" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/FinancePeriodPicker.dia",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/FinancePeriodPicker.o",
+    "swift-dependencies" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/FinancePeriodPicker.swiftdeps"
+  }
+}

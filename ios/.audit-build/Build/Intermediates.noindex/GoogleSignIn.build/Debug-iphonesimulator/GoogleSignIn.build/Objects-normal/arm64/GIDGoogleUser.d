@@ -1,0 +1,22 @@
+dependencies: \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/GoogleSignIn-iOS/GoogleSignIn/Sources/GIDGoogleUser.m \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/Build/Intermediates.noindex/GoogleSignIn.build/Debug-iphonesimulator/GoogleSignIn.build/DerivedSources/resource_bundle_accessor.h \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/System/Library/Frameworks/Foundation.framework/Modules/module.modulemap \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/usr/include/DarwinFoundation1.modulemap \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/GoogleSignIn-iOS/GoogleSignIn/Sources/Public/GoogleSignIn/GIDGoogleUser.h \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/System/Library/Frameworks/UIKit.framework/Modules/module.modulemap \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/Build/Intermediates.noindex/GeneratedModuleMaps-iphonesimulator/GTMSessionFetcherCore.modulemap \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/GoogleSignIn-iOS/GoogleSignIn/Sources/GIDGoogleUser_Private.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/Build/Intermediates.noindex/GeneratedModuleMaps-iphonesimulator/AppAuth.modulemap \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/Build/Intermediates.noindex/GeneratedModuleMaps-iphonesimulator/AppAuthCore.modulemap \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/GoogleSignIn-iOS/GoogleSignIn/Sources/Public/GoogleSignIn/GIDConfiguration.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/GoogleSignIn-iOS/GoogleSignIn/Sources/Public/GoogleSignIn/GIDSignIn.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/GoogleSignIn-iOS/GoogleSignIn/Sources/GIDAuthentication.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/GoogleSignIn-iOS/GoogleSignIn/Sources/GIDEMMSupport.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/Build/Intermediates.noindex/GeneratedModuleMaps-iphonesimulator/GTMAppAuth.modulemap \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/GoogleSignIn-iOS/GoogleSignIn/Sources/GIDProfileData_Private.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/GoogleSignIn-iOS/GoogleSignIn/Sources/Public/GoogleSignIn/GIDProfileData.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/GoogleSignIn-iOS/GoogleSignIn/Sources/GIDSignIn_Private.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/GoogleSignIn-iOS/GoogleSignIn/Sources/GIDSignInPreferences.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/GoogleSignIn-iOS/GoogleSignIn/Sources/GIDToken_Private.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/GoogleSignIn-iOS/GoogleSignIn/Sources/Public/GoogleSignIn/GIDToken.h

@@ -29,6 +29,62 @@ enum APIError: LocalizedError {
     }
 }
 
+enum APITransportMapper {
+    static func map(_ error: Error) -> APIError {
+        if APILoadFailure.isCancellation(error) {
+            return .transport(error)
+        }
+        let urlError = error as? URLError
+        switch urlError?.code {
+        case .notConnectedToInternet, .dataNotAllowed, .networkConnectionLost:
+            return .message("Tidak ada koneksi internet.")
+        case .timedOut:
+            return .message("Koneksi ke server habis waktu. Coba lagi.")
+        default:
+            return .transport(error)
+        }
+    }
+}
+
+enum APILoadFailure {
+    static func isCancellation(_ error: Error) -> Bool {
+        if error is CancellationError { return true }
+        if (error as? URLError)?.code == .cancelled { return true }
+        let nsError = error as NSError
+        if nsError.domain == NSURLErrorDomain && nsError.code == NSURLErrorCancelled {
+            return true
+        }
+        if case .transport(let inner)? = error as? APIError {
+            return isCancellation(inner)
+        }
+        let text = error.localizedDescription.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return text == "cancelled" || text == "canceled" || text == "dibatalkan"
+    }
+
+    static func userMessage(for error: Error) -> String? {
+        guard !isCancellation(error) else { return nil }
+        if let api = error as? APIError {
+            switch api {
+            case .unauthorized:
+                return "Sesi berakhir. Silakan masuk lagi."
+            case .message(let text):
+                return text
+            case .transport:
+                return APIConfig.connectionErrorMessage
+            case .http, .validation, .decoding, .invalidURL:
+                return api.errorDescription
+            }
+        }
+        return error.localizedDescription
+    }
+
+    static func assign(_ error: Error, to message: inout String?) {
+        if let text = userMessage(for: error) {
+            message = text
+        }
+    }
+}
+
 final class APIClient {
     var token: String?
     var onUnauthorized: (() -> Void)?
@@ -37,7 +93,7 @@ final class APIClient {
     private let decoder: JSONDecoder
     private let encoder: JSONEncoder
 
-    init(session: URLSession = .shared) {
+    init(session: URLSession = APIClient.makeSession()) {
         self.session = session
         self.decoder = JSONDecoder()
         self.encoder = JSONEncoder()
@@ -116,6 +172,11 @@ final class APIClient {
         )
     }
 
+    func authDevices() async throws -> [AuthSessionDevice] {
+        let envelope: DataEnvelope<[AuthSessionDevice]> = try await request(method: "GET", path: "/me/devices")
+        return envelope.data
+    }
+
     func compensation(period: String = "year") async throws -> CompensationData {
         let envelope: DataEnvelope<CompensationData> = try await request(
             method: "GET",
@@ -136,16 +197,18 @@ final class APIClient {
         return envelope.data
     }
 
-    func financeProjects(status: String? = nil, perPage: Int = 20) async throws -> FinanceProjectsResponse {
+    func financeProjects(status: String? = nil, perPage: Int = 20, page: Int = 1) async throws -> FinanceProjectsResponse {
         var query: [String] = ["per_page=\(perPage)"]
         if let status { query.append("status=\(status)") }
+        if page > 1 { query.append("page=\(page)") }
         let path = "/finance/projects?" + query.joined(separator: "&")
         return try await request(method: "GET", path: path)
     }
 
-    func financeProspects(status: String? = nil, perPage: Int = 50) async throws -> FinanceProspectsResponse {
+    func financeProspects(status: String? = nil, perPage: Int = 50, page: Int = 1) async throws -> FinanceProspectsResponse {
         var query: [String] = ["per_page=\(perPage)"]
         if let status { query.append("status=\(status)") }
+        if page > 1 { query.append("page=\(page)") }
         let path = "/finance/prospects?" + query.joined(separator: "&")
         return try await request(method: "GET", path: path)
     }
@@ -250,7 +313,7 @@ final class APIClient {
         to: String? = nil,
         type: String? = nil,
         direction: String? = nil,
-        limit: Int = 100
+        limit: Int = 200
     ) async throws -> FinanceTransactionsResponse {
         var query: [String] = ["limit=\(limit)"]
         if let from { query.append("from=\(from)") }
@@ -265,7 +328,7 @@ final class APIClient {
         let url: URL
         if let urlString, let parsed = APIConfig.mediaURL(from: urlString) {
             url = parsed
-        } else if let fallback = URL(string: APIConfig.baseURL.absoluteString + APIConfig.apiPrefix + "/finance/payments/\(id)/proof") {
+        } else if let fallback = APIConfig.endpoint("/finance/payments/\(id)/proof") {
             url = fallback
         } else {
             throw APIError.invalidURL
@@ -277,15 +340,17 @@ final class APIClient {
         request.setValue("image/*,application/pdf", forHTTPHeaderField: "Accept")
         request.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
         request.setValue("no-cache", forHTTPHeaderField: "Pragma")
-        guard let token, !token.isEmpty else { throw APIError.unauthorized }
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        if APIConfig.shouldAttachAuthorization(to: url) {
+            guard let token, !token.isEmpty else { throw APIError.unauthorized }
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
 
         let data: Data
         let response: URLResponse
         do {
             (data, response) = try await session.data(for: request)
         } catch {
-            throw APIError.transport(error)
+            throw mapTransport(error)
         }
 
         guard let http = response as? HTTPURLResponse else {
@@ -319,7 +384,7 @@ final class APIClient {
         if let from { query.append("from=\(from)") }
         if let to { query.append("to=\(to)") }
         let path = "/finance/reports/pdf?" + query.joined(separator: "&")
-        guard let url = URL(string: APIConfig.baseURL.absoluteString + APIConfig.apiPrefix + path) else {
+        guard let url = APIConfig.endpoint(path) else {
             throw APIError.invalidURL
         }
 
@@ -327,15 +392,14 @@ final class APIClient {
         request.httpMethod = "GET"
         request.timeoutInterval = 120
         request.setValue("application/pdf", forHTTPHeaderField: "Accept")
-        guard let token, !token.isEmpty else { throw APIError.unauthorized }
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        try applyAuthorization(to: &request)
 
         let data: Data
         let response: URLResponse
         do {
             (data, response) = try await session.data(for: request)
         } catch {
-            throw APIError.transport(error)
+            throw mapTransport(error)
         }
 
         guard let http = response as? HTTPURLResponse else {
@@ -356,7 +420,7 @@ final class APIClient {
         if let from { query.append("from=\(from)") }
         if let to { query.append("to=\(to)") }
         let path = "/finance/reports/excel?" + query.joined(separator: "&")
-        guard let url = URL(string: APIConfig.baseURL.absoluteString + APIConfig.apiPrefix + path) else {
+        guard let url = APIConfig.endpoint(path) else {
             throw APIError.invalidURL
         }
 
@@ -364,15 +428,14 @@ final class APIClient {
         request.httpMethod = "GET"
         request.timeoutInterval = 120
         request.setValue("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", forHTTPHeaderField: "Accept")
-        guard let token, !token.isEmpty else { throw APIError.unauthorized }
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        try applyAuthorization(to: &request)
 
         let data: Data
         let response: URLResponse
         do {
             (data, response) = try await session.data(for: request)
         } catch {
-            throw APIError.transport(error)
+            throw mapTransport(error)
         }
 
         guard let http = response as? HTTPURLResponse else {
@@ -388,10 +451,11 @@ final class APIClient {
         return data
     }
 
-    func financePiutangs(status: String? = nil, openOnly: Bool = false, perPage: Int = 20) async throws -> FinancePiutangsResponse {
+    func financePiutangs(status: String? = nil, openOnly: Bool = false, perPage: Int = 20, page: Int = 1) async throws -> FinancePiutangsResponse {
         var query: [String] = ["per_page=\(perPage)"]
         if let status { query.append("status=\(status)") }
         if openOnly { query.append("open_only=1") }
+        if page > 1 { query.append("page=\(page)") }
         let path = "/finance/piutangs?" + query.joined(separator: "&")
         return try await request(method: "GET", path: path)
     }
@@ -414,18 +478,23 @@ final class APIClient {
         return envelope.data
     }
 
-    func moduleList(key: String, query: String? = nil, perPage: Int = 30) async throws -> ModuleListResponse {
+    func moduleList(key: String, query: String? = nil, perPage: Int = 30, page: Int = 1) async throws -> ModuleListResponse {
         var parts = ["per_page=\(perPage)"]
+        if page > 1 { parts.append("page=\(page)") }
         if let query, !query.isEmpty, let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
             parts.append("q=\(encoded)")
         }
         return try await request(method: "GET", path: "/modules/\(key)?" + parts.joined(separator: "&"))
     }
 
-    func moduleForm(key: String) async throws -> ModuleFormSchema {
+    func moduleForm(key: String, id: Int? = nil) async throws -> ModuleFormSchema {
+        var path = "/modules/\(key)/form"
+        if let id {
+            path += "?id=\(id)"
+        }
         let envelope: DataEnvelope<ModuleFormSchema> = try await request(
             method: "GET",
-            path: "/modules/\(key)/form"
+            path: path
         )
         return envelope.data
     }
@@ -443,6 +512,24 @@ final class APIClient {
             method: "POST",
             path: "/modules/\(key)",
             body: JSONDictionary(values: values)
+        )
+        return envelope.data
+    }
+
+    func createSimulasi(_ payload: CreateSimulasiPayload) async throws -> ModuleRecord {
+        let envelope: MessageDataEnvelope<ModuleRecord> = try await request(
+            method: "POST",
+            path: "/modules/simulasi",
+            body: payload
+        )
+        return envelope.data
+    }
+
+    func updateSimulasi(id: Int, _ payload: CreateSimulasiPayload) async throws -> ModuleRecord {
+        let envelope: MessageDataEnvelope<ModuleRecord> = try await request(
+            method: "PATCH",
+            path: "/modules/simulasi/\(id)",
+            body: payload
         )
         return envelope.data
     }
@@ -500,7 +587,7 @@ final class APIClient {
         authorized: Bool = true,
         timeout: TimeInterval = 60
     ) async throws -> T {
-        guard let url = URL(string: APIConfig.baseURL.absoluteString + APIConfig.apiPrefix + path) else {
+        guard let url = APIConfig.endpoint(path) else {
             throw APIError.invalidURL
         }
 
@@ -512,8 +599,7 @@ final class APIClient {
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
 
         if authorized {
-            guard let token, !token.isEmpty else { throw APIError.unauthorized }
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            try applyAuthorization(to: &request)
         }
 
         var body = Data()
@@ -536,7 +622,7 @@ final class APIClient {
     }
 
     private func fetchPDF(path: String) async throws -> Data {
-        guard let url = URL(string: APIConfig.baseURL.absoluteString + APIConfig.apiPrefix + path) else {
+        guard let url = APIConfig.endpoint(path) else {
             throw APIError.invalidURL
         }
 
@@ -544,15 +630,14 @@ final class APIClient {
         request.httpMethod = "GET"
         request.timeoutInterval = 180
         request.setValue("application/pdf", forHTTPHeaderField: "Accept")
-        guard let token, !token.isEmpty else { throw APIError.unauthorized }
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        try applyAuthorization(to: &request)
 
         let data: Data
         let response: URLResponse
         do {
             (data, response) = try await session.data(for: request)
         } catch {
-            throw APIError.transport(error)
+            throw mapTransport(error)
         }
 
         guard let http = response as? HTTPURLResponse else {
@@ -587,18 +672,18 @@ final class APIClient {
         body: B?,
         authorized: Bool = true
     ) async throws -> T {
-        guard let url = URL(string: APIConfig.baseURL.absoluteString + APIConfig.apiPrefix + path) else {
+        guard let url = APIConfig.endpoint(path) else {
             throw APIError.invalidURL
         }
 
         var request = URLRequest(url: url)
         request.httpMethod = method
+        request.timeoutInterval = 30
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         if authorized {
-            guard let token, !token.isEmpty else { throw APIError.unauthorized }
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            try applyAuthorization(to: &request)
         }
 
         if let body {
@@ -614,7 +699,7 @@ final class APIClient {
         do {
             (data, response) = try await session.data(for: request)
         } catch {
-            throw APIError.transport(error)
+            throw mapTransport(error)
         }
 
         guard let http = response as? HTTPURLResponse else {
@@ -641,5 +726,25 @@ final class APIClient {
         } catch {
             throw APIError.decoding(error)
         }
+    }
+
+    private static func makeSession() -> URLSession {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 30
+        config.timeoutIntervalForResource = 90
+        config.waitsForConnectivity = false
+        return URLSession(configuration: config)
+    }
+
+    private func applyAuthorization(to request: inout URLRequest) throws {
+        guard let url = request.url, APIConfig.shouldAttachAuthorization(to: url) else {
+            throw APIError.unauthorized
+        }
+        guard let token, !token.isEmpty else { throw APIError.unauthorized }
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    }
+
+    private func mapTransport(_ error: Error) -> APIError {
+        APITransportMapper.map(error)
     }
 }

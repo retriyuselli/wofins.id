@@ -1,0 +1,19 @@
+{
+  "" : {
+    "diagnostics" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/WofinsTests.build/Objects-normal/arm64/WofinsTests-primary.dia",
+    "emit-module-dependencies" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/WofinsTests.build/Objects-normal/arm64/WofinsTests-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/WofinsTests.build/Objects-normal/arm64/WofinsTests-primary-emit-module.dia",
+    "pch" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/WofinsTests.build/Objects-normal/arm64/WofinsTests-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/WofinsTests.build/Objects-normal/arm64/WofinsTests-primary.swiftdeps"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/WofinsTests/WofinsLogicTests.swift" : {
+    "const-values" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/WofinsTests.build/Objects-normal/arm64/WofinsLogicTests.swiftconstvalues",
+    "dependencies" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/WofinsTests.build/Objects-normal/arm64/WofinsLogicTests.d",
+    "diagnostics" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/WofinsTests.build/Objects-normal/arm64/WofinsLogicTests.dia",
+    "index-unit-output-path" : "/Wofins.build/Debug-iphonesimulator/WofinsTests.build/Objects-normal/arm64/WofinsLogicTests.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/WofinsTests.build/Objects-normal/arm64/WofinsLogicTests.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/WofinsTests.build/Objects-normal/arm64/WofinsLogicTests.o",
+    "swift-dependencies" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/WofinsTests.build/Objects-normal/arm64/WofinsLogicTests.swiftdeps",
+    "swiftmodule" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/WofinsTests.build/Objects-normal/arm64/WofinsLogicTests~partial.swiftmodule"
+  }
+}

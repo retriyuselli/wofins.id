@@ -1,0 +1,4 @@
+module GoogleUtilities_Environment {
+umbrella "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/GoogleUtilities/GoogleUtilities/Environment/Public"
+export *
+}

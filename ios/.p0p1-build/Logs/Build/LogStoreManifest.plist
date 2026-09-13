@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>logFormatVersion</key>
+	<integer>12</integer>
+	<key>logs</key>
+	<dict>
+		<key>615E4876-97BE-45DD-B728-DE75AA336231</key>
+		<dict>
+			<key>className</key>
+			<string>IDECommandLineBuildLog</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>615E4876-97BE-45DD-B728-DE75AA336231.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>Wofins project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>Wofins</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Testing project Wofins with scheme Wofins</string>
+			<key>timeStartedRecording</key>
+			<real>810995011.22622097</real>
+			<key>timeStoppedRecording</key>
+			<real>810995016.83308995</real>
+			<key>title</key>
+			<string>Testing project Wofins with scheme Wofins</string>
+			<key>uniqueIdentifier</key>
+			<string>615E4876-97BE-45DD-B728-DE75AA336231</string>
+		</dict>
+		<key>FCE3869A-BB0B-4C88-9058-EB3429556365</key>
+		<dict>
+			<key>className</key>
+			<string>IDECommandLineBuildLog</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>FCE3869A-BB0B-4C88-9058-EB3429556365.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>Wofins project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>Wofins</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Testing project Wofins with scheme Wofins</string>
+			<key>timeStartedRecording</key>
+			<real>810994922.17125297</real>
+			<key>timeStoppedRecording</key>
+			<real>810994936.92907906</real>
+			<key>title</key>
+			<string>Testing project Wofins with scheme Wofins</string>
+			<key>uniqueIdentifier</key>
+			<string>FCE3869A-BB0B-4C88-9058-EB3429556365</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

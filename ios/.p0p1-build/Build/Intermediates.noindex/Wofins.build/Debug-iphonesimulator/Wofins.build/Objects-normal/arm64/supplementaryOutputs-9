@@ -1,0 +1,23 @@
+{
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Core/Typography.swift" : {
+    "const-values" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/Typography.swiftconstvalues",
+    "dependencies" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/Typography.d",
+    "diagnostics" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/Typography.dia",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/Typography.o",
+    "swift-dependencies" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/Typography.swiftdeps"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Features/Finance/TransactionsOverviewView.swift" : {
+    "const-values" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/TransactionsOverviewView.swiftconstvalues",
+    "dependencies" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/TransactionsOverviewView.d",
+    "diagnostics" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/TransactionsOverviewView.dia",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/TransactionsOverviewView.o",
+    "swift-dependencies" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/TransactionsOverviewView.swiftdeps"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Features/Finance/TransactionsView.swift" : {
+    "const-values" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/TransactionsView.swiftconstvalues",
+    "dependencies" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/TransactionsView.d",
+    "diagnostics" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/TransactionsView.dia",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/TransactionsView.o",
+    "swift-dependencies" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Debug-iphonesimulator/Wofins.build/Objects-normal/arm64/TransactionsView.swiftdeps"
+  }
+}

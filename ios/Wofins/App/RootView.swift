@@ -61,6 +61,7 @@ struct MainTabView: View {
         .tint(WofinsTheme.accent)
         .toolbarBackground(.white, for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)
+        .preferredColorScheme(.light)
     }
 }
 
@@ -286,6 +287,15 @@ extension View {
                 }
             }
         }
+    }
+
+    func projectSurface() -> some View {
+        background(WofinsTheme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(WofinsTheme.border.opacity(0.75), lineWidth: 1)
+            }
+            .shadow(color: WofinsTheme.primary.opacity(0.055), radius: 12, y: 5)
     }
 }
 

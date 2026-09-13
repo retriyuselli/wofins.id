@@ -129,4 +129,32 @@ class MeController extends Controller
             ],
         ]);
     }
+
+    /**
+     * Daftar sesi/token perangkat (tanpa nilai token).
+     */
+    public function devices(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $currentId = $user->currentAccessToken()?->id;
+
+        $devices = $user->tokens()
+            ->orderByDesc('last_used_at')
+            ->orderByDesc('id')
+            ->get()
+            ->map(static function ($token) use ($currentId): array {
+                return [
+                    'id' => (int) $token->id,
+                    'name' => $token->name,
+                    'last_used_at' => optional($token->last_used_at)?->toIso8601String(),
+                    'created_at' => optional($token->created_at)?->toIso8601String(),
+                    'is_current' => $currentId !== null && (int) $token->id === (int) $currentId,
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'data' => $devices,
+        ]);
+    }
 }

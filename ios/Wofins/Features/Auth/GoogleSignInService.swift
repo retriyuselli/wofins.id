@@ -74,6 +74,10 @@ final class GoogleSignInService {
         GIDSignIn.sharedInstance.handle(url)
     }
 
+    func signOut() {
+        GIDSignIn.sharedInstance.signOut()
+    }
+
     private func googleClientID() -> String? {
         plistString("GIDClientID")
     }

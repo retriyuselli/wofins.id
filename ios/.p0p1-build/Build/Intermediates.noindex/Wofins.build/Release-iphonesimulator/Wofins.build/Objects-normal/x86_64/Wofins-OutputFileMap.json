@@ -1,0 +1,161 @@
+{
+  "" : {
+    "const-values" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/Wofins-primary.swiftconstvalues",
+    "dependencies" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/Wofins-primary.d",
+    "diagnostics" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/Wofins-primary.dia",
+    "emit-module-dependencies" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/Wofins-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/Wofins-primary-emit-module.dia",
+    "pch" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/Wofins-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/Wofins-primary.swiftdeps"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/GeneratedAssetSymbols.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/GeneratedAssetSymbols.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/App/AppState.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/AppState.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/AppState.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/AppState.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/App/RootView.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/RootView.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/RootView.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/RootView.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/App/WofinsApp.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/WofinsApp.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/WofinsApp.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/WofinsApp.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Config/APIConfig.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/APIConfig.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/APIConfig.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/APIConfig.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Core/APIClient.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/APIClient.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/APIClient.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/APIClient.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Core/KeychainStore.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/KeychainStore.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/KeychainStore.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/KeychainStore.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Core/Typography.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/Typography.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/Typography.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/Typography.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Features/Account/AccountOverviewView.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/AccountOverviewView.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/AccountOverviewView.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/AccountOverviewView.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Features/Account/AccountView.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/AccountView.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/AccountView.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/AccountView.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Features/Auth/GoogleSignInService.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/GoogleSignInService.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/GoogleSignInService.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/GoogleSignInService.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Features/Auth/LoginView.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/LoginView.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/LoginView.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/LoginView.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Features/Auth/PrivacyStatementView.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/PrivacyStatementView.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/PrivacyStatementView.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/PrivacyStatementView.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Features/Compensation/CompensationView.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/CompensationView.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/CompensationView.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/CompensationView.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Features/Finance/CreateProjectView.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/CreateProjectView.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/CreateProjectView.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/CreateProjectView.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Features/Finance/CreateProspectView.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/CreateProspectView.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/CreateProspectView.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/CreateProspectView.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Features/Finance/DashboardView.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/DashboardView.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/DashboardView.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/DashboardView.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Features/Finance/FinancePeriodPicker.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/FinancePeriodPicker.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/FinancePeriodPicker.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/FinancePeriodPicker.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Features/Finance/ModulesView.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/ModulesView.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/ModulesView.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/ModulesView.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Features/Finance/ProductDetailView.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/ProductDetailView.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/ProductDetailView.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/ProductDetailView.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Features/Finance/ProjectDetailView.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/ProjectDetailView.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/ProjectDetailView.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/ProjectDetailView.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Features/Finance/ProjectDocumentView.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/ProjectDocumentView.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/ProjectDocumentView.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/ProjectDocumentView.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Features/Finance/ProjectsView.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/ProjectsView.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/ProjectsView.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/ProjectsView.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Features/Finance/ProspectDetailView.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/ProspectDetailView.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/ProspectDetailView.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/ProspectDetailView.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Features/Finance/ReportsOverviewView.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/ReportsOverviewView.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/ReportsOverviewView.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/ReportsOverviewView.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Features/Finance/SimulasiFormView.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/SimulasiFormView.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/SimulasiFormView.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/SimulasiFormView.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Features/Finance/TransactionsOverviewView.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/TransactionsOverviewView.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/TransactionsOverviewView.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/TransactionsOverviewView.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Features/Finance/TransactionsView.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/TransactionsView.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/TransactionsView.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/TransactionsView.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Features/Finance/VendorDetailView.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/VendorDetailView.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/VendorDetailView.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/VendorDetailView.o"
+  },
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Models/APIModels.swift" : {
+    "index-unit-output-path" : "/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/APIModels.o",
+    "llvm-bc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/APIModels.bc",
+    "object" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/APIModels.o"
+  }
+}

@@ -31,6 +31,7 @@ final class AppState: ObservableObject {
             currentUser = try await api.me()
             isAuthenticated = true
         } catch {
+            if APILoadFailure.isCancellation(error) { return }
             keychain.clearToken()
             api.token = nil
             isAuthenticated = false
@@ -60,7 +61,7 @@ final class AppState: ObservableObject {
         do {
             currentUser = try await api.me()
         } catch {
-            globalError = error.localizedDescription
+            APILoadFailure.assign(error, to: &globalError)
         }
     }
 
@@ -79,9 +80,17 @@ final class AppState: ObservableObject {
 
     func forceLogout(message: String? = nil) {
         keychain.clearToken()
+        keychain.clearCredentials()
+        GoogleSignInService.shared.signOut()
         api.token = nil
         currentUser = nil
         isAuthenticated = false
         globalError = message
+    }
+
+    func selectAPIHost(_ option: APIHostOption) {
+        guard APIConfig.selectedHost != option else { return }
+        forceLogout()
+        APIConfig.selectedHost = option
     }
 }

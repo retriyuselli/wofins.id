@@ -1,0 +1,21 @@
+moduledependenciestarget: \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/GeneratedModuleMaps-iphonesimulator/AppCheckCore.modulemap \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/AppCheckCore.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppCheck.h \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.5.sdk/System/Library/Frameworks/Foundation.framework/Modules/module.modulemap \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.5.sdk/usr/include/DarwinFoundation1.modulemap \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppCheckErrors.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppCheckLogger.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppCheckProvider.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppCheckSettings.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppCheckToken.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppCheckTokenDelegate.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppCheckTokenResult.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppCheckDebugProvider.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACDeviceCheckProvider.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppCheckAvailability.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppAttestProvider.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/_GACAppCheckAPIService.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/_GACAppCheckBackoffWrapper.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/_GACAppCheckErrorUtil.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/_GACURLSessionDataResponse.h

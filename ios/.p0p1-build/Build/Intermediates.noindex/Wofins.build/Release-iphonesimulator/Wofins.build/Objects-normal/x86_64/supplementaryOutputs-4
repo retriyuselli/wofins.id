@@ -1,0 +1,12 @@
+{
+  "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/Wofins/Core/APIClient.swift" : {
+    "abi-baseline-json" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/Wofins.abi.json",
+    "const-values" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/Wofins-primary.swiftconstvalues",
+    "dependencies" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/Wofins-primary.d",
+    "diagnostics" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/Wofins-primary.dia",
+    "objc-header" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/Wofins-Swift.h",
+    "swiftdoc" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/Wofins.swiftdoc",
+    "swiftmodule" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/Wofins.swiftmodule",
+    "swiftsourceinfo" : "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/Wofins.build/Release-iphonesimulator/Wofins.build/Objects-normal/x86_64/Wofins.swiftsourceinfo"
+  }
+}

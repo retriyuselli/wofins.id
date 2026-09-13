@@ -1,0 +1,4 @@
+module third_party_IsAppEncrypted {
+umbrella "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/GoogleUtilities/third_party/IsAppEncrypted/Public"
+export *
+}

@@ -1,0 +1,4 @@
+module GTMSessionFetcherCore {
+umbrella "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/gtm-session-fetcher/Sources/Core/Public"
+export *
+}

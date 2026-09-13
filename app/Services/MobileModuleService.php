@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\JenisPiutang;
+use App\Enums\MonthEnum;
 use App\Enums\StatusPiutang;
 use App\Enums\StatusVendor;
 use App\Models\AccountManagerTarget;
@@ -128,18 +129,25 @@ class MobileModuleService
     /**
      * @return array<string, mixed>
      */
-    public function form(?User $user, string $key): array
+    public function form(?User $user, string $key, ?int $id = null): array
     {
         $def = $this->definition($key);
         $this->assertAllowed($user, $def);
 
-        if (! $this->canCreate($def)) {
+        if ($id === null && ! $this->canCreate($def)) {
             $quota = $def['quota'] ?? null;
             throw new HttpResponseException(response()->json([
                 'message' => $quota
                     ? CompanySubscription::fullMessage($quota)
                     : 'Penambahan data tidak tersedia untuk modul ini.',
             ], 403));
+        }
+
+        $record = $id ? $this->findModel($user, $key, $id) : null;
+        if ($id && ! $record) {
+            throw new HttpResponseException(response()->json([
+                'message' => 'Data tidak ditemukan.',
+            ], 404));
         }
 
         $fields = [];
@@ -153,17 +161,47 @@ class MobileModuleService
             ];
 
             if (($field['type'] ?? '') === 'select') {
-                $row['options'] = $this->options($field['options'] ?? []);
+                $row['options'] = $key === 'simulasi' && ($field['options'] ?? '') === 'products'
+                    ? $this->simulasiProductOptions()
+                    : $this->options($field['options'] ?? []);
+            }
+            if (! empty($field['helper'])) {
+                $row['helper'] = $field['helper'];
+            }
+            if (! empty($field['readonly'])) {
+                $row['readonly'] = true;
+            }
+            if (! empty($field['section'])) {
+                $row['section'] = $field['section'];
             }
 
             $fields[] = $row;
         }
 
-        return [
-            'title' => 'Tambah '.$def['title'],
-            'can_create' => true,
+        if ($record instanceof SimulasiProduk) {
+            $fields = $this->ensureSimulasiProspectOption($fields, $record);
+        }
+
+        $payload = [
+            'title' => ($id ? 'Edit ' : 'Tambah ').$def['title'],
+            'can_create' => $id !== null || $this->canCreate($def),
             'fields' => $fields,
         ];
+
+        if ($key === 'simulasi') {
+            $payload['defaults'] = [
+                'user_id' => $user?->id ? (string) $user->id : null,
+            ];
+            $payload['months'] = collect(MonthEnum::cases())
+                ->map(fn (MonthEnum $month) => [
+                    'value' => $month->value,
+                    'label' => (string) $month->getLabel(),
+                ])
+                ->values()
+                ->all();
+        }
+
+        return $payload;
     }
 
     /**
@@ -185,6 +223,9 @@ class MobileModuleService
         }
 
         $data = $this->validated($def, $input);
+        if ($key === 'simulasi') {
+            $data['payment_simulation'] = $input['payment_simulation'] ?? [];
+        }
         $data = $this->prepare($user, $key, $def, $data, null);
 
         $modelClass = $def['model'];
@@ -211,6 +252,9 @@ class MobileModuleService
         }
 
         $data = $this->validated($def, $input, $id);
+        if ($key === 'simulasi' && array_key_exists('payment_simulation', $input)) {
+            $data['payment_simulation'] = $input['payment_simulation'];
+        }
         $data = $this->prepare($user, $key, $def, $data, $model);
         $model->fill($data);
         $model->save();
@@ -391,6 +435,8 @@ class MobileModuleService
                     $rule[] = 'email';
                     $rule[] = 'max:255';
                     break;
+                case 'select':
+                    break;
                 default:
                     $rule[] = 'string';
                     $rule[] = 'max:255';
@@ -459,9 +505,11 @@ class MobileModuleService
             'vendors' => 'vendors',
             'orders' => 'orders',
             'prospects' => 'prospects',
+            'open_prospects' => 'prospects',
             'products' => 'products',
             'employees' => 'employees',
             'users' => 'users',
+            'account_managers' => 'users',
             'categories' => 'categories',
             'nota_dinas' => 'nota_dinas',
             'piutangs' => 'piutangs',
@@ -622,21 +670,126 @@ class MobileModuleService
      */
     private function prepareSimulasi(?User $user, array $data, ?Model $existing): array
     {
+        unset($data['customer_name']);
+
         $product = ! empty($data['product_id']) ? Product::query()->find($data['product_id']) : null;
-        $price = (int) ($product?->price ?? $product?->product_price ?? 0);
-        $data['total_price'] = $data['total_price'] ?? $price;
-        $data['grand_total'] = $data['grand_total'] ?? $price;
-        $data['total_simulation'] = $data['total_simulation'] ?? $price;
-        $data['penambahan'] = $data['penambahan'] ?? 0;
-        $data['pengurangan'] = $data['pengurangan'] ?? 0;
-        $data['promo'] = $data['promo'] ?? 0;
+        [$totalPrice, $penambahan, $pengurangan] = $product
+            ? $this->productPricing($product)
+            : [0, 0, 0];
+
+        $promo = (int) ($data['promo'] ?? $existing?->promo ?? 0);
+        $grand = max(0, $totalPrice + $penambahan - $promo - $pengurangan);
+
+        $data['total_price'] = $totalPrice;
+        $data['penambahan'] = $penambahan;
+        $data['pengurangan'] = $pengurangan;
+        $data['promo'] = $promo;
+        $data['grand_total'] = $grand;
+        $data['payment_dp_amount'] = (int) ($data['payment_dp_amount'] ?? 0);
+
+        $terms = $data['payment_simulation'] ?? [];
+        if (is_string($terms)) {
+            $decoded = json_decode($terms, true);
+            $terms = is_array($decoded) ? $decoded : [];
+        }
+        if (! is_array($terms)) {
+            $terms = [];
+        }
+
+        $normalized = [];
+        $termsTotal = 0;
+        foreach ($terms as $term) {
+            if (! is_array($term)) {
+                continue;
+            }
+            $nominal = (int) preg_replace('/[^\d]/', '', (string) ($term['nominal'] ?? 0));
+            $normalized[] = [
+                'persen' => $term['persen'] ?? null,
+                'nominal' => $nominal,
+                'bulan' => $term['bulan'] ?? null,
+                'tahun' => isset($term['tahun']) ? (int) $term['tahun'] : (int) now()->year,
+            ];
+            $termsTotal += $nominal;
+        }
+        $data['payment_simulation'] = $normalized;
+        $data['total_simulation'] = $data['payment_dp_amount'] + $termsTotal;
+
+        if (! empty($data['notes']) && ! str_contains((string) $data['notes'], '<')) {
+            $data['notes'] = '<p>'.e(trim((string) $data['notes'])).'</p>';
+        }
+
         if (! $existing) {
-            $data['user_id'] = $user?->id;
-            $base = $product?->name ?: 'simulasi';
+            $data['user_id'] = $data['user_id'] ?? $user?->id;
+            $prospect = ! empty($data['prospect_id']) ? Prospect::query()->find($data['prospect_id']) : null;
+            $base = $prospect?->name_event ?: ($product?->name ?: 'simulasi');
             $data['slug'] = SimulasiProduk::generateUniqueSlug((string) $base);
         }
 
         return $data;
+    }
+
+    /**
+     * @return array{0: int, 1: int, 2: int}
+     */
+    private function productPricing(Product $product): array
+    {
+        $totalPrice = (int) ($product->product_price ?? 0);
+        $penambahan = (int) ($product->penambahan_publish ?? 0);
+        $pengurangan = (int) ($product->pengurangan ?? 0);
+
+        if ($totalPrice === 0) {
+            $totalPrice = (int) $product->items()->sum('price_public');
+        }
+        if ($penambahan === 0) {
+            $penambahan = (int) $product->penambahanHarga()->sum('harga_publish');
+        }
+        if ($pengurangan === 0) {
+            $pengurangan = (int) $product->pengurangans()->sum('amount');
+        }
+
+        return [$totalPrice, $penambahan, $pengurangan];
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function simulasiProductOptions(): array
+    {
+        return Product::query()
+            ->orderBy('name')
+            ->get()
+            ->map(function (Product $product) {
+                [$total, $add, $cut] = $this->productPricing($product);
+
+                return [
+                    'value' => (string) $product->id,
+                    'label' => (string) $product->name,
+                    'total_price' => $total,
+                    'penambahan' => $add,
+                    'pengurangan' => $cut,
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    private function accountManagerOptions(): array
+    {
+        $query = User::query();
+        UserVisibility::constrainUsersQuery($query);
+
+        $amQuery = (clone $query)->role('Account Manager');
+        if ($amQuery->exists()) {
+            $query->role('Account Manager');
+        }
+
+        return $query->orderBy('name')->get(['id', 'name'])->map(fn (User $row) => [
+            'value' => (string) $row->id,
+            'label' => (string) $row->name,
+        ])->values()->all();
     }
 
     /**
@@ -923,6 +1076,22 @@ class MobileModuleService
         if ($detailed) {
             $payload['fields'] = $this->detailFields($def, $model);
             $payload['children'] = $this->children($key, $model);
+            $payload['values'] = $this->formValues($def, $model);
+            if ($key === 'simulasi' && $model instanceof SimulasiProduk) {
+                $payload['payment_simulation'] = collect($model->payment_simulation ?? [])
+                    ->map(function ($term) {
+                        $term = is_array($term) ? $term : [];
+
+                        return [
+                            'persen' => isset($term['persen']) ? (string) $term['persen'] : null,
+                            'nominal' => (int) ($term['nominal'] ?? 0),
+                            'bulan' => $term['bulan'] ?? null,
+                            'tahun' => isset($term['tahun']) ? (int) $term['tahun'] : null,
+                        ];
+                    })
+                    ->values()
+                    ->all();
+            }
         }
 
         return $payload;
@@ -957,6 +1126,83 @@ class MobileModuleService
         }
 
         return $rows;
+    }
+
+    /**
+     * @param  array<string, mixed>  $def
+     * @return array<string, string>
+     */
+    private function formValues(array $def, Model $model): array
+    {
+        $values = [];
+        foreach ($def['fields'] ?? [] as $field) {
+            $name = $field['name'] ?? null;
+            if (! is_string($name) || $name === '') {
+                continue;
+            }
+
+            $raw = $model->{$name} ?? null;
+            if ($raw === null || $raw === '') {
+                continue;
+            }
+
+            if ($name === 'notes') {
+                $plain = $this->plainText((string) $raw);
+                if ($plain) {
+                    $values[$name] = $plain;
+                }
+
+                continue;
+            }
+
+            if ($raw instanceof \DateTimeInterface) {
+                $values[$name] = $raw->format('Y-m-d');
+
+                continue;
+            }
+
+            if (is_bool($raw)) {
+                $values[$name] = $raw ? '1' : '0';
+
+                continue;
+            }
+
+            $values[$name] = (string) $raw;
+        }
+
+        return $values;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $fields
+     * @return list<array<string, mixed>>
+     */
+    private function ensureSimulasiProspectOption(array $fields, SimulasiProduk $record): array
+    {
+        $record->loadMissing('prospect:id,name_event');
+        if (! $record->prospect_id || ! $record->prospect) {
+            return $fields;
+        }
+
+        foreach ($fields as $index => $field) {
+            if (($field['name'] ?? '') !== 'prospect_id') {
+                continue;
+            }
+
+            $options = $field['options'] ?? [];
+            $exists = collect($options)->contains(
+                fn ($option) => (string) ($option['value'] ?? '') === (string) $record->prospect_id
+            );
+            if (! $exists) {
+                array_unshift($options, [
+                    'value' => (string) $record->prospect_id,
+                    'label' => (string) $record->prospect->name_event,
+                ]);
+                $fields[$index]['options'] = $options;
+            }
+        }
+
+        return $fields;
     }
 
     /**
@@ -1011,6 +1257,20 @@ class MobileModuleService
                     ];
                 })->values()->all()
                 : [],
+            'simulasi' => $model instanceof SimulasiProduk
+                ? collect($model->payment_simulation ?? [])->values()->map(function ($term, $index) {
+                    $term = is_array($term) ? $term : [];
+                    $bulan = trim((string) ($term['bulan'] ?? 'Termin'));
+                    $tahun = (string) ($term['tahun'] ?? '');
+
+                    return [
+                        'id' => $index + 1,
+                        'title' => trim($bulan.' '.$tahun) ?: 'Termin',
+                        'subtitle' => isset($term['persen']) ? $term['persen'].'%' : null,
+                        'amount' => (int) ($term['nominal'] ?? 0),
+                    ];
+                })->all()
+                : [],
             default => [],
         };
     }
@@ -1051,7 +1311,22 @@ class MobileModuleService
                 'label' => trim(($order->no_kontrak ? $order->no_kontrak.' · ' : '').($order->prospect?->name_event ?: 'Proyek #'.$order->id)),
             ])->values()->all(),
             'prospects' => $map(Prospect::query(), 'name_event'),
+            'open_prospects' => Prospect::query()
+                ->where(function ($query) {
+                    $query->whereDoesntHave('orders', function ($orderQuery) {
+                        $orderQuery->whereNotNull('status');
+                    });
+                })
+                ->orderBy('name_event')
+                ->get(['id', 'name_event'])
+                ->map(fn (Prospect $row) => [
+                    'value' => (string) $row->id,
+                    'label' => (string) $row->name_event,
+                ])
+                ->values()
+                ->all(),
             'products' => $map(Product::query(), 'name'),
+            'account_managers' => $this->accountManagerOptions(),
             'employees' => $map(Employee::query(), 'name'),
             'users' => User::query()
                 ->when($companyId, fn ($q) => $q->where('company_id', $companyId))
@@ -1157,8 +1432,32 @@ class MobileModuleService
             return $value->format('d M Y');
         }
         $text = $this->stringValue($value);
+        if ($format === 'html' || $this->looksLikeHtml($text)) {
+            $text = $this->plainText($text) ?? '';
+        }
 
         return $text !== '' ? $text : null;
+    }
+
+    private function looksLikeHtml(string $text): bool
+    {
+        return (bool) preg_match('/<\/?[a-z][\s\S]*>/i', $text);
+    }
+
+    private function plainText(?string $html): ?string
+    {
+        if ($html === null || trim($html) === '') {
+            return null;
+        }
+
+        $text = preg_replace('/<\s*br\s*\/?\s*>/i', "\n", $html) ?? $html;
+        $text = preg_replace('/<\/(p|div|li|h[1-6]|tr)>/i', "\n", $text) ?? $text;
+        $text = html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $text = preg_replace("/[ \t]+/u", ' ', $text) ?? $text;
+        $text = preg_replace("/\n{3,}/", "\n\n", $text) ?? $text;
+        $text = trim($text);
+
+        return $text === '' ? null : $text;
     }
 
     /**
@@ -1339,20 +1638,30 @@ class MobileModuleService
                 'subtitle_attr' => 'product.name',
                 'amount_attr' => 'grand_total',
                 'search' => ['customer_name', 'notes', 'contract_number'],
-                'with' => ['prospect:id,name_event', 'product:id,name'],
+                'with' => ['prospect:id,name_event', 'product:id,name', 'user:id,name'],
                 'fields' => [
-                    ['name' => 'prospect_id', 'label' => 'Prospek', 'type' => 'select', 'required' => true, 'options' => 'prospects', 'cast' => 'int'],
-                    ['name' => 'product_id', 'label' => 'Paket', 'type' => 'select', 'required' => true, 'options' => 'products', 'cast' => 'int'],
-                    ['name' => 'customer_name', 'label' => 'Nama klien', 'type' => 'text'],
-                    ['name' => 'notes', 'label' => 'Catatan', 'type' => 'textarea'],
+                    ['name' => 'product_id', 'label' => 'Paket dasar', 'type' => 'select', 'required' => true, 'options' => 'products', 'cast' => 'int', 'section' => 'Paket & harga', 'helper' => 'Harga otomatis mengikuti paket yang dipilih.'],
+                    ['name' => 'user_id', 'label' => 'Account Manager', 'type' => 'select', 'required' => true, 'options' => 'account_managers', 'cast' => 'int', 'section' => 'Paket & harga'],
+                    ['name' => 'prospect_id', 'label' => 'Prospek', 'type' => 'select', 'required' => true, 'options' => 'open_prospects', 'cast' => 'int', 'section' => 'Detail simulasi', 'helper' => 'Hanya prospek yang belum punya proyek.'],
+                    ['name' => 'contract_number', 'label' => 'Nomor kontrak / surat', 'type' => 'text', 'section' => 'Detail simulasi', 'helper' => 'Kosongkan untuk penomoran otomatis.'],
+                    ['name' => 'name_ttd', 'label' => 'Nama TTD', 'type' => 'text', 'section' => 'Detail simulasi'],
+                    ['name' => 'title_ttd', 'label' => 'Jabatan TTD', 'type' => 'text', 'section' => 'Detail simulasi'],
+                    ['name' => 'notes', 'label' => 'Catatan', 'type' => 'textarea', 'section' => 'Detail simulasi'],
+                    ['name' => 'payment_dp_amount', 'label' => 'Down Payment (DP)', 'type' => 'number', 'cast' => 'int', 'section' => 'Pola pembayaran'],
                 ],
                 'detail' => [
                     ['label' => 'Prospek', 'attr' => 'prospect.name_event'],
                     ['label' => 'Paket', 'attr' => 'product.name'],
-                    ['label' => 'Klien', 'attr' => 'customer_name'],
-                    ['label' => 'Total', 'attr' => 'grand_total', 'format' => 'money'],
+                    ['label' => 'Account Manager', 'attr' => 'user.name'],
+                    ['label' => 'Harga paket', 'attr' => 'total_price', 'format' => 'money'],
+                    ['label' => 'Penambahan', 'attr' => 'penambahan', 'format' => 'money'],
+                    ['label' => 'Pengurangan', 'attr' => 'pengurangan', 'format' => 'money'],
+                    ['label' => 'Grand total', 'attr' => 'grand_total', 'format' => 'money'],
+                    ['label' => 'Down Payment', 'attr' => 'payment_dp_amount', 'format' => 'money'],
                     ['label' => 'Nomor kontrak', 'attr' => 'contract_number'],
-                    ['label' => 'Catatan', 'attr' => 'notes'],
+                    ['label' => 'Nama TTD', 'attr' => 'name_ttd'],
+                    ['label' => 'Jabatan TTD', 'attr' => 'title_ttd'],
+                    ['label' => 'Catatan', 'attr' => 'notes', 'format' => 'html'],
                 ],
             ],
             'payment_methods' => [

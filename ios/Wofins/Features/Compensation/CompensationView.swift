@@ -74,7 +74,7 @@ struct CompensationView: View {
             data = try await appState.api.compensation()
             errorMessage = nil
         } catch {
-            errorMessage = error.localizedDescription
+            APILoadFailure.assign(error, to: &errorMessage)
         }
     }
 }

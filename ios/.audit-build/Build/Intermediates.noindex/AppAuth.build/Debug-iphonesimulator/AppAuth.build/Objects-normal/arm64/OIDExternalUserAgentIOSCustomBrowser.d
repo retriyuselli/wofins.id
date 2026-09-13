@@ -1,0 +1,8 @@
+dependencies: \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuth/iOS/OIDExternalUserAgentIOSCustomBrowser.m \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/Build/Intermediates.noindex/AppAuth.build/Debug-iphonesimulator/AppAuth.build/DerivedSources/resource_bundle_accessor.h \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/System/Library/Frameworks/Foundation.framework/Modules/module.modulemap \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/usr/include/DarwinFoundation1.modulemap \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuth/iOS/OIDExternalUserAgentIOSCustomBrowser.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/Build/Intermediates.noindex/GeneratedModuleMaps-iphonesimulator/AppAuthCore.modulemap \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/System/Library/Frameworks/UIKit.framework/Modules/module.modulemap

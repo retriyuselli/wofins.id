@@ -1,54 +1,6 @@
 import SwiftUI
 import PhotosUI
 
-struct LegacyAccountView: View {
-    @EnvironmentObject private var appState: AppState
-
-    var body: some View {
-        NavigationStack {
-            List {
-                if let user = appState.currentUser {
-                    Section {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(user.name).font(.poppins(.title3, weight: .bold))
-                            Text(user.email).foregroundStyle(WofinsTheme.muted)
-                            if let phone = user.phone_number, !phone.isEmpty {
-                                Text(phone).font(.poppins(.subheadline))
-                            }
-                        }
-                        .padding(.vertical, 4)
-                    }
-
-                    Section("Akun") {
-                        NavigationLink("Edit profil") {
-                            EditProfileView()
-                        }
-                        NavigationLink("Ganti password") {
-                            ChangePasswordView()
-                        }
-                    }
-
-                    Section("SDM") {
-                        NavigationLink {
-                            CompensationView()
-                        } label: {
-                            Label("Kompensasi", systemImage: "banknote.fill")
-                        }
-                    }
-                }
-
-                Section {
-                    Button(role: .destructive) {
-                        Task { await appState.logout() }
-                    } label: {
-                        Label("Logout", systemImage: "rectangle.portrait.and.arrow.right")
-                    }
-                }
-            }
-            .navigationTitle("Akun")
-        }
-    }
-}
 struct EditProfileView: View {
     @EnvironmentObject private var appState: AppState
     @Environment(\.dismiss) private var dismiss
@@ -230,8 +182,10 @@ struct EditProfileView: View {
             try? await Task.sleep(nanoseconds: 600_000_000)
             dismiss()
         } catch {
-            errorMessage = error.localizedDescription
-            successMessage = nil
+            if let message = APILoadFailure.userMessage(for: error) {
+                errorMessage = message
+                successMessage = nil
+            }
         }
     }
 
@@ -253,7 +207,7 @@ struct EditProfileView: View {
             successMessage = "Foto profil diperbarui."
             errorMessage = nil
         } catch {
-            errorMessage = error.localizedDescription
+            APILoadFailure.assign(error, to: &errorMessage)
         }
     }
 
@@ -341,7 +295,7 @@ struct ChangePasswordView: View {
             )
             dismiss()
         } catch {
-            errorMessage = error.localizedDescription
+            APILoadFailure.assign(error, to: &errorMessage)
         }
     }
 }

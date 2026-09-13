@@ -1,0 +1,4 @@
+module GoogleSignIn {
+umbrella header "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/GoogleSignIn-iOS/GoogleSignIn/Sources/Public/GoogleSignIn/GoogleSignIn.h"
+export *
+}

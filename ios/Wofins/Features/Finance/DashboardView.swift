@@ -91,7 +91,7 @@ struct DashboardView: View {
                 Image(systemName: "arrow.clockwise")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(.white)
-                    .symbolEffect(.rotate, options: .repeating, isActive: isLoading)
+                    .modifier(ReloadRotateEffect(isActive: isLoading))
                     .frame(width: 40, height: 40)
                     .background(.white.opacity(isLoading ? 0.22 : 0.11), in: Circle())
             }
@@ -348,6 +348,7 @@ struct DashboardView: View {
             Text(message)
                 .font(.poppins(.caption))
                 .foregroundStyle(WofinsTheme.muted)
+                .fixedSize(horizontal: false, vertical: true)
             Button("Coba lagi") { reloadToken += 1 }
                 .font(.poppins(.subheadline, weight: .semibold))
                 .foregroundStyle(.white)
@@ -362,8 +363,13 @@ struct DashboardView: View {
 
     private func refreshDashboard() async {
         guard appState.allows(.basicFinance) else { return }
+        let requestID = reloadToken
         isLoading = true
-        defer { isLoading = false }
+        defer {
+            if requestID == reloadToken {
+                isLoading = false
+            }
+        }
 
         async let profile: Void = appState.refreshMe()
         do {
@@ -371,13 +377,31 @@ struct DashboardView: View {
                 from: period.fromString,
                 to: period.toString
             )
+            guard requestID == reloadToken else { return }
             errorMessage = nil
-        } catch is CancellationError {
-            return
         } catch {
-            errorMessage = error.localizedDescription
+            guard requestID == reloadToken else { return }
+            if let message = APILoadFailure.userMessage(for: error) {
+                errorMessage = message
+            }
         }
-        await profile
+        if !Task.isCancelled {
+            await profile
+        }
+    }
+}
+
+private struct ReloadRotateEffect: ViewModifier {
+    let isActive: Bool
+
+    func body(content: Content) -> some View {
+        if #available(iOS 18.0, *) {
+            content.symbolEffect(.rotate, options: .repeating, isActive: isActive)
+        } else {
+            content
+                .rotationEffect(.degrees(isActive ? 360 : 0))
+                .animation(isActive ? .linear(duration: 0.9).repeatForever(autoreverses: false) : .default, value: isActive)
+        }
     }
 }
 

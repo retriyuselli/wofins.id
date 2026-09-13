@@ -1,0 +1,4 @@
+module AppCheckCore {
+umbrella header "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/AppCheckCore.h"
+export *
+}

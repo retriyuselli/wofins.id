@@ -96,8 +96,20 @@ class UserResource extends JsonResource
             'name' => $company->company_name,
             'inisial' => $company->inisial_wo,
             'logo_url' => $logoUrl,
+            'email' => $company->email,
+            'phone' => $company->phone,
+            'address' => $company->address,
+            'city' => $company->city,
+            'province' => $company->province,
+            'website' => $company->website,
+            'description' => $company->description,
+            'owner_name' => $company->owner_name,
+            'jabatan_owner' => $company->jabatan_owner,
+            'established_year' => $company->established_year,
+            'is_active' => $company->isActive(),
             'subscription_plan' => $company->subscription_plan,
             'subscription_label' => \App\Support\PricingPlans::shortLabel($company->subscription_plan),
+            'subscription_expires_at' => optional($company->subscription_expires_at)?->toIso8601String(),
         ];
     }
 }

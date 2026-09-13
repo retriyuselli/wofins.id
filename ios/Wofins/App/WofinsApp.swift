@@ -1,39 +1,69 @@
 import SwiftUI
 
+enum SplashTiming {
+    /// Durasi minimum overlay. Reduce Motion hampir langsung; selain itu cukup untuk logo tanpa menahan 3 detik.
+    static func minimumHoldNanoseconds(reduceMotion: Bool) -> UInt64 {
+        reduceMotion ? 120_000_000 : 800_000_000
+    }
+}
+
 @main
 struct WofinsApp: App {
     @StateObject private var appState = AppState()
-    @State private var showsAnimatedSplash = true
 
     var body: some Scene {
         WindowGroup {
-            ZStack {
-                RootView()
-                    .environmentObject(appState)
+            AppBootstrap()
+                .environmentObject(appState)
+        }
+    }
+}
 
-                if showsAnimatedSplash {
-                    AnimatedSplashView()
-                        .transition(.opacity)
-                        .zIndex(10)
-                }
+private struct AppBootstrap: View {
+    @EnvironmentObject private var appState: AppState
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var showsAnimatedSplash = true
+
+    var body: some View {
+        ZStack {
+            RootView()
+
+            if showsAnimatedSplash {
+                AnimatedSplashView(reduceMotion: reduceMotion)
+                    .transition(reduceMotion ? .identity : .opacity)
+                    .zIndex(10)
             }
-            .font(.poppins(.body))
-            .tint(WofinsTheme.accent)
-            .task {
-                guard showsAnimatedSplash else { return }
-                try? await Task.sleep(for: .seconds(3.2))
-                withAnimation(.easeInOut(duration: 0.7)) {
-                    showsAnimatedSplash = false
-                }
-            }
-            .onOpenURL { url in
-                _ = GoogleSignInService.shared.handle(url: url)
+        }
+        .font(.poppins(.body))
+        .tint(WofinsTheme.accent)
+        .preferredColorScheme(.light)
+        .task {
+            await dismissSplashWhenReady()
+        }
+        .onOpenURL { url in
+            _ = GoogleSignInService.shared.handle(url: url)
+        }
+    }
+
+    private func dismissSplashWhenReady() async {
+        let hold = SplashTiming.minimumHoldNanoseconds(reduceMotion: reduceMotion)
+        try? await Task.sleep(nanoseconds: hold)
+        while appState.isBootstrapping {
+            try? await Task.sleep(nanoseconds: 50_000_000)
+        }
+        if reduceMotion {
+            showsAnimatedSplash = false
+        } else {
+            withAnimation(.easeInOut(duration: 0.35)) {
+                showsAnimatedSplash = false
             }
         }
     }
 }
 
 private struct AnimatedSplashView: View {
+    let reduceMotion: Bool
+
     @State private var logoScale: CGFloat = 0.82
     @State private var logoOpacity = 0.0
     @State private var glowScale: CGFloat = 0.6
@@ -74,15 +104,24 @@ private struct AnimatedSplashView: View {
             }
         }
         .onAppear {
-            withAnimation(.easeInOut(duration: 1.45)) {
+            if reduceMotion {
+                logoScale = 1
+                logoOpacity = 1
+                glowScale = 1
+                glowOpacity = 1
+                textOffset = 0
+                textOpacity = 1
+                return
+            }
+            withAnimation(.easeInOut(duration: 0.7)) {
                 logoScale = 1
                 logoOpacity = 1
             }
-            withAnimation(.easeInOut(duration: 1.8)) {
+            withAnimation(.easeInOut(duration: 0.85)) {
                 glowScale = 1
                 glowOpacity = 1
             }
-            withAnimation(.easeInOut(duration: 0.9).delay(0.65)) {
+            withAnimation(.easeInOut(duration: 0.45).delay(0.2)) {
                 textOffset = 0
                 textOpacity = 1
             }

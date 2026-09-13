@@ -42,8 +42,12 @@ class MobileModuleController extends Controller
 
     public function form(Request $request, string $key): JsonResponse
     {
+        $data = $request->validate([
+            'id' => ['nullable', 'integer', 'min:1'],
+        ]);
+
         return response()->json([
-            'data' => $this->modules->form($request->user(), $key),
+            'data' => $this->modules->form($request->user(), $key, isset($data['id']) ? (int) $data['id'] : null),
         ]);
     }
 

@@ -1,0 +1,27 @@
+dependencies: \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDAuthorizationService.m \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/Build/Intermediates.noindex/AppAuth.build/Debug-iphonesimulator/AppAuthCore.build/DerivedSources/resource_bundle_accessor.h \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/System/Library/Frameworks/Foundation.framework/Modules/module.modulemap \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDAuthorizationService.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDAuthorizationRequest.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDExternalUserAgentRequest.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDResponseTypes.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDScopes.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDAuthorizationResponse.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDDefines.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDEndSessionRequest.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDEndSessionResponse.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDErrorUtilities.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDError.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDExternalUserAgent.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDExternalUserAgentSession.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDIDToken.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDRegistrationRequest.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDRegistrationResponse.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDServiceConfiguration.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDServiceDiscovery.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDTokenRequest.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDGrantTypes.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDTokenResponse.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDURLQueryComponent.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore/OIDURLSessionProvider.h

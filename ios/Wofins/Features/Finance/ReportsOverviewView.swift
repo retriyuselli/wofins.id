@@ -279,7 +279,11 @@ struct ReportsView: View {
     private func load() async {
         isLoading = true; defer { isLoading = false }
         do { report = try await appState.api.financeReportSummary(from: period.fromString, to: period.toString, mode: mode); errorMessage = nil }
-        catch { errorMessage = error.localizedDescription }
+        catch {
+            if let message = APILoadFailure.userMessage(for: error) {
+                errorMessage = message
+            }
+        }
     }
 
     private func downloadPdf() async {
@@ -290,7 +294,7 @@ struct ReportsView: View {
             let data = try await appState.api.financeReportPdf(from: period.fromString, to: period.toString, mode: mode)
             try shareFile(data: data, fileName: reportFileName(ext: "pdf"))
         } catch {
-            notice = error.localizedDescription
+            APILoadFailure.assign(error, to: &notice)
         }
     }
 
@@ -302,7 +306,7 @@ struct ReportsView: View {
             let data = try await appState.api.financeReportExcel(from: period.fromString, to: period.toString, mode: mode)
             try shareFile(data: data, fileName: reportFileName(ext: "xlsx"))
         } catch {
-            notice = error.localizedDescription
+            APILoadFailure.assign(error, to: &notice)
         }
     }
 

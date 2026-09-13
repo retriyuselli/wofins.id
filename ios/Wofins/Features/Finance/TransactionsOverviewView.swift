@@ -348,7 +348,11 @@ struct TransactionsView: View {
             let response = try await appState.api.financeTransactions(from: period.fromString, to: period.toString,
                 type: nil, direction: nil, limit: 200)
             items = response.data; meta = response.meta; errorMessage = nil
-        } catch { errorMessage = error.localizedDescription }
+        } catch {
+            if let message = APILoadFailure.userMessage(for: error) {
+                errorMessage = message
+            }
+        }
         if catalog.isEmpty {
             catalog = (try? await appState.api.moduleCatalog()) ?? []
         }
@@ -598,7 +602,7 @@ struct TransactionCategoryView: View {
             items = response.data
             errorMessage = nil
         } catch {
-            errorMessage = error.localizedDescription
+            APILoadFailure.assign(error, to: &errorMessage)
         }
     }
 }
@@ -894,7 +898,9 @@ struct PaymentProofView: View {
             image = UIImage(data: data)
             failed = image == nil
         } catch {
-            failed = true
+            if !APILoadFailure.isCancellation(error) {
+                failed = true
+            }
         }
     }
 }

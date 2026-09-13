@@ -1,0 +1,4 @@
+module AppAuth {
+umbrella "/Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.p0p1-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuth"
+export *
+}

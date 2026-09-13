@@ -2,8 +2,8 @@ import SwiftUI
 
 struct AccountView: View {
     @EnvironmentObject private var appState: AppState
-    @State private var notice: String?
     @State private var confirmLogout = false
+    @State private var showPrivacy = false
 
     private var user: UserProfile? { appState.currentUser }
     private var initials: String {
@@ -25,7 +25,7 @@ struct AccountView: View {
                         securitySection
                         helpSection
                         logoutButton
-                        Text("Versi 1.0.0").font(.poppins(.caption2)).foregroundStyle(WofinsTheme.muted)
+                        Text(AppRelease.label).font(.poppins(.caption2)).foregroundStyle(WofinsTheme.muted)
                     }
                     .padding(.top, 16)
                     .padding(.bottom, 28)
@@ -34,12 +34,12 @@ struct AccountView: View {
             }
             .background(WofinsTheme.background.ignoresSafeArea())
             .toolbar(.hidden, for: .navigationBar)
-            .alert("Informasi", isPresented: Binding(get: { notice != nil }, set: { if !$0 { notice = nil } })) {
-                Button("OK", role: .cancel) {}
-            } message: { Text(notice ?? "") }
             .confirmationDialog("Keluar dari akun?", isPresented: $confirmLogout, titleVisibility: .visible) {
                 Button("Keluar", role: .destructive) { Task { await appState.logout() } }
                 Button("Batal", role: .cancel) {}
+            }
+            .sheet(isPresented: $showPrivacy) {
+                PrivacyStatementView()
             }
         }
     }
@@ -48,8 +48,18 @@ struct AccountView: View {
         HStack(spacing: 12) {
             WofinsCompactMark()
             VStack(alignment: .leading, spacing: 2) { Text(user?.name ?? "Pengguna WOFINS").font(.poppins(.headline, weight: .bold)).foregroundStyle(.white).lineLimit(1); Text(user?.companyDisplayName ?? user?.roleLabel ?? "Akun").font(.poppins(.caption)).foregroundStyle(.white.opacity(0.72)).lineLimit(1) }
-            Spacer()
-            Button { notice = "Pengaturan tambahan akan tersedia pada pembaruan berikutnya." } label: { Image(systemName: "gearshape.fill").font(.system(size: 17, weight: .bold)).foregroundStyle(.white).frame(width: 40, height: 40).background(.white.opacity(0.11), in: Circle()) }
+            Spacer(minLength: 8)
+            NavigationLink {
+                AppSettingsView()
+            } label: {
+                Image(systemName: "gearshape.fill")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 40, height: 40)
+                    .background(.white.opacity(0.11), in: Circle())
+            }
+            .buttonStyle(.plain)
+            .fixedSize()
         }
         .padding(.horizontal, 20).padding(.vertical, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -72,23 +82,19 @@ struct AccountView: View {
     }
 
     private var subscriptionCard: some View {
-        Button {
-            if let company = user?.company {
-                let plan = company.subscription_label ?? company.subscription_plan ?? "Paket belum diatur"
-                notice = "\(company.name ?? "Perusahaan")\n\(plan)"
-            } else {
-                notice = "Akun ini belum terhubung ke company. Data keuangan tidak ditampilkan lintas tenant."
-            }
+        NavigationLink {
+            SubscriptionPlanView()
         } label: {
             HStack(spacing: 14) {
                 Image(systemName: "crown.fill").font(.system(size: 22, weight: .bold)).foregroundStyle(WofinsTheme.yellow)
                     .frame(width: 50, height: 50).background(.white.opacity(0.1), in: Circle())
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Paket Aktif").font(.poppins(.caption)).foregroundStyle(.white.opacity(0.72))
-                    Text(user?.company?.subscription_label ?? "Belum terhubung company").font(.poppins(.headline, weight: .bold)).foregroundStyle(.white).lineLimit(1)
+                    Text(user?.company?.subscription_label ?? "Belum terhubung company").font(.poppins(.headline, weight: .bold)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.8)
                     Text(user?.company?.name ?? (user?.is_expired == true ? "Masa aktif akun berakhir" : "Akun tanpa company"))
                         .font(.poppins(.caption2, weight: .semibold)).foregroundStyle(user?.company == nil || user?.is_expired == true ? WofinsTheme.yellow : Color.green.opacity(0.9)).lineLimit(1)
                 }
+                .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
                 Spacer(); Image(systemName: "chevron.right").foregroundStyle(.white.opacity(0.75))
             }.padding(18)
                 .background(LinearGradient(colors: [WofinsTheme.primary, WofinsTheme.primaryLight], startPoint: .leading, endPoint: .trailing), in: RoundedRectangle(cornerRadius: 20))
@@ -99,17 +105,7 @@ struct AccountView: View {
         settingsGroup("Akun & Perusahaan") {
             NavigationLink { EditProfileView() } label: { settingRow("Edit Profil", "person.fill") }
             Divider().padding(.leading, 47)
-            Button {
-                if let company = user?.company {
-                    notice = [
-                        company.name,
-                        company.subscription_label,
-                        user?.email,
-                    ].compactMap { $0 }.joined(separator: "\n")
-                } else {
-                    notice = "Akun ini belum terhubung ke company."
-                }
-            } label: { settingRow("Informasi Perusahaan", "building.2.fill") }
+            NavigationLink { CompanyInfoView() } label: { settingRow("Informasi Perusahaan", "building.2.fill") }
             Divider().padding(.leading, 47)
             NavigationLink { ModulesHubView() } label: { settingRow("Semua Modul", "square.grid.2x2.fill") }
             Divider().padding(.leading, 47)
@@ -123,9 +119,9 @@ struct AccountView: View {
         settingsGroup("Keamanan") {
             NavigationLink { ChangePasswordView() } label: { settingRow("Ubah Password", "lock.fill") }
             Divider().padding(.leading, 47)
-            Button { notice = "Face ID digunakan pada alur masuk aman di perangkat yang mendukung." } label: { settingRow("Face ID", "faceid", badge: "Tersedia") }
+            NavigationLink { FaceIDSettingsView() } label: { settingRow("Face ID", "faceid", badge: "Tersedia") }
             Divider().padding(.leading, 47)
-            Button { notice = "Manajemen perangkat memerlukan endpoint daftar token perangkat." } label: { settingRow("Perangkat Terhubung", "laptopcomputer.and.iphone") }
+            NavigationLink { ConnectedDevicesView() } label: { settingRow("Perangkat Terhubung", "laptopcomputer.and.iphone") }
             Divider().padding(.leading, 47)
             NavigationLink { CompensationView() } label: {
                 settingRow("Kompensasi", "banknote.fill", badge: appState.allows(.payroll) ? nil : "Pro")
@@ -171,11 +167,11 @@ struct AccountView: View {
 
     private var helpSection: some View {
         settingsGroup("Bantuan") {
-            Button { notice = "Pusat Bantuan WOFINS akan segera tersedia di aplikasi." } label: { settingRow("Pusat Bantuan", "questionmark.circle.fill") }
+            NavigationLink { HelpCenterView() } label: { settingRow("Pusat Bantuan", "questionmark.circle.fill") }
             Divider().padding(.leading, 47)
-            Button { notice = "Dokumen Kebijakan Privasi akan dihubungkan ke halaman resmi WOFINS." } label: { settingRow("Kebijakan Privasi", "hand.raised.fill") }
+            Button { showPrivacy = true } label: { settingRow("Kebijakan Privasi", "hand.raised.fill") }
             Divider().padding(.leading, 47)
-            Button { notice = "WOFINS — Wedding Organizer Financial System." } label: { settingRow("Tentang WOFINS", "info.circle.fill") }
+            NavigationLink { AboutWofinsView() } label: { settingRow("Tentang WOFINS", "info.circle.fill") }
         }
     }
 
@@ -190,8 +186,12 @@ struct AccountView: View {
         HStack(spacing: 12) {
             Image(systemName: icon).font(.system(size: 14, weight: .semibold)).foregroundStyle(WofinsTheme.primary)
                 .frame(width: 35, height: 35).background(WofinsTheme.primary.opacity(0.09), in: Circle())
-            Text(title).font(.poppins(.subheadline)).foregroundStyle(WofinsTheme.ink)
-            Spacer()
+            Text(title)
+                .font(.poppins(.subheadline))
+                .foregroundStyle(WofinsTheme.ink)
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+                .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
             if let badge {
                 Text(badge)
                     .font(.poppins(.caption2, weight: .semibold))
@@ -199,6 +199,7 @@ struct AccountView: View {
                     .padding(.horizontal, 9)
                     .padding(.vertical, 5)
                     .background((badge == "Tersedia" ? WofinsTheme.success : WofinsTheme.yellow).opacity(0.18), in: Capsule())
+                    .fixedSize()
             }
             Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(WofinsTheme.muted)
         }.padding(.vertical, 8).contentShape(Rectangle())

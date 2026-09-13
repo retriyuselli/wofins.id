@@ -34,6 +34,7 @@ Route::prefix('v1')->group(function () {
         Route::put('/me/password', [MeController::class, 'updatePassword'])
             ->middleware('throttle:5,1')
             ->name('api.v1.me.password');
+        Route::get('/me/devices', [MeController::class, 'devices'])->name('api.v1.me.devices');
 
         Route::get('/me/compensation', [MeController::class, 'compensation'])
             ->middleware('pro.feature:payroll')

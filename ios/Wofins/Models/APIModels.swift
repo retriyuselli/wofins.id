@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 struct MessageResponse: Decodable {
     let message: String?
@@ -28,6 +29,14 @@ struct PageMeta: Decodable {
     let last_page: Int?
     let per_page: Int?
     let total: Int?
+
+    var canLoadMore: Bool { ListPaging.canLoadMore(current: current_page, last: last_page) }
+}
+
+enum ListPaging {
+    static func canLoadMore(current: Int?, last: Int?) -> Bool {
+        (current ?? 1) < max(last ?? 1, 1)
+    }
 }
 
 struct LoginResponse: Decodable {
@@ -149,6 +158,11 @@ enum PlanFeature: String, CaseIterable {
         }
     }
 
+    static func title(for raw: String) -> String {
+        PlanFeature(rawValue: raw)?.screenTitle
+            ?? raw.replacingOccurrences(of: "_", with: " ").capitalized
+    }
+
     func upgradeMessage(planLabel: String?) -> String {
         let plan = planLabel ?? "paket saat ini"
         switch self {
@@ -176,8 +190,49 @@ struct UserCompany: Decodable, Equatable {
     let name: String?
     let inisial: String?
     let logo_url: String?
+    let email: String?
+    let phone: String?
+    let address: String?
+    let city: String?
+    let province: String?
+    let website: String?
+    let description: String?
+    let owner_name: String?
+    let jabatan_owner: String?
+    let established_year: Int?
+    let is_active: Bool?
     let subscription_plan: String?
     let subscription_label: String?
+    let subscription_expires_at: String?
+
+    var locationLine: String? {
+        let parts = [city, province]
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        return parts.isEmpty ? nil : parts.joined(separator: ", ")
+    }
+}
+
+struct AuthSessionDevice: Decodable, Identifiable, Equatable {
+    let id: Int
+    let name: String?
+    let last_used_at: String?
+    let created_at: String?
+    let is_current: Bool?
+
+    var isCurrent: Bool { is_current == true }
+
+    var displayName: String {
+        switch name {
+        case "ios-wofins": return "iPhone (email)"
+        case "ios-wofins-google": return "iPhone (Google)"
+        case "ios-app": return "Aplikasi iOS"
+        case let value? where !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty:
+            return value
+        default:
+            return "Perangkat"
+        }
+    }
 }
 
 struct UpdateProfilePayload: Encodable {
@@ -758,6 +813,34 @@ enum MoneyFormat {
         return formatter.string(from: NSNumber(value: number)) ?? "Rp\(number)"
     }
 
+    /// `14790000` → `14.790.000` (pemisah ribuan Indonesia).
+    static func grouped(_ value: Int) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.locale = Locale(identifier: "id_ID")
+        formatter.maximumFractionDigits = 0
+        formatter.usesGroupingSeparator = true
+        return formatter.string(from: NSNumber(value: value)) ?? "\(value)"
+    }
+
+    static func digits(in raw: String) -> String {
+        raw.filter(\.isNumber)
+    }
+
+    static func groupedInput(_ raw: String) -> String {
+        let digits = digits(in: raw)
+        guard !digits.isEmpty else { return "" }
+        guard let value = Int(digits) else { return digits }
+        return grouped(value)
+    }
+
+    static func groupedBinding(_ source: Binding<String>) -> Binding<String> {
+        Binding(
+            get: { groupedInput(source.wrappedValue) },
+            set: { source.wrappedValue = digits(in: $0) }
+        )
+    }
+
     static func dateRange(_ from: String, _ to: String) -> String {
         let parsedFrom = parseISO(from)
         let parsedTo = parseISO(to)
@@ -968,6 +1051,8 @@ struct ModuleRecord: Decodable, Identifiable {
     let date: String?
     let fields: [ModuleFieldRow]?
     let children: [ModuleRecord]?
+    let values: [String: String]?
+    let payment_simulation: [SimulasiPaymentTerm]?
 
     var displayTitle: String { title?.isEmpty == false ? title! : "#\(id)" }
 }
@@ -977,12 +1062,19 @@ struct ModuleFieldRow: Decodable, Identifiable, Hashable {
     let value: String?
 
     var id: String { label }
+
+    var displayText: String {
+        let plain = HTMLText.plain(value)
+        return plain.isEmpty ? "—" : plain
+    }
 }
 
 struct ModuleFormSchema: Decodable {
     let title: String?
     let can_create: Bool?
     let fields: [ModuleFormField]?
+    let defaults: [String: String]?
+    let months: [ModuleFormOption]?
 }
 
 struct ModuleFormField: Decodable, Identifiable, Hashable {
@@ -991,17 +1083,89 @@ struct ModuleFormField: Decodable, Identifiable, Hashable {
     let type: String?
     let required: Bool?
     let placeholder: String?
+    let helper: String?
+    let readonly: Bool?
+    let section: String?
     let options: [ModuleFormOption]?
 
     var id: String { name }
     var isRequired: Bool { required ?? false }
     var fieldType: String { type ?? "text" }
+
+    /// Number fields that represent money should show thousand separators.
+    var usesThousandSeparator: Bool {
+        let key = "\(name) \(label)".lowercased()
+        let skip = ["pax", "tahun", "bulan", "year", "month", "qty", "quantity", "stok", "stock", "persentase", "percent"]
+        if skip.contains(where: { key.contains($0) }) { return false }
+        let money = ["nominal", "amount", "harga", "price", "saldo", "gaji", "tunjangan", "pengurangan", "bonus", "jumlah", "target", "pencapaian", "dp", "payment", "transfer"]
+        return money.contains(where: { key.contains($0) })
+    }
 }
 
 struct ModuleFormOption: Decodable, Identifiable, Hashable {
     let value: String
     let label: String
+    let total_price: Int?
+    let penambahan: Int?
+    let pengurangan: Int?
+
     var id: String { value }
+}
+
+struct CreateSimulasiPayload: Encodable {
+    let product_id: Int
+    let prospect_id: Int
+    let user_id: Int?
+    let contract_number: String?
+    let name_ttd: String?
+    let title_ttd: String?
+    let notes: String?
+    let payment_dp_amount: Int
+    let payment_simulation: [SimulasiPaymentTermPayload]
+}
+
+struct SimulasiPaymentTermPayload: Encodable {
+    let persen: String?
+    let nominal: Int
+    let bulan: String?
+    let tahun: Int
+}
+
+struct SimulasiPaymentTerm: Decodable {
+    let persen: String?
+    let nominal: Int?
+    let bulan: String?
+    let tahun: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case persen, nominal, bulan, tahun
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        if let text = try? container.decode(String.self, forKey: .persen) {
+            persen = text
+        } else if let number = try? container.decode(Double.self, forKey: .persen) {
+            persen = String(number)
+        } else {
+            persen = nil
+        }
+        if let number = try? container.decode(Int.self, forKey: .nominal) {
+            nominal = number
+        } else if let text = try? container.decode(String.self, forKey: .nominal) {
+            nominal = Int(text.filter(\.isNumber))
+        } else {
+            nominal = nil
+        }
+        bulan = try container.decodeIfPresent(String.self, forKey: .bulan)
+        if let number = try? container.decode(Int.self, forKey: .tahun) {
+            tahun = number
+        } else if let text = try? container.decode(String.self, forKey: .tahun) {
+            tahun = Int(text.filter(\.isNumber))
+        } else {
+            tahun = nil
+        }
+    }
 }
 
 struct JSONDictionary: Encodable {
@@ -1019,5 +1183,24 @@ struct JSONDictionary: Encodable {
         init(stringValue: String) { self.stringValue = stringValue }
         var intValue: Int? { nil }
         init?(intValue: Int) { return nil }
+    }
+}
+
+enum HTMLText {
+    static func plain(_ raw: String?) -> String {
+        guard var text = raw, !text.isEmpty else { return "" }
+        guard text.contains("<") else { return text.trimmingCharacters(in: .whitespacesAndNewlines) }
+
+        text = text.replacingOccurrences(of: #"</p>|</div>|<br\s*/?>"# , with: "\n", options: .regularExpression)
+        text = text.replacingOccurrences(of: #"<[^>]+>"#, with: "", options: .regularExpression)
+        text = text
+            .replacingOccurrences(of: "&nbsp;", with: " ")
+            .replacingOccurrences(of: "&amp;", with: "&")
+            .replacingOccurrences(of: "&lt;", with: "<")
+            .replacingOccurrences(of: "&gt;", with: ">")
+            .replacingOccurrences(of: "&quot;", with: "\"")
+            .replacingOccurrences(of: "&#39;", with: "'")
+        text = text.replacingOccurrences(of: #"[ \t]+"# , with: " ", options: .regularExpression)
+        return text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

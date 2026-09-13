@@ -1,0 +1,26 @@
+dependencies: \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/AppAttestProvider/GACAppAttestProvider.m \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppAttestProvider.h \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/System/Library/Frameworks/Foundation.framework/Modules/module.modulemap \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/usr/include/DarwinFoundation1.modulemap \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppCheckProvider.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppCheckAvailability.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/AppAttestProvider/DCAppAttestService+GACAppAttestService.h \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/System/Library/Frameworks/DeviceCheck.framework/Modules/module.modulemap \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/AppAttestProvider/GACAppAttestService.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/promises/Sources/FBLPromises/include/module.modulemap \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/AppAttestProvider/API/GACAppAttestAPIService.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/AppAttestProvider/API/GACAppAttestAttestationResponse.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/AppAttestProvider/GACAppAttestProviderState.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/AppAttestProvider/Storage/GACAppAttestArtifactStorage.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/AppAttestProvider/Storage/GACAppAttestKeyIDStorage.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Core/GACAppCheckLogger+Internal.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppCheckErrors.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppCheckLogger.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/GACAppCheckToken.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/_GACAppCheckAPIService.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/_GACAppCheckBackoffWrapper.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Core/Utils/GACAppCheckCryptoUtils.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/AppAttestProvider/Errors/GACAppAttestRejectionError.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Core/Errors/GACAppCheckHTTPError.h \
+  /Applications/XAMPP/xamppfiles/htdocs/application/wofins/ios/.audit-build/SourcePackages/checkouts/app-check/AppCheckCore/Sources/Public/AppCheckCore/_GACAppCheckErrorUtil.h
