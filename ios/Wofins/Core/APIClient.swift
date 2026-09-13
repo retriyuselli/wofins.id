@@ -226,36 +226,7 @@ final class APIClient {
     }
 
     func financeProjectInvoice(id: Int) async throws -> Data {
-        guard let url = URL(string: APIConfig.baseURL.absoluteString + APIConfig.apiPrefix + "/finance/projects/\(id)/invoice") else {
-            throw APIError.invalidURL
-        }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.timeoutInterval = 120
-        request.setValue("application/pdf", forHTTPHeaderField: "Accept")
-        guard let token, !token.isEmpty else { throw APIError.unauthorized }
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-
-        let data: Data
-        let response: URLResponse
-        do {
-            (data, response) = try await session.data(for: request)
-        } catch {
-            throw APIError.transport(error)
-        }
-
-        guard let http = response as? HTTPURLResponse else {
-            throw APIError.message("Respons tidak valid.")
-        }
-        if http.statusCode == 401 {
-            onUnauthorized?()
-            throw APIError.unauthorized
-        }
-        if !(200...299).contains(http.statusCode) {
-            throw APIError.http(http.statusCode, nil)
-        }
-        return data
+        try await fetchPDF(path: "/finance/projects/\(id)/invoice")
     }
 
     func financeProduct(id: Int) async throws -> FinanceProductDetail {
@@ -485,6 +456,10 @@ final class APIClient {
         return envelope.data
     }
 
+    func moduleDraftKontrakPdf(id: Int) async throws -> Data {
+        try await fetchPDF(path: "/modules/simulasi/\(id)/draft-kontrak")
+    }
+
     // MARK: - Core request
 
     private struct EmptyBody: Encodable {}
@@ -558,6 +533,44 @@ final class APIClient {
         request.httpBody = body
 
         return try await perform(request)
+    }
+
+    private func fetchPDF(path: String) async throws -> Data {
+        guard let url = URL(string: APIConfig.baseURL.absoluteString + APIConfig.apiPrefix + path) else {
+            throw APIError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.timeoutInterval = 180
+        request.setValue("application/pdf", forHTTPHeaderField: "Accept")
+        guard let token, !token.isEmpty else { throw APIError.unauthorized }
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await session.data(for: request)
+        } catch {
+            throw APIError.transport(error)
+        }
+
+        guard let http = response as? HTTPURLResponse else {
+            throw APIError.message("Respons tidak valid.")
+        }
+        if http.statusCode == 401 {
+            onUnauthorized?()
+            throw APIError.unauthorized
+        }
+        if !(200...299).contains(http.statusCode) {
+            let message = (try? decoder.decode(MessageResponse.self, from: data))?.message
+            throw APIError.http(http.statusCode, message)
+        }
+        let isPdf = data.starts(with: [0x25, 0x50, 0x44, 0x46])
+        if !isPdf {
+            throw APIError.message("PDF tidak dapat dibuat. Coba lagi.")
+        }
+        return data
     }
 
     private func request<T: Decodable>(

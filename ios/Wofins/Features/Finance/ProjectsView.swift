@@ -3297,12 +3297,17 @@ private struct DocumentWebView: UIViewRepresentable {
         webView.backgroundColor = .clear
         webView.isOpaque = false
         webView.scrollView.contentInsetAdjustmentBehavior = .never
-        var request = URLRequest(url: url)
-        request.setValue("application/pdf", forHTTPHeaderField: "Accept")
-        if let token, !token.isEmpty {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        if url.isFileURL {
+            webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
+        } else {
+            var request = URLRequest(url: url)
+            request.timeoutInterval = 180
+            request.setValue("application/pdf", forHTTPHeaderField: "Accept")
+            if let token, !token.isEmpty {
+                request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            }
+            webView.load(request)
         }
-        webView.load(request)
         return webView
     }
 

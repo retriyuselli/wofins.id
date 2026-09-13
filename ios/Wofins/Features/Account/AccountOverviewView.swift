@@ -139,8 +139,8 @@ struct AccountView: View {
                 settingRow("Nota Dinas", "doc.text.fill")
             }
             Divider().padding(.leading, 47)
-            NavigationLink { ModuleListView(item: .placeholder(key: "simulasi", title: "Draft Kontrak", feature: "simulasi", allowed: appState.allows(.simulasi), badge: "Pro", icon: "doc.badge.plus")) } label: {
-                settingRow("Draft Kontrak", "doc.badge.plus", badge: appState.allows(.simulasi) ? nil : "Pro")
+            NavigationLink { ModuleListView(item: .placeholder(key: "simulasi", title: "Simulasi", feature: "simulasi", allowed: appState.allows(.simulasi), badge: "Pro", icon: "doc.badge.plus")) } label: {
+                settingRow("Simulasi", "doc.badge.plus", badge: appState.allows(.simulasi) ? nil : "Pro")
             }
             Divider().padding(.leading, 47)
             NavigationLink { ModuleListView(item: .placeholder(key: "fixed_assets", title: "Aset Tetap", feature: "fixed_assets", allowed: appState.allows(.fixedAssets), badge: "Pro", icon: "building.2.fill")) } label: {

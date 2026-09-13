@@ -137,7 +137,7 @@ enum PlanFeature: String, CaseIterable {
         case .projects: return "Proyek"
         case .basicFinance: return "Keuangan"
         case .payroll: return "Kompensasi"
-        case .simulasi: return "Draft Kontrak"
+        case .simulasi: return "Simulasi"
         case .reconciliation: return "Rekonsiliasi"
         case .advancedReports: return "Laporan Lanjutan"
         case .documents: return "Dokumen & SOP"

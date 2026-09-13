@@ -51,6 +51,12 @@ Route::prefix('v1')->group(function () {
             Route::get('/{key}/{id}', [MobileModuleController::class, 'detail'])
                 ->whereNumber('id')
                 ->name('api.v1.modules.detail');
+            Route::get('/{key}/{id}/draft-kontrak', [MobileModuleController::class, 'draftKontrak'])
+                ->whereNumber('id')
+                ->name('api.v1.modules.draft-kontrak');
+            Route::get('/{key}/{id}/pdf', [MobileModuleController::class, 'pdf'])
+                ->whereNumber('id')
+                ->name('api.v1.modules.pdf');
             Route::patch('/{key}/{id}', [MobileModuleController::class, 'update'])
                 ->whereNumber('id')
                 ->name('api.v1.modules.update');

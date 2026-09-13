@@ -80,6 +80,20 @@ class SimulasiDisplayController extends Controller
     {
         Gate::authorize('view', $record);
 
+        return $this->draftKontrakResponse($record);
+    }
+
+    /**
+     * PDF draft kontrak — dipakai web dan API iOS.
+     */
+    public function draftKontrakResponse(SimulasiProduk $record)
+    {
+        @set_time_limit(180);
+        @ini_set('max_execution_time', '180');
+        @ini_set('memory_limit', '512M');
+
+        $record->loadMissing(['prospect', 'product', 'user.company.paymentMethod', 'company.paymentMethod']);
+
         $items = collect();
         if ($record->product) {
             $record->product->load([

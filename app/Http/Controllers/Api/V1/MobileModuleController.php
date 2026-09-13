@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\SimulasiDisplayController;
+use App\Models\SimulasiProduk;
 use App\Services\MobileModuleService;
 use App\Support\UserVisibility;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\Response;
 
 class MobileModuleController extends Controller
 {
@@ -85,6 +88,45 @@ class MobileModuleController extends Controller
             'message' => 'Data berhasil diperbarui.',
             'data' => $record,
         ]);
+    }
+
+    public function draftKontrak(Request $request, string $key, int $id): Response
+    {
+        $simulasi = $this->simulasiRecord($request, $key, $id);
+
+        if ($simulasi instanceof JsonResponse) {
+            return $simulasi;
+        }
+
+        return app(SimulasiDisplayController::class)->draftKontrakResponse($simulasi);
+    }
+
+    public function pdf(Request $request, string $key, int $id): Response
+    {
+        $simulasi = $this->simulasiRecord($request, $key, $id);
+
+        if ($simulasi instanceof JsonResponse) {
+            return $simulasi;
+        }
+
+        return app(SimulasiDisplayController::class)->downloadPdf($simulasi);
+    }
+
+    private function simulasiRecord(Request $request, string $key, int $id): SimulasiProduk|JsonResponse
+    {
+        if ($key !== 'simulasi') {
+            return response()->json([
+                'message' => 'Dokumen ini hanya tersedia untuk simulasi / draft kontrak.',
+            ], 404);
+        }
+
+        $model = $this->modules->findModel($request->user(), $key, $id);
+
+        if (! $model instanceof SimulasiProduk) {
+            return response()->json(['message' => 'Data tidak ditemukan.'], 404);
+        }
+
+        return $model;
     }
 
     private function assertCompany(): void

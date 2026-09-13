@@ -241,6 +241,14 @@ class MobileModuleService
         return $model ? $this->mapRecord($key, $def, $model, true) : null;
     }
 
+    public function findModel(?User $user, string $key, int $id): ?Model
+    {
+        $def = $this->definition($key);
+        $this->assertAllowed($user, $def);
+
+        return $this->scopedQuery($def)->find($id);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -1322,8 +1330,8 @@ class MobileModuleService
                 'feature' => PricingPlans::FEATURE_SIMULASI,
                 'quota' => CompanySubscription::RESOURCE_SIMULASI,
                 'plan_badge' => 'Pro',
-                'title' => 'Draft Kontrak',
-                'subtitle' => 'Simulasi paket untuk calon klien',
+                'title' => 'Simulasi',
+                'subtitle' => 'Paket penawaran untuk calon klien',
                 'icon' => 'doc.badge.plus',
                 'group' => 'penjualan',
                 'group_label' => 'Penjualan',

@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct ModulesHubView: View {
     @EnvironmentObject private var appState: AppState
@@ -312,13 +313,22 @@ struct ModuleListView: View {
                 }
             }
             .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-            if let amount = record.amount {
-                Text(MoneyFormat.idr(amount))
-                    .font(.poppins(.caption, weight: .bold))
-                    .foregroundStyle(WofinsTheme.ink)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
+            HStack(spacing: 8) {
+                if let amount = record.amount {
+                    Text(MoneyFormat.idr(amount))
+                        .font(.poppins(.caption, weight: .bold))
+                        .foregroundStyle(WofinsTheme.ink)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
+                if item.key == "simulasi" {
+                    Image(systemName: "doc.richtext.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(WofinsTheme.primary)
+                        .accessibilityLabel("Ada draft kontrak PDF")
+                }
             }
+            .fixedSize(horizontal: true, vertical: false)
         }
         .padding(14)
         .moduleSurface()
@@ -347,6 +357,24 @@ struct ModuleDetailView: View {
     @State private var record: ModuleRecord?
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var actionMessage: String?
+    @State private var isOpeningDraft = false
+    @State private var isSharingDraft = false
+    @State private var showPdfPreview = false
+    @State private var pdfPreviewURL: URL?
+    @State private var shareItem: ModulePdfShareItem?
+
+    private var isSimulasi: Bool { item.key == "simulasi" }
+    private var isBusy: Bool { isOpeningDraft || isSharingDraft }
+
+    private var draftFileName: String {
+        let raw = record?.displayTitle ?? "simulasi-\(recordId)"
+        let safe = raw
+            .replacingOccurrences(of: "/", with: "-")
+            .replacingOccurrences(of: ":", with: "-")
+            .replacingOccurrences(of: " ", with: "_")
+        return "Draft_Kontrak_\(safe).pdf"
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -363,7 +391,27 @@ struct ModuleDetailView: View {
                         .foregroundStyle(.white.opacity(0.72))
                         .lineLimit(1)
                 }
-                Spacer(minLength: 8)
+                .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                if isSimulasi, record != nil {
+                    Button {
+                        Task { await openDraftKontrak() }
+                    } label: {
+                        Group {
+                            if isOpeningDraft {
+                                ProgressView().tint(.white)
+                            } else {
+                                Image(systemName: "doc.richtext.fill")
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundStyle(.white)
+                            }
+                        }
+                        .frame(width: 40, height: 40)
+                        .background(.white.opacity(0.11), in: Circle())
+                    }
+                    .accessibilityLabel("Lihat draft kontrak PDF")
+                    .disabled(isBusy)
+                    .fixedSize()
+                }
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
@@ -374,7 +422,7 @@ struct ModuleDetailView: View {
                 LazyVStack(alignment: .leading, spacing: 12) {
                     if isLoading && record == nil {
                         ProgressView("Memuat detail…").frame(maxWidth: .infinity).padding(24)
-                    } else if let errorMessage {
+                    } else if let errorMessage, record == nil {
                         Text(errorMessage).font(.poppins(.caption)).foregroundStyle(WofinsTheme.danger).padding(16).moduleSurface()
                     } else if let record {
                         if let amount = record.amount {
@@ -404,6 +452,10 @@ struct ModuleDetailView: View {
                         }
                         .padding(16)
                         .moduleSurface()
+
+                        if isSimulasi {
+                            draftKontrakActions
+                        }
 
                         if let children = record.children, !children.isEmpty {
                             Text("Rincian")
@@ -442,6 +494,86 @@ struct ModuleDetailView: View {
         .background(WofinsTheme.background.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .task { await load() }
+        .fullScreenCover(isPresented: $showPdfPreview) {
+            if let pdfPreviewURL {
+                ProjectDocumentView(
+                    url: pdfPreviewURL,
+                    title: "Draft Kontrak",
+                    fileName: draftFileName
+                )
+            }
+        }
+        .sheet(item: $shareItem) { item in
+            ModulePdfShareSheet(items: [item.url])
+        }
+        .alert("Draft Kontrak", isPresented: Binding(
+            get: { actionMessage != nil },
+            set: { if !$0 { actionMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(actionMessage ?? "")
+        }
+    }
+
+    private var draftKontrakActions: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Dokumen")
+                .font(.poppins(.headline, weight: .bold))
+                .foregroundStyle(WofinsTheme.primary)
+            Text("PDF kontrak kerja dari data simulasi ini — sama seperti di web.")
+                .font(.poppins(.caption2))
+                .foregroundStyle(WofinsTheme.muted)
+                .fixedSize(horizontal: false, vertical: true)
+            Button {
+                Task { await openDraftKontrak() }
+            } label: {
+                HStack(spacing: 10) {
+                    if isOpeningDraft {
+                        ProgressView().tint(.white)
+                    } else {
+                        Image(systemName: "doc.richtext.fill")
+                    }
+                    Text(isOpeningDraft ? "Menyiapkan PDF…" : "Lihat Draft Kontrak")
+                        .font(.poppins(.subheadline, weight: .semibold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
+                }
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 48)
+                .background(WofinsTheme.primary, in: RoundedRectangle(cornerRadius: 14))
+            }
+            .buttonStyle(.plain)
+            .disabled(isBusy)
+            Button {
+                Task { await shareDraftKontrak() }
+            } label: {
+                HStack(spacing: 10) {
+                    if isSharingDraft {
+                        ProgressView()
+                    } else {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                    Text(isSharingDraft ? "Menyiapkan PDF…" : "Bagikan / Simpan PDF")
+                        .font(.poppins(.subheadline, weight: .semibold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
+                }
+                .foregroundStyle(WofinsTheme.primary)
+                .frame(maxWidth: .infinity)
+                .frame(height: 48)
+                .background(WofinsTheme.primary.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 14).stroke(WofinsTheme.primary.opacity(0.3))
+                }
+            }
+            .buttonStyle(.plain)
+            .disabled(isBusy)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .moduleSurface()
     }
 
     private func load() async {
@@ -454,6 +586,56 @@ struct ModuleDetailView: View {
             errorMessage = error.localizedDescription
         }
     }
+
+    private func openDraftKontrak() async {
+        guard !isBusy else { return }
+        isOpeningDraft = true
+        defer { isOpeningDraft = false }
+        do {
+            pdfPreviewURL = try await cachedDraftPdf()
+            showPdfPreview = true
+        } catch {
+            actionMessage = error.localizedDescription
+        }
+    }
+
+    private func shareDraftKontrak() async {
+        guard !isBusy else { return }
+        isSharingDraft = true
+        defer { isSharingDraft = false }
+        do {
+            let url = try await cachedDraftPdf()
+            shareItem = ModulePdfShareItem(url: url)
+        } catch {
+            actionMessage = error.localizedDescription
+        }
+    }
+
+    private func cachedDraftPdf() async throws -> URL {
+        if let pdfPreviewURL, FileManager.default.fileExists(atPath: pdfPreviewURL.path) {
+            return pdfPreviewURL
+        }
+        let data = try await appState.api.moduleDraftKontrakPdf(id: recordId)
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(draftFileName)
+        try data.write(to: url, options: .atomic)
+        pdfPreviewURL = url
+        return url
+    }
+}
+
+private struct ModulePdfShareItem: Identifiable {
+    let id = UUID()
+    let url: URL
+}
+
+private struct ModulePdfShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 struct ModuleCreateView: View {
