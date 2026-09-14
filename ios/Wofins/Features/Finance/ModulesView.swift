@@ -151,10 +151,17 @@ struct ModuleListView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var showCreate = false
+    @State private var showDesktopOnlyCreate = false
     @State private var listPage = 1
     @State private var isLoadingMore = false
 
     private var canCreateNow: Bool { meta?.can_create ?? item.canCreate }
+    private var isBankStatement: Bool { item.key == "bank_statements" }
+    private var showsCreateAction: Bool { canCreateNow || isBankStatement }
+
+    private var desktopCreateMessage: String {
+        "Rekonsiliasi hanya bisa dibuat di desktop (admin web). Unggah rekening koran dan file perbandingan membutuhkan layar yang lebih besar."
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -239,6 +246,12 @@ struct ModuleListView: View {
             .environmentObject(appState)
             .presentationDetents([.large])
         }
+        .alert("Buat di desktop", isPresented: $showDesktopOnlyCreate) {
+            Button("Buka admin web") { openDesktopBankStatements() }
+            Button("Mengerti", role: .cancel) {}
+        } message: {
+            Text(desktopCreateMessage)
+        }
     }
 
     private var header: some View {
@@ -253,8 +266,8 @@ struct ModuleListView: View {
                     .minimumScaleFactor(0.8)
             }
             .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-            if canCreateNow {
-                Button { showCreate = true } label: {
+            if showsCreateAction {
+                Button { requestCreate() } label: {
                     Image(systemName: "plus")
                         .font(.system(size: 17, weight: .bold))
                         .foregroundStyle(.white)
@@ -300,8 +313,10 @@ struct ModuleListView: View {
                 .font(.poppins(.caption))
                 .foregroundStyle(WofinsTheme.muted)
                 .fixedSize(horizontal: false, vertical: true)
-            if canCreateNow {
-                Button("Tambah \(item.title)") { showCreate = true }
+            if showsCreateAction {
+                Button(isBankStatement ? "Info buat rekonsiliasi" : "Tambah \(item.title)") {
+                    requestCreate()
+                }
                     .font(.poppins(.subheadline, weight: .semibold))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
@@ -312,6 +327,20 @@ struct ModuleListView: View {
         }
         .padding(16)
         .moduleSurface()
+    }
+
+    private func requestCreate() {
+        if isBankStatement {
+            showDesktopOnlyCreate = true
+        } else {
+            showCreate = true
+        }
+    }
+
+    private func openDesktopBankStatements() {
+        if let url = APIConfig.websiteURL("/admin/bank-statements") {
+            UIApplication.shared.open(url)
+        }
     }
 
     private func recordRow(_ record: ModuleRecord) -> some View {
@@ -415,6 +444,7 @@ struct ModuleDetailView: View {
     @State private var isDownloadingPdf = false
     @State private var shareItem: ModulePdfShareItem?
     @State private var showEdit = false
+    @State private var showDesktopOnlyEdit = false
     @State private var productDetail: FinanceProductDetail?
     @State private var isLoadingProduct = false
 
@@ -426,6 +456,9 @@ struct ModuleDetailView: View {
         if isProduct { return "Fasilitas Dasar" }
         if isBankStatement { return record?.children_title ?? "Mutasi rekening" }
         return "Rincian"
+    }
+    private var desktopEditMessage: String {
+        "Rekonsiliasi hanya bisa diedit di desktop (admin web). Unggah file, penyesuaian periode, dan perbandingan membutuhkan layar yang lebih besar."
     }
     private var resolvedProduct: FinanceProductDetail? { productDetail ?? record?.product }
 
@@ -620,6 +653,12 @@ struct ModuleDetailView: View {
         } message: {
             Text(actionMessage ?? "")
         }
+        .alert("Edit di desktop", isPresented: $showDesktopOnlyEdit) {
+            Button("Buka admin web") { openDesktopBankStatementEdit() }
+            Button("Mengerti", role: .cancel) {}
+        } message: {
+            Text(desktopEditMessage)
+        }
     }
 
     @ViewBuilder
@@ -653,7 +692,7 @@ struct ModuleDetailView: View {
             .accessibilityLabel("Aksi paket")
             .fixedSize()
         } else {
-            Button { showEdit = true } label: {
+            Button { requestEdit() } label: {
                 Image(systemName: "slider.horizontal.3")
                     .font(.system(size: 16, weight: .bold))
                     .foregroundStyle(.white)
@@ -662,6 +701,20 @@ struct ModuleDetailView: View {
             }
             .accessibilityLabel(isSimulasi ? "Edit simulasi" : "Edit \(item.title)")
             .fixedSize()
+        }
+    }
+
+    private func requestEdit() {
+        if isBankStatement {
+            showDesktopOnlyEdit = true
+        } else {
+            showEdit = true
+        }
+    }
+
+    private func openDesktopBankStatementEdit() {
+        if let url = APIConfig.websiteURL("/admin/bank-statements/\(recordId)/edit") {
+            UIApplication.shared.open(url)
         }
     }
 
