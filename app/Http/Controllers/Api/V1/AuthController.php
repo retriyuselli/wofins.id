@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\UserResource;
 use App\Models\User;
+use App\Services\GoogleAvatarSync;
 use App\Services\GoogleTokenVerifier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -41,17 +42,22 @@ class AuthController extends Controller
     /**
      * Login / tautkan akun lewat Google ID token dari aplikasi iOS.
      */
-    public function google(Request $request, GoogleTokenVerifier $verifier): JsonResponse
+    public function google(Request $request, GoogleTokenVerifier $verifier, GoogleAvatarSync $avatarSync): JsonResponse
     {
         $data = $request->validate([
             'id_token' => ['required', 'string'],
             'device_name' => ['nullable', 'string', 'max:120'],
+            'picture_url' => ['nullable', 'string', 'max:2048'],
         ]);
 
         $payload = $verifier->verify($data['id_token']);
         $googleId = (string) ($payload['sub'] ?? '');
         $email = trim((string) ($payload['email'] ?? ''));
         $emailVerified = filter_var($payload['email_verified'] ?? false, FILTER_VALIDATE_BOOL);
+        $picture = $this->resolveGooglePictureUrl(
+            $data['picture_url'] ?? null,
+            $payload['picture'] ?? null
+        );
 
         if ($googleId === '' || $email === '') {
             throw ValidationException::withMessages([
@@ -79,13 +85,39 @@ class AuthController extends Controller
             if ($updates !== []) {
                 $user->forceFill($updates)->save();
             }
+
+            // Ambil foto Google sebagai avatar default jika user belum punya foto
+            $avatarSync->sync($user, $picture);
+            $user->refresh();
         } else {
             throw ValidationException::withMessages([
-                'id_token' => ['Akun Google belum terdaftar di WOFINS. Hubungi administrator company Anda.'],
+                'id_token' => ['Akun Google belum terdaftar di WOFINS. Hubungi administrator company Anda, atau beli paket untuk mendaftar.'],
             ]);
         }
 
         return $this->tokenResponse($user, $data['device_name'] ?? 'ios-wofins-google');
+    }
+
+    /**
+     * Hanya terima URL foto dari host Google yang dikenal.
+     */
+    private function resolveGooglePictureUrl(mixed $fromClient, mixed $fromToken): ?string
+    {
+        foreach ([$fromClient, $fromToken] as $candidate) {
+            $url = trim((string) $candidate);
+            if ($url === '' || ! filter_var($url, FILTER_VALIDATE_URL)) {
+                continue;
+            }
+
+            $host = strtolower((string) parse_url($url, PHP_URL_HOST));
+            if ($host === '' || ! str_ends_with($host, 'googleusercontent.com')) {
+                continue;
+            }
+
+            return $url;
+        }
+
+        return null;
     }
 
     /**

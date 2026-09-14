@@ -14,8 +14,6 @@ class UserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $avatarPath = $this->avatar_url;
-
         return [
             'id' => $this->id,
             'employee_id' => $this->employee_id,
@@ -31,9 +29,7 @@ class UserResource extends JsonResource
             'notes' => $this->notes,
             'status' => $this->status,
             'last_working_date' => optional($this->last_working_date)?->toDateString(),
-            'avatar_url' => $avatarPath
-                ? url(Storage::url($avatarPath))
-                : null,
+            'avatar_url' => $this->publicMediaUrl($this->avatar_url),
             'roles' => $this->whenLoaded('roles', fn () => $this->getRoleNames()->values()->all()),
             'expire_date' => optional($this->expire_date)?->toIso8601String(),
             'is_expired' => $this->isExpired(),
@@ -83,13 +79,7 @@ class UserResource extends JsonResource
             return null;
         }
 
-        $logo = trim((string) ($company->logo_url ?? ''));
-        $logoUrl = null;
-        if ($logo !== '') {
-            $logoUrl = str_starts_with($logo, 'http://') || str_starts_with($logo, 'https://')
-                ? $logo
-                : url(Storage::url($logo));
-        }
+        $logoUrl = $this->publicMediaUrl($company->logo_url);
 
         return [
             'id' => (int) $company->id,
@@ -111,5 +101,20 @@ class UserResource extends JsonResource
             'subscription_label' => \App\Support\PricingPlans::shortLabel($company->subscription_plan),
             'subscription_expires_at' => optional($company->subscription_expires_at)?->toIso8601String(),
         ];
+    }
+
+    private function publicMediaUrl(?string $path): ?string
+    {
+        $path = trim((string) $path);
+        if ($path === '') {
+            return null;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        // Avatar/logo selalu di disk public, bukan default FILESYSTEM_DISK (bisa local/private).
+        return url(Storage::disk('public')->url(ltrim($path, '/')));
     }
 }

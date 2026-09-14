@@ -52,8 +52,9 @@ targets:
         CODE_SIGN_STYLE: Automatic
         CODE_SIGN_IDENTITY: "Apple Development"
         IPHONEOS_DEPLOYMENT_TARGET: "17.0"
-        GID_CLIENT_ID: "408651692876-pp16jkl7kdtdjh9g2htnu89amv05kjmr.apps.googleusercontent.com"
-        GID_SERVER_CLIENT_ID: "408651692876-pp16jkl7kdtdjh9g2htnu89amv05kjmr.apps.googleusercontent.com"
+        # Harus client tipe iOS (bukan Web) — Web memicu Error 400: custom scheme not allowed
+        GID_CLIENT_ID: "408651692876-vea73ugad9mapivcldjfrc4hmd3tirv0.apps.googleusercontent.com"
+        GID_SERVER_CLIENT_ID: "408651692876-ju4su29c4t3l08ee9kjajdmavkr0afj1.apps.googleusercontent.com"
       configs:
         Debug:
           BASE_URL: "http://127.0.0.1:8000"
@@ -61,12 +62,12 @@ targets:
           INFOPLIST_FILE: Wofins/Info-Debug.plist
           ENABLE_TESTABILITY: YES
           ENABLE_USER_SCRIPT_SANDBOXING: NO
+          # Server lokal: aud idToken = Web Debug client
+          GID_SERVER_CLIENT_ID: "408651692876-pp16jkl7kdtdjh9g2htnu89amv05kjmr.apps.googleusercontent.com"
         Release:
           BASE_URL: "https://app.wofins.id"
           INFOPLIST_FILE: Wofins/Info.plist
-          # iOS OAuth client (bundle id.wofins.app)
-          GID_CLIENT_ID: "408651692876-vea73ugad9mapivcldjfrc4hmd3tirv0.apps.googleusercontent.com"
-          # Web OAuth client — idToken aud untuk verifikasi server
+          # Web Production — idToken aud untuk verifikasi server
           GID_SERVER_CLIENT_ID: "408651692876-ju4su29c4t3l08ee9kjajdmavkr0afj1.apps.googleusercontent.com"
     dependencies:
       - package: GoogleSignIn

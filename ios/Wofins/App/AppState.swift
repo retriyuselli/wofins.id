@@ -44,8 +44,12 @@ final class AppState: ObservableObject {
     }
 
     func loginWithGoogle() async throws {
-        let idToken = try await GoogleSignInService.shared.signIn()
-        let response = try await api.loginWithGoogle(idToken: idToken, deviceName: "ios-wofins-google")
+        let google = try await GoogleSignInService.shared.signIn()
+        let response = try await api.loginWithGoogle(
+            idToken: google.idToken,
+            pictureURL: google.pictureURL,
+            deviceName: "ios-wofins-google"
+        )
         applySession(response)
     }
 

@@ -10,6 +10,7 @@ struct LoginView: View {
     @State private var showPassword = false
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var googleInfoMessage: String?
     @State private var faceNote = ""
     @State private var showPrivacy = false
     @State private var selectedHost = APIConfig.selectedHost
@@ -68,6 +69,23 @@ struct LoginView: View {
         .sheet(isPresented: $showPrivacy) {
             PrivacyStatementView()
         }
+        .alert(
+            "Akun belum terdaftar",
+            isPresented: Binding(
+                get: { googleInfoMessage != nil },
+                set: { if !$0 { googleInfoMessage = nil } }
+            )
+        ) {
+            if selectedHost == .wofins {
+                Button("Beli paket") {
+                    openPurchasePage()
+                    googleInfoMessage = nil
+                }
+            }
+            Button("Mengerti", role: .cancel) { googleInfoMessage = nil }
+        } message: {
+            Text(googleInfoMessage ?? "")
+        }
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
@@ -100,6 +118,15 @@ struct LoginView: View {
         dismissKeyboard()
         guard let url = APIConfig.websiteURL("/forgot-password") else {
             errorMessage = "Halaman atur ulang password tidak tersedia."
+            return
+        }
+        UIApplication.shared.open(url)
+    }
+
+    private func openPurchasePage() {
+        dismissKeyboard()
+        guard let url = APIConfig.websiteURL("/harga") else {
+            errorMessage = "Halaman pembelian paket tidak tersedia."
             return
         }
         UIApplication.shared.open(url)
@@ -518,6 +545,7 @@ struct LoginView: View {
     private func loginWithGoogle() async {
         dismissKeyboard()
         errorMessage = nil
+        googleInfoMessage = nil
         faceNote = ""
         isLoading = true
         defer { isLoading = false }
@@ -532,8 +560,20 @@ struct LoginView: View {
         } catch let error as URLError where error.code == .cannotConnectToHost || error.code == .timedOut || error.code == .networkConnectionLost {
             errorMessage = APIConfig.connectionErrorMessage
         } catch {
-            APILoadFailure.assign(error, to: &errorMessage)
+            let message = APILoadFailure.userMessage(for: error) ?? error.localizedDescription
+            if isGoogleAccountNotRegistered(message) {
+                googleInfoMessage = selectedHost == .wofins
+                    ? "Akun Google belum terdaftar di WOFINS. Hubungi administrator company Anda, atau beli paket untuk mendaftar."
+                    : message
+            } else {
+                errorMessage = message
+            }
         }
+    }
+
+    private func isGoogleAccountNotRegistered(_ message: String) -> Bool {
+        let text = message.lowercased()
+        return text.contains("belum terdaftar") || text.contains("hubungi administrator")
     }
 
     private func loginWithFaceID() async {

@@ -115,15 +115,16 @@ final class APIClient {
         )
     }
 
-    func loginWithGoogle(idToken: String, deviceName: String) async throws -> LoginResponse {
+    func loginWithGoogle(idToken: String, pictureURL: String? = nil, deviceName: String) async throws -> LoginResponse {
         struct Body: Encodable {
             let id_token: String
+            let picture_url: String?
             let device_name: String
         }
         return try await request(
             method: "POST",
             path: "/auth/google",
-            body: Body(id_token: idToken, device_name: deviceName),
+            body: Body(id_token: idToken, picture_url: pictureURL, device_name: deviceName),
             authorized: false
         )
     }

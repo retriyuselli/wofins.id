@@ -25,6 +25,11 @@ enum GoogleSignInError: LocalizedError, Equatable {
 final class GoogleSignInService {
     static let shared = GoogleSignInService()
 
+    struct SignInResult: Sendable {
+        let idToken: String
+        let pictureURL: String?
+    }
+
     private var isConfigured = false
 
     private init() {}
@@ -48,7 +53,7 @@ final class GoogleSignInService {
         googleClientID() != nil
     }
 
-    func signIn() async throws -> String {
+    func signIn() async throws -> SignInResult {
         configureIfNeeded()
         guard isConfigured else { throw GoogleSignInError.notConfigured }
         guard let presenter = topViewController() else { throw GoogleSignInError.missingPresenter }
@@ -67,7 +72,9 @@ final class GoogleSignInService {
             throw GoogleSignInError.missingIdToken
         }
 
-        return idToken
+        let pictureURL = result.user.profile?.imageURL(withDimension: 400)?.absoluteString
+
+        return SignInResult(idToken: idToken, pictureURL: pictureURL)
     }
 
     func handle(url: URL) -> Bool {
