@@ -425,7 +425,7 @@ struct ModuleListView: View {
     }
 
     private func recordRow(_ record: ModuleRecord) -> some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(record.displayTitle)
                     .font(.poppins(.subheadline, weight: .semibold))
@@ -467,11 +467,58 @@ struct ModuleListView: View {
                         .foregroundStyle(WofinsTheme.primary)
                         .accessibilityLabel("Ada draft kontrak PDF")
                 }
+                if showsListAvatar {
+                    recordAvatar(record)
+                }
             }
             .fixedSize(horizontal: true, vertical: false)
         }
         .padding(14)
         .moduleSurface()
+    }
+
+    private var showsListAvatar: Bool {
+        item.key == "data_pribadis"
+    }
+
+    private func recordAvatar(_ record: ModuleRecord) -> some View {
+        Group {
+            if let url = APIConfig.mediaURL(from: record.image_url) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image.resizable().scaledToFill()
+                    default:
+                        recordAvatarFallback(record)
+                    }
+                }
+            } else {
+                recordAvatarFallback(record)
+            }
+        }
+        .frame(width: 52, height: 52)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .accessibilityLabel("Foto \(record.displayTitle)")
+    }
+
+    private func recordAvatarFallback(_ record: ModuleRecord) -> some View {
+        Text(avatarInitials(from: record.displayTitle))
+            .font(.poppins(.caption, weight: .bold))
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(
+                LinearGradient(
+                    colors: [WofinsTheme.primaryLight, WofinsTheme.primary],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+    }
+
+    private func avatarInitials(from name: String) -> String {
+        let parts = name.split(separator: " ").prefix(2)
+        let letters = parts.compactMap { $0.first.map(String.init) }
+        return letters.isEmpty ? "?" : letters.joined().uppercased()
     }
 
     private var canLoadMore: Bool {
@@ -506,7 +553,7 @@ struct ModuleListView: View {
                 records.append(contentsOf: response.data.filter { !existing.contains($0.id) })
             }
             meta = response.meta
-            if let rekeningFilter = response.meta.filters?.first(where: { $0.key == "payment_method_id" }) {
+            if let rekeningFilter = response.meta?.filters?.first(where: { $0.key == "payment_method_id" }) {
                 rekeningFilterOptions = rekeningFilter.options
                 if selectedPaymentMethodId == nil {
                     selectedPaymentMethodId = rekeningFilter.value
