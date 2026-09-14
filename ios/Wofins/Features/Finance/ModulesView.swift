@@ -420,8 +420,13 @@ struct ModuleDetailView: View {
 
     private var isSimulasi: Bool { item.key == "simulasi" }
     private var isProduct: Bool { item.key == "products" }
+    private var isBankStatement: Bool { item.key == "bank_statements" }
     private var isBusy: Bool { isOpeningDraft || isSharingDraft || isDownloadingPdf }
-    private var childrenTitle: String { isProduct ? "Fasilitas Dasar" : "Rincian" }
+    private var childrenTitle: String {
+        if isProduct { return "Fasilitas Dasar" }
+        if isBankStatement { return record?.children_title ?? "Mutasi rekening" }
+        return "Rincian"
+    }
     private var resolvedProduct: FinanceProductDetail? { productDetail ?? record?.product }
 
     private var headerAmount: Int? {
@@ -562,7 +567,7 @@ struct ModuleDetailView: View {
                             } else {
                                 childrenSection(record.children ?? [])
                             }
-                        } else if !(record.children ?? []).isEmpty {
+                        } else if isBankStatement || !(record.children ?? []).isEmpty {
                             childrenSection(record.children ?? [])
                         }
                     }
@@ -662,7 +667,9 @@ struct ModuleDetailView: View {
                 .font(.poppins(.headline, weight: .bold))
                 .foregroundStyle(WofinsTheme.primary)
             if children.isEmpty {
-                Text(isProduct ? "Belum ada fasilitas dasar pada paket ini." : "Belum ada rincian")
+                Text(isProduct
+                    ? "Belum ada fasilitas dasar pada paket ini."
+                    : (isBankStatement ? "Belum ada mutasi pada rekening koran ini." : "Belum ada rincian"))
                     .font(.poppins(.caption))
                     .foregroundStyle(WofinsTheme.muted)
                     .fixedSize(horizontal: false, vertical: true)
@@ -715,6 +722,14 @@ struct ModuleDetailView: View {
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
                     }
+                    if isBankStatement, let status = child.status, !status.isEmpty {
+                        Text(bankStatementStatusLabel(status))
+                            .font(.poppins(.caption2, weight: .semibold))
+                            .foregroundStyle(bankStatementStatusColor(status))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(bankStatementStatusColor(status).opacity(0.12), in: Capsule())
+                    }
                     if isProduct, child.vendor_id != nil {
                         Image(systemName: "chevron.right")
                             .font(.system(size: 12, weight: .semibold))
@@ -743,6 +758,22 @@ struct ModuleDetailView: View {
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .moduleSurface()
+    }
+
+    private func bankStatementStatusLabel(_ status: String) -> String {
+        switch status.lowercased() {
+        case "matched": return "Cocok"
+        case "unmatched": return "Belum cocok"
+        default: return DisplayText.titleCase(status)
+        }
+    }
+
+    private func bankStatementStatusColor(_ status: String) -> Color {
+        switch status.lowercased() {
+        case "matched": return WofinsTheme.success
+        case "unmatched": return WofinsTheme.muted
+        default: return WofinsTheme.primary
+        }
     }
 
     private var draftKontrakActions: some View {

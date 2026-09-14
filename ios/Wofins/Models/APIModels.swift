@@ -1250,6 +1250,7 @@ struct ModuleRecord: Decodable, Identifiable {
     let date: String?
     let fields: [ModuleFieldRow]?
     let children: [ModuleRecord]?
+    let children_title: String?
     let values: [String: String]?
     let payment_simulation: [SimulasiPaymentTerm]?
     let vendor_id: Int?
@@ -1270,6 +1271,7 @@ struct ModuleRecord: Decodable, Identifiable {
         date = try c.decodeIfPresent(String.self, forKey: .date)
         fields = try c.decodeIfPresent([ModuleFieldRow].self, forKey: .fields)
         children = try c.decodeIfPresent([ModuleRecord].self, forKey: .children)
+        children_title = c.flexString(.children_title)
         values = try c.decodeIfPresent([String: String].self, forKey: .values)
         payment_simulation = try c.decodeIfPresent([SimulasiPaymentTerm].self, forKey: .payment_simulation)
         vendor_id = c.flexInt(.vendor_id)
@@ -1277,7 +1279,7 @@ struct ModuleRecord: Decodable, Identifiable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, title, subtitle, amount, status, date, fields, children, values
+        case id, title, subtitle, amount, status, date, fields, children, children_title, values
         case payment_simulation, vendor_id, product
     }
 }
