@@ -1255,6 +1255,7 @@ struct ModuleRecord: Decodable, Identifiable {
     let payment_simulation: [SimulasiPaymentTerm]?
     let vendor_id: Int?
     let product: FinanceProductDetail?
+    let reconciliation: BankReconciliationComparison?
 
     var displayTitle: String {
         let raw = title?.isEmpty == false ? title! : "#\(id)"
@@ -1276,11 +1277,171 @@ struct ModuleRecord: Decodable, Identifiable {
         payment_simulation = try c.decodeIfPresent([SimulasiPaymentTerm].self, forKey: .payment_simulation)
         vendor_id = c.flexInt(.vendor_id)
         product = try? c.decode(FinanceProductDetail.self, forKey: .product)
+        reconciliation = try c.decodeIfPresent(BankReconciliationComparison.self, forKey: .reconciliation)
     }
 
     private enum CodingKeys: String, CodingKey {
         case id, title, subtitle, amount, status, date, fields, children, children_title, values
-        case payment_simulation, vendor_id, product
+        case payment_simulation, vendor_id, product, reconciliation
+    }
+}
+
+struct BankReconciliationComparison: Decodable {
+    let statistics: BankReconciliationStatistics
+    let matched: [BankReconciliationMatch]
+    let unmatched_app: [BankReconciliationSideItem]
+    let unmatched_bank: [BankReconciliationSideItem]
+    let truncated: BankReconciliationTruncation?
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        statistics = try c.decodeIfPresent(BankReconciliationStatistics.self, forKey: .statistics)
+            ?? BankReconciliationStatistics.empty
+        matched = try c.decodeIfPresent([BankReconciliationMatch].self, forKey: .matched) ?? []
+        unmatched_app = try c.decodeIfPresent([BankReconciliationSideItem].self, forKey: .unmatched_app) ?? []
+        unmatched_bank = try c.decodeIfPresent([BankReconciliationSideItem].self, forKey: .unmatched_bank) ?? []
+        truncated = try c.decodeIfPresent(BankReconciliationTruncation.self, forKey: .truncated)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case statistics, matched, unmatched_app, unmatched_bank, truncated
+    }
+}
+
+struct BankReconciliationTruncation: Decodable {
+    let matched: Bool?
+    let unmatched_app: Bool?
+    let unmatched_bank: Bool?
+}
+
+struct BankReconciliationStatistics: Decodable {
+    let total_app_transactions: Int
+    let total_bank_items: Int
+    let matched_count: Int
+    let unmatched_app_count: Int
+    let unmatched_bank_count: Int
+    let match_percentage: Double
+    let total_app_debit: Int
+    let total_app_credit: Int
+    let total_bank_debit: Int
+    let total_bank_credit: Int
+
+    static let empty = BankReconciliationStatistics(
+        total_app_transactions: 0,
+        total_bank_items: 0,
+        matched_count: 0,
+        unmatched_app_count: 0,
+        unmatched_bank_count: 0,
+        match_percentage: 0,
+        total_app_debit: 0,
+        total_app_credit: 0,
+        total_bank_debit: 0,
+        total_bank_credit: 0
+    )
+
+    init(
+        total_app_transactions: Int,
+        total_bank_items: Int,
+        matched_count: Int,
+        unmatched_app_count: Int,
+        unmatched_bank_count: Int,
+        match_percentage: Double,
+        total_app_debit: Int,
+        total_app_credit: Int,
+        total_bank_debit: Int,
+        total_bank_credit: Int
+    ) {
+        self.total_app_transactions = total_app_transactions
+        self.total_bank_items = total_bank_items
+        self.matched_count = matched_count
+        self.unmatched_app_count = unmatched_app_count
+        self.unmatched_bank_count = unmatched_bank_count
+        self.match_percentage = match_percentage
+        self.total_app_debit = total_app_debit
+        self.total_app_credit = total_app_credit
+        self.total_bank_debit = total_bank_debit
+        self.total_bank_credit = total_bank_credit
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        total_app_transactions = c.flexInt(.total_app_transactions) ?? 0
+        total_bank_items = c.flexInt(.total_bank_items) ?? 0
+        matched_count = c.flexInt(.matched_count) ?? 0
+        unmatched_app_count = c.flexInt(.unmatched_app_count) ?? 0
+        unmatched_bank_count = c.flexInt(.unmatched_bank_count) ?? 0
+        match_percentage = try c.decodeIfPresent(Double.self, forKey: .match_percentage)
+            ?? Double(c.flexInt(.match_percentage) ?? 0)
+        total_app_debit = c.flexInt(.total_app_debit) ?? 0
+        total_app_credit = c.flexInt(.total_app_credit) ?? 0
+        total_bank_debit = c.flexInt(.total_bank_debit) ?? 0
+        total_bank_credit = c.flexInt(.total_bank_credit) ?? 0
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case total_app_transactions, total_bank_items, matched_count
+        case unmatched_app_count, unmatched_bank_count, match_percentage
+        case total_app_debit, total_app_credit, total_bank_debit, total_bank_credit
+    }
+}
+
+struct BankReconciliationMatch: Decodable {
+    let confidence: Int
+    let match_type: String?
+    let app: BankReconciliationSideItem?
+    let bank: BankReconciliationSideItem?
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        confidence = c.flexInt(.confidence) ?? 0
+        match_type = c.flexString(.match_type)
+        app = try c.decodeIfPresent(BankReconciliationSideItem.self, forKey: .app)
+        bank = try c.decodeIfPresent(BankReconciliationSideItem.self, forKey: .bank)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case confidence, match_type, app, bank
+    }
+}
+
+struct BankReconciliationSideItem: Decodable, Identifiable {
+    let id: Int
+    let date: String?
+    let description: String
+    let source: String?
+    let debit: Int
+    let credit: Int
+    let amount: Int
+    let is_debit: Bool
+
+    var dateDisplay: String {
+        guard let date, !date.isEmpty else { return "—" }
+        return AccountDateFormat.display(date)
+    }
+
+    var signedAmountLabel: String {
+        let prefix = is_debit ? "−" : "+"
+        return prefix + MoneyFormat.idr(amount)
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = c.flexInt(.id) ?? 0
+        date = c.flexString(.date)
+        description = c.flexString(.description) ?? "—"
+        source = c.flexString(.source)
+        debit = c.flexInt(.debit) ?? 0
+        credit = c.flexInt(.credit) ?? 0
+        amount = c.flexInt(.amount) ?? max(debit, credit)
+        if let flag = try c.decodeIfPresent(Bool.self, forKey: .is_debit) {
+            is_debit = flag
+        } else {
+            is_debit = debit > 0
+        }
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, date, description, source, debit, credit, amount, is_debit
     }
 }
 

@@ -557,6 +557,10 @@ struct ModuleDetailView: View {
                             draftKontrakActions
                         }
 
+                        if isBankStatement, let comparison = record.reconciliation {
+                            BankReconciliationComparisonView(comparison: comparison)
+                        }
+
                         if isProduct {
                             if let product = resolvedProduct {
                                 ProductBreakdownView(detail: product)
