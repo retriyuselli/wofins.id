@@ -13,57 +13,67 @@
 				<key>testAllowlistAcceptsProductionHosts</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.001356959342956543</real>
+					<real>0.0018240213394165039</real>
 				</dict>
 				<key>testAllowlistRejectsForeignURLs</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00050997734069824219</real>
+					<real>0.0004520416259765625</real>
 				</dict>
 				<key>testAuthorizationMatchesPort</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00046110153198242188</real>
+					<real>0.00041294097900390625</real>
 				</dict>
 				<key>testAuthorizationStaysOnAPIHost</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00058197975158691406</real>
+					<real>0.00040495395660400391</real>
 				</dict>
 				<key>testEndpointJoinsPrefix</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0023289918899536133</real>
+					<real>0.0034080743789672852</real>
 				</dict>
 				<key>testLoopbackDetection</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00059795379638671875</real>
+					<real>0.00066602230072021484</real>
 				</dict>
 				<key>testMaknaHostUsesAllowlistedProductionURL</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0017570257186889648</real>
+					<real>0.0018409490585327148</real>
 				</dict>
 				<key>testPhysicalDevicePrefersNonLoopbackDebugURL</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00045001506805419922</real>
+					<real>0.00050294399261474609</real>
+				</dict>
+				<key>testProductPreviewUsesWebsiteHostNotAPIPrefix</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.0013170242309570312</real>
+				</dict>
+				<key>testPublicLoginStaysOnWofinsUntilInternalUnlock</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.00058603286743164062</real>
 				</dict>
 				<key>testSelectedHostDefaultsToWofins</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0019949674606323242</real>
+					<real>0.0019190311431884766</real>
 				</dict>
 				<key>testTrustedReleaseURL</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.039651989936828613</real>
+					<real>0.00054705142974853516</real>
 				</dict>
 				<key>testWebsiteURLStaysOffAPIPrefix</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0011800527572631836</real>
+					<real>0.0013470649719238281</real>
 				</dict>
 			</dict>
 			<key>APIHostSwitchTests</key>
@@ -71,7 +81,7 @@
 				<key>testSwitchingHostClearsTokenAndSession</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.012164950370788574</real>
+					<real>0.019494056701660156</real>
 				</dict>
 			</dict>
 			<key>APITransportMapperTests</key>
@@ -79,22 +89,22 @@
 				<key>testCancellationIsNotAUserFacingError</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0059529542922973633</real>
+					<real>0.0072469711303710938</real>
 				</dict>
 				<key>testOfflineMessage</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0082349777221679688</real>
+					<real>0.0087789297103881836</real>
 				</dict>
 				<key>testOtherTransportKeepsSystemDescription</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00058293342590332031</real>
+					<real>0.00056803226470947266</real>
 				</dict>
 				<key>testTimeoutMessage</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00046193599700927734</real>
+					<real>0.00047993659973144531</real>
 				</dict>
 			</dict>
 			<key>AccountSupportLogicTests</key>
@@ -102,22 +112,89 @@
 				<key>testAccountDateFormatEmptyIsDash</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00058102607727050781</real>
+					<real>0.00053489208221435547</real>
 				</dict>
 				<key>testDeviceDisplayNames</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00085306167602539062</real>
+					<real>0.00080907344818115234</real>
 				</dict>
 				<key>testPlanCatalogMatchesPublicPricing</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00079596042633056641</real>
+					<real>0.001277923583984375</real>
 				</dict>
 				<key>testPlanFeatureTitleFallback</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00084805488586425781</real>
+					<real>0.0013040304183959961</real>
+				</dict>
+			</dict>
+			<key>DisplayTextTests</key>
+			<dict>
+				<key>testTitleCasesExpenseAndIncomeLabels</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.0034850835800170898</real>
+				</dict>
+			</dict>
+			<key>DocumentPayloadTests</key>
+			<dict>
+				<key>testClassifiesJsonMessage</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.0026869773864746094</real>
+				</dict>
+				<key>testClassifiesMarketingHomepageAsMissingEndpoint</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.0022779703140258789</real>
+				</dict>
+				<key>testClassifiesPdfMagicBytes</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.00058996677398681641</real>
+				</dict>
+				<key>testClassifiesProductPreviewHTML</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.00059604644775390625</real>
+				</dict>
+			</dict>
+			<key>FinanceProductDetailDecodingTests</key>
+			<dict>
+				<key>testDecodesVendorsAdditionsAndDiscountsWithLooseTypes</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.022516012191772461</real>
+				</dict>
+				<key>testKeepsValidVendorsWhenOneLineIsMalformed</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.002472996711730957</real>
+				</dict>
+			</dict>
+			<key>HTMLTextListTests</key>
+			<dict>
+				<key>testListItemsFromOrderedHTML</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.0084900856018066406</real>
+				</dict>
+				<key>testListItemsFromPlainDashes</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.00065290927886962891</real>
+				</dict>
+				<key>testListItemsFromUnorderedHTML</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.00086498260498046875</real>
+				</dict>
+				<key>testRecoversGluedStripTagsList</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.00076591968536376953</real>
 				</dict>
 			</dict>
 			<key>ListPagingTests</key>
@@ -125,7 +202,7 @@
 				<key>testCanLoadMore</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00064802169799804688</real>
+					<real>0.00069499015808105469</real>
 				</dict>
 			</dict>
 			<key>LoginResponseDecodingTests</key>
@@ -133,7 +210,7 @@
 				<key>testDecodesSanctumPayload</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0040889978408813477</real>
+					<real>0.0035669803619384766</real>
 				</dict>
 			</dict>
 			<key>MoneyFormatTests</key>
@@ -141,7 +218,25 @@
 				<key>testGroupedIndonesianThousands</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.008686065673828125</real>
+					<real>0.013118982315063477</real>
+				</dict>
+			</dict>
+			<key>ProjectProfitDisplayTests</key>
+			<dict>
+				<key>testFallsBackToGrandTotalMinusExpenses</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.0027399063110351562</real>
+				</dict>
+				<key>testLabelsLossAsRugi</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.00058805942535400391</real>
+				</dict>
+				<key>testUsesApiProfitWhenPresent</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.00051903724670410156</real>
 				</dict>
 			</dict>
 			<key>SavedCredentialCodecTests</key>
@@ -149,17 +244,17 @@
 				<key>testPasswordMayContainNewlinesAfterFirstSplit</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00053691864013671875</real>
+					<real>0.00053703784942626953</real>
 				</dict>
 				<key>testRejectsMissingPasswordLine</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00058007240295410156</real>
+					<real>0.0004730224609375</real>
 				</dict>
 				<key>testRoundTrip</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00052201747894287109</real>
+					<real>0.00050103664398193359</real>
 				</dict>
 			</dict>
 			<key>SplashTimingTests</key>
@@ -167,7 +262,20 @@
 				<key>testReduceMotionIsNearlyImmediate</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00052797794342041016</real>
+					<real>0.0021829605102539062</real>
+				</dict>
+			</dict>
+			<key>SwipeBackPolicyTests</key>
+			<dict>
+				<key>testDismissFinishesFromDistanceOrFling</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.00054299831390380859</real>
+				</dict>
+				<key>testPopRequiresAPushedScreen</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.00054299831390380859</real>
 				</dict>
 			</dict>
 		</dict>

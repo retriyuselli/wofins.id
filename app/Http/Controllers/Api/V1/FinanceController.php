@@ -407,6 +407,23 @@ class FinanceController extends Controller
         ]);
     }
 
+    public function productPdf(int $id): \Symfony\Component\HttpFoundation\Response
+    {
+        $product = \App\Models\Product::query()->find($id);
+
+        if (! $product) {
+            return response()->json(['message' => 'Paket tidak ditemukan.'], 404);
+        }
+
+        try {
+            return app(\App\Http\Controllers\ProductDisplayController::class)->apiDownloadPdf($product);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json(['message' => 'PDF paket gagal dibuat.'], 500);
+        }
+    }
+
     public function vendorShow(int $id): JsonResponse
     {
         $detail = $this->finance->vendorDetail($id);

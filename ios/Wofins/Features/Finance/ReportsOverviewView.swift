@@ -60,7 +60,7 @@ struct ReportsView: View {
                 }
             }
             .background(WofinsTheme.background.ignoresSafeArea())
-            .toolbar(.hidden, for: .navigationBar)
+            .wofinsHidesNavigationBar()
             .task(id: reloadToken) {
                 guard appState.allows(.basicFinance) else { return }
                 await load()
@@ -166,8 +166,9 @@ struct ReportsView: View {
                 summaryMetric(mode == "cash" ? "Total Keluar" : "Biaya Wedding", outgoing, WofinsTheme.danger)
             }
         }.padding(19)
-            .background(LinearGradient(colors: [WofinsTheme.primary, WofinsTheme.primaryLight], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 22))
-            .shadow(color: WofinsTheme.primary.opacity(0.18), radius: 16, y: 7).padding(.horizontal, 16)
+            .background(WofinsTheme.primary, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .wofinsHeroShadow()
+            .padding(.horizontal, 16)
     }
 
     private func summaryMetric(_ title: String, _ amount: Int?, _ color: Color) -> some View {
@@ -341,6 +342,6 @@ private extension View {
     func reportSurface() -> some View {
         background(WofinsTheme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay { RoundedRectangle(cornerRadius: 18).stroke(WofinsTheme.border.opacity(0.75)) }
-            .shadow(color: WofinsTheme.primary.opacity(0.055), radius: 12, y: 5)
+            .wofinsSoftShadow()
     }
 }

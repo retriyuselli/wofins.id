@@ -69,8 +69,7 @@ struct DashboardView: View {
                     }
                 }
                 .background(WofinsTheme.background.ignoresSafeArea())
-                .toolbar(.hidden, for: .navigationBar)
-                .toolbarBackground(.hidden, for: .navigationBar)
+                .wofinsHidesNavigationBar()
             }
         }
         .background(WofinsTheme.background.ignoresSafeArea())
@@ -155,15 +154,8 @@ struct DashboardView: View {
                 .foregroundStyle(.white.opacity(0.78))
         }
         .padding(20)
-        .background(
-            LinearGradient(
-                colors: [WofinsTheme.primary, WofinsTheme.primaryLight],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            ),
-            in: RoundedRectangle(cornerRadius: 22, style: .continuous)
-        )
-        .shadow(color: WofinsTheme.primary.opacity(0.18), radius: 16, y: 7)
+        .background(WofinsTheme.primary, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .wofinsHeroShadow()
         .padding(.horizontal, 16)
     }
 
@@ -413,6 +405,6 @@ private extension View {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .stroke(WofinsTheme.border.opacity(0.75), lineWidth: 1)
             }
-            .shadow(color: WofinsTheme.primary.opacity(0.055), radius: 12, y: 5)
+            .wofinsSoftShadow()
     }
 }

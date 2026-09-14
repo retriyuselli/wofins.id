@@ -24,7 +24,7 @@ struct HomeView: View {
                         .padding()
                         .background(WofinsTheme.card)
                         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        .shadow(color: .black.opacity(0.04), radius: 8, y: 2)
+                        .wofinsSoftShadow()
                     }
 
                     Text("Selamat datang di WOFINS.")

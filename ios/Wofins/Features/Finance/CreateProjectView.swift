@@ -170,7 +170,7 @@ struct CreateProjectView: View {
                 Spacer()
             } else {
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: 16) {
+                    LazyVStack(spacing: 16) {
                         if let errorMessage {
                             Text(errorMessage)
                                 .font(.poppins(.caption))
@@ -198,7 +198,7 @@ struct CreateProjectView: View {
         .background(WofinsTheme.background.ignoresSafeArea())
         .wofinsDismissKeyboardOnOutsideTap()
         .wofinsKeyboardDoneButton()
-        .toolbar(.hidden, for: .navigationBar)
+        .wofinsHidesNavigationBar()
         .task { await loadOptions() }
         .fileImporter(isPresented: $isPickingPDF, allowedContentTypes: [.pdf]) { result in
             switch pdfTarget {

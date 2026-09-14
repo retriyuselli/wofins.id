@@ -50,7 +50,7 @@ struct ProjectDetailView: View {
             VStack(spacing: 0) {
                 header
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: 16) {
+                    LazyVStack(spacing: 16) {
                         if isLoading && detail == nil && preview == nil {
                             loadingCard
                         } else if let errorMessage, detail == nil {
@@ -74,6 +74,7 @@ struct ProjectDetailView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .refreshable { await load() }
+                .scrollDismissesKeyboard(.immediately)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -97,7 +98,7 @@ struct ProjectDetailView: View {
             }
         }
         .background(WofinsTheme.background.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
+        .wofinsHidesNavigationBar()
         .task { await load() }
         .navigationDestination(isPresented: $showInvoicePreview) {
             if let invoiceURL {
@@ -164,23 +165,6 @@ struct ProjectDetailView: View {
                     .lineLimit(1)
             }
             .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-
-            Button {
-                if canEditProject {
-                    showEdit = true
-                } else {
-                    actionMessage = detail?.can_edit_reason ?? "Proyek sudah selesai. Hanya Super Admin yang dapat mengedit."
-                }
-            } label: {
-                Image(systemName: "pencil")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(.white)
-                    .frame(width: 40, height: 40)
-                    .background(.white.opacity(0.11), in: Circle())
-            }
-            .accessibilityLabel("Edit proyek")
-            .disabled(detail == nil)
-            .fixedSize()
 
             Menu {
                 Button {
@@ -292,15 +276,18 @@ struct ProjectDetailView: View {
                             .font(.poppins(.caption, weight: .bold))
                             .foregroundStyle(appearance.color)
                     }
-                    Capsule()
-                        .fill(WofinsTheme.border)
-                        .frame(height: 8)
-                        .overlay(alignment: .leading) {
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
                             Capsule()
-                                .fill(LinearGradient(colors: [WofinsTheme.primary, WofinsTheme.yellow], startPoint: .leading, endPoint: .trailing))
-                                .scaleEffect(x: progress, y: 1, anchor: .leading)
+                                .fill(WofinsTheme.border)
+                            Capsule()
+                                .fill(WofinsTheme.primary)
+                                .frame(width: max(4, geo.size.width * progress))
                         }
-                        .clipShape(Capsule())
+                    }
+                    .frame(height: 8)
+                    .clipShape(Capsule())
+                    .accessibilityLabel("Progress bayar \(Int(progress * 100)) persen")
                 }
             }
         }
@@ -356,26 +343,45 @@ struct ProjectDetailView: View {
     }
 
     private var financeGrid: some View {
-        let tiles = [
+        let grandTotal = detail?.grandTotalValue ?? preview?.grand_total ?? 0
+        let expenses = detail?.expensesValue ?? preview?.expenses_total ?? 0
+        let profit = ProjectProfitDisplay.amount(
+            api: detail?.grossProfitValue ?? preview?.gross_profit,
+            grandTotal: grandTotal,
+            expenses: expenses
+        )
+        let profitColor = profit < 0 ? WofinsTheme.danger : WofinsTheme.success
+        var tiles = [
             ("Nilai proyek", detail?.grandTotalValue ?? preview?.grand_total, WofinsTheme.primary),
             ("Terbayar", detail?.paidValue ?? preview?.paid_amount, WofinsTheme.success),
             ("Sisa", detail?.remainingValue ?? preview?.remaining, Color(red: 0.76, green: 0.52, blue: 0.00)),
             ("Pengeluaran", detail?.expensesValue ?? preview?.expenses_total, WofinsTheme.danger),
-        ].filter { ($0.1 ?? 0) != 0 }
+        ].filter { $0.0 == "Sisa" ? ($0.1 ?? 0) != 0 : ($0.1 ?? 0) != 0 }
+
+        if detail != nil || preview != nil {
+            tiles.append((ProjectProfitDisplay.title(for: profit), profit, profitColor))
+        }
 
         return Group {
             if !tiles.isEmpty {
-                VStack(spacing: 12) {
-                    ForEach(Array(stride(from: 0, to: tiles.count, by: 2)), id: \.self) { index in
-                        if index + 1 < tiles.count {
-                            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 8) {
+                    VStack(spacing: 12) {
+                        ForEach(Array(stride(from: 0, to: tiles.count, by: 2)), id: \.self) { index in
+                            if index + 1 < tiles.count {
+                                HStack(spacing: 12) {
+                                    financeTile(tiles[index].0, tiles[index].1, tiles[index].2)
+                                    financeTile(tiles[index + 1].0, tiles[index + 1].1, tiles[index + 1].2)
+                                }
+                            } else {
                                 financeTile(tiles[index].0, tiles[index].1, tiles[index].2)
-                                financeTile(tiles[index + 1].0, tiles[index + 1].1, tiles[index + 1].2)
                             }
-                        } else {
-                            financeTile(tiles[index].0, tiles[index].1, tiles[index].2)
                         }
                     }
+                    Text(ProjectProfitDisplay.caption)
+                        .font(.poppins(.caption2))
+                        .foregroundStyle(WofinsTheme.muted)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .padding(.horizontal, 16)
             }
@@ -399,7 +405,7 @@ struct ProjectDetailView: View {
                 .frame(width: 28, height: 3)
         }
         .padding(14)
-        .frame(maxWidth: .infinity, minHeight: 86, alignment: .topLeading)
+        .frame(minWidth: 0, maxWidth: .infinity, minHeight: 86, alignment: .topLeading)
         .projectSurface()
     }
 
@@ -412,16 +418,16 @@ struct ProjectDetailView: View {
                     NavigationLink {
                         ProductDetailView(
                             productId: productId,
-                            previewName: item.name,
+                            previewName: DisplayText.titleCase(item.name ?? "Paket"),
                             previewPax: item.pax,
                             previewPrice: item.unit_price
                         )
                     } label: {
-                        packageRow(item, showsChevron: true)
+                        packageRow(item)
                     }
                     .buttonStyle(.plain)
                 } else {
-                    packageRow(item, showsChevron: false)
+                    packageRow(item)
                 }
             }
         }
@@ -430,10 +436,10 @@ struct ProjectDetailView: View {
         .padding(.horizontal, 16)
     }
 
-    private func packageRow(_ item: FinanceProjectProduct, showsChevron: Bool) -> some View {
+    private func packageRow(_ item: FinanceProjectProduct) -> some View {
         HStack(alignment: .top, spacing: 10) {
             VStack(alignment: .leading, spacing: 3) {
-                Text(item.name ?? "Paket")
+                Text(DisplayText.titleCase(item.name ?? "Paket"))
                     .font(.poppins(.subheadline, weight: .semibold))
                     .foregroundStyle(WofinsTheme.ink)
                     .multilineTextAlignment(.leading)
@@ -451,18 +457,11 @@ struct ProjectDetailView: View {
                 .minimumScaleFactor(0.8)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            VStack(alignment: .trailing, spacing: 6) {
-                Text(MoneyFormat.idr(item.lineTotal))
-                    .font(.poppins(.caption, weight: .bold))
-                    .foregroundStyle(WofinsTheme.primary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                if showsChevron {
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(WofinsTheme.muted)
-                }
-            }
+            Text(MoneyFormat.idr(item.lineTotal))
+                .font(.poppins(.caption, weight: .bold))
+                .foregroundStyle(WofinsTheme.primary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
         }
         .contentShape(Rectangle())
     }
@@ -477,8 +476,11 @@ struct ProjectDetailView: View {
                 ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
                     if index > 0 { Divider() }
                     moneyRow(
-                        title: item.keterangan ?? "Pembayaran",
-                        subtitle: [formattedDate(item.date), item.payment_method].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · "),
+                        title: DisplayText.titleCase(item.keterangan ?? "Pembayaran"),
+                        subtitle: [
+                            formattedDate(item.date),
+                            item.payment_method.map(DisplayText.titleCase)
+                        ].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · "),
                         amount: item.amount,
                         positive: true
                     )
@@ -500,7 +502,7 @@ struct ProjectDetailView: View {
                 ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
                     if index > 0 { Divider() }
                     moneyRow(
-                        title: item.vendor ?? item.note ?? "Pengeluaran",
+                        title: DisplayText.titleCase(item.vendor ?? item.note ?? "Pengeluaran"),
                         subtitle: [formattedDate(item.date), item.note].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · "),
                         amount: item.amount,
                         positive: false

@@ -57,7 +57,7 @@ struct ModulesHubView: View {
             .refreshable { await load() }
         }
         .background(WofinsTheme.background.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
+        .wofinsHidesNavigationBar()
         .task { await load() }
     }
 
@@ -222,7 +222,7 @@ struct ModuleListView: View {
             }
         }
         .background(WofinsTheme.background.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
+        .wofinsHidesNavigationBar()
         .task { await load() }
         .sheet(isPresented: $showCreate) {
             Group {
@@ -412,11 +412,41 @@ struct ModuleDetailView: View {
     @State private var isSharingDraft = false
     @State private var showPdfPreview = false
     @State private var pdfPreviewURL: URL?
+    @State private var isDownloadingPdf = false
     @State private var shareItem: ModulePdfShareItem?
     @State private var showEdit = false
+    @State private var productDetail: FinanceProductDetail?
+    @State private var isLoadingProduct = false
 
     private var isSimulasi: Bool { item.key == "simulasi" }
-    private var isBusy: Bool { isOpeningDraft || isSharingDraft }
+    private var isProduct: Bool { item.key == "products" }
+    private var isBusy: Bool { isOpeningDraft || isSharingDraft || isDownloadingPdf }
+    private var childrenTitle: String { isProduct ? "Fasilitas Dasar" : "Rincian" }
+    private var resolvedProduct: FinanceProductDetail? { productDetail ?? record?.product }
+
+    private var headerAmount: Int? {
+        if isProduct {
+            return resolvedProduct?.pricing?.total_publish
+                ?? resolvedProduct?.price
+                ?? record?.amount
+        }
+        return record?.amount
+    }
+
+    private var displayFields: [ModuleFieldRow] {
+        let fields = record?.fields ?? []
+        guard isProduct, let pricing = resolvedProduct?.pricing else { return fields }
+        return fields.map { field in
+            switch field.label.lowercased() {
+            case "harga", "total paket":
+                return ModuleFieldRow(label: "Total Paket", value: MoneyFormat.idr(pricing.total_publish))
+            case "harga vendor", "total vendor":
+                return ModuleFieldRow(label: "Total Vendor", value: MoneyFormat.idr(pricing.total_vendor))
+            default:
+                return field
+            }
+        }
+    }
 
     private var draftFileName: String {
         let raw = record?.displayTitle ?? "simulasi-\(recordId)"
@@ -425,6 +455,17 @@ struct ModuleDetailView: View {
             .replacingOccurrences(of: ":", with: "-")
             .replacingOccurrences(of: " ", with: "_")
         return "Draft_Kontrak_\(safe).pdf"
+    }
+
+    private var productPdfFileName: String {
+        let slug = resolvedProduct?.slug ?? "paket-\(recordId)"
+        return "Paket_\(slug).pdf"
+    }
+
+    private var actionAlertTitle: String {
+        if isSimulasi { return "Draft Kontrak" }
+        if isProduct { return "Paket" }
+        return item.title
     }
 
     var body: some View {
@@ -444,15 +485,7 @@ struct ModuleDetailView: View {
                 }
                 .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
                 if record != nil {
-                    Button { showEdit = true } label: {
-                        Image(systemName: "slider.horizontal.3")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundStyle(.white)
-                            .frame(width: 40, height: 40)
-                            .background(.white.opacity(0.11), in: Circle())
-                    }
-                    .accessibilityLabel(isSimulasi ? "Edit simulasi" : "Edit \(item.title)")
-                    .fixedSize()
+                    headerActions
                 }
                 if isSimulasi, record != nil {
                     Button {
@@ -487,7 +520,7 @@ struct ModuleDetailView: View {
                     } else if let errorMessage, record == nil {
                         Text(errorMessage).font(.poppins(.caption)).foregroundStyle(WofinsTheme.danger).padding(16).moduleSurface()
                     } else if let record {
-                        if let amount = record.amount {
+                        if let amount = headerAmount {
                             Text(MoneyFormat.idr(amount))
                                 .font(.poppins(size: 24, weight: .bold))
                                 .foregroundStyle(WofinsTheme.primary)
@@ -496,7 +529,7 @@ struct ModuleDetailView: View {
                                 .moduleSurface()
                         }
                         VStack(alignment: .leading, spacing: 0) {
-                            ForEach(Array((record.fields ?? []).enumerated()), id: \.offset) { index, field in
+                            ForEach(Array(displayFields.enumerated()), id: \.offset) { index, field in
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(field.label)
                                         .font(.poppins(.caption2))
@@ -507,7 +540,7 @@ struct ModuleDetailView: View {
                                         .fixedSize(horizontal: false, vertical: true)
                                 }
                                 .padding(.vertical, 10)
-                                if index < (record.fields?.count ?? 0) - 1 {
+                                if index < displayFields.count - 1 {
                                     Divider()
                                 }
                             }
@@ -519,31 +552,18 @@ struct ModuleDetailView: View {
                             draftKontrakActions
                         }
 
-                        if let children = record.children, !children.isEmpty {
-                            Text("Rincian")
-                                .font(.poppins(.headline, weight: .bold))
-                                .foregroundStyle(WofinsTheme.primary)
-                            ForEach(children) { child in
-                                HStack(alignment: .top, spacing: 10) {
-                                    VStack(alignment: .leading, spacing: 3) {
-                                        Text(child.displayTitle)
-                                            .font(.poppins(.subheadline, weight: .semibold))
-                                            .foregroundStyle(WofinsTheme.ink)
-                                            .fixedSize(horizontal: false, vertical: true)
-                                        if let subtitle = child.subtitle {
-                                            Text(subtitle).font(.poppins(.caption2)).foregroundStyle(WofinsTheme.muted)
-                                        }
-                                    }
-                                    .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-                                    if let amount = child.amount {
-                                        Text(MoneyFormat.idr(amount))
-                                            .font(.poppins(.caption, weight: .bold))
-                                            .foregroundStyle(WofinsTheme.ink)
-                                    }
-                                }
-                                .padding(14)
-                                .moduleSurface()
+                        if isProduct {
+                            if let product = resolvedProduct {
+                                ProductBreakdownView(detail: product)
+                            } else if isLoadingProduct {
+                                ProgressView("Memuat fasilitas paket…")
+                                    .frame(maxWidth: .infinity)
+                                    .padding(24)
+                            } else {
+                                childrenSection(record.children ?? [])
                             }
+                        } else if !(record.children ?? []).isEmpty {
+                            childrenSection(record.children ?? [])
                         }
                     }
                 }
@@ -554,7 +574,7 @@ struct ModuleDetailView: View {
             .refreshable { await load() }
         }
         .background(WofinsTheme.background.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
+        .wofinsHidesNavigationBar()
         .task { await load() }
         .sheet(isPresented: $showEdit) {
             Group {
@@ -583,7 +603,7 @@ struct ModuleDetailView: View {
         .sheet(item: $shareItem) { item in
             ModulePdfShareSheet(items: [item.url])
         }
-        .alert("Draft Kontrak", isPresented: Binding(
+        .alert(actionAlertTitle, isPresented: Binding(
             get: { actionMessage != nil },
             set: { if !$0 { actionMessage = nil } }
         )) {
@@ -591,6 +611,138 @@ struct ModuleDetailView: View {
         } message: {
             Text(actionMessage ?? "")
         }
+    }
+
+    @ViewBuilder
+    private var headerActions: some View {
+        if isProduct {
+            Menu {
+                Button {
+                    showEdit = true
+                } label: {
+                    Label("Edit", systemImage: "pencil")
+                }
+                Button {
+                    Task { await downloadProductPdf() }
+                } label: {
+                    Label("Download PDF", systemImage: "arrow.down.doc.fill")
+                }
+                .disabled(isBusy)
+            } label: {
+                Group {
+                    if isDownloadingPdf {
+                        ProgressView().tint(.white)
+                    } else {
+                        Image(systemName: "ellipsis")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundStyle(.white)
+                    }
+                }
+                .frame(width: 40, height: 40)
+                .background(.white.opacity(0.11), in: Circle())
+            }
+            .accessibilityLabel("Aksi paket")
+            .fixedSize()
+        } else {
+            Button { showEdit = true } label: {
+                Image(systemName: "slider.horizontal.3")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 40, height: 40)
+                    .background(.white.opacity(0.11), in: Circle())
+            }
+            .accessibilityLabel(isSimulasi ? "Edit simulasi" : "Edit \(item.title)")
+            .fixedSize()
+        }
+    }
+
+    private func childrenSection(_ children: [ModuleRecord]) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(childrenTitle)
+                .font(.poppins(.headline, weight: .bold))
+                .foregroundStyle(WofinsTheme.primary)
+            if children.isEmpty {
+                Text(isProduct ? "Belum ada fasilitas dasar pada paket ini." : "Belum ada rincian")
+                    .font(.poppins(.caption))
+                    .foregroundStyle(WofinsTheme.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .moduleSurface()
+            } else {
+                ForEach(children) { child in
+                    childCard(child)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func childCard(_ child: ModuleRecord) -> some View {
+        let card = childCardContent(child)
+        if isProduct, let vendorId = child.vendor_id {
+            NavigationLink {
+                VendorDetailView(vendorId: vendorId, previewName: child.title)
+            } label: {
+                card
+            }
+            .buttonStyle(.plain)
+        } else {
+            card
+        }
+    }
+
+    private func childCardContent(_ child: ModuleRecord) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .top, spacing: 10) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(child.displayTitle)
+                        .font(.poppins(.subheadline, weight: .semibold))
+                        .foregroundStyle(WofinsTheme.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if let subtitle = child.subtitle, !subtitle.isEmpty {
+                        Text(subtitle)
+                            .font(.poppins(.caption2))
+                            .foregroundStyle(WofinsTheme.muted)
+                    }
+                }
+                .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                VStack(alignment: .trailing, spacing: 6) {
+                    if let amount = child.amount, amount != 0 {
+                        Text(MoneyFormat.idr(amount))
+                            .font(.poppins(.caption, weight: .bold))
+                            .foregroundStyle(WofinsTheme.ink)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                    }
+                    if isProduct, child.vendor_id != nil {
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(WofinsTheme.muted)
+                    }
+                }
+                .fixedSize(horizontal: true, vertical: false)
+            }
+
+            if let fields = child.fields, !fields.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    ForEach(fields) { field in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(field.label)
+                                .font(.poppins(.caption2))
+                                .foregroundStyle(WofinsTheme.muted)
+                            Text(field.displayText)
+                                .font(.poppins(.caption))
+                                .foregroundStyle(WofinsTheme.ink)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .moduleSurface()
     }
 
     private var draftKontrakActions: some View {
@@ -674,10 +826,48 @@ struct ModuleDetailView: View {
         isLoading = true
         defer { isLoading = false }
         do {
-            record = try await appState.api.moduleDetail(key: item.key, id: recordId)
+            let detail = try await appState.api.moduleDetail(key: item.key, id: recordId)
+            record = detail
             errorMessage = nil
+            if isProduct {
+                await loadProductBreakdown(preferring: detail.product)
+            } else {
+                productDetail = nil
+            }
         } catch {
             APILoadFailure.assign(error, to: &errorMessage)
+        }
+    }
+
+    private func loadProductBreakdown(preferring bundled: FinanceProductDetail?) async {
+        if productDetail == nil {
+            productDetail = bundled
+        }
+        isLoadingProduct = productDetail == nil
+        defer { isLoadingProduct = false }
+        do {
+            productDetail = try await appState.api.financeProduct(id: recordId)
+        } catch {
+            if productDetail == nil {
+                productDetail = bundled
+            }
+        }
+    }
+
+    private func downloadProductPdf() async {
+        guard !isBusy else { return }
+        isDownloadingPdf = true
+        defer { isDownloadingPdf = false }
+        do {
+            let data = try await appState.api.financeProductPdf(id: recordId)
+            let safeName = productPdfFileName
+                .replacingOccurrences(of: "/", with: "-")
+                .replacingOccurrences(of: ":", with: "-")
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent(safeName)
+            try data.write(to: url, options: .atomic)
+            shareItem = ModulePdfShareItem(url: url)
+        } catch {
+            APILoadFailure.assign(error, to: &actionMessage)
         }
     }
 
@@ -758,7 +948,7 @@ struct ModuleCreateView: View {
                         .padding()
                 } else {
                     ScrollView(showsIndicators: false) {
-                        VStack(alignment: .leading, spacing: 14) {
+                        LazyVStack(alignment: .leading, spacing: 14) {
                             if let errorMessage {
                                 Text(errorMessage)
                                     .font(.poppins(.caption))
@@ -799,6 +989,7 @@ struct ModuleCreateView: View {
                     Button("Tutup") { dismiss() }
                 }
             }
+            .wofinsSwipeBack()
             .task { await loadForm() }
         }
     }
@@ -1060,5 +1251,6 @@ extension View {
     func moduleSurface() -> some View {
         background(WofinsTheme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay { RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(WofinsTheme.border.opacity(0.75)) }
+            .wofinsSoftShadow()
     }
 }

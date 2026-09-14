@@ -224,6 +224,7 @@ struct PiutangDetailView: View {
         }
         .navigationTitle(detail?.displayName ?? "Detail Piutang")
         .navigationBarTitleDisplayMode(.inline)
+        .wofinsSwipeBack()
         .task { await load() }
     }
 

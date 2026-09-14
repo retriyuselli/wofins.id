@@ -29,6 +29,7 @@ struct PrivacyStatementView: View {
                     Button("Tutup") { dismiss() }
                 }
             }
+            .wofinsSwipeBack()
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)

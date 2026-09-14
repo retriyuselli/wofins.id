@@ -6,7 +6,7 @@
 	<integer>12</integer>
 	<key>logs</key>
 	<dict>
-		<key>615E4876-97BE-45DD-B728-DE75AA336231</key>
+		<key>1D25F88D-C6F0-485A-938F-FE8A5D041C52</key>
 		<dict>
 			<key>className</key>
 			<string>IDECommandLineBuildLog</string>
@@ -15,7 +15,7 @@
 			<key>domainType</key>
 			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
 			<key>fileName</key>
-			<string>615E4876-97BE-45DD-B728-DE75AA336231.xcactivitylog</string>
+			<string>1D25F88D-C6F0-485A-938F-FE8A5D041C52.xcactivitylog</string>
 			<key>hasPrimaryLog</key>
 			<true/>
 			<key>primaryObservable</key>
@@ -38,17 +38,17 @@
 			<key>schemeIdentifier-sharedScheme</key>
 			<integer>1</integer>
 			<key>signature</key>
-			<string>Testing project Wofins with scheme Wofins</string>
+			<string>Building project Wofins with scheme Wofins and configuration Debug</string>
 			<key>timeStartedRecording</key>
-			<real>810995011.22622097</real>
+			<real>811082434.76697004</real>
 			<key>timeStoppedRecording</key>
-			<real>810995016.83308995</real>
+			<real>811082447.63586605</real>
 			<key>title</key>
-			<string>Testing project Wofins with scheme Wofins</string>
+			<string>Building project Wofins with scheme Wofins and configuration Debug</string>
 			<key>uniqueIdentifier</key>
-			<string>615E4876-97BE-45DD-B728-DE75AA336231</string>
+			<string>1D25F88D-C6F0-485A-938F-FE8A5D041C52</string>
 		</dict>
-		<key>FCE3869A-BB0B-4C88-9058-EB3429556365</key>
+		<key>79FAA659-A8F6-4607-9643-C36F4032E50A</key>
 		<dict>
 			<key>className</key>
 			<string>IDECommandLineBuildLog</string>
@@ -57,7 +57,7 @@
 			<key>domainType</key>
 			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
 			<key>fileName</key>
-			<string>FCE3869A-BB0B-4C88-9058-EB3429556365.xcactivitylog</string>
+			<string>79FAA659-A8F6-4607-9643-C36F4032E50A.xcactivitylog</string>
 			<key>hasPrimaryLog</key>
 			<true/>
 			<key>primaryObservable</key>
@@ -80,15 +80,15 @@
 			<key>schemeIdentifier-sharedScheme</key>
 			<integer>1</integer>
 			<key>signature</key>
-			<string>Testing project Wofins with scheme Wofins</string>
+			<string>Building project Wofins with scheme Wofins and configuration Debug</string>
 			<key>timeStartedRecording</key>
-			<real>810994922.17125297</real>
+			<real>811083603.153705</real>
 			<key>timeStoppedRecording</key>
-			<real>810994936.92907906</real>
+			<real>811083620.083776</real>
 			<key>title</key>
-			<string>Testing project Wofins with scheme Wofins</string>
+			<string>Building project Wofins with scheme Wofins and configuration Debug</string>
 			<key>uniqueIdentifier</key>
-			<string>FCE3869A-BB0B-4C88-9058-EB3429556365</string>
+			<string>79FAA659-A8F6-4607-9643-C36F4032E50A</string>
 		</dict>
 	</dict>
 </dict>

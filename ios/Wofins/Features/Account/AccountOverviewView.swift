@@ -33,7 +33,7 @@ struct AccountView: View {
                 .refreshable { await appState.refreshMe() }
             }
             .background(WofinsTheme.background.ignoresSafeArea())
-            .toolbar(.hidden, for: .navigationBar)
+            .wofinsHidesNavigationBar()
             .confirmationDialog("Keluar dari akun?", isPresented: $confirmLogout, titleVisibility: .visible) {
                 Button("Keluar", role: .destructive) { Task { await appState.logout() } }
                 Button("Batal", role: .cancel) {}
@@ -97,7 +97,8 @@ struct AccountView: View {
                 .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
                 Spacer(); Image(systemName: "chevron.right").foregroundStyle(.white.opacity(0.75))
             }.padding(18)
-                .background(LinearGradient(colors: [WofinsTheme.primary, WofinsTheme.primaryLight], startPoint: .leading, endPoint: .trailing), in: RoundedRectangle(cornerRadius: 20))
+                .background(WofinsTheme.primary, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .wofinsHeroShadow()
         }.buttonStyle(.plain).padding(.horizontal, 16)
     }
 
@@ -257,6 +258,6 @@ private extension View {
     func accountSurface() -> some View {
         background(WofinsTheme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay { RoundedRectangle(cornerRadius: 18).stroke(WofinsTheme.border.opacity(0.75)) }
-            .shadow(color: WofinsTheme.primary.opacity(0.055), radius: 12, y: 5)
+            .wofinsSoftShadow()
     }
 }

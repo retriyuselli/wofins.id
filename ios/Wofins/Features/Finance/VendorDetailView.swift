@@ -11,7 +11,7 @@ struct VendorDetailView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
 
-    private var title: String { detail?.name ?? previewName ?? "Vendor" }
+    private var title: String { DisplayText.titleCase(detail?.name ?? previewName ?? "Vendor") }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -33,7 +33,7 @@ struct VendorDetailView: View {
             .refreshable { await load() }
         }
         .background(WofinsTheme.background.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
+        .wofinsHidesNavigationBar()
         .task { await load() }
     }
 
@@ -70,10 +70,10 @@ struct VendorDetailView: View {
     private var summaryCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             if let category = detail?.category, !category.isEmpty {
-                labeledRow("Kategori", category, icon: "square.grid.2x2.fill")
+                labeledRow("Kategori", DisplayText.titleCase(category), icon: "square.grid.2x2.fill")
             }
             if let pic = detail?.pic_name, !pic.isEmpty {
-                labeledRow("PIC", pic, icon: "person.fill")
+                labeledRow("PIC", DisplayText.titleCase(pic), icon: "person.fill")
             }
             if let phone = detail?.phone, !phone.isEmpty {
                 if let url = PhoneFormat.telURL(phone) {
@@ -86,17 +86,18 @@ struct VendorDetailView: View {
                 }
             }
             if let address = detail?.address, !address.isEmpty {
-                labeledRow("Alamat", address, icon: "mappin.and.ellipse")
+                labeledRow("Alamat", DisplayText.titleCase(address), icon: "mappin.and.ellipse")
             }
             if let description = detail?.description, !description.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Deskripsi")
                         .font(.poppins(.caption2))
                         .foregroundStyle(WofinsTheme.muted)
-                    Text(description)
-                        .font(.poppins(.subheadline))
-                        .foregroundStyle(WofinsTheme.ink)
-                        .fixedSize(horizontal: false, vertical: true)
+                    HTMLListView(
+                        text: description,
+                        font: .poppins(.subheadline),
+                        color: WofinsTheme.ink
+                    )
                 }
             }
         }

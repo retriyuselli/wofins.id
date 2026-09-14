@@ -45,7 +45,7 @@ struct ProjectDocumentView: View {
                 .background(WofinsTheme.background)
         }
         .background(WofinsTheme.background.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
+        .wofinsHidesNavigationBar()
     }
 }
 

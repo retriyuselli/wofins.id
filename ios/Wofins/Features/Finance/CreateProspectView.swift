@@ -63,7 +63,7 @@ struct CreateProspectView: View {
         VStack(spacing: 0) {
             header
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 16) {
+                LazyVStack(spacing: 16) {
                     if let errorMessage {
                         Text(errorMessage)
                             .font(.poppins(.caption))
@@ -129,7 +129,7 @@ struct CreateProspectView: View {
         }
         .background(WofinsTheme.background.ignoresSafeArea())
         .wofinsDismissKeyboardOnOutsideTap()
-        .toolbar(.hidden, for: .navigationBar)
+        .wofinsHidesNavigationBar()
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()

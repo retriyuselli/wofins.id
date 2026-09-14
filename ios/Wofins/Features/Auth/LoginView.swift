@@ -13,6 +13,8 @@ struct LoginView: View {
     @State private var faceNote = ""
     @State private var showPrivacy = false
     @State private var selectedHost = APIConfig.selectedHost
+    @State private var showInternalHostPicker = LoginHostPolicy.isInternalUnlocked
+    @State private var logoUnlockTaps = 0
     @FocusState private var focusedField: Field?
 
     private enum Field {
@@ -28,6 +30,12 @@ struct LoginView: View {
     private let canvas = Color(red: 0.969, green: 0.976, blue: 0.988) // #F7F9FC
     private let keychain = KeychainStore()
 
+    private var canSubmitLogin: Bool {
+        !isLoading
+            && !email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !password.isEmpty
+    }
+
     var body: some View {
         ZStack {
             canvas
@@ -41,7 +49,7 @@ struct LoginView: View {
                     .onTapGesture { dismissKeyboard() }
 
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: 20) {
+                    LazyVStack(spacing: 20) {
                         formPanel
                             .padding(.horizontal, 20)
                             .padding(.top, 22)
@@ -69,7 +77,15 @@ struct LoginView: View {
             }
         }
         .onAppear {
+            showInternalHostPicker = LoginHostPolicy.isInternalUnlocked
             selectedHost = APIConfig.selectedHost
+            let publicHost = LoginHostPolicy.resolvedHost(
+                unlocked: showInternalHostPicker,
+                current: selectedHost
+            )
+            if publicHost != selectedHost {
+                applyHost(publicHost)
+            }
             if let saved = UserDefaults.standard.string(forKey: "wofins.savedEmail"), !saved.isEmpty {
                 email = saved
             }
@@ -115,6 +131,8 @@ struct LoginView: View {
             VStack(spacing: 14) {
                 HStack(spacing: 12) {
                     logoBadge
+                        .highPriorityGesture(TapGesture().onEnded(handleLogoUnlockTap))
+                        .accessibilityLabel("WOFINS")
                     VStack(alignment: .leading, spacing: 2) {
                         Text("WOFINS")
                             .font(.poppins(size: 28, weight: .heavy))
@@ -160,14 +178,16 @@ struct LoginView: View {
                 .font(.poppins(size: 22, weight: .bold))
                 .foregroundStyle(navy)
 
-            Text(selectedHost == .makna ? "Gunakan email akun Makna Finance" : "Gunakan email akun WOFINS Anda")
+            Text(LoginHostPolicy.accountHint(for: selectedHost, unlocked: showInternalHostPicker))
                 .font(.poppins(size: 13))
                 .foregroundStyle(muted)
                 .padding(.top, 6)
                 .fixedSize(horizontal: false, vertical: true)
 
-            hostPicker
-                .padding(.top, 16)
+            if showInternalHostPicker {
+                hostPicker
+                    .padding(.top, 16)
+            }
 
             if let errorMessage {
                 Text(errorMessage)
@@ -245,23 +265,24 @@ struct LoginView: View {
             .padding(.top, 18)
 
             Button {
+                guard canSubmitLogin else { return }
                 Task { await submit() }
             } label: {
                 ZStack {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(LinearGradient(colors: [navy, navyDeep], startPoint: .leading, endPoint: .trailing))
+
                     if isLoading {
-                        ProgressView().tint(.white)
+                        ProgressView()
+                            .tint(Color.white)
                     } else {
                         Text("Masuk")
                             .font(.poppins(size: 16, weight: .bold))
+                            .foregroundStyle(Color.white)
                     }
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 52)
-                .foregroundStyle(.white)
-                .background(
-                    LinearGradient(colors: [navy, navyDeep], startPoint: .leading, endPoint: .trailing)
-                )
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .overlay(alignment: .bottom) {
                     Capsule()
                         .fill(gold)
@@ -269,12 +290,12 @@ struct LoginView: View {
                         .padding(.horizontal, 18)
                         .offset(y: 1)
                 }
-                .shadow(color: navy.opacity(0.28), radius: 14, y: 8)
+                .shadow(color: navy.opacity(canSubmitLogin ? 0.28 : 0.14), radius: 14, y: 8)
+                .opacity(canSubmitLogin || isLoading ? 1 : 0.88)
             }
             .buttonStyle(.plain)
             .padding(.top, 22)
-            .disabled(isLoading || email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || password.isEmpty)
-            .opacity(isLoading || email.isEmpty || password.isEmpty ? 0.65 : 1)
+            // Hindari `.disabled` — iOS mengaburkan teks putih jadi hampir tak terbaca.
 
             HStack(spacing: 12) {
                 Rectangle().fill(line).frame(height: 1)
@@ -353,9 +374,22 @@ struct LoginView: View {
         }
     }
 
+    private func handleLogoUnlockTap() {
+        logoUnlockTaps += 1
+        guard logoUnlockTaps >= LoginHostPolicy.unlockTapCount else { return }
+        logoUnlockTaps = 0
+        let unlocked = !LoginHostPolicy.isInternalUnlocked
+        LoginHostPolicy.isInternalUnlocked = unlocked
+        showInternalHostPicker = unlocked
+        if !unlocked {
+            applyHost(.wofins)
+        }
+        UINotificationFeedbackGenerator().notificationOccurred(unlocked ? .success : .warning)
+    }
+
     private var hostPicker: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Server")
+            Text("Akses internal")
                 .font(.poppins(size: 12, weight: .semibold))
                 .foregroundStyle(navy)
 

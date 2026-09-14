@@ -118,6 +118,7 @@ struct EditProfileView: View {
         }
         .navigationTitle("Edit Profil")
         .navigationBarTitleDisplayMode(.inline)
+        .wofinsSwipeBack()
         .scrollDismissesKeyboard(.immediately)
         .wofinsKeyboardDoneButton()
         .onAppear { loadUser() }
@@ -280,6 +281,7 @@ struct ChangePasswordView: View {
             }
         }
         .navigationTitle("Ganti Password")
+        .wofinsSwipeBack()
         .scrollDismissesKeyboard(.immediately)
         .wofinsKeyboardDoneButton()
     }

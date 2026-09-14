@@ -231,6 +231,24 @@ class ProductDisplayController extends Controller
         abort(404, 'Invalid action specified.');
     }
 
+    public function apiDownloadPdf(Product $product): \Symfony\Component\HttpFoundation\Response
+    {
+        $pdf = $this->buildProductPdf($product);
+        $fileName = 'product-'.$product->slug.'-'.now()->format('Ymd').'.pdf';
+
+        return $pdf->download($fileName);
+    }
+
+    public function streamPreview(Product $product)
+    {
+        Gate::authorize('view', $product);
+
+        $pdf = $this->buildProductPdf($product);
+        $fileName = 'product-'.$product->slug.'-'.now()->format('Ymd').'.pdf';
+
+        return $pdf->stream($fileName);
+    }
+
     public function downloadPdf(Product $product)
     {
         Gate::authorize('view', $product);

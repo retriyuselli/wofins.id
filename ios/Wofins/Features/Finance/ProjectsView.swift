@@ -116,7 +116,7 @@ struct ProjectsView: View {
                         LazyVStack(spacing: 16) {
                             sectionSwitcher
                             ModuleShortcutsView(
-                                keys: ["products", "vendors", "categories", "nota_dinas", "simulasi"],
+                                keys: ["products", "vendors", "nota_dinas", "simulasi"],
                                 title: "Katalog & operasional"
                             )
                             searchBar
@@ -135,7 +135,7 @@ struct ProjectsView: View {
                 }
             }
             .background(WofinsTheme.background.ignoresSafeArea())
-            .toolbar(.hidden, for: .navigationBar)
+            .wofinsHidesNavigationBar()
             .task {
                 guard appState.allows(.projects) else { return }
                 await load()
@@ -245,7 +245,7 @@ struct ProjectsView: View {
             RoundedRectangle(cornerRadius: 17, style: .continuous)
                 .stroke(WofinsTheme.border, lineWidth: 1)
         }
-        .shadow(color: WofinsTheme.primary.opacity(0.06), radius: 12, y: 5)
+        .wofinsSoftShadow()
         .padding(.horizontal, 16)
     }
 
@@ -455,23 +455,17 @@ struct ProjectsView: View {
 
         return VStack(alignment: .leading, spacing: 15) {
             HStack(alignment: .top, spacing: 12) {
-                Text(project.initials)
-                    .font(.poppins(.headline, weight: .bold))
-                    .foregroundStyle(appearance.color)
-                    .frame(width: 50, height: 50)
-                    .background(appearance.color.opacity(0.11), in: Circle())
-
                 VStack(alignment: .leading, spacing: 3) {
                     Text(project.displayName)
-                        .font(.poppins(.headline, weight: .bold))
+                        .font(.poppins(.subheadline, weight: .bold))
                         .foregroundStyle(WofinsTheme.ink)
                         .lineLimit(2)
+                        .minimumScaleFactor(0.85)
                     Text(project.number ?? "Proyek #\(project.id)")
                         .font(.poppins(.caption))
                         .foregroundStyle(WofinsTheme.muted)
                 }
-
-                Spacer(minLength: 4)
+                .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
 
                 VStack(alignment: .trailing, spacing: 8) {
                     HStack(spacing: 6) {
@@ -483,10 +477,6 @@ struct ProjectsView: View {
                     .padding(.horizontal, 10)
                     .padding(.vertical, 7)
                     .background(appearance.color.opacity(0.11), in: Capsule())
-
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(WofinsTheme.muted)
                 }
             }
 
@@ -552,13 +542,7 @@ struct ProjectsView: View {
                         ZStack(alignment: .leading) {
                             Capsule().fill(WofinsTheme.border)
                             Capsule()
-                                .fill(
-                                    LinearGradient(
-                                        colors: [WofinsTheme.primary, WofinsTheme.primaryLight, WofinsTheme.yellow],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
+                                .fill(WofinsTheme.primary)
                                 .frame(width: proxy.size.width * progress)
                         }
                     }

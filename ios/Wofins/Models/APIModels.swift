@@ -324,6 +324,55 @@ enum FlexibleStringInt: Decodable, Equatable {
     }
 }
 
+private struct LossyDecodable<T: Decodable>: Decodable {
+    let value: T?
+
+    init(from decoder: Decoder) throws {
+        value = try? T(from: decoder)
+    }
+}
+
+private extension KeyedDecodingContainer {
+    func flexInt(_ key: Key) -> Int? {
+        if let value = try? decode(Int.self, forKey: key) { return value }
+        if let value = try? decode(Double.self, forKey: key) { return Int(value) }
+        if let raw = try? decode(String.self, forKey: key) {
+            let compact = raw.replacingOccurrences(of: ".", with: "").replacingOccurrences(of: ",", with: "")
+            return Int(compact.filter { $0.isNumber || $0 == "-" })
+        }
+        return nil
+    }
+
+    func flexBool(_ key: Key) -> Bool? {
+        if let value = try? decode(Bool.self, forKey: key) { return value }
+        if let value = try? decode(Int.self, forKey: key) { return value != 0 }
+        if let raw = try? decode(String.self, forKey: key) {
+            return ["1", "true", "yes", "aktif"].contains(raw.lowercased())
+        }
+        return nil
+    }
+
+    func flexString(_ key: Key) -> String? {
+        if let value = try? decode(String.self, forKey: key) { return value }
+        if let value = try? decode(Int.self, forKey: key) { return String(value) }
+        if let value = try? decode(Double.self, forKey: key) { return String(Int(value)) }
+        return nil
+    }
+
+    func lossyArray<T: Decodable>(_ key: Key) -> [T] {
+        (try? decode([LossyDecodable<T>].self, forKey: key))?.compactMap(\.value) ?? []
+    }
+
+    func requiredFlexInt(_ key: Key) throws -> Int {
+        if let value = flexInt(key) { return value }
+        throw DecodingError.dataCorruptedError(
+            forKey: key,
+            in: self,
+            debugDescription: "Expected integer for \(key.stringValue)"
+        )
+    }
+}
+
 // MARK: - Finance
 
 struct FinancePeriod: Decodable, Equatable {
@@ -570,6 +619,29 @@ struct FinanceProductVendor: Decodable, Identifiable {
         if unit != 0 { return unit * max(1, quantity ?? 1) }
         return 0
     }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = c.flexInt(.id) ?? 0
+        vendor_id = c.flexInt(.vendor_id)
+        name = c.flexString(.name)
+        pic_name = c.flexString(.pic_name)
+        phone = c.flexString(.phone)
+        address = c.flexString(.address)
+        category = c.flexString(.category)
+        quantity = c.flexInt(.quantity)
+        harga_publish = c.flexInt(.harga_publish)
+        harga_vendor = c.flexInt(.harga_vendor)
+        line_public = c.flexInt(.line_public)
+        line_vendor = c.flexInt(.line_vendor)
+        line_total = c.flexInt(.line_total)
+        description = c.flexString(.description)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, vendor_id, name, pic_name, phone, address, category, quantity
+        case harga_publish, harga_vendor, line_public, line_vendor, line_total, description
+    }
 }
 
 struct FinanceProductDiscount: Decodable, Identifiable {
@@ -577,6 +649,50 @@ struct FinanceProductDiscount: Decodable, Identifiable {
     let description: String?
     let amount: Int?
     let notes: String?
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = c.flexInt(.id) ?? 0
+        description = c.flexString(.description)
+        amount = c.flexInt(.amount)
+        notes = c.flexString(.notes)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, description, amount, notes
+    }
+}
+
+struct FinanceProductPricing: Decodable {
+    let harga_awal_publish: Int?
+    let harga_awal_vendor: Int?
+    let penambahan_publish: Int?
+    let penambahan_vendor: Int?
+    let subtotal_publish: Int?
+    let subtotal_vendor: Int?
+    let pengurangan: Int?
+    let total_publish: Int?
+    let total_vendor: Int?
+    let profit: Int?
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        harga_awal_publish = c.flexInt(.harga_awal_publish)
+        harga_awal_vendor = c.flexInt(.harga_awal_vendor)
+        penambahan_publish = c.flexInt(.penambahan_publish)
+        penambahan_vendor = c.flexInt(.penambahan_vendor)
+        subtotal_publish = c.flexInt(.subtotal_publish)
+        subtotal_vendor = c.flexInt(.subtotal_vendor)
+        pengurangan = c.flexInt(.pengurangan)
+        total_publish = c.flexInt(.total_publish)
+        total_vendor = c.flexInt(.total_vendor)
+        profit = c.flexInt(.profit)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case harga_awal_publish, harga_awal_vendor, penambahan_publish, penambahan_vendor
+        case subtotal_publish, subtotal_vendor, pengurangan, total_publish, total_vendor, profit
+    }
 }
 
 struct FinanceProductDetail: Decodable, Identifiable {
@@ -584,17 +700,56 @@ struct FinanceProductDetail: Decodable, Identifiable {
     let name: String?
     let slug: String?
     let pax: Int?
+    let pax_akad: Int?
     let category: String?
     let description: String?
+    let image_url: String?
+    let free_pengurangan: String?
     let product_price: Int?
     let vendor_price: Int?
     let pengurangan: Int?
+    let penambahan_publish: Int?
+    let penambahan_vendor: Int?
     let price: Int?
     let profit: Int?
     let is_active: Bool?
     let is_approved: Bool?
     let vendors: [FinanceProductVendor]?
+    let additions: [FinanceProductVendor]?
     let discounts: [FinanceProductDiscount]?
+    let pricing: FinanceProductPricing?
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = c.flexInt(.id) ?? 0
+        name = c.flexString(.name)
+        slug = c.flexString(.slug)
+        pax = c.flexInt(.pax)
+        pax_akad = c.flexInt(.pax_akad)
+        category = c.flexString(.category)
+        description = c.flexString(.description)
+        image_url = c.flexString(.image_url)
+        free_pengurangan = c.flexString(.free_pengurangan)
+        product_price = c.flexInt(.product_price)
+        vendor_price = c.flexInt(.vendor_price)
+        pengurangan = c.flexInt(.pengurangan)
+        penambahan_publish = c.flexInt(.penambahan_publish)
+        penambahan_vendor = c.flexInt(.penambahan_vendor)
+        price = c.flexInt(.price)
+        profit = c.flexInt(.profit)
+        is_active = c.flexBool(.is_active)
+        is_approved = c.flexBool(.is_approved)
+        vendors = c.lossyArray(.vendors)
+        additions = c.lossyArray(.additions)
+        discounts = c.lossyArray(.discounts)
+        pricing = try? c.decode(FinanceProductPricing.self, forKey: .pricing)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, slug, pax, pax_akad, category, description, image_url, free_pengurangan
+        case product_price, vendor_price, pengurangan, penambahan_publish, penambahan_vendor
+        case price, profit, is_active, is_approved, vendors, additions, discounts, pricing
+    }
 }
 
 struct FinanceVendorDetail: Decodable, Identifiable {
@@ -740,6 +895,50 @@ struct FinanceProjectDetail: Decodable, Identifiable {
     var remainingValue: Int { totals?.remaining ?? remaining ?? 0 }
     var expensesValue: Int { totals?.expenses ?? expenses_total ?? 0 }
     var netCashValue: Int { totals?.net_cash ?? net_cash_flow ?? 0 }
+    var grossProfitValue: Int {
+        totals?.gross_profit ?? gross_profit ?? (grandTotalValue - expensesValue)
+    }
+}
+
+enum ProjectProfitDisplay {
+    static let caption = "Nilai proyek dikurangi pengeluaran"
+
+    static func title(for amount: Int) -> String {
+        amount < 0 ? "Rugi" : "Keuntungan"
+    }
+
+    static func amount(api: Int?, grandTotal: Int, expenses: Int) -> Int {
+        api ?? (grandTotal - expenses)
+    }
+}
+
+enum DisplayText {
+    private static let locale = Locale(identifier: "id_ID")
+    private static let numericCharacters = CharacterSet(charactersIn: "0123456789.+-()/")
+
+    static func titleCase(_ value: String) -> String {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed != "—" else { return value }
+        if shouldPreserve(trimmed) { return trimmed }
+        return trimmed.capitalized(with: locale)
+    }
+
+    private static func shouldPreserve(_ value: String) -> Bool {
+        if isMoneyOrNumeric(value) { return true }
+        if isShortAcronym(value) { return true }
+        return false
+    }
+
+    private static func isShortAcronym(_ value: String) -> Bool {
+        guard (2...4).contains(value.count), value.allSatisfy(\.isLetter) else { return false }
+        return value == value.uppercased()
+    }
+
+    private static func isMoneyOrNumeric(_ value: String) -> Bool {
+        let compact = value.replacingOccurrences(of: " ", with: "")
+        if compact.lowercased().hasPrefix("rp") { return true }
+        return !compact.isEmpty && compact.unicodeScalars.allSatisfy { numericCharacters.contains($0) }
+    }
 }
 
 struct FinanceTransactionItem: Decodable, Identifiable {
@@ -1053,8 +1252,34 @@ struct ModuleRecord: Decodable, Identifiable {
     let children: [ModuleRecord]?
     let values: [String: String]?
     let payment_simulation: [SimulasiPaymentTerm]?
+    let vendor_id: Int?
+    let product: FinanceProductDetail?
 
-    var displayTitle: String { title?.isEmpty == false ? title! : "#\(id)" }
+    var displayTitle: String {
+        let raw = title?.isEmpty == false ? title! : "#\(id)"
+        return DisplayText.titleCase(raw)
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.requiredFlexInt(.id)
+        title = c.flexString(.title)
+        subtitle = c.flexString(.subtitle)
+        amount = c.flexInt(.amount)
+        status = try c.decodeIfPresent(String.self, forKey: .status)
+        date = try c.decodeIfPresent(String.self, forKey: .date)
+        fields = try c.decodeIfPresent([ModuleFieldRow].self, forKey: .fields)
+        children = try c.decodeIfPresent([ModuleRecord].self, forKey: .children)
+        values = try c.decodeIfPresent([String: String].self, forKey: .values)
+        payment_simulation = try c.decodeIfPresent([SimulasiPaymentTerm].self, forKey: .payment_simulation)
+        vendor_id = c.flexInt(.vendor_id)
+        product = try? c.decode(FinanceProductDetail.self, forKey: .product)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, title, subtitle, amount, status, date, fields, children, values
+        case payment_simulation, vendor_id, product
+    }
 }
 
 struct ModuleFieldRow: Decodable, Identifiable, Hashable {
@@ -1065,7 +1290,13 @@ struct ModuleFieldRow: Decodable, Identifiable, Hashable {
 
     var displayText: String {
         let plain = HTMLText.plain(value)
-        return plain.isEmpty ? "—" : plain
+        guard !plain.isEmpty else { return "—" }
+        switch label.lowercased() {
+        case "fasilitas", "deskripsi", "catatan", "keterangan":
+            return plain
+        default:
+            return DisplayText.titleCase(plain)
+        }
     }
 }
 
@@ -1186,21 +1417,130 @@ struct JSONDictionary: Encodable {
     }
 }
 
+enum DocumentPayload: Equatable {
+    case pdf
+    case html
+    case jsonMessage(String)
+    case missingEndpoint
+    case unknown
+
+    static func classify(_ data: Data) -> DocumentPayload {
+        if pdfBytes(in: data) != nil { return .pdf }
+        if let message = jsonMessage(data) { return .jsonMessage(message) }
+        guard let text = String(data: data.prefix(12_000), encoding: .utf8) else { return .unknown }
+        let lower = text.lowercased()
+        if lower.contains("jadwalkan demo gratis")
+            || lower.contains("kelola wedding organizer lebih rapi") {
+            return .missingEndpoint
+        }
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.hasPrefix("<!") || trimmed.hasPrefix("<html") || lower.contains("<html") {
+            return .html
+        }
+        return .unknown
+    }
+
+    static func pdfBytes(in data: Data) -> Data? {
+        let magic = Data([0x25, 0x50, 0x44, 0x46])
+        if data.starts(with: magic) { return data }
+        guard let range = data.range(of: magic) else { return nil }
+        return data.subdata(in: range.lowerBound..<data.endIndex)
+    }
+
+    static func htmlByInsertingBase(_ html: String, baseURL: URL) -> String {
+        var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)
+        components?.path = "/"
+        components?.query = nil
+        components?.fragment = nil
+        let href = components?.url?.absoluteString ?? baseURL.absoluteString
+        let tag = "<base href=\"\(href)\">"
+        if let range = html.range(of: "<head>", options: .caseInsensitive) {
+            return html.replacingCharacters(in: range, with: "<head>\n\(tag)")
+        }
+        return tag + html
+    }
+
+    private static func jsonMessage(_ data: Data) -> String? {
+        guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return nil
+        }
+        if let message = object["message"] as? String, !message.isEmpty {
+            return message
+        }
+        return nil
+    }
+}
+
 enum HTMLText {
     static func plain(_ raw: String?) -> String {
-        guard var text = raw, !text.isEmpty else { return "" }
-        guard text.contains("<") else { return text.trimmingCharacters(in: .whitespacesAndNewlines) }
+        listItems(raw).joined(separator: "\n")
+    }
 
-        text = text.replacingOccurrences(of: #"</p>|</div>|<br\s*/?>"# , with: "\n", options: .regularExpression)
-        text = text.replacingOccurrences(of: #"<[^>]+>"#, with: "", options: .regularExpression)
-        text = text
+    static func isOrderedList(_ raw: String?) -> Bool {
+        guard let raw, !raw.isEmpty else { return false }
+        if raw.range(of: #"<ol\b"#, options: [.regularExpression, .caseInsensitive]) != nil {
+            return true
+        }
+        let numbered = listItems(raw, stripMarkers: false).filter {
+            $0.range(of: #"^\d+[.)]\s+\S"#, options: .regularExpression) != nil
+        }
+        return numbered.count >= 2
+    }
+
+    static func listItems(_ raw: String?) -> [String] {
+        listItems(raw, stripMarkers: true)
+    }
+
+    private static func listItems(_ raw: String?, stripMarkers: Bool) -> [String] {
+        guard let raw, !raw.isEmpty else { return [] }
+        return normalize(raw)
+            .components(separatedBy: .newlines)
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+            .map { stripMarkers ? stripListMarker($0) : $0 }
+            .filter { !$0.isEmpty }
+    }
+
+    private static func stripListMarker(_ line: String) -> String {
+        guard let range = line.range(of: #"^(\d+[.)]\s+|[-•–—]\s+)"#, options: .regularExpression) else {
+            return line
+        }
+        return String(line[range.upperBound...]).trimmingCharacters(in: .whitespaces)
+    }
+
+    private static func normalize(_ raw: String) -> String {
+        var text = raw
+        if text.contains("<") {
+            text = text.replacingOccurrences(of: #"</li\s*>"#, with: "\n", options: [.regularExpression, .caseInsensitive])
+            text = text.replacingOccurrences(of: #"<li\b[^>]*>"#, with: "", options: [.regularExpression, .caseInsensitive])
+            text = text.replacingOccurrences(of: #"</?(ul|ol)\b[^>]*>"#, with: "\n", options: [.regularExpression, .caseInsensitive])
+            text = text.replacingOccurrences(of: #"</p>|</div>|<br\s*/?>"#, with: "\n", options: [.regularExpression, .caseInsensitive])
+            text = text.replacingOccurrences(of: #"<[^>]+>"#, with: "", options: .regularExpression)
+            text = decodeEntities(text)
+        }
+        text = text.replacingOccurrences(of: #"[ \t]+"#, with: " ", options: .regularExpression)
+        text = recoverGluedListItems(text)
+        return text.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Recovers Filament HTML lists that were flattened with strip_tags ("stay5 Superior").
+    private static func recoverGluedListItems(_ text: String) -> String {
+        guard !text.contains("\n"), text.count > 40 else { return text }
+        let recovered = text.replacingOccurrences(
+            of: #"([a-z])([A-Z0-9])"#,
+            with: "$1\n$2",
+            options: .regularExpression
+        )
+        return recovered.components(separatedBy: .newlines).count >= 3 ? recovered : text
+    }
+
+    private static func decodeEntities(_ text: String) -> String {
+        text
             .replacingOccurrences(of: "&nbsp;", with: " ")
             .replacingOccurrences(of: "&amp;", with: "&")
             .replacingOccurrences(of: "&lt;", with: "<")
             .replacingOccurrences(of: "&gt;", with: ">")
             .replacingOccurrences(of: "&quot;", with: "\"")
             .replacingOccurrences(of: "&#39;", with: "'")
-        text = text.replacingOccurrences(of: #"[ \t]+"# , with: " ", options: .regularExpression)
-        return text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

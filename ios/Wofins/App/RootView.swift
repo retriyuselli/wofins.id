@@ -264,8 +264,7 @@ struct WofinsYellowIconButton: View {
 extension View {
     func wofinsPinnedScreen() -> some View {
         background(WofinsTheme.background.ignoresSafeArea())
-            .toolbar(.hidden, for: .navigationBar)
-            .toolbarBackground(.hidden, for: .navigationBar)
+            .wofinsHidesNavigationBar()
             .navigationBarTitleDisplayMode(.inline)
             .ignoresSafeArea(edges: .top)
     }
@@ -295,7 +294,17 @@ extension View {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .stroke(WofinsTheme.border.opacity(0.75), lineWidth: 1)
             }
-            .shadow(color: WofinsTheme.primary.opacity(0.055), radius: 12, y: 5)
+            .wofinsSoftShadow()
+    }
+
+    /// Soft shadow for cards inside scrolling lists — cheap enough for 60fps.
+    func wofinsSoftShadow() -> some View {
+        shadow(color: Color.black.opacity(0.04), radius: 3, y: 1)
+    }
+
+    /// Slightly stronger shadow for one-off hero cards (balance / cash summary).
+    func wofinsHeroShadow() -> some View {
+        shadow(color: Color.black.opacity(0.08), radius: 6, y: 3)
     }
 }
 

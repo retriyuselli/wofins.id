@@ -43,7 +43,7 @@ struct CompanyInfoView: View {
 
     var body: some View {
         ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 16) {
+            LazyVStack(alignment: .leading, spacing: 16) {
                 if let company {
                     headerCard(company)
                     infoCard("Identitas") {
@@ -86,6 +86,7 @@ struct CompanyInfoView: View {
         .navigationTitle("Informasi Perusahaan")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.visible, for: .navigationBar)
+        .wofinsSwipeBack()
         .refreshable { await appState.refreshMe() }
     }
 
@@ -164,7 +165,7 @@ struct SubscriptionPlanView: View {
 
     var body: some View {
         ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 16) {
+            LazyVStack(alignment: .leading, spacing: 16) {
                 if company == nil {
                     emptyCard("Akun ini belum terhubung ke company. Paket tidak ditampilkan lintas tenant.")
                 } else {
@@ -221,6 +222,7 @@ struct SubscriptionPlanView: View {
         .navigationTitle("Paket Aktif")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.visible, for: .navigationBar)
+        .wofinsSwipeBack()
         .refreshable { await appState.refreshMe() }
         .sheet(isPresented: $showPlans) {
             PlansCatalogSheet()
@@ -234,7 +236,7 @@ struct AppSettingsView: View {
 
     var body: some View {
         ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 16) {
+            LazyVStack(alignment: .leading, spacing: 16) {
                 infoCard("Keamanan") {
                     NavigationLink { FaceIDSettingsView() } label: {
                         settingsRow("Face ID", "faceid")
@@ -268,6 +270,7 @@ struct AppSettingsView: View {
         .navigationTitle("Pengaturan")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.visible, for: .navigationBar)
+        .wofinsSwipeBack()
         .sheet(isPresented: $showPrivacy) {
             PrivacyStatementView()
         }
@@ -291,7 +294,7 @@ struct FaceIDSettingsView: View {
 
     var body: some View {
         ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 16) {
+            LazyVStack(alignment: .leading, spacing: 16) {
                 infoCard("Status di perangkat ini") {
                     infoRow("Sensor", keychain.canUseBiometrics ? "\(biometryName) tersedia" : "Tidak tersedia")
                     infoRow("Login cepat", credentialsSaved ? "Aktif" : "Belum diaktifkan")
@@ -324,6 +327,7 @@ struct FaceIDSettingsView: View {
         .navigationTitle(biometryName)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.visible, for: .navigationBar)
+        .wofinsSwipeBack()
         .onAppear { credentialsSaved = keychain.hasAnySavedCredentials }
         .confirmationDialog("Matikan login \(biometryName)?", isPresented: $confirmDisable, titleVisibility: .visible) {
             Button("Matikan", role: .destructive) {
@@ -345,7 +349,7 @@ struct ConnectedDevicesView: View {
 
     var body: some View {
         ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 12) {
+            LazyVStack(alignment: .leading, spacing: 12) {
                 if isLoading && devices.isEmpty {
                     ProgressView("Memuat perangkat…")
                         .frame(maxWidth: .infinity)
@@ -400,6 +404,7 @@ struct ConnectedDevicesView: View {
         .navigationTitle("Perangkat Terhubung")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.visible, for: .navigationBar)
+        .wofinsSwipeBack()
         .task { await load() }
         .refreshable { await load() }
     }
@@ -424,7 +429,7 @@ struct HelpCenterView: View {
 
     var body: some View {
         ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 16) {
+            LazyVStack(alignment: .leading, spacing: 16) {
                 infoCard("Pertanyaan umum") {
                     faq("Bagaimana masuk dengan Face ID?", "Di halaman masuk, centang Ingat saya lalu masuk sekali. Berikutnya gunakan tombol Face ID.")
                     Divider()
@@ -453,6 +458,7 @@ struct HelpCenterView: View {
         .navigationTitle("Pusat Bantuan")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.visible, for: .navigationBar)
+        .wofinsSwipeBack()
         .sheet(isPresented: $showContact) {
             ContactUsSheet()
                 .environmentObject(appState)
@@ -615,6 +621,7 @@ private struct AccountBottomSheet<Content: View>: View {
                     Button("Tutup") { dismiss() }
                 }
             }
+            .wofinsSwipeBack()
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
@@ -834,7 +841,7 @@ struct AboutWofinsView: View {
 
     var body: some View {
         ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 16) {
+            LazyVStack(alignment: .leading, spacing: 16) {
                 VStack(spacing: 10) {
                     Image("LaunchLogo")
                         .resizable()
@@ -884,6 +891,7 @@ struct AboutWofinsView: View {
         .navigationTitle("Tentang WOFINS")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.visible, for: .navigationBar)
+        .wofinsSwipeBack()
         .sheet(isPresented: $showPrivacy) {
             PrivacyStatementView()
         }
@@ -975,5 +983,6 @@ private extension View {
     func accountPageSurface() -> some View {
         background(WofinsTheme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay { RoundedRectangle(cornerRadius: 18).stroke(WofinsTheme.border.opacity(0.75)) }
+            .wofinsSoftShadow()
     }
 }

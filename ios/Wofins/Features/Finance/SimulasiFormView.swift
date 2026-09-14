@@ -59,7 +59,7 @@ struct SimulasiFormView: View {
                         .padding()
                 } else {
                     ScrollView(showsIndicators: false) {
-                        VStack(alignment: .leading, spacing: 16) {
+                        LazyVStack(alignment: .leading, spacing: 16) {
                             if let errorMessage {
                                 Text(errorMessage)
                                     .font(.poppins(.caption))
@@ -167,6 +167,7 @@ struct SimulasiFormView: View {
                     Button("Tutup") { dismiss() }
                 }
             }
+            .wofinsSwipeBack()
             .task { await loadForm() }
         }
     }

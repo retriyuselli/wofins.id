@@ -133,7 +133,7 @@ struct TransactionsView: View {
                 }
             }
             .background(WofinsTheme.background.ignoresSafeArea())
-            .toolbar(.hidden, for: .navigationBar)
+            .wofinsHidesNavigationBar()
             .task(id: reloadToken) {
                 guard appState.allows(.basicFinance) else { return }
                 page = 0
@@ -143,13 +143,8 @@ struct TransactionsView: View {
             .onChange(of: visibleItems.count) { _, count in
                 page = TransactionPaging.clamped(page: page, total: count)
             }
-            .confirmationDialog("Tambah Transaksi", isPresented: $showAddSheet, titleVisibility: .visible) {
-                ForEach(addableItems) { item in
-                    Button(item.title) { createItem = item }
-                }
-                Button("Batal", role: .cancel) {}
-            } message: {
-                Text("Pilih jenis transaksi. Data tersimpan hanya untuk company Anda.")
+            .overlay {
+                addTransactionOverlay
             }
             .sheet(item: $createItem) { item in
                 ModuleCreateView(item: item) {
@@ -167,10 +162,77 @@ struct TransactionsView: View {
             VStack(alignment: .leading, spacing: 2) { Text("Transaksi").font(.poppins(.headline, weight: .bold)).foregroundStyle(.white); Text(appState.currentUser?.companyDisplayName ?? "Arus kas bisnis").font(.poppins(.caption)).foregroundStyle(.white.opacity(0.72)).lineLimit(1) }
             Spacer()
             Button { showAddSheet = true } label: { Image(systemName: "plus").font(.system(size: 17, weight: .bold)).foregroundStyle(.white).frame(width: 40, height: 40).background(.white.opacity(0.11), in: Circle()) }
+                .accessibilityLabel("Tambah transaksi")
         }
         .padding(.horizontal, 20).padding(.vertical, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(WofinsTheme.primary.ignoresSafeArea(edges: .top))
+    }
+
+    @ViewBuilder
+    private var addTransactionOverlay: some View {
+        ZStack {
+            if showAddSheet {
+                Color.black.opacity(0.28)
+                    .ignoresSafeArea()
+                    .onTapGesture { showAddSheet = false }
+                    .transition(.opacity)
+
+                VStack(spacing: 14) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Tambah Transaksi")
+                            .font(.poppins(.headline, weight: .bold))
+                            .foregroundStyle(WofinsTheme.ink)
+                        Text("Pilih jenis transaksi. Data tersimpan hanya untuk company Anda.")
+                            .font(.poppins(.caption))
+                            .foregroundStyle(WofinsTheme.muted)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                    VStack(spacing: 10) {
+                        ForEach(addableItems) { item in
+                            Button {
+                                showAddSheet = false
+                                createItem = item
+                            } label: {
+                                Text(item.title)
+                                    .font(.poppins(.subheadline, weight: .semibold))
+                                    .foregroundStyle(.white)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.85)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 13)
+                                    .padding(.horizontal, 12)
+                                    .background(WofinsTheme.primary, in: Capsule())
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+
+                    Button("Batal") { showAddSheet = false }
+                        .font(.poppins(.subheadline, weight: .semibold))
+                        .foregroundStyle(WofinsTheme.ink)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .padding(.top, 2)
+                }
+                .padding(20)
+                .frame(maxWidth: 360)
+                .background(WofinsTheme.card, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(WofinsTheme.border, lineWidth: 1)
+                }
+                .shadow(color: Color.black.opacity(0.16), radius: 28, y: 12)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
+                .transition(.scale(scale: 0.94).combined(with: .opacity))
+                .accessibilityAddTraits(.isModal)
+            }
+        }
+        .allowsHitTesting(showAddSheet)
+        .animation(.easeInOut(duration: 0.22), value: showAddSheet)
     }
 
     private var periodMenu: some View {
@@ -213,8 +275,9 @@ struct TransactionsView: View {
             }
         }
         .padding(19)
-        .background(LinearGradient(colors: [WofinsTheme.primary, WofinsTheme.primaryLight], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 22))
-        .shadow(color: WofinsTheme.primary.opacity(0.18), radius: 16, y: 7).padding(.horizontal, 16)
+        .background(WofinsTheme.primary, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .wofinsHeroShadow()
+        .padding(.horizontal, 16)
     }
 
     private func balanceMetric(_ title: String, _ value: Int?, _ icon: String, _ color: Color) -> some View {
@@ -428,7 +491,7 @@ struct TransactionCategoryView: View {
             }
         }
         .background(WofinsTheme.background.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
+        .wofinsHidesNavigationBar()
         .task(id: reloadToken) { page = 0; await load() }
         .onChange(of: searchText) { _, _ in page = 0 }
         .onChange(of: visibleItems.count) { _, count in
@@ -695,7 +758,7 @@ struct TransactionDetailView: View {
             }
         }
         .background(WofinsTheme.background.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
+        .wofinsHidesNavigationBar()
     }
 
     private var header: some View {
@@ -886,7 +949,7 @@ struct PaymentProofView: View {
             .background(WofinsTheme.background)
         }
         .background(WofinsTheme.background.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
+        .wofinsHidesNavigationBar()
         .task { await load() }
     }
 
@@ -1008,6 +1071,6 @@ private extension View {
     func transactionSurface() -> some View {
         background(WofinsTheme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay { RoundedRectangle(cornerRadius: 18).stroke(WofinsTheme.border.opacity(0.75), lineWidth: 1) }
-            .shadow(color: WofinsTheme.primary.opacity(0.055), radius: 12, y: 5)
+            .wofinsSoftShadow()
     }
 }

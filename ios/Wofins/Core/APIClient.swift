@@ -300,6 +300,10 @@ final class APIClient {
         return envelope.data
     }
 
+    func financeProductPdf(id: Int) async throws -> Data {
+        try await fetchPDF(path: "/finance/products/\(id)/pdf")
+    }
+
     func financeVendor(id: Int) async throws -> FinanceVendorDetail {
         let envelope: DataEnvelope<FinanceVendorDetail> = try await request(
             method: "GET",
@@ -621,7 +625,7 @@ final class APIClient {
         return try await perform(request)
     }
 
-    private func fetchPDF(path: String) async throws -> Data {
+    private func fetchDocument(path: String) async throws -> Data {
         guard let url = APIConfig.endpoint(path) else {
             throw APIError.invalidURL
         }
@@ -629,7 +633,7 @@ final class APIClient {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.timeoutInterval = 180
-        request.setValue("application/pdf", forHTTPHeaderField: "Accept")
+        request.setValue("application/pdf,text/html,application/json", forHTTPHeaderField: "Accept")
         try applyAuthorization(to: &request)
 
         let data: Data
@@ -648,14 +652,28 @@ final class APIClient {
             throw APIError.unauthorized
         }
         if !(200...299).contains(http.statusCode) {
+            let classified = DocumentPayload.classify(data)
+            if case .jsonMessage(let message) = classified {
+                throw APIError.http(http.statusCode, message)
+            }
             let message = (try? decoder.decode(MessageResponse.self, from: data))?.message
             throw APIError.http(http.statusCode, message)
         }
-        let isPdf = data.starts(with: [0x25, 0x50, 0x44, 0x46])
-        if !isPdf {
+        return data
+    }
+
+    private func fetchPDF(path: String) async throws -> Data {
+        let data = try await fetchDocument(path: path)
+        switch DocumentPayload.classify(data) {
+        case .pdf:
+            return DocumentPayload.pdfBytes(in: data) ?? data
+        case .jsonMessage(let message):
+            throw APIError.message(message)
+        case .missingEndpoint:
+            throw APIError.message("Server belum mengirim dokumen. Deploy API, lalu coba lagi.")
+        default:
             throw APIError.message("PDF tidak dapat dibuat. Coba lagi.")
         }
-        return data
     }
 
     private func request<T: Decodable>(

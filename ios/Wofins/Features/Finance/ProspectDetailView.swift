@@ -31,7 +31,7 @@ struct ProspectDetailView: View {
         VStack(spacing: 0) {
             header
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 16) {
+                LazyVStack(spacing: 16) {
                     if isLoading && prospect == nil {
                         HStack(spacing: 12) {
                             ProgressView().tint(WofinsTheme.primary)
@@ -66,7 +66,7 @@ struct ProspectDetailView: View {
             .refreshable { await load() }
         }
         .background(WofinsTheme.background.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
+        .wofinsHidesNavigationBar()
         .task { await load() }
         .fullScreenCover(isPresented: $showEdit) {
             CreateProspectView(prospect: prospect) {

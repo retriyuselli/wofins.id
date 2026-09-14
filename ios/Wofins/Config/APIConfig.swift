@@ -9,7 +9,7 @@ enum APIHostOption: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .wofins: return "WOFINS"
-        case .makna: return "Makna"
+        case .makna: return "Internal"
         }
     }
 
@@ -25,6 +25,27 @@ enum APIHostOption: String, CaseIterable, Identifiable {
         case .wofins: return URL(string: "https://app.wofins.id")!
         case .makna: return URL(string: "https://maknafinance.id")!
         }
+    }
+}
+
+enum LoginHostPolicy {
+    static let unlockTapCount = 7
+    static let unlockKey = "wofins.internalHostUnlocked"
+
+    static var isInternalUnlocked: Bool {
+        get { UserDefaults.standard.bool(forKey: unlockKey) }
+        set { UserDefaults.standard.set(newValue, forKey: unlockKey) }
+    }
+
+    static func resolvedHost(unlocked: Bool, current: APIHostOption) -> APIHostOption {
+        unlocked ? current : .wofins
+    }
+
+    static func accountHint(for host: APIHostOption, unlocked: Bool) -> String {
+        if unlocked, host == .makna {
+            return "Gunakan email akun internal"
+        }
+        return "Gunakan email akun WOFINS Anda"
     }
 }
 

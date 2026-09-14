@@ -1094,7 +1094,63 @@ class MobileModuleService
             }
         }
 
+        if ($key === 'products' && $model instanceof Product) {
+            try {
+                if ($detailed) {
+                    $serialized = app(FinanceSummaryService::class)->serializeProductDetail($model);
+                    $payload['product'] = $serialized;
+                    $this->applyProductTotals($payload, $serialized);
+                } else {
+                    $this->applyLiveProductAmount($payload, $model);
+                }
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
         return $payload;
+    }
+
+    /**
+     * List paket: amount = Total Paket (final_publish), bukan kolom `price` / Subtotal.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private function applyLiveProductAmount(array &$payload, Product $product): void
+    {
+        $pricing = ProductPricingCalculator::calculateForProduct($product);
+        $payload['amount'] = (int) ($pricing['final_publish'] ?? 0);
+    }
+
+    /**
+     * Header & field harga mengikuti Total Paket (final_publish), bukan kolom `price` mentah.
+     *
+     * @param  array<string, mixed>  $payload
+     * @param  array<string, mixed>  $serialized
+     */
+    private function applyProductTotals(array &$payload, array $serialized): void
+    {
+        $totalPublish = (int) ($serialized['pricing']['total_publish'] ?? $serialized['price'] ?? 0);
+        $totalVendor = (int) ($serialized['pricing']['total_vendor'] ?? $serialized['vendor_price'] ?? 0);
+        $payload['amount'] = $totalPublish;
+
+        $payload['fields'] = array_map(function (array $field) use ($totalPublish, $totalVendor) {
+            $label = strtolower(trim((string) ($field['label'] ?? '')));
+            if ($label === 'harga') {
+                return [
+                    'label' => 'Total Paket',
+                    'value' => $this->displayValue($totalPublish, 'money'),
+                ];
+            }
+            if ($label === 'harga vendor') {
+                return [
+                    'label' => 'Total Vendor',
+                    'value' => $this->displayValue($totalVendor, 'money'),
+                ];
+            }
+
+            return $field;
+        }, $payload['fields'] ?? []);
     }
 
     /**
@@ -1271,8 +1327,50 @@ class MobileModuleService
                     ];
                 })->all()
                 : [],
+            'products' => $model instanceof Product
+                ? $this->productFacilityChildren($model)
+                : [],
             default => [],
         };
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function productFacilityChildren(Product $product): array
+    {
+        $product->loadMissing(['items.vendor']);
+
+        return $product->items->map(function ($item) {
+            $qty = max(1, (int) ($item->quantity ?? 1));
+            $hargaPublish = (int) ($item->harga_publish ?? 0);
+            $hargaVendor = (int) ($item->harga_vendor ?? 0);
+            $linePublic = (int) ($item->price_public ?: $hargaPublish * $qty);
+            $lineVendor = (int) ($item->total_price ?: $hargaVendor * $qty);
+            if ($hargaVendor > 0 && $hargaPublish !== $hargaVendor && $lineVendor === $linePublic) {
+                $lineVendor = $hargaVendor * $qty;
+            }
+
+            $fields = [];
+            if ($description = $this->plainText($item->description)) {
+                $fields[] = ['label' => 'Fasilitas', 'value' => $description];
+            }
+            if ($qty > 1) {
+                $fields[] = ['label' => 'Qty', 'value' => (string) $qty];
+            }
+            if ($lineVendor > 0) {
+                $fields[] = ['label' => 'Harga vendor', 'value' => $this->displayValue($lineVendor, 'money')];
+            }
+
+            return [
+                'id' => (int) $item->id,
+                'title' => $item->vendor?->name ?: 'Fasilitas',
+                'subtitle' => $qty > 1 ? $qty.'×' : null,
+                'amount' => $linePublic,
+                'vendor_id' => $item->vendor_id ? (int) $item->vendor_id : null,
+                'fields' => $fields,
+            ];
+        })->values()->all();
     }
 
     /**
@@ -1480,7 +1578,17 @@ class MobileModuleService
                 'amount_attr' => 'price',
                 'status_attr' => 'is_active',
                 'search' => ['name', 'slug'],
-                'with' => ['category:id,name'],
+                'with' => [
+                    'category:id,name',
+                    'items',
+                    'pengurangans',
+                    'penambahanHarga',
+                ],
+                'detail_with' => [
+                    'items.vendor.category:id,name',
+                    'pengurangans',
+                    'penambahanHarga.vendor.category:id,name',
+                ],
                 'fields' => [
                     ['name' => 'name', 'label' => 'Nama paket', 'type' => 'text', 'required' => true],
                     ['name' => 'category_id', 'label' => 'Kategori', 'type' => 'select', 'options' => 'categories', 'cast' => 'int'],
@@ -1494,6 +1602,7 @@ class MobileModuleService
                     ['label' => 'Harga', 'attr' => 'price', 'format' => 'money'],
                     ['label' => 'Harga vendor', 'attr' => 'product_price', 'format' => 'money'],
                     ['label' => 'Pax', 'attr' => 'pax'],
+                    ['label' => 'Akad (pax)', 'attr' => 'pax_akad'],
                     ['label' => 'Deskripsi', 'attr' => 'description'],
                 ],
             ],

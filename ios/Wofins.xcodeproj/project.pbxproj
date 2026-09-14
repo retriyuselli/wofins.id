@@ -21,6 +21,7 @@
 		3E4F4E1FD8BE181028EC18CC /* ReportsOverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 011B984DDDC24785B2236C10 /* ReportsOverviewView.swift */; };
 		410298A35790AF15E1810FC8 /* ProjectDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB6800F355B4440B596EED85 /* ProjectDetailView.swift */; };
 		4168D4CA35BEEF9999D9A642 /* Poppins-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D839C0D5C282780676C64491 /* Poppins-Bold.ttf */; };
+		490D124C13CEEBFFA1F021D3 /* WofinsSwipeBack.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADBC85C3684765BFE0C2CEB6 /* WofinsSwipeBack.swift */; };
 		50B6B2DF767A01521E2749D9 /* AccountOverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C56D6CF361CC4647D05759AA /* AccountOverviewView.swift */; };
 		6157224A1BA4F6A74F58817A /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB270F9D6E7E2C018D3FE1AD /* RootView.swift */; };
 		66567BAC64354D9982F41B3D /* AccountSupportViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5691BD2A257F78CA68391180 /* AccountSupportViews.swift */; };
@@ -85,6 +86,7 @@
 		9FBB5BC72D7FB3D244C5A65E /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		A6876B4085C7B752E9174A88 /* WofinsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WofinsApp.swift; sourceTree = "<group>"; };
 		ABCD950C88B25F749D0C89E0 /* Poppins-Light.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Poppins-Light.ttf"; sourceTree = "<group>"; };
+		ADBC85C3684765BFE0C2CEB6 /* WofinsSwipeBack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WofinsSwipeBack.swift; sourceTree = "<group>"; };
 		BF72C60297D2D0F40EE36C0E /* APIModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIModels.swift; sourceTree = "<group>"; };
 		BFA430F656989A0F725AE426 /* TransactionsOverviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionsOverviewView.swift; sourceTree = "<group>"; };
 		C3E405D0D93962DA87A4FF9A /* TransactionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionsView.swift; sourceTree = "<group>"; };
@@ -220,6 +222,7 @@
 				65967F9044D62AFFCF093112 /* AppState.swift */,
 				DB270F9D6E7E2C018D3FE1AD /* RootView.swift */,
 				A6876B4085C7B752E9174A88 /* WofinsApp.swift */,
+				ADBC85C3684765BFE0C2CEB6 /* WofinsSwipeBack.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -449,6 +452,7 @@
 				9C111356AB24539863CA60A9 /* Typography.swift in Sources */,
 				F21E3760BE167E9AB0CBD048 /* VendorDetailView.swift in Sources */,
 				97E5F1D0331B861C22F80097 /* WofinsApp.swift in Sources */,
+				490D124C13CEEBFFA1F021D3 /* WofinsSwipeBack.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -589,7 +593,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = LHH9LVRYVY;
 				GENERATE_INFOPLIST_FILE = NO;
-				GID_CLIENT_ID = "408651692876-ju4su29c4t3l08ee9kjajdmavkr0afj1.apps.googleusercontent.com";
+				GID_CLIENT_ID = "408651692876-vea73ugad9mapivcldjfrc4hmd3tirv0.apps.googleusercontent.com";
 				GID_SERVER_CLIENT_ID = "408651692876-ju4su29c4t3l08ee9kjajdmavkr0afj1.apps.googleusercontent.com";
 				INFOPLIST_FILE = Wofins/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
