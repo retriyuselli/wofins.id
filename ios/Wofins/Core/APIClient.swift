@@ -483,11 +483,23 @@ final class APIClient {
         return envelope.data
     }
 
-    func moduleList(key: String, query: String? = nil, perPage: Int = 30, page: Int = 1) async throws -> ModuleListResponse {
+    func moduleList(
+        key: String,
+        query: String? = nil,
+        perPage: Int = 30,
+        page: Int = 1,
+        filters: [String: String] = [:]
+    ) async throws -> ModuleListResponse {
         var parts = ["per_page=\(perPage)"]
         if page > 1 { parts.append("page=\(page)") }
         if let query, !query.isEmpty, let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
             parts.append("q=\(encoded)")
+        }
+        for (key, value) in filters where !value.isEmpty {
+            guard let encodedKey = key.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+                  let encodedValue = value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
+            else { continue }
+            parts.append("\(encodedKey)=\(encodedValue)")
         }
         return try await request(method: "GET", path: "/modules/\(key)?" + parts.joined(separator: "&"))
     }

@@ -154,13 +154,27 @@ struct ModuleListView: View {
     @State private var showDesktopOnlyCreate = false
     @State private var listPage = 1
     @State private var isLoadingMore = false
+    @State private var selectedPaymentMethodId: String?
+    @State private var rekeningFilterOptions: [ModuleFormOption] = []
 
     private var canCreateNow: Bool { meta?.can_create ?? item.canCreate }
     private var isBankStatement: Bool { item.key == "bank_statements" }
     private var showsCreateAction: Bool { canCreateNow || isBankStatement }
+    private var activeListFilters: [String: String] {
+        guard isBankStatement, let selectedPaymentMethodId, !selectedPaymentMethodId.isEmpty else { return [:] }
+        return ["payment_method_id": selectedPaymentMethodId]
+    }
+    private var selectedRekeningLabel: String? {
+        guard let selectedPaymentMethodId else { return nil }
+        return rekeningFilterOptions.first(where: { $0.value == selectedPaymentMethodId })?.label
+    }
 
     private var desktopCreateMessage: String {
         "Rekonsiliasi hanya bisa dibuat di desktop (admin web). Unggah rekening koran dan file perbandingan membutuhkan layar yang lebih besar."
+    }
+
+    private var searchPlaceholder: String {
+        isBankStatement ? "Cari rekening / rekonsiliasi" : "Cari \(item.title.lowercased())"
     }
 
     var body: some View {
@@ -170,6 +184,28 @@ struct ModuleListView: View {
                 ScrollView(showsIndicators: false) {
                     LazyVStack(spacing: 12) {
                         searchBar
+                        if isBankStatement, let selectedRekeningLabel {
+                            HStack(spacing: 8) {
+                                Image(systemName: "building.columns.fill")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundStyle(WofinsTheme.primary)
+                                Text(selectedRekeningLabel)
+                                    .font(.poppins(.caption, weight: .semibold))
+                                    .foregroundStyle(WofinsTheme.ink)
+                                    .lineLimit(2)
+                                    .minimumScaleFactor(0.85)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                Button("Hapus") {
+                                    selectedPaymentMethodId = nil
+                                    Task { await load(reset: true) }
+                                }
+                                .font(.poppins(.caption2, weight: .semibold))
+                                .foregroundStyle(WofinsTheme.primary)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .moduleSurface()
+                        }
                         if isLoading && records.isEmpty {
                             ProgressView("Memuat…")
                                 .frame(maxWidth: .infinity)
@@ -286,24 +322,69 @@ struct ModuleListView: View {
 
     private var searchBar: some View {
         HStack(spacing: 10) {
-            Image(systemName: "magnifyingglass").foregroundStyle(WofinsTheme.muted)
-            TextField("Cari \(item.title.lowercased())", text: $searchText)
-                .font(.poppins(.subheadline))
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .onSubmit { Task { await load() } }
-            if !searchText.isEmpty {
-                Button {
-                    searchText = ""
-                    Task { await load() }
-                } label: {
-                    Image(systemName: "xmark.circle.fill").foregroundStyle(WofinsTheme.muted)
+            HStack(spacing: 10) {
+                Image(systemName: "magnifyingglass").foregroundStyle(WofinsTheme.muted)
+                TextField(searchPlaceholder, text: $searchText)
+                    .font(.poppins(.subheadline))
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .onSubmit { Task { await load(reset: true) } }
+                if !searchText.isEmpty {
+                    Button {
+                        searchText = ""
+                        Task { await load(reset: true) }
+                    } label: {
+                        Image(systemName: "xmark.circle.fill").foregroundStyle(WofinsTheme.muted)
+                    }
                 }
             }
+            .padding(.horizontal, 14)
+            .frame(maxWidth: .infinity)
+            .frame(height: 50)
+            .moduleSurface()
+
+            if isBankStatement {
+                rekeningFilterMenu
+            }
         }
-        .padding(.horizontal, 14)
-        .frame(height: 50)
-        .moduleSurface()
+    }
+
+    private var rekeningFilterMenu: some View {
+        Menu {
+            Section("Daftar Rekening Koran") {
+                Button {
+                    selectedPaymentMethodId = nil
+                    Task { await load(reset: true) }
+                } label: {
+                    if selectedPaymentMethodId == nil {
+                        Label("Semua rekening", systemImage: "checkmark")
+                    } else {
+                        Text("Semua rekening")
+                    }
+                }
+                ForEach(rekeningFilterOptions) { option in
+                    Button {
+                        selectedPaymentMethodId = option.value
+                        Task { await load(reset: true) }
+                    } label: {
+                        if selectedPaymentMethodId == option.value {
+                            Label(option.label, systemImage: "checkmark")
+                        } else {
+                            Text(option.label)
+                        }
+                    }
+                }
+            }
+        } label: {
+            Image(systemName: selectedPaymentMethodId == nil
+                  ? "line.3.horizontal.decrease.circle"
+                  : "line.3.horizontal.decrease.circle.fill")
+                .font(.system(size: 22, weight: .semibold))
+                .foregroundStyle(selectedPaymentMethodId == nil ? WofinsTheme.primary : WofinsTheme.primary)
+                .frame(width: 50, height: 50)
+                .moduleSurface()
+        }
+        .accessibilityLabel("Filter daftar rekening koran")
     }
 
     private var emptyState: some View {
@@ -412,7 +493,12 @@ struct ModuleListView: View {
             isLoadingMore = false
         }
         do {
-            let response = try await appState.api.moduleList(key: item.key, query: searchText, page: listPage)
+            let response = try await appState.api.moduleList(
+                key: item.key,
+                query: searchText,
+                page: listPage,
+                filters: activeListFilters
+            )
             if reset {
                 records = response.data
             } else {
@@ -420,6 +506,12 @@ struct ModuleListView: View {
                 records.append(contentsOf: response.data.filter { !existing.contains($0.id) })
             }
             meta = response.meta
+            if let rekeningFilter = response.meta.filters?.first(where: { $0.key == "payment_method_id" }) {
+                rekeningFilterOptions = rekeningFilter.options
+                if selectedPaymentMethodId == nil {
+                    selectedPaymentMethodId = rekeningFilter.value
+                }
+            }
             errorMessage = nil
         } catch {
             if !reset { listPage = max(1, listPage - 1) }

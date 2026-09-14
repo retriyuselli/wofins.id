@@ -1239,6 +1239,28 @@ struct ModuleListMeta: Decodable {
     let total: Int?
     let title: String?
     let can_create: Bool?
+    let filters: [ModuleListFilter]?
+}
+
+struct ModuleListFilter: Decodable, Identifiable, Hashable {
+    let key: String
+    let label: String
+    let value: String?
+    let options: [ModuleFormOption]
+
+    var id: String { key }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        key = c.flexString(.key) ?? ""
+        label = c.flexString(.label) ?? key
+        value = c.flexString(.value)
+        options = try c.decodeIfPresent([ModuleFormOption].self, forKey: .options) ?? []
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case key, label, value, options
+    }
 }
 
 struct ModuleRecord: Decodable, Identifiable {
