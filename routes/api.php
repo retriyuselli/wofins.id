@@ -98,6 +98,8 @@ Route::prefix('v1')->group(function () {
                     ->name('api.v1.finance.prospects.update');
                 Route::get('/projects', [FinanceController::class, 'projects'])
                     ->name('api.v1.finance.projects');
+                Route::get('/projects/overview', [FinanceController::class, 'projectsOverview'])
+                    ->name('api.v1.finance.projects.overview');
                 Route::get('/projects/options', [FinanceController::class, 'projectOptions'])
                     ->name('api.v1.finance.projects.options');
                 Route::post('/projects', [FinanceController::class, 'projectStore'])

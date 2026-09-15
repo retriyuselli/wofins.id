@@ -807,6 +807,25 @@ struct FinanceProjectMeta: Decodable {
     let total_net_cash_flow: Int?
 }
 
+struct FinanceOrderOverviewWidget: Decodable, Identifiable, Hashable {
+    let key: String
+    let title: String
+    let value: String
+    let value_raw: Int?
+    let description: String?
+    let tone: String?
+
+    var id: String { key }
+}
+
+struct FinanceOrderOverviewData: Decodable {
+    let widgets: [FinanceOrderOverviewWidget]?
+}
+
+struct FinanceOrderOverviewEnvelope: Decodable {
+    let data: FinanceOrderOverviewData
+}
+
 struct FinanceProjectsResponse: Decodable {
     let data: [FinanceProjectItem]
     let meta: FinanceProjectMeta?

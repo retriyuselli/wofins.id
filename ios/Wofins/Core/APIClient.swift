@@ -206,6 +206,14 @@ final class APIClient {
         return try await request(method: "GET", path: path)
     }
 
+    func financeProjectsOverview() async throws -> [FinanceOrderOverviewWidget] {
+        let envelope: FinanceOrderOverviewEnvelope = try await request(
+            method: "GET",
+            path: "/finance/projects/overview"
+        )
+        return envelope.data.widgets ?? []
+    }
+
     func financeProspects(status: String? = nil, perPage: Int = 50, page: Int = 1) async throws -> FinanceProspectsResponse {
         var query: [String] = ["per_page=\(perPage)"]
         if let status { query.append("status=\(status)") }

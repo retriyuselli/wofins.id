@@ -20,6 +20,8 @@ struct ProjectsView: View {
     @State private var listPage = 1
     @State private var isLoadingMore = false
     @State private var loadGeneration = 0
+    @State private var orderWidgets: [FinanceOrderOverviewWidget] = []
+    @State private var isLoadingOverview = false
 
     private enum SalesWorkspace: String, CaseIterable, Identifiable {
         case projects, prospects
@@ -115,10 +117,9 @@ struct ProjectsView: View {
                     ScrollView(showsIndicators: false) {
                         LazyVStack(spacing: 16) {
                             sectionSwitcher
-                            ModuleShortcutsView(
-                                keys: ["products", "vendors", "nota_dinas", "simulasi"],
-                                title: "Katalog & operasional"
-                            )
+                            if !isProspects {
+                                orderOverviewSection
+                            }
                             searchBar
                             filterBar
                             overviewCards
@@ -303,6 +304,93 @@ struct ProjectsView: View {
                 }
         }
         .buttonStyle(.plain)
+    }
+
+    private var orderOverviewSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Ringkasan Orders")
+                .font(.poppins(.headline, weight: .bold))
+                .foregroundStyle(WofinsTheme.primary)
+                .padding(.horizontal, 16)
+
+            if isLoadingOverview && orderWidgets.isEmpty {
+                ProgressView("Memuat ringkasan…")
+                    .frame(maxWidth: .infinity)
+                    .padding(20)
+                    .projectSurface()
+                    .padding(.horizontal, 16)
+            } else if !orderWidgets.isEmpty {
+                LazyVGrid(
+                    columns: [
+                        GridItem(.flexible(), spacing: 10),
+                        GridItem(.flexible(), spacing: 10),
+                    ],
+                    spacing: 10
+                ) {
+                    ForEach(orderWidgets) { widget in
+                        orderWidgetCard(widget)
+                    }
+                }
+                .padding(.horizontal, 16)
+            }
+        }
+    }
+
+    private func orderWidgetCard(_ widget: FinanceOrderOverviewWidget) -> some View {
+        let color = orderWidgetToneColor(widget.tone)
+        return VStack(alignment: .leading, spacing: 8) {
+            Text(widget.title)
+                .font(.poppins(.caption2, weight: .semibold))
+                .foregroundStyle(WofinsTheme.muted)
+                .lineLimit(2)
+                .minimumScaleFactor(0.85)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text(widget.value)
+                .font(.poppins(.headline, weight: .bold))
+                .foregroundStyle(WofinsTheme.ink)
+                .lineLimit(2)
+                .minimumScaleFactor(0.7)
+                .fixedSize(horizontal: false, vertical: true)
+
+            HStack(alignment: .top, spacing: 6) {
+                Image(systemName: orderWidgetIcon(widget.key))
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(color)
+                    .padding(.top, 1)
+                Text(widget.description ?? "")
+                    .font(.poppins(.caption2))
+                    .foregroundStyle(WofinsTheme.muted)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.85)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, minHeight: 108, alignment: .topLeading)
+        .projectSurface()
+    }
+
+    private func orderWidgetToneColor(_ tone: String?) -> Color {
+        switch (tone ?? "").lowercased() {
+        case "success": return WofinsTheme.success
+        case "danger": return WofinsTheme.danger
+        default: return WofinsTheme.primary
+        }
+    }
+
+    private func orderWidgetIcon(_ key: String) -> String {
+        switch key {
+        case "customer_payments": return "arrow.up.right"
+        case "customer_expenses": return "arrow.up.right"
+        case "agreement_files": return "checkmark.square.fill"
+        case "new_projects_month": return "calendar.badge.plus"
+        case "monthly_revenue": return "banknote.fill"
+        case "contract_docs": return "doc.fill"
+        case "total_revenue", "total_expenses": return "dollarsign.circle.fill"
+        case "net_received_processing": return "building.columns.fill"
+        default: return "chart.bar.fill"
+        }
     }
 
     private var overviewCards: some View {
@@ -762,6 +850,7 @@ struct ProjectsView: View {
         guard appState.allows(.projects) else { return }
         if reset {
             isLoading = true
+            isLoadingOverview = !isProspects
             listPage = 1
         } else {
             guard canLoadMore, !isLoadingMore else { return }
@@ -774,6 +863,7 @@ struct ProjectsView: View {
             if requestID == loadGeneration {
                 isLoading = false
                 isLoadingMore = false
+                isLoadingOverview = false
             }
         }
 
@@ -793,14 +883,20 @@ struct ProjectsView: View {
                 }
                 prospectMeta = response.meta
             } else {
+                async let overviewTask: [FinanceOrderOverviewWidget] = {
+                    do { return try await appState.api.financeProjectsOverview() }
+                    catch { return orderWidgets }
+                }()
                 let response = try await appState.api.financeProjects(
                     status: selectedFilter.apiValue,
                     perPage: 50,
                     page: listPage
                 )
+                let widgets = await overviewTask
                 guard requestID == loadGeneration else { return }
                 if reset {
                     projects = response.data
+                    orderWidgets = widgets
                 } else {
                     let existing = Set(projects.map(\.id))
                     projects.append(contentsOf: response.data.filter { !existing.contains($0.id) })

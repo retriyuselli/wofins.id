@@ -431,24 +431,36 @@ struct ModuleListView: View {
     }
 
     private func recordRow(_ record: ModuleRecord) -> some View {
-        HStack(alignment: .center, spacing: 12) {
+        let isProductList = item.key == "products"
+
+        return HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(record.displayTitle)
                     .font(.poppins(.subheadline, weight: .semibold))
                     .foregroundStyle(WofinsTheme.ink)
                     .lineLimit(2)
-                    .minimumScaleFactor(0.85)
-                if let subtitle = record.subtitle, !subtitle.isEmpty {
+                    .minimumScaleFactor(isProductList ? 1 : 0.85)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                if isProductList {
+                    if let amount = record.amount {
+                        Text(MoneyFormat.idr(amount))
+                            .font(.poppins(.caption, weight: .semibold))
+                            .foregroundStyle(WofinsTheme.ink)
+                            .lineLimit(1)
+                    }
+                } else if let subtitle = record.subtitle, !subtitle.isEmpty {
                     Text(subtitle)
                         .font(.poppins(.caption2))
                         .foregroundStyle(WofinsTheme.muted)
                         .lineLimit(2)
                 }
+
                 HStack(spacing: 8) {
                     if let date = record.date {
                         Text(date).font(.poppins(.caption2)).foregroundStyle(WofinsTheme.muted)
                     }
-                    if let status = record.status, !status.isEmpty {
+                    if !isProductList, let status = record.status, !status.isEmpty {
                         Text(status.replacingOccurrences(of: "_", with: " "))
                             .font(.poppins(.caption2, weight: .semibold))
                             .foregroundStyle(WofinsTheme.primary)
@@ -459,8 +471,9 @@ struct ModuleListView: View {
                 }
             }
             .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+
             HStack(spacing: 8) {
-                if let amount = record.amount {
+                if !isProductList, let amount = record.amount {
                     Text(MoneyFormat.idr(amount))
                         .font(.poppins(.caption, weight: .bold))
                         .foregroundStyle(WofinsTheme.ink)
