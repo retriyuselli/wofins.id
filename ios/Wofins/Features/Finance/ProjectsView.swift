@@ -306,7 +306,6 @@ struct ProjectsView: View {
             "monthly_revenue",
             "net_received_processing",
             "agreement_files",
-            "customer_payments",
             "customer_expenses",
             "contract_docs",
             "total_revenue",
