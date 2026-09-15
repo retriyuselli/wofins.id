@@ -273,6 +273,14 @@ struct ModuleListView: View {
                     SimulasiFormView {
                         Task { await load() }
                     }
+                } else if item.key == "products" {
+                    ProductFormView {
+                        Task { await load() }
+                    }
+                } else if item.key == "vendors" {
+                    VendorFormView {
+                        Task { await load() }
+                    }
                 } else {
                     ModuleCreateView(item: item) {
                         Task { await load() }
@@ -761,6 +769,14 @@ struct ModuleDetailView: View {
             Group {
                 if isSimulasi {
                     SimulasiFormView(recordId: recordId) {
+                        Task { await load() }
+                    }
+                } else if isProduct {
+                    ProductFormView(recordId: recordId) {
+                        Task { await load() }
+                    }
+                } else if item.key == "vendors" {
+                    VendorFormView(recordId: recordId) {
                         Task { await load() }
                     }
                 } else {

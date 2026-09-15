@@ -1495,6 +1495,222 @@ struct ModuleFormSchema: Decodable {
     let months: [ModuleFormOption]?
 }
 
+struct ProductFormSchema: Decodable {
+    let title: String?
+    let can_create: Bool?
+    let fields: [ModuleFormField]?
+    let defaults: [String: String]?
+    let vendor_options: [ProductVendorOption]?
+    let items: [ProductFormItemRow]?
+    let discounts: [ProductFormDiscountRow]?
+    let additions: [ProductFormAdditionRow]?
+}
+
+struct ProductVendorOption: Decodable, Identifiable, Hashable {
+    let value: String
+    let label: String
+    let harga_publish: Int?
+    let harga_vendor: Int?
+    let description: String?
+
+    var id: String { value }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        value = c.flexString(.value) ?? ""
+        label = c.flexString(.label) ?? value
+        harga_publish = c.flexInt(.harga_publish)
+        harga_vendor = c.flexInt(.harga_vendor)
+        description = c.flexString(.description)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case value, label, harga_publish, harga_vendor, description
+    }
+}
+
+struct ProductFormItemRow: Decodable {
+    let id: Int?
+    let vendor_id: String?
+    let harga_publish: Int?
+    let harga_vendor: Int?
+    let quantity: Int?
+    let price_public: Int?
+    let total_price: Int?
+    let description: String?
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = c.flexInt(.id)
+        vendor_id = c.flexString(.vendor_id)
+        harga_publish = c.flexInt(.harga_publish)
+        harga_vendor = c.flexInt(.harga_vendor)
+        quantity = c.flexInt(.quantity)
+        price_public = c.flexInt(.price_public)
+        total_price = c.flexInt(.total_price)
+        description = c.flexString(.description)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, vendor_id, harga_publish, harga_vendor, quantity, price_public, total_price, description
+    }
+}
+
+struct ProductFormDiscountRow: Decodable {
+    let id: Int?
+    let description: String?
+    let amount: Int?
+    let notes: String?
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = c.flexInt(.id)
+        description = c.flexString(.description)
+        amount = c.flexInt(.amount)
+        notes = c.flexString(.notes)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, description, amount, notes
+    }
+}
+
+struct ProductFormAdditionRow: Decodable {
+    let id: Int?
+    let vendor_id: String?
+    let harga_publish: Int?
+    let harga_vendor: Int?
+    let description: String?
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = c.flexInt(.id)
+        vendor_id = c.flexString(.vendor_id)
+        harga_publish = c.flexInt(.harga_publish)
+        harga_vendor = c.flexInt(.harga_vendor)
+        description = c.flexString(.description)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, vendor_id, harga_publish, harga_vendor, description
+    }
+}
+
+struct CreateProductPayload: Encodable {
+    let name: String
+    let category_id: Int?
+    let parent_id: Int?
+    let pax: Int
+    let pax_akad: Int
+    let stock: Int
+    let description: String?
+    let free_pengurangan: String?
+    let is_active: Bool
+    let product_price: Int
+    let pengurangan: Int
+    let penambahan_publish: Int
+    let penambahan_vendor: Int
+    let price: Int
+    let items: [CreateProductItemPayload]
+    let discounts: [CreateProductDiscountPayload]
+    let additions: [CreateProductAdditionPayload]
+}
+
+struct CreateProductItemPayload: Encodable {
+    let vendor_id: Int
+    let harga_publish: Int
+    let harga_vendor: Int
+    let quantity: Int
+    let price_public: Int
+    let total_price: Int
+    let description: String?
+}
+
+struct CreateProductDiscountPayload: Encodable {
+    let description: String
+    let amount: Int
+    let notes: String?
+}
+
+struct CreateProductAdditionPayload: Encodable {
+    let vendor_id: Int
+    let harga_publish: Int
+    let harga_vendor: Int
+    let description: String?
+}
+
+struct VendorFormSchema: Decodable {
+    let title: String?
+    let can_create: Bool?
+    let fields: [ModuleFormField]?
+    let defaults: [String: String]?
+    let price_histories: [VendorPriceHistoryRow]?
+}
+
+struct VendorPriceHistoryRow: Decodable {
+    let id: Int?
+    let effective_from: String?
+    let effective_to: String?
+    let harga_publish: Int?
+    let harga_vendor: Int?
+    let profit_amount: Int?
+    let profit_margin: Double?
+    let description: String?
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = c.flexInt(.id)
+        effective_from = c.flexString(.effective_from)
+        effective_to = c.flexString(.effective_to)
+        harga_publish = c.flexInt(.harga_publish)
+        harga_vendor = c.flexInt(.harga_vendor)
+        profit_amount = c.flexInt(.profit_amount)
+        if let double = try? c.decodeIfPresent(Double.self, forKey: .profit_margin) {
+            profit_margin = double
+        } else if let int = c.flexInt(.profit_margin) {
+            profit_margin = Double(int)
+        } else {
+            profit_margin = nil
+        }
+        description = c.flexString(.description)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, effective_from, effective_to, harga_publish, harga_vendor
+        case profit_amount, profit_margin, description
+    }
+}
+
+struct CreateVendorPayload: Encodable {
+    let name: String
+    let phone: String
+    let address: String?
+    let pic_name: String?
+    let status: String
+    let parent_id: Int?
+    let category_id: Int?
+    let is_master: Bool
+    let is_published: Bool
+    let description: String?
+    let harga_publish: Int
+    let harga_vendor: Int
+    let profit_amount: Int
+    let profit_margin: Int
+    let stock: Int
+    let bank_name: String?
+    let bank_account: String?
+    let account_holder: String?
+    let price_histories: [CreateVendorPriceHistoryPayload]
+}
+
+struct CreateVendorPriceHistoryPayload: Encodable {
+    let effective_from: String
+    let effective_to: String
+    let harga_publish: Int
+    let harga_vendor: Int
+    let description: String?
+}
+
 struct ModuleFormField: Decodable, Identifiable, Hashable {
     let name: String
     let label: String

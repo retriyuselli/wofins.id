@@ -516,6 +516,66 @@ final class APIClient {
         return envelope.data
     }
 
+    func productForm(id: Int? = nil) async throws -> ProductFormSchema {
+        var path = "/modules/products/form"
+        if let id {
+            path += "?id=\(id)"
+        }
+        let envelope: DataEnvelope<ProductFormSchema> = try await request(
+            method: "GET",
+            path: path
+        )
+        return envelope.data
+    }
+
+    func createProduct(_ payload: CreateProductPayload) async throws -> ModuleRecord {
+        let envelope: MessageDataEnvelope<ModuleRecord> = try await request(
+            method: "POST",
+            path: "/modules/products",
+            body: payload
+        )
+        return envelope.data
+    }
+
+    func updateProduct(id: Int, _ payload: CreateProductPayload) async throws -> ModuleRecord {
+        let envelope: MessageDataEnvelope<ModuleRecord> = try await request(
+            method: "PATCH",
+            path: "/modules/products/\(id)",
+            body: payload
+        )
+        return envelope.data
+    }
+
+    func vendorForm(id: Int? = nil) async throws -> VendorFormSchema {
+        var path = "/modules/vendors/form"
+        if let id {
+            path += "?id=\(id)"
+        }
+        let envelope: DataEnvelope<VendorFormSchema> = try await request(
+            method: "GET",
+            path: path
+        )
+        return envelope.data
+    }
+
+    func createVendor(_ payload: CreateVendorPayload) async throws -> ModuleRecord {
+        let envelope: MessageDataEnvelope<ModuleRecord> = try await request(
+            method: "POST",
+            path: "/modules/vendors",
+            body: payload
+        )
+        return envelope.data
+    }
+
+    func updateVendor(id: Int, _ payload: CreateVendorPayload) async throws -> ModuleRecord {
+        let envelope: MessageDataEnvelope<ModuleRecord> = try await request(
+            method: "PATCH",
+            path: "/modules/vendors/\(id)",
+            body: payload
+        )
+        return envelope.data
+    }
+
     func moduleDetail(key: String, id: Int) async throws -> ModuleRecord {
         let envelope: DataEnvelope<ModuleRecord> = try await request(
             method: "GET",
