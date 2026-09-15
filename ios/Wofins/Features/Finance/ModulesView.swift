@@ -63,7 +63,6 @@ struct ModulesHubView: View {
 
     private var header: some View {
         HStack(spacing: 12) {
-            WofinsCompactMark()
             VStack(alignment: .leading, spacing: 2) {
                 Text("Modul").font(.poppins(.headline, weight: .bold)).foregroundStyle(.white)
                 Text(appState.currentUser?.companyDisplayName ?? "Sesuai paket company")
@@ -76,7 +75,7 @@ struct ModulesHubView: View {
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(WofinsTheme.primary.ignoresSafeArea(edges: .top))
+        .background(WofinsTheme.primary)
     }
 
     private func moduleRow(_ item: MobileModuleCatalogItem) -> some View {
@@ -300,7 +299,6 @@ struct ModuleListView: View {
 
     private var header: some View {
         HStack(spacing: 12) {
-            WofinsCompactMark()
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.title).font(.poppins(.headline, weight: .bold)).foregroundStyle(.white).lineLimit(1)
                 Text("\(meta?.total ?? item.count ?? records.count) data · \(appState.currentUser?.companyDisplayName ?? "Company")")
@@ -325,7 +323,7 @@ struct ModuleListView: View {
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(WofinsTheme.primary.ignoresSafeArea(edges: .top))
+        .background(WofinsTheme.primary)
     }
 
     private var searchBar: some View {
@@ -656,7 +654,6 @@ struct ModuleDetailView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
-                WofinsCompactMark()
                 VStack(alignment: .leading, spacing: 2) {
                     Text(record?.displayTitle ?? item.title)
                         .font(.poppins(.headline, weight: .bold))
@@ -696,7 +693,7 @@ struct ModuleDetailView: View {
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(WofinsTheme.primary.ignoresSafeArea(edges: .top))
+            .background(WofinsTheme.primary)
 
             ScrollView(showsIndicators: false) {
                 LazyVStack(alignment: .leading, spacing: 12) {
