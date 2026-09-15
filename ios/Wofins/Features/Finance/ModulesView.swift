@@ -595,10 +595,12 @@ struct ModuleDetailView: View {
 
     private var isSimulasi: Bool { item.key == "simulasi" }
     private var isProduct: Bool { item.key == "products" }
+    private var isDocument: Bool { item.key == "documents" }
     private var isBankStatement: Bool { item.key == "bank_statements" }
     private var isBusy: Bool { isOpeningDraft || isSharingDraft || isDownloadingPdf }
     private var childrenTitle: String {
         if isProduct { return "Fasilitas Dasar" }
+        if isDocument { return record?.children_title ?? "Persetujuan & lampiran" }
         if isBankStatement { return record?.children_title ?? "Mutasi rekening" }
         return "Rincian"
     }
@@ -649,6 +651,25 @@ struct ModuleDetailView: View {
         if isSimulasi { return "Draft Kontrak" }
         if isProduct { return "Paket" }
         return item.title
+    }
+
+    @ViewBuilder
+    private func moduleFieldValue(_ field: ModuleFieldRow) -> some View {
+        let label = field.label.lowercased()
+        let isListField = ["deskripsi", "fasilitas", "catatan", "keterangan", "free / pengurangan", "free/pengurangan", "isi dokumen", "ringkasan", "konten"].contains(label)
+        if isListField, HTMLText.listItems(field.value).count >= 2 {
+            HTMLListView(
+                text: field.value ?? "",
+                numbered: label == "deskripsi" || label == "fasilitas" || label == "isi dokumen" || HTMLText.isOrderedList(field.value),
+                fontSize: 15,
+                color: WofinsTheme.ink
+            )
+        } else {
+            Text(field.displayText)
+                .font(.poppins(.subheadline))
+                .foregroundStyle(WofinsTheme.ink)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     var body: some View {
@@ -716,10 +737,7 @@ struct ModuleDetailView: View {
                                     Text(field.label)
                                         .font(.poppins(.caption2))
                                         .foregroundStyle(WofinsTheme.muted)
-                                    Text(field.displayText)
-                                        .font(.poppins(.subheadline))
-                                        .foregroundStyle(WofinsTheme.ink)
-                                        .fixedSize(horizontal: false, vertical: true)
+                                    moduleFieldValue(field)
                                 }
                                 .padding(.vertical, 10)
                                 if index < displayFields.count - 1 {
@@ -748,7 +766,7 @@ struct ModuleDetailView: View {
                             } else {
                                 childrenSection(record.children ?? [])
                             }
-                        } else if isBankStatement || !(record.children ?? []).isEmpty {
+                        } else if isBankStatement || isDocument || !(record.children ?? []).isEmpty {
                             childrenSection(record.children ?? [])
                         }
                     }
@@ -955,10 +973,30 @@ struct ModuleDetailView: View {
                             Text(field.label)
                                 .font(.poppins(.caption2))
                                 .foregroundStyle(WofinsTheme.muted)
-                            Text(field.displayText)
-                                .font(.poppins(.caption))
-                                .foregroundStyle(WofinsTheme.ink)
-                                .fixedSize(horizontal: false, vertical: true)
+                            if ["deskripsi", "fasilitas", "catatan", "keterangan", "isi dokumen"].contains(field.label.lowercased()),
+                               HTMLText.listItems(field.value).count >= 2 {
+                                HTMLListView(
+                                    text: field.value ?? "",
+                                    numbered: true,
+                                    fontSize: 12,
+                                    color: WofinsTheme.ink
+                                )
+                            } else if let raw = field.value,
+                                      let url = URL(string: raw),
+                                      raw.lowercased().hasPrefix("http") {
+                                Link(destination: url) {
+                                    Text(raw)
+                                        .font(.poppins(.caption))
+                                        .foregroundStyle(WofinsTheme.primary)
+                                        .lineLimit(2)
+                                        .minimumScaleFactor(0.85)
+                                }
+                            } else {
+                                Text(field.displayText)
+                                    .font(.poppins(.caption))
+                                    .foregroundStyle(WofinsTheme.ink)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
                         }
                     }
                 }
@@ -1302,7 +1340,7 @@ struct ModuleCreateView: View {
                 case "textarea":
                     TextField(field.placeholder ?? field.label, text: stringBinding(field.name), axis: .vertical)
                         .font(.poppins(.subheadline))
-                        .lineLimit(3...6)
+                        .lineLimit(field.name == "content" || field.name == "summary" ? 4...12 : 3...6)
                         .padding(12)
                         .moduleSurface()
                         .disabled(field.readonly == true)

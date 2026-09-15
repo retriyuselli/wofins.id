@@ -95,7 +95,8 @@ struct VendorDetailView: View {
                         .foregroundStyle(WofinsTheme.muted)
                     HTMLListView(
                         text: description,
-                        font: .poppins(.subheadline),
+                        numbered: true,
+                        fontSize: 15,
                         color: WofinsTheme.ink
                     )
                 }

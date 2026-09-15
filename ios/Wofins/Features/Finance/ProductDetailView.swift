@@ -94,10 +94,12 @@ struct ProductDetailView: View {
                     Text("Deskripsi")
                         .font(.poppins(.caption2))
                         .foregroundStyle(WofinsTheme.muted)
-                    Text(description)
-                        .font(.poppins(.subheadline))
-                        .foregroundStyle(WofinsTheme.ink)
-                        .fixedSize(horizontal: false, vertical: true)
+                    HTMLListView(
+                        text: description,
+                        numbered: true,
+                        fontSize: 15,
+                        color: WofinsTheme.ink
+                    )
                 }
             }
         }
@@ -516,16 +518,18 @@ struct ProductBreakdownView: View {
 struct HTMLListView: View {
     let text: String
     var numbered: Bool? = nil
-    var font: Font = .poppins(.caption2)
+    var fontSize: CGFloat = 11
     var color: Color = WofinsTheme.muted
 
     private var items: [String] { HTMLText.listItems(text) }
     private var useNumbers: Bool { numbered ?? HTMLText.isOrderedList(text) }
+    private var itemFont: Font { .poppins(size: fontSize) }
+    private var markerFont: Font { .poppins(size: max(9, fontSize - 1)) }
 
     var body: some View {
         if items.count <= 1 {
             Text(items.first ?? text)
-                .font(font)
+                .font(itemFont)
                 .foregroundStyle(color)
                 .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
@@ -534,13 +538,12 @@ struct HTMLListView: View {
                 ForEach(Array(items.enumerated()), id: \.offset) { index, item in
                     HStack(alignment: .top, spacing: 8) {
                         Text(useNumbers ? "\(index + 1)." : "•")
-                            .font(font)
-                            .fontWeight(.semibold)
+                            .font(markerFont)
                             .foregroundStyle(color)
-                            .frame(width: useNumbers ? 24 : 12, alignment: .trailing)
+                            .frame(width: useNumbers ? 22 : 12, alignment: .trailing)
                             .padding(.top, 1)
                         Text(item)
-                            .font(font)
+                            .font(itemFont)
                             .foregroundStyle(color)
                             .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
                             .fixedSize(horizontal: false, vertical: true)
