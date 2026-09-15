@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		007D49C9AAF31685607F0291 /* VendorFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8044E0B6B3FC433882660F57 /* VendorFormView.swift */; };
 		03574C02893BCC8590178A5C /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 4FD833A25656F177B63F5BEC /* PrivacyInfo.xcprivacy */; };
 		03AD763118BF5DA1471A2FCD /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80D236068B7DE1DA8572115F /* KeychainStore.swift */; };
 		059180338D92E2767CC39D37 /* ModulesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 344A7AE80446155283D87DCB /* ModulesView.swift */; };
@@ -32,6 +33,7 @@
 		9791363DEEC5307D2E8A0F9D /* TransactionsOverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA430F656989A0F725AE426 /* TransactionsOverviewView.swift */; };
 		97E5F1D0331B861C22F80097 /* WofinsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6876B4085C7B752E9174A88 /* WofinsApp.swift */; };
 		9C111356AB24539863CA60A9 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C2972523AD19542CB2D8F7A /* Typography.swift */; };
+		A21C1225306088B731DA9328 /* ProductFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3109EF10B23E08C0C2129085 /* ProductFormView.swift */; };
 		A3E4A8CCBDDB3CAE8FF12F4B /* ProjectDocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AF9342BEC6D810CA52935BB /* ProjectDocumentView.swift */; };
 		A5D11915EEB51CCBC8442910 /* TransactionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3E405D0D93962DA87A4FF9A /* TransactionsView.swift */; };
 		BD1DDC063377980C0853FA6C /* CompensationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FC6878A1387E5694ADCF405 /* CompensationView.swift */; };
@@ -69,6 +71,7 @@
 		1C2972523AD19542CB2D8F7A /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
 		208F8A27219120B2D2573A31 /* PrivacyStatementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyStatementView.swift; sourceTree = "<group>"; };
 		2E5B0759775E1392314F7A97 /* ProspectDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProspectDetailView.swift; sourceTree = "<group>"; };
+		3109EF10B23E08C0C2129085 /* ProductFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductFormView.swift; sourceTree = "<group>"; };
 		344A7AE80446155283D87DCB /* ModulesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModulesView.swift; sourceTree = "<group>"; };
 		4377770D0A19A5521A0F1D15 /* Poppins-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Poppins-Medium.ttf"; sourceTree = "<group>"; };
 		46F62323D466E9BB6888B561 /* Wofins.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Wofins.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -81,6 +84,7 @@
 		686D73F0C67F4833B617C3E4 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		6AF9342BEC6D810CA52935BB /* ProjectDocumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectDocumentView.swift; sourceTree = "<group>"; };
 		706B3949E60F9497875D24B7 /* ProjectsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsView.swift; sourceTree = "<group>"; };
+		8044E0B6B3FC433882660F57 /* VendorFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VendorFormView.swift; sourceTree = "<group>"; };
 		80D236068B7DE1DA8572115F /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
 		8645D50A042315D4079AC879 /* GoogleSignInService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleSignInService.swift; sourceTree = "<group>"; };
 		8FC6878A1387E5694ADCF405 /* CompensationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompensationView.swift; sourceTree = "<group>"; };
@@ -150,6 +154,7 @@
 				EDF3E253264C0388C4DEC91E /* FinancePeriodPicker.swift */,
 				344A7AE80446155283D87DCB /* ModulesView.swift */,
 				1BA7C7798BF15FD393540E64 /* ProductDetailView.swift */,
+				3109EF10B23E08C0C2129085 /* ProductFormView.swift */,
 				EB6800F355B4440B596EED85 /* ProjectDetailView.swift */,
 				6AF9342BEC6D810CA52935BB /* ProjectDocumentView.swift */,
 				706B3949E60F9497875D24B7 /* ProjectsView.swift */,
@@ -159,6 +164,7 @@
 				BFA430F656989A0F725AE426 /* TransactionsOverviewView.swift */,
 				C3E405D0D93962DA87A4FF9A /* TransactionsView.swift */,
 				5D7C0DEF4E29A558884A0034 /* VendorDetailView.swift */,
+				8044E0B6B3FC433882660F57 /* VendorFormView.swift */,
 			);
 			path = Finance;
 			sourceTree = "<group>";
@@ -444,6 +450,7 @@
 				059180338D92E2767CC39D37 /* ModulesView.swift in Sources */,
 				83F6083A1FEABD3BF861E5CE /* PrivacyStatementView.swift in Sources */,
 				FFE35A2D1042D46A6A3EFE65 /* ProductDetailView.swift in Sources */,
+				A21C1225306088B731DA9328 /* ProductFormView.swift in Sources */,
 				410298A35790AF15E1810FC8 /* ProjectDetailView.swift in Sources */,
 				A3E4A8CCBDDB3CAE8FF12F4B /* ProjectDocumentView.swift in Sources */,
 				3D7508703C0B8D1CE4B70D22 /* ProjectsView.swift in Sources */,
@@ -455,6 +462,7 @@
 				A5D11915EEB51CCBC8442910 /* TransactionsView.swift in Sources */,
 				9C111356AB24539863CA60A9 /* Typography.swift in Sources */,
 				F21E3760BE167E9AB0CBD048 /* VendorDetailView.swift in Sources */,
+				007D49C9AAF31685607F0291 /* VendorFormView.swift in Sources */,
 				97E5F1D0331B861C22F80097 /* WofinsApp.swift in Sources */,
 				490D124C13CEEBFFA1F021D3 /* WofinsSwipeBack.swift in Sources */,
 			);
@@ -506,7 +514,7 @@
 				BASE_URL = "http://127.0.0.1:8000";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVICE_BASE_URL = "";
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -514,8 +522,6 @@
 				GID_CLIENT_ID = "408651692876-vea73ugad9mapivcldjfrc4hmd3tirv0.apps.googleusercontent.com";
 				GID_SERVER_CLIENT_ID = "408651692876-pp16jkl7kdtdjh9g2htnu89amv05kjmr.apps.googleusercontent.com";
 				INFOPLIST_FILE = "Wofins/Info-Debug.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = Wofins;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -596,13 +602,11 @@
 				BASE_URL = "https://app.wofins.id";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = NO;
 				GID_CLIENT_ID = "408651692876-vea73ugad9mapivcldjfrc4hmd3tirv0.apps.googleusercontent.com";
 				GID_SERVER_CLIENT_ID = "408651692876-ju4su29c4t3l08ee9kjajdmavkr0afj1.apps.googleusercontent.com";
 				INFOPLIST_FILE = Wofins/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Wofins;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
