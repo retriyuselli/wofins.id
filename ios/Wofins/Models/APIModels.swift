@@ -826,6 +826,21 @@ struct FinanceOrderOverviewEnvelope: Decodable {
     let data: FinanceOrderOverviewData
 }
 
+struct FinanceProjectsClosingMeta: Decodable {
+    let month: String?
+    let month_label: String?
+    let total: Int?
+    let total_grand_total: Int?
+    let total_payments: Int?
+    let total_expenses: Int?
+    let total_net_cash_flow: Int?
+}
+
+struct FinanceProjectsClosingResponse: Decodable {
+    let data: [FinanceProjectItem]
+    let meta: FinanceProjectsClosingMeta?
+}
+
 struct FinanceProjectsResponse: Decodable {
     let data: [FinanceProjectItem]
     let meta: FinanceProjectMeta?

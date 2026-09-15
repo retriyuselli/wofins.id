@@ -369,7 +369,16 @@ struct ProjectsView: View {
                     spacing: 10
                 ) {
                     ForEach(visibleOrderWidgets) { widget in
-                        orderWidgetCard(widget)
+                        if widget.key == "new_projects_month" {
+                            NavigationLink {
+                                MonthlyClosingProjectsView()
+                            } label: {
+                                orderWidgetCard(widget, showsChevron: true)
+                            }
+                            .buttonStyle(.plain)
+                        } else {
+                            orderWidgetCard(widget)
+                        }
                     }
                 }
                 .padding(.horizontal, 16)
@@ -377,14 +386,25 @@ struct ProjectsView: View {
         }
     }
 
-    private func orderWidgetCard(_ widget: FinanceOrderOverviewWidget) -> some View {
+    private func orderWidgetCard(_ widget: FinanceOrderOverviewWidget, showsChevron: Bool = false) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(widget.title)
-                .font(.poppins(.caption2, weight: .semibold))
-                .foregroundStyle(WofinsTheme.muted)
-                .lineLimit(2)
-                .minimumScaleFactor(0.85)
-                .fixedSize(horizontal: false, vertical: true)
+            HStack(alignment: .top, spacing: 6) {
+                Text(widget.title)
+                    .font(.poppins(.caption2, weight: .semibold))
+                    .foregroundStyle(WofinsTheme.muted)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.85)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                if showsChevron {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(WofinsTheme.muted)
+                        .padding(.top, 1)
+                        .accessibilityHidden(true)
+                }
+            }
 
             Text(widget.value)
                 .font(.poppins(.headline, weight: .bold))
@@ -404,6 +424,7 @@ struct ProjectsView: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, minHeight: 108, alignment: .topLeading)
+        .contentShape(Rectangle())
         .projectSurface()
     }
 
@@ -882,9 +903,10 @@ struct ProjectsView: View {
                 }
                 prospectMeta = response.meta
             } else {
+                let previousWidgets = orderWidgets
                 async let overviewTask: [FinanceOrderOverviewWidget] = {
                     do { return try await appState.api.financeProjectsOverview() }
-                    catch { return orderWidgets }
+                    catch { return previousWidgets }
                 }()
                 let response = try await appState.api.financeProjects(
                     status: selectedFilter.apiValue,

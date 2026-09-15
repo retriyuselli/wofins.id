@@ -33,6 +33,7 @@
 		9791363DEEC5307D2E8A0F9D /* TransactionsOverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA430F656989A0F725AE426 /* TransactionsOverviewView.swift */; };
 		97E5F1D0331B861C22F80097 /* WofinsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6876B4085C7B752E9174A88 /* WofinsApp.swift */; };
 		9C111356AB24539863CA60A9 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C2972523AD19542CB2D8F7A /* Typography.swift */; };
+		9EE035E60B2F8FE43809D950 /* MonthlyClosingProjectsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC09C0E40E0094E46600F955 /* MonthlyClosingProjectsView.swift */; };
 		A21C1225306088B731DA9328 /* ProductFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3109EF10B23E08C0C2129085 /* ProductFormView.swift */; };
 		A3E4A8CCBDDB3CAE8FF12F4B /* ProjectDocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AF9342BEC6D810CA52935BB /* ProjectDocumentView.swift */; };
 		A5D11915EEB51CCBC8442910 /* TransactionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3E405D0D93962DA87A4FF9A /* TransactionsView.swift */; };
@@ -101,6 +102,7 @@
 		D6ADAE80BECA7F2C7D1CEFFF /* WofinsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WofinsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D839C0D5C282780676C64491 /* Poppins-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Poppins-Bold.ttf"; sourceTree = "<group>"; };
 		DB270F9D6E7E2C018D3FE1AD /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		DC09C0E40E0094E46600F955 /* MonthlyClosingProjectsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthlyClosingProjectsView.swift; sourceTree = "<group>"; };
 		E4DB65D88A34C74CD0C989A2 /* CreateProjectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateProjectView.swift; sourceTree = "<group>"; };
 		EB6800F355B4440B596EED85 /* ProjectDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectDetailView.swift; sourceTree = "<group>"; };
 		EDF3E253264C0388C4DEC91E /* FinancePeriodPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FinancePeriodPicker.swift; sourceTree = "<group>"; };
@@ -153,6 +155,7 @@
 				9FBB5BC72D7FB3D244C5A65E /* DashboardView.swift */,
 				EDF3E253264C0388C4DEC91E /* FinancePeriodPicker.swift */,
 				344A7AE80446155283D87DCB /* ModulesView.swift */,
+				DC09C0E40E0094E46600F955 /* MonthlyClosingProjectsView.swift */,
 				1BA7C7798BF15FD393540E64 /* ProductDetailView.swift */,
 				3109EF10B23E08C0C2129085 /* ProductFormView.swift */,
 				EB6800F355B4440B596EED85 /* ProjectDetailView.swift */,
@@ -448,6 +451,7 @@
 				03AD763118BF5DA1471A2FCD /* KeychainStore.swift in Sources */,
 				EF5B825D1FC02E91BBB9B576 /* LoginView.swift in Sources */,
 				059180338D92E2767CC39D37 /* ModulesView.swift in Sources */,
+				9EE035E60B2F8FE43809D950 /* MonthlyClosingProjectsView.swift in Sources */,
 				83F6083A1FEABD3BF861E5CE /* PrivacyStatementView.swift in Sources */,
 				FFE35A2D1042D46A6A3EFE65 /* ProductDetailView.swift in Sources */,
 				A21C1225306088B731DA9328 /* ProductFormView.swift in Sources */,

@@ -214,6 +214,14 @@ final class APIClient {
         return envelope.data.widgets ?? []
     }
 
+    func financeProjectsClosing(month: String? = nil) async throws -> FinanceProjectsClosingResponse {
+        var path = "/finance/projects/closing"
+        if let month, !month.isEmpty {
+            path += "?month=\(month)"
+        }
+        return try await request(method: "GET", path: path)
+    }
+
     func financeProspects(status: String? = nil, perPage: Int = 50, page: Int = 1) async throws -> FinanceProspectsResponse {
         var query: [String] = ["per_page=\(perPage)"]
         if let status { query.append("status=\(status)") }
