@@ -916,14 +916,9 @@ struct PaymentProofView: View {
 
             Group {
                 if let image {
-                    ScrollView([.horizontal, .vertical], showsIndicators: false) {
-                        Image(uiImage: image)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(maxWidth: .infinity)
-                            .padding(16)
-                    }
-                    .refreshable { await load() }
+                    ZoomableProofImage(image: image)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding(12)
                 } else if isLoading {
                     VStack(spacing: 12) {
                         ProgressView().tint(WofinsTheme.primary)
@@ -965,6 +960,141 @@ struct PaymentProofView: View {
                 failed = true
             }
         }
+    }
+}
+
+/// Fits proof image to the phone viewport; pinch to zoom, double-tap to toggle.
+private struct ZoomableProofImage: UIViewRepresentable {
+    let image: UIImage
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(image: image)
+    }
+
+    func makeUIView(context: Context) -> LayoutNotifyingScrollView {
+        let scrollView = LayoutNotifyingScrollView()
+        scrollView.delegate = context.coordinator
+        scrollView.minimumZoomScale = 1
+        scrollView.maximumZoomScale = 5
+        scrollView.bouncesZoom = true
+        scrollView.showsHorizontalScrollIndicator = false
+        scrollView.showsVerticalScrollIndicator = false
+        scrollView.backgroundColor = .clear
+        scrollView.contentInsetAdjustmentBehavior = .never
+        scrollView.onLayout = { [weak coordinator = context.coordinator] in
+            coordinator?.relayoutIfNeeded()
+        }
+
+        let imageView = UIImageView(image: image)
+        imageView.contentMode = .scaleAspectFit
+        imageView.isUserInteractionEnabled = true
+        scrollView.addSubview(imageView)
+
+        let doubleTap = UITapGestureRecognizer(
+            target: context.coordinator,
+            action: #selector(Coordinator.handleDoubleTap(_:))
+        )
+        doubleTap.numberOfTapsRequired = 2
+        scrollView.addGestureRecognizer(doubleTap)
+
+        context.coordinator.scrollView = scrollView
+        context.coordinator.imageView = imageView
+        return scrollView
+    }
+
+    func updateUIView(_ scrollView: LayoutNotifyingScrollView, context: Context) {
+        context.coordinator.image = image
+        context.coordinator.imageView?.image = image
+        context.coordinator.relayoutIfNeeded()
+    }
+
+    final class Coordinator: NSObject, UIScrollViewDelegate {
+        var image: UIImage
+        weak var scrollView: UIScrollView?
+        weak var imageView: UIImageView?
+        private var lastBoundsSize: CGSize = .zero
+
+        init(image: UIImage) {
+            self.image = image
+        }
+
+        func viewForZooming(in scrollView: UIScrollView) -> UIView? {
+            imageView
+        }
+
+        func scrollViewDidZoom(_ scrollView: UIScrollView) {
+            centerImage()
+        }
+
+        func relayoutIfNeeded() {
+            guard let scrollView else { return }
+            let bounds = scrollView.bounds.size
+            guard bounds.width > 1, bounds.height > 1 else { return }
+            if bounds != lastBoundsSize || imageView?.frame.isEmpty == true {
+                lastBoundsSize = bounds
+                layoutImage(resetZoom: true)
+            }
+        }
+
+        private func layoutImage(resetZoom: Bool) {
+            guard let scrollView, let imageView else { return }
+            let imageSize = image.size
+            guard imageSize.width > 0, imageSize.height > 0 else { return }
+
+            imageView.frame = CGRect(origin: .zero, size: imageSize)
+            scrollView.contentSize = imageSize
+
+            let fitScale = min(
+                scrollView.bounds.width / imageSize.width,
+                scrollView.bounds.height / imageSize.height
+            )
+            scrollView.minimumZoomScale = fitScale
+            scrollView.maximumZoomScale = max(fitScale * 5, 5)
+            if resetZoom {
+                scrollView.zoomScale = fitScale
+            } else {
+                scrollView.zoomScale = min(max(scrollView.zoomScale, fitScale), scrollView.maximumZoomScale)
+            }
+            centerImage()
+        }
+
+        private func centerImage() {
+            guard let scrollView, let imageView else { return }
+            let bounds = scrollView.bounds.size
+            let frame = imageView.frame
+            let insetX = max((bounds.width - frame.width) * 0.5, 0)
+            let insetY = max((bounds.height - frame.height) * 0.5, 0)
+            scrollView.contentInset = UIEdgeInsets(top: insetY, left: insetX, bottom: insetY, right: insetX)
+        }
+
+        @objc func handleDoubleTap(_ gesture: UITapGestureRecognizer) {
+            guard let scrollView else { return }
+            if scrollView.zoomScale > scrollView.minimumZoomScale * 1.05 {
+                scrollView.setZoomScale(scrollView.minimumZoomScale, animated: true)
+            } else {
+                let target = min(scrollView.minimumZoomScale * 2.5, scrollView.maximumZoomScale)
+                let point = gesture.location(in: imageView)
+                let size = scrollView.bounds.size
+                let width = size.width / target
+                let height = size.height / target
+                let rect = CGRect(
+                    x: point.x - width * 0.5,
+                    y: point.y - height * 0.5,
+                    width: width,
+                    height: height
+                )
+                scrollView.zoom(to: rect, animated: true)
+            }
+        }
+    }
+}
+
+private final class LayoutNotifyingScrollView: UIScrollView {
+    var onLayout: (() -> Void)?
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        onLayout?()
     }
 }
 

@@ -1184,7 +1184,15 @@ struct ModuleCreateView: View {
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .background(WofinsTheme.danger.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
                             }
-                            ForEach(schema?.fields ?? []) { field in
+                            ForEach(Array((schema?.fields ?? []).enumerated()), id: \.element.id) { index, field in
+                                let previousSection = index > 0 ? schema?.fields?[index - 1].section : nil
+                                if let section = field.section, section != previousSection {
+                                    Text(section)
+                                        .font(.poppins(.caption, weight: .bold))
+                                        .foregroundStyle(WofinsTheme.primary)
+                                        .padding(.top, index == 0 ? 0 : 8)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
                                 fieldView(field)
                             }
                             Button(action: save) {
@@ -1224,74 +1232,109 @@ struct ModuleCreateView: View {
     @ViewBuilder
     private func fieldView(_ field: ModuleFormField) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(field.label + (field.isRequired ? " *" : ""))
-                .font(.poppins(.caption, weight: .semibold))
-                .foregroundStyle(WofinsTheme.ink)
-            switch field.fieldType {
-            case "select":
-                Menu {
-                    ForEach(field.options ?? []) { option in
-                        Button(option.label) { values[field.name] = option.value }
+            if field.fieldType == "toggle" {
+                HStack(alignment: .center, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(field.label + (field.isRequired ? " *" : ""))
+                            .font(.poppins(.caption, weight: .semibold))
+                            .foregroundStyle(WofinsTheme.ink)
+                        if let helper = field.helper, !helper.isEmpty {
+                            Text(helper)
+                                .font(.poppins(.caption2))
+                                .foregroundStyle(WofinsTheme.muted)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                     }
-                } label: {
-                    HStack {
-                        Text(selectedLabel(field) ?? "Pilih")
+                    .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                    Toggle("", isOn: toggleBinding(field.name))
+                        .labelsHidden()
+                        .tint(WofinsTheme.primary)
+                        .disabled(field.readonly == true)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .moduleSurface()
+            } else {
+                Text(field.label + (field.isRequired ? " *" : ""))
+                    .font(.poppins(.caption, weight: .semibold))
+                    .foregroundStyle(WofinsTheme.ink)
+                switch field.fieldType {
+                case "select":
+                    Menu {
+                        Button("Kosongkan") { values[field.name] = "" }
+                        ForEach(field.options ?? []) { option in
+                            Button(option.label) { values[field.name] = option.value }
+                        }
+                    } label: {
+                        HStack {
+                            Text(selectedLabel(field) ?? "Pilih")
+                                .font(.poppins(.subheadline))
+                                .foregroundStyle(selectedLabel(field) == nil ? WofinsTheme.muted : WofinsTheme.ink)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.85)
+                            Spacer()
+                            Image(systemName: "chevron.down").foregroundStyle(WofinsTheme.muted)
+                        }
+                        .padding(.horizontal, 12)
+                        .frame(minHeight: 46)
+                        .moduleSurface()
+                    }
+                    .disabled(field.readonly == true)
+                case "date":
+                    DatePicker("", selection: dateBinding(field.name), displayedComponents: .date)
+                        .labelsHidden()
+                        .datePickerStyle(.compact)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .disabled(field.readonly == true)
+                case "textarea":
+                    TextField(field.placeholder ?? field.label, text: stringBinding(field.name), axis: .vertical)
+                        .font(.poppins(.subheadline))
+                        .lineLimit(3...6)
+                        .padding(12)
+                        .moduleSurface()
+                        .disabled(field.readonly == true)
+                case "number":
+                    if field.usesThousandSeparator {
+                        TextField(field.placeholder ?? "0", text: MoneyFormat.groupedBinding(stringBinding(field.name)))
                             .font(.poppins(.subheadline))
-                            .foregroundStyle(selectedLabel(field) == nil ? WofinsTheme.muted : WofinsTheme.ink)
-                            .lineLimit(1)
-                        Spacer()
-                        Image(systemName: "chevron.down").foregroundStyle(WofinsTheme.muted)
+                            .keyboardType(.numberPad)
+                            .padding(.horizontal, 12)
+                            .frame(height: 46)
+                            .moduleSurface()
+                            .disabled(field.readonly == true)
+                    } else {
+                        TextField(field.placeholder ?? "0", text: stringBinding(field.name))
+                            .font(.poppins(.subheadline))
+                            .keyboardType(.numberPad)
+                            .padding(.horizontal, 12)
+                            .frame(height: 46)
+                            .moduleSurface()
+                            .disabled(field.readonly == true)
                     }
-                    .padding(.horizontal, 12)
-                    .frame(minHeight: 46)
-                    .moduleSurface()
-                }
-            case "toggle":
-                Toggle("", isOn: toggleBinding(field.name))
-                    .labelsHidden()
-                    .tint(WofinsTheme.primary)
-            case "date":
-                DatePicker("", selection: dateBinding(field.name), displayedComponents: .date)
-                    .labelsHidden()
-                    .datePickerStyle(.compact)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            case "textarea":
-                TextField(field.placeholder ?? field.label, text: stringBinding(field.name), axis: .vertical)
-                    .font(.poppins(.subheadline))
-                    .lineLimit(3...6)
-                    .padding(12)
-                    .moduleSurface()
-            case "number":
-                if field.usesThousandSeparator {
-                    TextField(field.placeholder ?? "0", text: MoneyFormat.groupedBinding(stringBinding(field.name)))
+                case "email":
+                    TextField(field.placeholder ?? field.label, text: stringBinding(field.name))
                         .font(.poppins(.subheadline))
-                        .keyboardType(.numberPad)
+                        .keyboardType(.emailAddress)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
                         .padding(.horizontal, 12)
                         .frame(height: 46)
                         .moduleSurface()
-                } else {
-                    TextField(field.placeholder ?? "0", text: stringBinding(field.name))
+                        .disabled(field.readonly == true)
+                default:
+                    TextField(field.placeholder ?? field.label, text: stringBinding(field.name))
                         .font(.poppins(.subheadline))
-                        .keyboardType(.numberPad)
                         .padding(.horizontal, 12)
                         .frame(height: 46)
                         .moduleSurface()
+                        .disabled(field.readonly == true)
                 }
-            case "email":
-                TextField(field.placeholder ?? field.label, text: stringBinding(field.name))
-                    .font(.poppins(.subheadline))
-                    .keyboardType(.emailAddress)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .padding(.horizontal, 12)
-                    .frame(height: 46)
-                    .moduleSurface()
-            default:
-                TextField(field.placeholder ?? field.label, text: stringBinding(field.name))
-                    .font(.poppins(.subheadline))
-                    .padding(.horizontal, 12)
-                    .frame(height: 46)
-                    .moduleSurface()
+                if let helper = field.helper, !helper.isEmpty {
+                    Text(helper)
+                        .font(.poppins(.caption2))
+                        .foregroundStyle(WofinsTheme.muted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
         }
     }
