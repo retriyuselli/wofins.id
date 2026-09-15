@@ -1,9 +1,11 @@
 import SwiftUI
 
-struct MonthlyClosingProjectsView: View {
+struct OrderOverviewProjectsView: View {
     @EnvironmentObject private var appState: AppState
     @Environment(\.dismiss) private var dismiss
 
+    let widgetKey: String
+    var fallbackTitle: String = "Daftar Proyek"
     var month: String? = nil
 
     @State private var projects: [FinanceProjectItem] = []
@@ -12,7 +14,26 @@ struct MonthlyClosingProjectsView: View {
     @State private var errorMessage: String?
 
     private var title: String {
-        meta?.month_label.map { "Proyek \($0)" } ?? "Proyek Baru Bulan Ini"
+        meta?.title ?? fallbackTitle
+    }
+
+    private var subtitle: String {
+        if let subtitle = meta?.subtitle, !subtitle.isEmpty {
+            return subtitle
+        }
+        return "\(meta?.total ?? projects.count) proyek"
+    }
+
+    private var showsDocBadge: Bool {
+        widgetKey == "agreement_files" || widgetKey == "contract_docs"
+    }
+
+    private var emphasizesExpenses: Bool {
+        widgetKey == "customer_expenses"
+    }
+
+    private var emphasizesNet: Bool {
+        widgetKey == "net_received_processing"
     }
 
     var body: some View {
@@ -36,7 +57,7 @@ struct MonthlyClosingProjectsView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .projectSurface()
                     } else if projects.isEmpty {
-                        Text("Belum ada proyek closing di bulan ini.")
+                        Text("Belum ada data untuk widget ini.")
                             .font(.poppins(.subheadline))
                             .foregroundStyle(WofinsTheme.muted)
                             .padding(16)
@@ -47,7 +68,7 @@ struct MonthlyClosingProjectsView: View {
                             NavigationLink {
                                 ProjectDetailView(projectId: project.id, preview: project)
                             } label: {
-                                closingProjectCard(project)
+                                projectCard(project)
                             }
                             .buttonStyle(.plain)
                         }
@@ -81,10 +102,11 @@ struct MonthlyClosingProjectsView: View {
                     .foregroundStyle(.white)
                     .lineLimit(1)
                     .minimumScaleFactor(0.85)
-                Text("\(meta?.total ?? projects.count) proyek · closing bulan ini")
+                Text(subtitle)
                     .font(.poppins(.caption))
                     .foregroundStyle(.white.opacity(0.72))
-                    .lineLimit(1)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.85)
             }
             .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
         }
@@ -96,9 +118,23 @@ struct MonthlyClosingProjectsView: View {
 
     private func summaryBar(_ meta: FinanceProjectsClosingMeta) -> some View {
         HStack(spacing: 10) {
-            summaryChip("Total", MoneyFormat.idr(meta.total_grand_total))
-            summaryChip("Dibayar", MoneyFormat.idr(meta.total_payments))
-            summaryChip("Net", MoneyFormat.idr(meta.total_net_cash_flow))
+            if emphasizesExpenses {
+                summaryChip("Pengeluaran", MoneyFormat.idr(meta.total_expenses))
+                summaryChip("Dibayar", MoneyFormat.idr(meta.total_payments))
+                summaryChip("Net", MoneyFormat.idr(meta.total_net_cash_flow))
+            } else if emphasizesNet {
+                summaryChip("Net", MoneyFormat.idr(meta.total_net_cash_flow))
+                summaryChip("Dibayar", MoneyFormat.idr(meta.total_payments))
+                summaryChip("Keluar", MoneyFormat.idr(meta.total_expenses))
+            } else if showsDocBadge {
+                summaryChip("Proyek", "\(meta.total ?? projects.count)")
+                summaryChip("Upload", "\(meta.uploaded ?? 0)")
+                summaryChip("Belum", "\(meta.pending ?? 0)")
+            } else {
+                summaryChip("Total", MoneyFormat.idr(meta.total_grand_total))
+                summaryChip("Dibayar", MoneyFormat.idr(meta.total_payments))
+                summaryChip("Net", MoneyFormat.idr(meta.total_net_cash_flow))
+            }
         }
     }
 
@@ -118,7 +154,7 @@ struct MonthlyClosingProjectsView: View {
         .projectSurface()
     }
 
-    private func closingProjectCard(_ project: FinanceProjectItem) -> some View {
+    private func projectCard(_ project: FinanceProjectItem) -> some View {
         let appearance = projectStatusAppearance(project.status)
         return VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top, spacing: 12) {
@@ -134,12 +170,23 @@ struct MonthlyClosingProjectsView: View {
                 }
                 .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
 
-                Text(appearance.label)
-                    .font(.poppins(.caption2, weight: .semibold))
-                    .foregroundStyle(appearance.color)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(appearance.color.opacity(0.12), in: Capsule())
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text(appearance.label)
+                        .font(.poppins(.caption2, weight: .semibold))
+                        .foregroundStyle(appearance.color)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(appearance.color.opacity(0.12), in: Capsule())
+
+                    if showsDocBadge {
+                        let uploaded = widgetKey == "agreement_files"
+                            ? (project.has_agreement == true)
+                            : (project.has_contract == true)
+                        Text(uploaded ? "Sudah upload" : "Belum upload")
+                            .font(.poppins(.caption2, weight: .semibold))
+                            .foregroundStyle(uploaded ? WofinsTheme.success : WofinsTheme.danger)
+                    }
+                }
             }
 
             HStack(spacing: 12) {
@@ -149,7 +196,19 @@ struct MonthlyClosingProjectsView: View {
                         .foregroundStyle(WofinsTheme.muted)
                 }
                 Spacer(minLength: 0)
-                if let total = project.grand_total {
+                if emphasizesExpenses, let expenses = project.expenses_total {
+                    Text(MoneyFormat.idr(expenses))
+                        .font(.poppins(.caption, weight: .semibold))
+                        .foregroundStyle(WofinsTheme.danger)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                } else if emphasizesNet, let net = project.net_cash_flow {
+                    Text(MoneyFormat.idr(net))
+                        .font(.poppins(.caption, weight: .semibold))
+                        .foregroundStyle(net >= 0 ? WofinsTheme.success : WofinsTheme.danger)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                } else if let total = project.grand_total {
                     Text(MoneyFormat.idr(total))
                         .font(.poppins(.caption, weight: .semibold))
                         .foregroundStyle(WofinsTheme.ink)
@@ -168,7 +227,7 @@ struct MonthlyClosingProjectsView: View {
         isLoading = true
         defer { isLoading = false }
         do {
-            let response = try await appState.api.financeProjectsClosing(month: month)
+            let response = try await appState.api.financeProjectsOverviewWidget(key: widgetKey, month: month)
             projects = response.data
             meta = response.meta
             errorMessage = nil

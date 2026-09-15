@@ -369,9 +369,9 @@ struct ProjectsView: View {
                     spacing: 10
                 ) {
                     ForEach(visibleOrderWidgets) { widget in
-                        if widget.key == "new_projects_month" {
+                        if isClickableOrderWidget(widget.key) {
                             NavigationLink {
-                                MonthlyClosingProjectsView()
+                                orderWidgetDestination(for: widget)
                             } label: {
                                 orderWidgetCard(widget, showsChevron: true)
                             }
@@ -383,6 +383,48 @@ struct ProjectsView: View {
                 }
                 .padding(.horizontal, 16)
             }
+        }
+    }
+
+    private func isClickableOrderWidget(_ key: String) -> Bool {
+        switch key {
+        case "new_projects_month",
+             "monthly_revenue",
+             "net_received_processing",
+             "agreement_files",
+             "customer_expenses",
+             "contract_docs",
+             "total_revenue",
+             "total_expenses":
+            return true
+        default:
+            return false
+        }
+    }
+
+    @ViewBuilder
+    private func orderWidgetDestination(for widget: FinanceOrderOverviewWidget) -> some View {
+        switch widget.key {
+        case "new_projects_month",
+             "monthly_revenue",
+             "net_received_processing",
+             "agreement_files",
+             "customer_expenses",
+             "contract_docs",
+             "total_revenue":
+            OrderOverviewProjectsView(widgetKey: widget.key, fallbackTitle: widget.title)
+        case "total_expenses":
+            ModuleListView(
+                item: .placeholder(
+                    key: "expense_ops",
+                    title: widget.title,
+                    feature: PlanFeature.basicFinance.rawValue,
+                    allowed: appState.allows(.basicFinance),
+                    icon: "briefcase.fill"
+                )
+            )
+        default:
+            EmptyView()
         }
     }
 

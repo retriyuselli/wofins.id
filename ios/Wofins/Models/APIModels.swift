@@ -780,6 +780,8 @@ struct FinanceProjectItem: Decodable, Identifiable, Equatable {
     let expenses_total: Int?
     let net_cash_flow: Int?
     let gross_profit: Int?
+    let has_agreement: Bool?
+    let has_contract: Bool?
 
     var displayName: String {
         name ?? prospect?.name_event ?? number ?? "Proyek #\(id)"
@@ -827,13 +829,19 @@ struct FinanceOrderOverviewEnvelope: Decodable {
 }
 
 struct FinanceProjectsClosingMeta: Decodable {
+    let key: String?
+    let title: String?
+    let subtitle: String?
     let month: String?
     let month_label: String?
+    let year: Int?
     let total: Int?
     let total_grand_total: Int?
     let total_payments: Int?
     let total_expenses: Int?
     let total_net_cash_flow: Int?
+    let uploaded: Int?
+    let pending: Int?
 }
 
 struct FinanceProjectsClosingResponse: Decodable {

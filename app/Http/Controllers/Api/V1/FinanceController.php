@@ -76,6 +76,34 @@ class FinanceController extends Controller
         );
     }
 
+    public function projectsOverviewWidget(Request $request, string $key): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $allowed = [
+            'new_projects_month',
+            'monthly_revenue',
+            'net_received_processing',
+            'agreement_files',
+            'customer_expenses',
+            'contract_docs',
+            'total_revenue',
+        ];
+
+        if (! in_array($key, $allowed, true)) {
+            return response()->json(['message' => 'Widget tidak valid.'], 422);
+        }
+
+        $data = $request->validate([
+            'month' => ['nullable', 'string', 'regex:/^\d{4}-\d{2}$/'],
+        ]);
+
+        return response()->json(
+            $this->finance->projectsByOverviewWidget($user, $key, $data['month'] ?? null)
+        );
+    }
+
     public function projectOptions(Request $request): JsonResponse
     {
         /** @var User $user */
