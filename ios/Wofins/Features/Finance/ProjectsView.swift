@@ -300,21 +300,37 @@ struct ProjectsView: View {
         .buttonStyle(.plain)
     }
 
-    private var primaryOrderWidgetKeys: [String] {
+    private var orderWidgetDisplayKeys: [String] {
         [
             "new_projects_month",
             "monthly_revenue",
             "net_received_processing",
             "agreement_files",
+            "customer_payments",
+            "customer_expenses",
+            "contract_docs",
+            "total_revenue",
+            "total_expenses",
         ]
     }
 
+    private var primaryOrderWidgetKeys: [String] {
+        Array(orderWidgetDisplayKeys.prefix(4))
+    }
+
     private var visibleOrderWidgets: [FinanceOrderOverviewWidget] {
-        guard !showAllOrderWidgets else { return orderWidgets }
-        let prioritized = primaryOrderWidgetKeys.compactMap { key in
+        let ordered = orderWidgetDisplayKeys.compactMap { key in
             orderWidgets.first(where: { $0.key == key })
         }
-        return prioritized.isEmpty ? Array(orderWidgets.prefix(4)) : prioritized
+        let remaining = orderWidgets.filter { widget in
+            !orderWidgetDisplayKeys.contains(widget.key)
+        }
+        let all = ordered + remaining
+        guard !showAllOrderWidgets else { return all }
+        let prioritized = primaryOrderWidgetKeys.compactMap { key in
+            all.first(where: { $0.key == key })
+        }
+        return prioritized.isEmpty ? Array(all.prefix(4)) : prioritized
     }
 
     private var orderOverviewSection: some View {
