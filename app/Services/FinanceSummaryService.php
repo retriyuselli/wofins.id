@@ -221,7 +221,7 @@ class FinanceSummaryService
         $widgets = [
             [
                 'key' => 'customer_payments',
-                'title' => 'Total Pembayaran Pelanggan',
+                'title' => 'Total Pembayaran',
                 'value' => $this->formatOverviewMoney($customerPayments),
                 'value_raw' => $customerPayments,
                 'description' => 'Total pembayaran diterima',
@@ -229,7 +229,7 @@ class FinanceSummaryService
             ],
             [
                 'key' => 'customer_expenses',
-                'title' => 'Total Pengeluaran Pelanggan',
+                'title' => 'Total Pengeluaran',
                 'value' => $this->formatOverviewMoney($customerExpenses),
                 'value_raw' => $customerExpenses,
                 'description' => 'Total pengeluaran',
@@ -253,7 +253,7 @@ class FinanceSummaryService
             ],
             [
                 'key' => 'monthly_revenue',
-                'title' => 'Pendapatan Bulanan',
+                'title' => 'Revenue Bulanan',
                 'value' => $this->formatOverviewMoney($monthlyRevenue),
                 'value_raw' => $monthlyRevenue,
                 'description' => 'Pendapatan di '.$monthLabel,

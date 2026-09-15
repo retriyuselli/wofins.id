@@ -363,8 +363,7 @@ struct ProjectsView: View {
     }
 
     private func orderWidgetCard(_ widget: FinanceOrderOverviewWidget) -> some View {
-        let color = orderWidgetToneColor(widget.tone)
-        return VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 8) {
             Text(widget.title)
                 .font(.poppins(.caption2, weight: .semibold))
                 .foregroundStyle(WofinsTheme.muted)
@@ -379,12 +378,8 @@ struct ProjectsView: View {
                 .minimumScaleFactor(0.7)
                 .fixedSize(horizontal: false, vertical: true)
 
-            HStack(alignment: .top, spacing: 6) {
-                Image(systemName: orderWidgetIcon(widget.key))
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(color)
-                    .padding(.top, 1)
-                Text(widget.description ?? "")
+            if let description = widget.description, !description.isEmpty {
+                Text(description)
                     .font(.poppins(.caption2))
                     .foregroundStyle(WofinsTheme.muted)
                     .lineLimit(2)
@@ -395,28 +390,6 @@ struct ProjectsView: View {
         .padding(12)
         .frame(maxWidth: .infinity, minHeight: 108, alignment: .topLeading)
         .projectSurface()
-    }
-
-    private func orderWidgetToneColor(_ tone: String?) -> Color {
-        switch (tone ?? "").lowercased() {
-        case "success": return WofinsTheme.success
-        case "danger": return WofinsTheme.danger
-        default: return WofinsTheme.primary
-        }
-    }
-
-    private func orderWidgetIcon(_ key: String) -> String {
-        switch key {
-        case "customer_payments": return "arrow.up.right"
-        case "customer_expenses": return "arrow.up.right"
-        case "agreement_files": return "checkmark.square.fill"
-        case "new_projects_month": return "calendar.badge.plus"
-        case "monthly_revenue": return "banknote.fill"
-        case "contract_docs": return "doc.fill"
-        case "total_revenue", "total_expenses": return "dollarsign.circle.fill"
-        case "net_received_processing": return "building.columns.fill"
-        default: return "chart.bar.fill"
-        }
     }
 
     private var overviewCards: some View {
