@@ -22,6 +22,7 @@ struct ProjectsView: View {
     @State private var loadGeneration = 0
     @State private var orderWidgets: [FinanceOrderOverviewWidget] = []
     @State private var isLoadingOverview = false
+    @State private var showAllOrderWidgets = false
 
     private enum SalesWorkspace: String, CaseIterable, Identifiable {
         case projects, prospects
@@ -86,15 +87,6 @@ struct ProjectsView: View {
         }
     }
 
-    private var eventsThisMonth: Int {
-        let calendar = Calendar.current
-        return projects.filter { project in
-            guard let date = project.eventDate else { return false }
-            return calendar.isDate(date, equalTo: Date(), toGranularity: .month)
-                && calendar.isDate(date, equalTo: Date(), toGranularity: .year)
-        }.count
-    }
-
     private var visibleProspects: [FinanceProspectItem] {
         let keyword = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !keyword.isEmpty else { return prospects }
@@ -122,7 +114,9 @@ struct ProjectsView: View {
                             }
                             searchBar
                             filterBar
-                            overviewCards
+                            if isProspects {
+                                overviewCards
+                            }
                             content
                         }
                         .padding(.top, 16)
@@ -306,12 +300,44 @@ struct ProjectsView: View {
         .buttonStyle(.plain)
     }
 
+    private var primaryOrderWidgetKeys: [String] {
+        [
+            "new_projects_month",
+            "monthly_revenue",
+            "net_received_processing",
+            "agreement_files",
+        ]
+    }
+
+    private var visibleOrderWidgets: [FinanceOrderOverviewWidget] {
+        guard !showAllOrderWidgets else { return orderWidgets }
+        let prioritized = primaryOrderWidgetKeys.compactMap { key in
+            orderWidgets.first(where: { $0.key == key })
+        }
+        return prioritized.isEmpty ? Array(orderWidgets.prefix(4)) : prioritized
+    }
+
     private var orderOverviewSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Ringkasan Orders")
-                .font(.poppins(.headline, weight: .bold))
-                .foregroundStyle(WofinsTheme.primary)
-                .padding(.horizontal, 16)
+            HStack(alignment: .firstTextBaseline) {
+                Text("Ringkasan Orders")
+                    .font(.poppins(.headline, weight: .bold))
+                    .foregroundStyle(WofinsTheme.primary)
+                Spacer(minLength: 8)
+                if orderWidgets.count > 4 {
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showAllOrderWidgets.toggle()
+                        }
+                    } label: {
+                        Text(showAllOrderWidgets ? "Sembunyikan" : "Lihat semua")
+                            .font(.poppins(.caption, weight: .semibold))
+                            .foregroundStyle(WofinsTheme.primary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 16)
 
             if isLoadingOverview && orderWidgets.isEmpty {
                 ProgressView("Memuat ringkasan…")
@@ -327,7 +353,7 @@ struct ProjectsView: View {
                     ],
                     spacing: 10
                 ) {
-                    ForEach(orderWidgets) { widget in
+                    ForEach(visibleOrderWidgets) { widget in
                         orderWidgetCard(widget)
                     }
                 }
@@ -395,33 +421,18 @@ struct ProjectsView: View {
 
     private var overviewCards: some View {
         HStack(spacing: 12) {
-            if isProspects {
-                overviewCard(
-                    value: prospectMeta?.all_count ?? prospects.count,
-                    label: "Semua Prospek",
-                    icon: "person.2.fill",
-                    color: WofinsTheme.primary
-                )
-                overviewCard(
-                    value: prospectMeta?.warm_count ?? 0,
-                    label: "Masih Hangat",
-                    icon: "flame.fill",
-                    color: Color(red: 0.78, green: 0.55, blue: 0.00)
-                )
-            } else {
-                overviewCard(
-                    value: meta?.total ?? projects.count,
-                    label: "Proyek Aktif",
-                    icon: "list.clipboard.fill",
-                    color: WofinsTheme.primary
-                )
-                overviewCard(
-                    value: eventsThisMonth,
-                    label: "Acara Bulan Ini",
-                    icon: "calendar",
-                    color: Color(red: 0.78, green: 0.55, blue: 0.00)
-                )
-            }
+            overviewCard(
+                value: prospectMeta?.all_count ?? prospects.count,
+                label: "Semua Prospek",
+                icon: "person.2.fill",
+                color: WofinsTheme.primary
+            )
+            overviewCard(
+                value: prospectMeta?.warm_count ?? 0,
+                label: "Masih Hangat",
+                icon: "flame.fill",
+                color: Color(red: 0.78, green: 0.55, blue: 0.00)
+            )
         }
         .padding(.horizontal, 16)
     }

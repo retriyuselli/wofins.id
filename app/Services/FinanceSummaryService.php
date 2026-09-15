@@ -285,10 +285,10 @@ class FinanceSummaryService
             ],
             [
                 'key' => 'net_received_processing',
-                'title' => 'Total Uang Diterima (processing)',
+                'title' => 'Sisa Uang Pengantin',
                 'value' => $this->formatOverviewMoney($netReceived),
                 'value_raw' => $netReceived,
-                'description' => 'Untuk order dengan status processing',
+                'description' => 'Processing',
                 'tone' => 'primary',
             ],
         ];
