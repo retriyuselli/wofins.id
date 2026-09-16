@@ -74,7 +74,7 @@ struct TransactionsView: View {
     @State private var showAddSheet = false
 
     private var visibleItems: [FinanceTransactionItem] {
-        let keyword = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+            let keyword = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !keyword.isEmpty else { return items }
         return items.filter {
             $0.transactionTitle.localizedCaseInsensitiveContains(keyword)
@@ -103,18 +103,18 @@ struct TransactionsView: View {
 
                 if appState.allows(.basicFinance) {
                     ScrollViewReader { proxy in
-                        ScrollView(showsIndicators: false) {
-                            LazyVStack(spacing: 16) {
-                                periodMenu
-                                balanceCard
-                                searchBar
-                                filters
+                ScrollView(showsIndicators: false) {
+                    LazyVStack(spacing: 16) {
+                        periodMenu
+                        balanceCard
+                        searchBar
+                        filters
                                 ModuleShortcutsView(
                                     keys: ["piutangs", "payment_methods", "expenses", "expense_ops", "pendapatan_lains", "pengeluaran_lains"],
                                     title: "Kas & piutang"
                                 )
                                 Color.clear.frame(height: 0).id("transaction-list")
-                                content
+                        content
                             }
                             .padding(.top, 16)
                             .padding(.bottom, 28)
@@ -157,7 +157,7 @@ struct TransactionsView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 12) {
+                HStack(spacing: 12) {
             WofinsCompactMark()
             VStack(alignment: .leading, spacing: 2) { Text("Transaksi").font(.poppins(.headline, weight: .bold)).foregroundStyle(.white); Text(appState.currentUser?.companyDisplayName ?? "Arus kas bisnis").font(.poppins(.caption)).foregroundStyle(.white.opacity(0.72)).lineLimit(1) }
             Spacer()
@@ -171,7 +171,7 @@ struct TransactionsView: View {
 
     @ViewBuilder
     private var addTransactionOverlay: some View {
-        ZStack {
+                    ZStack {
             if showAddSheet {
                 Color.black.opacity(0.28)
                     .ignoresSafeArea()
@@ -312,7 +312,7 @@ struct TransactionsView: View {
                     } else {
                         NavigationLink {
                             TransactionCategoryView(filter: item, period: period)
-                        } label: {
+                    } label: {
                             chipLabel(item, selected: false)
                         }
                         .buttonStyle(.plain)
@@ -363,7 +363,7 @@ struct TransactionsView: View {
                             NavigationLink {
                                 TransactionDetailView(item: item)
                             } label: {
-                                transactionRow(item)
+                            transactionRow(item)
                             }
                             .buttonStyle(.plain)
                             if index < rows.count - 1 { Divider().padding(.leading, 58) }

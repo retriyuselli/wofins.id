@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AccountView: View {
     @EnvironmentObject private var appState: AppState
+    @AppStorage(AppColorTheme.storageKey) private var colorTheme = AppColorTheme.hastana.rawValue
     @State private var confirmLogout = false
     @State private var showPrivacy = false
 
@@ -20,6 +21,7 @@ struct AccountView: View {
                     LazyVStack(spacing: 16) {
                         profileCard
                         subscriptionCard
+                        themeSection
                         accountSection
                         modulesSection
                         securitySection
@@ -114,6 +116,70 @@ struct AccountView: View {
                 settingRow("Tim & Hak Akses", "person.3.fill", badge: user?.canManageTeam == true ? nil : "Business")
             }
         }
+    }
+
+    private var themeSection: some View {
+        settingsGroup("Tema Warna") {
+            VStack(spacing: 8) {
+                ForEach(AppColorTheme.allCases) { theme in
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            colorTheme = theme.rawValue
+                        }
+                    } label: {
+                        themeRow(theme)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private func themeRow(_ theme: AppColorTheme) -> some View {
+        let selected = colorTheme == theme.rawValue
+
+        return HStack(spacing: 12) {
+            HStack(spacing: -5) {
+                ForEach(Array(theme.previewColors.enumerated()), id: \.offset) { _, color in
+                    Circle()
+                        .fill(color)
+                        .frame(width: 24, height: 24)
+                        .overlay { Circle().stroke(Color.black.opacity(0.14), lineWidth: 1) }
+                }
+            }
+            .frame(width: 62, alignment: .leading)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(theme.name)
+                    .font(.poppins(.subheadline, weight: .semibold))
+                    .foregroundStyle(WofinsTheme.ink)
+                Text(theme.description)
+                    .font(.poppins(.caption2))
+                    .foregroundStyle(WofinsTheme.muted)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+
+            Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(selected ? WofinsTheme.primary : WofinsTheme.muted)
+                .accessibilityHidden(true)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            selected ? WofinsTheme.primary.opacity(0.08) : WofinsTheme.background,
+            in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(selected ? WofinsTheme.primary : WofinsTheme.border, lineWidth: selected ? 1.5 : 1)
+        }
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(theme.name), \(theme.description)")
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
     private var securitySection: some View {

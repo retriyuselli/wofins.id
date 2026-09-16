@@ -2,19 +2,44 @@ import SwiftUI
 import UIKit
 
 enum WofinsTheme {
-    static let primary = Color(red: 0.00, green: 0.27, blue: 0.50)
-    static let primaryDark = Color(red: 0.00, green: 0.18, blue: 0.34)
-    static let primaryLight = Color(red: 0.08, green: 0.39, blue: 0.66)
-    static let yellow = Color(red: 1.00, green: 0.73, blue: 0.00)
-    static let yellowSoft = Color(red: 1.00, green: 0.83, blue: 0.48)
-    static let accent = primary
-    static let background = Color(red: 0.96, green: 0.975, blue: 0.99)
-    static let card = Color.white
-    static let ink = Color(red: 0.07, green: 0.16, blue: 0.25)
-    static let muted = Color(red: 0.40, green: 0.48, blue: 0.59)
-    static let border = Color(red: 0.86, green: 0.90, blue: 0.95)
-    static let success = Color(red: 0.08, green: 0.57, blue: 0.39)
-    static let danger = Color(red: 0.86, green: 0.25, blue: 0.23)
+    private static var isHastana: Bool { AppColorTheme.selected == .hastana }
+
+    // Nilai tema WOFINS dipertahankan persis seperti tampilan sebelumnya.
+    static var primary: Color {
+        isHastana ? Color(red: 0.70, green: 0.07, blue: 0.11) : Color(red: 0.00, green: 0.27, blue: 0.50)
+    }
+    static var primaryDark: Color {
+        isHastana ? Color(red: 0.07, green: 0.07, blue: 0.08) : Color(red: 0.00, green: 0.18, blue: 0.34)
+    }
+    static var primaryLight: Color {
+        isHastana ? Color(red: 0.82, green: 0.12, blue: 0.17) : Color(red: 0.08, green: 0.39, blue: 0.66)
+    }
+    static var yellow: Color {
+        isHastana ? Color(red: 0.98, green: 0.64, blue: 0.66) : Color(red: 1.00, green: 0.73, blue: 0.00)
+    }
+    static var yellowSoft: Color {
+        isHastana ? .white : Color(red: 1.00, green: 0.83, blue: 0.48)
+    }
+    static var accent: Color { primary }
+    static var background: Color {
+        isHastana ? Color(red: 0.97, green: 0.97, blue: 0.975) : Color(red: 0.96, green: 0.975, blue: 0.99)
+    }
+    static var card: Color { .white }
+    static var ink: Color {
+        isHastana ? Color(red: 0.07, green: 0.07, blue: 0.08) : Color(red: 0.07, green: 0.16, blue: 0.25)
+    }
+    static var muted: Color {
+        isHastana ? Color(red: 0.34, green: 0.34, blue: 0.38) : Color(red: 0.40, green: 0.48, blue: 0.59)
+    }
+    static var border: Color {
+        isHastana ? Color(red: 0.83, green: 0.83, blue: 0.85) : Color(red: 0.86, green: 0.90, blue: 0.95)
+    }
+    static var success: Color {
+        isHastana ? Color(red: 0.06, green: 0.43, blue: 0.27) : Color(red: 0.08, green: 0.57, blue: 0.39)
+    }
+    static var danger: Color {
+        isHastana ? Color(red: 0.70, green: 0.07, blue: 0.11) : Color(red: 0.86, green: 0.25, blue: 0.23)
+    }
 }
 
 struct RootView: View {
@@ -41,23 +66,32 @@ struct RootView: View {
 }
 
 struct MainTabView: View {
+    @AppStorage(AppColorTheme.storageKey) private var colorTheme = AppColorTheme.hastana.rawValue
+    @State private var selectedTab = 0
+
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             DashboardView()
                 .tabItem { Label("Dashboard", systemImage: "house.fill") }
+                .tag(0)
 
             ProjectsView()
                 .tabItem { Label("Proyek", systemImage: "heart.fill") }
+                .tag(1)
 
             TransactionsView()
                 .tabItem { Label("Transaksi", systemImage: "banknote.fill") }
+                .tag(2)
 
             ReportsView()
                 .tabItem { Label("Laporan", systemImage: "chart.pie.fill") }
+                .tag(3)
 
             AccountView()
                 .tabItem { Label("Akun", systemImage: "person.crop.circle.fill") }
+                .tag(4)
         }
+        .id(colorTheme)
         .tint(WofinsTheme.accent)
         .toolbarBackground(.white, for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)

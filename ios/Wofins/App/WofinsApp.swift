@@ -88,13 +88,7 @@ private struct AnimatedSplashView: View {
                     .opacity(glowOpacity)
 
                 VStack(spacing: 18) {
-                    Image("LaunchLogo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 160, height: 160)
-                        .scaleEffect(logoScale)
-                        .opacity(logoOpacity)
-                        .shadow(color: WofinsTheme.yellow.opacity(0.22), radius: 16)
+                    splashLogo
 
                     VStack(spacing: 4) {
                         Text("WOFINS")
@@ -107,6 +101,14 @@ private struct AnimatedSplashView: View {
                     }
                     .offset(y: textOffset)
                     .opacity(textOpacity)
+
+                    Image("SplashPartners")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: min(310, size.width - 40), height: 66)
+                        .offset(y: textOffset)
+                        .opacity(textOpacity)
+                        .accessibilityLabel("Makna Kreatif Indonesia dan Hastana Indonesia")
                 }
             }
             .frame(width: size.width, height: size.height)
@@ -114,7 +116,30 @@ private struct AnimatedSplashView: View {
         .ignoresSafeArea()
         .onAppear(perform: playIntro)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("WOFINS, Wedding Organizer Financial System")
+        .accessibilityLabel("WOFINS, Wedding Organizer Financial System, Makna Kreatif Indonesia dan Hastana Indonesia")
+    }
+
+    @ViewBuilder
+    private var splashLogo: some View {
+        if AppColorTheme.selected == .hastana {
+            Image("LaunchLogo")
+                .renderingMode(.template)
+                .resizable()
+                .scaledToFit()
+                .foregroundStyle(.white)
+                .frame(width: 160, height: 160)
+                .scaleEffect(logoScale)
+                .opacity(logoOpacity)
+                .shadow(color: Color.black.opacity(0.22), radius: 16)
+        } else {
+            Image("LaunchLogo")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 160, height: 160)
+                .scaleEffect(logoScale)
+                .opacity(logoOpacity)
+                .shadow(color: WofinsTheme.yellow.opacity(0.22), radius: 16)
+        }
     }
 
     private func splashShapes(in size: CGSize) -> some View {

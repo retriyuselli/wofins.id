@@ -22,13 +22,12 @@ struct LoginView: View {
         case email, password
     }
 
-    /// Bank Mandiri palette
-    private let navy = Color(red: 0.0, green: 0.239, blue: 0.475) // #003D79
-    private let navyDeep = Color(red: 0.0, green: 0.169, blue: 0.337) // #002B56
-    private let gold = Color(red: 1.0, green: 0.725, blue: 0.0) // #FFB900
-    private let muted = Color(red: 0.42, green: 0.486, blue: 0.576) // #6B7C93
-    private let line = Color(red: 0.882, green: 0.906, blue: 0.937) // #E1E7EF
-    private let canvas = Color(red: 0.969, green: 0.976, blue: 0.988) // #F7F9FC
+    private var navy: Color { WofinsTheme.primary }
+    private var navyDeep: Color { WofinsTheme.primaryDark }
+    private var gold: Color { WofinsTheme.yellow }
+    private var muted: Color { WofinsTheme.muted }
+    private var line: Color { WofinsTheme.border }
+    private var canvas: Color { WofinsTheme.background }
     private let keychain = KeychainStore()
 
     private var canSubmitLogin: Bool {
@@ -178,7 +177,7 @@ struct LoginView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.top, 4)
 
-                // Gold accent bar
+                    // Accent bar mengikuti tema yang sedang aktif.
                 RoundedRectangle(cornerRadius: 2, style: .continuous)
                     .fill(gold)
                     .frame(width: 48, height: 4)
@@ -222,7 +221,7 @@ struct LoginView: View {
                     .foregroundStyle(WofinsTheme.danger)
                     .padding(12)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color(red: 1, green: 0.94, blue: 0.94))
+                    .background(WofinsTheme.danger.opacity(0.09))
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     .padding(.top, 16)
             }
@@ -345,7 +344,7 @@ struct LoginView: View {
                 .frame(maxWidth: .infinity)
                 .frame(height: 50)
                 .foregroundStyle(navy)
-                .background(Color.white)
+                .background(WofinsTheme.card)
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
@@ -389,7 +388,7 @@ struct LoginView: View {
             }
         }
         .padding(22)
-        .background(Color.white)
+        .background(WofinsTheme.card)
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .shadow(color: navy.opacity(0.08), radius: 24, y: 10)
         .overlay(alignment: .topLeading) {
