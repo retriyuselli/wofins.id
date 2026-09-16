@@ -48,7 +48,7 @@ class PublicCrewInviteController extends Controller
             'tanggal_lahir' => 'nullable|date|before_or_equal:today',
             'jenis_kelamin' => 'nullable|string|in:Laki-laki,Perempuan',
             'alamat' => 'nullable|string|max:2000',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:1024',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
             'pekerjaan' => 'nullable|string|max:255',
             'motivasi_kerja' => 'nullable|string|max:5000',
             'pelatihan' => 'nullable|string|max:5000',

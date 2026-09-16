@@ -9,7 +9,9 @@ final class APIConfigTests: XCTestCase {
     }
 
     func testTrustedReleaseURL() {
-        XCTAssertTrue(APIConfig.isTrustedReleaseURL(URL(string: "https://app.example.com")!))
+        XCTAssertTrue(APIConfig.isTrustedReleaseURL(URL(string: "https://app.wofins.id")!))
+        XCTAssertTrue(APIConfig.isTrustedReleaseURL(URL(string: "https://maknafinance.id")!))
+        XCTAssertFalse(APIConfig.isTrustedReleaseURL(URL(string: "https://app.example.com")!))
         XCTAssertFalse(APIConfig.isTrustedReleaseURL(URL(string: "http://app.example.com")!))
         XCTAssertFalse(APIConfig.isTrustedReleaseURL(URL(string: "https://127.0.0.1")!))
         XCTAssertFalse(APIConfig.isTrustedReleaseURL(URL(string: "http://localhost:8000")!))
@@ -32,6 +34,19 @@ final class APIConfigTests: XCTestCase {
         let url = APIConfig.endpoint("/me")
         XCTAssertNotNil(url)
         XCTAssertTrue(url?.absoluteString.contains("/api/v1/me") == true)
+    }
+
+    func testEndpointEncodesQueryItemsWithoutChangingMeaning() {
+        let url = APIConfig.endpoint(
+            "/modules/products",
+            queryItems: [
+                URLQueryItem(name: "q", value: "Paket & Vendor"),
+                URLQueryItem(name: "status", value: "aktif/belum"),
+            ]
+        )
+        let components = url.flatMap { URLComponents(url: $0, resolvingAgainstBaseURL: false) }
+        XCTAssertEqual(components?.queryItems?.first(where: { $0.name == "q" })?.value, "Paket & Vendor")
+        XCTAssertEqual(components?.queryItems?.first(where: { $0.name == "status" })?.value, "aktif/belum")
     }
 
     func testWebsiteURLStaysOffAPIPrefix() {
@@ -79,6 +94,14 @@ final class APIConfigTests: XCTestCase {
         XCTAssertFalse(APIConfig.isAllowedAPIHost(URL(string: "https://wofins.id")!))
         XCTAssertFalse(APIConfig.isAllowedAPIHost(URL(string: "http://maknafinance.id")!))
         XCTAssertFalse(APIConfig.isAllowedAPIHost(URL(string: "https://maknafinance.id.evil.test")!))
+    }
+
+    func testMediaAllowlistRejectsForeignAndLookalikeHosts() {
+        XCTAssertTrue(APIConfig.isAllowedMediaURL(URL(string: "https://app.wofins.id/storage/a.jpg")!))
+        XCTAssertTrue(APIConfig.isAllowedMediaURL(URL(string: "https://maknafinance.id/storage/a.jpg")!))
+        XCTAssertFalse(APIConfig.isAllowedMediaURL(URL(string: "https://cdn.example.com/a.jpg")!))
+        XCTAssertFalse(APIConfig.isAllowedMediaURL(URL(string: "https://app.wofins.id.evil.test/a.jpg")!))
+        XCTAssertFalse(APIConfig.isAllowedMediaURL(URL(string: "http://app.wofins.id/a.jpg")!))
     }
 
     func testSelectedHostDefaultsToWofins() {
@@ -374,6 +397,21 @@ final class APITransportMapperTests: XCTestCase {
         XCTAssertEqual(message, "lama")
         APILoadFailure.assign(APIError.message("Tidak ada koneksi internet."), to: &message)
         XCTAssertEqual(message, "Tidak ada koneksi internet.")
+    }
+}
+
+@MainActor
+final class APIRetryPolicyTests: XCTestCase {
+    func testRetryAfterSecondsIsBounded() {
+        XCTAssertEqual(APIClient.retryAfterDelay("2"), 2)
+        XCTAssertEqual(APIClient.retryAfterDelay("120"), 4)
+        XCTAssertEqual(APIClient.retryAfterDelay("-2"), 0)
+        XCTAssertNil(APIClient.retryAfterDelay("not-a-date"))
+    }
+
+    func testRetryAfterHTTPDateIsBounded() {
+        let now = Date(timeIntervalSince1970: 0)
+        XCTAssertEqual(APIClient.retryAfterDelay("Thu, 01 Jan 1970 00:00:03 GMT", now: now), 3)
     }
 }
 

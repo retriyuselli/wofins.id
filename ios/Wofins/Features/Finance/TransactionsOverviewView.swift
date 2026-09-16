@@ -1,4 +1,5 @@
 import SwiftUI
+import ImageIO
 import UIKit
 
 enum TransactionChipFilter: String, CaseIterable, Identifiable, Hashable {
@@ -69,6 +70,7 @@ struct TransactionsView: View {
     @State private var errorMessage: String?
     @State private var reloadToken = 0
     @State private var page = 0
+    @State private var loadGeneration = 0
     @State private var catalog: [MobileModuleCatalogItem] = []
     @State private var createItem: MobileModuleCatalogItem?
     @State private var showAddSheet = false
@@ -406,19 +408,28 @@ struct TransactionsView: View {
     }
 
     private func load() async {
-        isLoading = true; defer { isLoading = false }
+        loadGeneration += 1
+        let generation = loadGeneration
+        let from = period.fromString
+        let to = period.toString
+        isLoading = true
         do {
-            let response = try await appState.api.financeTransactions(from: period.fromString, to: period.toString,
+            let response = try await appState.api.financeTransactions(from: from, to: to,
                 type: nil, direction: nil, limit: 200)
+            guard !Task.isCancelled, generation == loadGeneration else { return }
             items = response.data; meta = response.meta; errorMessage = nil
         } catch {
+            guard !Task.isCancelled, generation == loadGeneration else { return }
             if let message = APILoadFailure.userMessage(for: error) {
                 errorMessage = message
             }
         }
-        if catalog.isEmpty {
-            catalog = (try? await appState.api.moduleCatalog()) ?? []
+        if catalog.isEmpty, generation == loadGeneration {
+            let loadedCatalog = (try? await appState.api.moduleCatalog()) ?? []
+            guard !Task.isCancelled, generation == loadGeneration else { return }
+            catalog = loadedCatalog
         }
+        if generation == loadGeneration { isLoading = false }
     }
 }
 
@@ -435,6 +446,7 @@ struct TransactionCategoryView: View {
     @State private var errorMessage: String?
     @State private var reloadToken = 0
     @State private var page = 0
+    @State private var loadGeneration = 0
 
     init(filter: TransactionChipFilter, period: FinancePeriodSelection) {
         self.filter = filter
@@ -652,21 +664,27 @@ struct TransactionCategoryView: View {
     }
 
     private func load() async {
+        loadGeneration += 1
+        let generation = loadGeneration
+        let from = period.fromString
+        let to = period.toString
         isLoading = true
-        defer { isLoading = false }
         do {
             let response = try await appState.api.financeTransactions(
-                from: period.fromString,
-                to: period.toString,
+                from: from,
+                to: to,
                 type: filter.apiType,
                 direction: filter.direction,
                 limit: 200
             )
+            guard !Task.isCancelled, generation == loadGeneration else { return }
             items = response.data
             errorMessage = nil
         } catch {
+            guard !Task.isCancelled, generation == loadGeneration else { return }
             APILoadFailure.assign(error, to: &errorMessage)
         }
+        if generation == loadGeneration { isLoading = false }
     }
 }
 
@@ -870,6 +888,7 @@ struct PaymentProofView: View {
     @State private var image: UIImage?
     @State private var isLoading = true
     @State private var failed = false
+    @State private var loadGeneration = 0
 
     var body: some View {
         VStack(spacing: 0) {
@@ -949,17 +968,37 @@ struct PaymentProofView: View {
     }
 
     private func load() async {
+        loadGeneration += 1
+        let generation = loadGeneration
         isLoading = true
-        defer { isLoading = false }
         do {
             let data = try await appState.api.financePaymentProof(id: paymentId, urlString: proofURL)
-            image = UIImage(data: data)
+            guard !Task.isCancelled, generation == loadGeneration else { return }
+            image = PaymentProofImageDecoder.image(from: data)
             failed = image == nil
         } catch {
+            guard !Task.isCancelled, generation == loadGeneration else { return }
             if !APILoadFailure.isCancellation(error) {
                 failed = true
             }
         }
+        if generation == loadGeneration { isLoading = false }
+    }
+}
+
+enum PaymentProofImageDecoder {
+    static func image(from data: Data, maximumPixelSize: Int = 2_048) -> UIImage? {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceShouldCacheImmediately: true,
+            kCGImageSourceThumbnailMaxPixelSize: maximumPixelSize,
+        ]
+        guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
+            return nil
+        }
+        return UIImage(cgImage: image)
     }
 }
 

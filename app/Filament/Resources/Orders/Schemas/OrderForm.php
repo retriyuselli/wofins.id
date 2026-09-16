@@ -4,15 +4,10 @@ namespace App\Filament\Resources\Orders\Schemas;
 
 use App\Enums\OrderStatus;
 use App\Filament\Resources\Orders\OrderResource;
-use App\Models\Expense;
-use App\Models\NotaDinas;
-use App\Models\NotaDinasDetail;
 use App\Models\Order;
 use App\Models\PaymentMethod;
 use App\Models\Prospect;
-use App\Models\Vendor;
 use App\Support\CompanySubscription;
-use App\Support\Rupiah;
 use App\Support\UserVisibility;
 use Exception;
 use Filament\Forms\Components\DatePicker;
@@ -21,7 +16,6 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ToggleButtons;
@@ -37,7 +31,6 @@ use Filament\Support\RawJs;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class OrderForm
@@ -195,6 +188,8 @@ class OrderForm
                             ->required()
                             ->helperText('Pastikan kontrak sudah ditandatangani semua pihak.')
                             ->openable()
+                            ->disk('private')
+                            ->visibility('private')
                             ->directory('doc_kontrak')
                             ->downloadable()
                             ->acceptedFileTypes(['application/pdf']),
@@ -204,6 +199,8 @@ class OrderForm
                             ->required()
                             ->helperText('Pastikan file persetujuan produk sudah ditandatangani.')
                             ->openable()
+                            ->disk('private')
+                            ->visibility('private')
                             ->directory('agreement_product')
                             ->downloadable()
                             ->acceptedFileTypes(['application/pdf']),
@@ -218,7 +215,7 @@ class OrderForm
                             ->label('Keterangan Tambahan')
                             ->fileAttachmentsDirectory('orders')
                             ->columnSpan(3)
-                            ->fileAttachmentsDisk('public'),
+                            ->fileAttachmentsDisk('private'),
                     ]),
                 Step::make('Detail Pembayaran')
                     ->icon('heroicon-o-currency-dollar')
@@ -280,9 +277,9 @@ class OrderForm
                                                 ->label('Payment Proof')
                                                 ->image()
                                                 ->maxSize(1280)
-                                                ->disk('public')
+                                                ->disk('private')
                                                 ->directory('payment-proofs/'.date('Y/m'))
-                                                ->visibility('public')
+                                                ->visibility('private')
                                                 ->downloadable()
                                                 ->openable()
                                                 ->acceptedFileTypes(['image/jpeg', 'image/png'])
@@ -299,7 +296,7 @@ class OrderForm
                                         function (array $state): ?string {
                                             $keterangan = $state['keterangan'] ?? 'Pembayaran';
                                             $tglRaw = $state['tgl_bayar'] ?? null;
-                                            $tanggal = $tglRaw ? \Illuminate\Support\Carbon::parse($tglRaw)->format('d M Y') : 'Tanggal?';
+                                            $tanggal = $tglRaw ? Carbon::parse($tglRaw)->format('d M Y') : 'Tanggal?';
                                             $nominalRaw = $state['nominal'] ?? 0;
                                             $nominalVal = is_numeric($nominalRaw)
                                                 ? (int) $nominalRaw
@@ -309,14 +306,14 @@ class OrderForm
                                             $methodLabel = 'Metode?';
                                             try {
                                                 if (isset($state['payment_method_id']) && $state['payment_method_id']) {
-                                                    $pm = \App\Models\PaymentMethod::find($state['payment_method_id']);
+                                                    $pm = PaymentMethod::find($state['payment_method_id']);
                                                     if ($pm) {
                                                         $methodLabel = $pm->is_cash
                                                             ? 'Kas/Tunai'
                                                             : ($pm->bank_name ? "{$pm->bank_name} - {$pm->no_rekening}" : $pm->name);
                                                     }
                                                 }
-                                            } catch (\Exception $e) {
+                                            } catch (Exception $e) {
                                             }
 
                                             return "{$keterangan} | {$tanggal} | {$methodLabel} | {$nominalFmt}";

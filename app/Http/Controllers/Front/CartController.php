@@ -92,7 +92,7 @@ class CartController extends Controller
         $pricing = PricingPlans::resolveBillingPrice($plan, $data['billing']);
         $uniqueAmount = $this->cartUniqueAmount();
         $payable = (int) $pricing['amount'] + $uniqueAmount;
-        $path = $request->file('payment_proof')->store('subscription-orders', 'public');
+        $path = $request->file('payment_proof')->store('subscription-orders', 'private');
 
         $order = SubscriptionOrder::query()->create([
             'user_id' => Auth::id(),

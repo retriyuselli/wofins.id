@@ -7,7 +7,6 @@ use App\Support\CompanySubscription;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
-use Illuminate\Support\Facades\Storage;
 
 class EditSubscriptionOrder extends EditRecord
 {
@@ -22,7 +21,7 @@ class EditSubscriptionOrder extends EditRecord
                 ->label('Lihat bukti bayar')
                 ->icon('heroicon-o-photo')
                 ->url(fn (): ?string => $this->record->payment_proof_path
-                    ? Storage::disk('public')->url($this->record->payment_proof_path)
+                    ? $this->record->payment_proof_url
                     : null)
                 ->openUrlInNewTab()
                 ->visible(fn (): bool => filled($this->record->payment_proof_path)),

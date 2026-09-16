@@ -2,12 +2,17 @@
 
 namespace App\Models;
 
+use App\Support\CompanyBrand;
+use App\Support\CompanySubscription;
+use App\Support\DefaultCategories;
+use App\Support\PackageRolePermissions;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -17,22 +22,40 @@ class Company extends Model
 
     protected static function booted(): void
     {
+        static::saving(function (Company $company): void {
+            if (! $company->payment_method_id) {
+                return;
+            }
+
+            $valid = PaymentMethod::query()
+                ->withoutGlobalScopes()
+                ->whereKey($company->payment_method_id)
+                ->where('company_id', $company->getKey())
+                ->exists();
+
+            if (! $valid) {
+                throw ValidationException::withMessages([
+                    'payment_method_id' => 'Rekening utama harus dimiliki perusahaan yang sama.',
+                ]);
+            }
+        });
+
         static::created(function (Company $company) {
-            \App\Support\DefaultCategories::ensureForCompany($company);
+            DefaultCategories::ensureForCompany($company);
         });
 
         static::saved(function (Company $company) {
-            \App\Support\CompanySubscription::forgetCache($company->id);
-            \App\Support\CompanyBrand::forgetCache($company->id);
+            CompanySubscription::forgetCache($company->id);
+            CompanyBrand::forgetCache($company->id);
 
             if ($company->wasChanged('subscription_plan')) {
-                \App\Support\PackageRolePermissions::syncPengunjungRole();
+                PackageRolePermissions::syncPengunjungRole();
             }
         });
 
         static::deleted(function (Company $company) {
-            \App\Support\CompanySubscription::forgetCache($company->id);
-            \App\Support\CompanyBrand::forgetCache($company->id);
+            CompanySubscription::forgetCache($company->id);
+            CompanyBrand::forgetCache($company->id);
         });
     }
 
@@ -126,7 +149,6 @@ class Company extends Model
         'crew_invite_enabled' => 'boolean',
         'crew_invite_rotated_at' => 'datetime',
     ];
-
 
     public function getActivitylogOptions(): LogOptions
     {

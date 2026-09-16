@@ -14,10 +14,10 @@ use App\Models\Category;
 use App\Models\DataPribadi;
 use App\Models\Document;
 use App\Models\DocumentApproval;
-use App\Models\DocumentAttachment;
-use App\Models\DocumentCategory;
 use App\Models\Documentation;
 use App\Models\DocumentationCategory;
+use App\Models\DocumentAttachment;
+use App\Models\DocumentCategory;
 use App\Models\Employee;
 use App\Models\Expense;
 use App\Models\ExpenseOps;
@@ -32,16 +32,12 @@ use App\Models\PendapatanLain;
 use App\Models\PengeluaranLain;
 use App\Models\Piutang;
 use App\Models\Product;
-use App\Models\ProductPenambahan;
-use App\Models\ProductPengurangan;
-use App\Models\ProductVendor;
 use App\Models\Prospect;
 use App\Models\SimulasiProduk;
 use App\Models\Sop;
 use App\Models\SopCategory;
 use App\Models\User;
 use App\Models\Vendor;
-use App\Models\VendorPriceHistory;
 use App\Support\CompanySubscription;
 use App\Support\PricingPlans;
 use App\Support\ProFeatures;
@@ -49,11 +45,12 @@ use App\Support\UserVisibility;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 
 class MobileModuleService
 {
@@ -66,7 +63,7 @@ class MobileModuleService
 
         foreach ($this->definitions() as $key => $def) {
             $allowed = $this->allows($user, $def);
-            $canCreate = $allowed && $this->canCreate($def);
+            $canCreate = $allowed && $this->canCreate($user, $def);
             $count = $allowed ? $this->scopedQuery($def)->count() : 0;
 
             $items[] = [
@@ -147,7 +144,7 @@ class MobileModuleService
             'per_page' => $paginator->perPage(),
             'total' => $paginator->total(),
             'title' => $def['title'],
-            'can_create' => $this->canCreate($def),
+            'can_create' => $this->canCreate($user, $def),
             'filters' => $this->listFilterPayload($def, $filters),
         ];
 
@@ -199,7 +196,7 @@ class MobileModuleService
         $def = $this->definition($key);
         $this->assertAllowed($user, $def);
 
-        if ($id === null && ! $this->canCreate($def)) {
+        if ($id === null && ! $this->canCreate($user, $def)) {
             $quota = $def['quota'] ?? null;
             throw new HttpResponseException(response()->json([
                 'message' => $quota
@@ -249,7 +246,7 @@ class MobileModuleService
 
         $payload = [
             'title' => ($id ? 'Edit ' : 'Tambah ').$def['title'],
-            'can_create' => $id !== null || $this->canCreate($def),
+            'can_create' => $id !== null || $this->canCreate($user, $def),
             'fields' => $fields,
         ];
 
@@ -355,7 +352,7 @@ class MobileModuleService
         $def = $this->definition($key);
         $this->assertAllowed($user, $def);
 
-        if (! $this->canCreate($def)) {
+        if (! $this->canCreate($user, $def)) {
             $quota = $def['quota'] ?? null;
             throw new HttpResponseException(response()->json([
                 'message' => $quota
@@ -364,22 +361,40 @@ class MobileModuleService
             ], 403));
         }
 
-        $data = $this->validated($def, $input);
-        if ($key === 'simulasi') {
-            $data['payment_simulation'] = $input['payment_simulation'] ?? [];
-        }
-        $data = $this->prepare($user, $key, $def, $data, null);
+        $model = DB::transaction(function () use ($user, $key, $def, $input): Model {
+            $companyId = UserVisibility::companyId($user);
+            if ($companyId) {
+                DB::table('companies')->where('id', $companyId)->lockForUpdate()->first();
+            }
 
-        $modelClass = $def['model'];
-        /** @var Model $model */
-        $model = $modelClass::query()->create($data);
-        if ($key === 'products' && $model instanceof Product) {
-            $this->syncProductRelations($model, $input);
-        }
-        if ($key === 'vendors' && $model instanceof Vendor) {
-            $this->syncVendorPriceHistories($model, $input);
-        }
-        $this->afterSave($key, $model, true);
+            if (! $this->canCreate($user, $def)) {
+                $quota = $def['quota'] ?? null;
+                throw new HttpResponseException(response()->json([
+                    'message' => $quota
+                        ? CompanySubscription::fullMessage($quota)
+                        : 'Penambahan data tidak tersedia untuk modul ini.',
+                ], 403));
+            }
+
+            $data = $this->validated($def, $input);
+            if ($key === 'simulasi') {
+                $data['payment_simulation'] = $input['payment_simulation'] ?? [];
+            }
+            $data = $this->prepare($user, $key, $def, $data, null);
+
+            $modelClass = $def['model'];
+            /** @var Model $created */
+            $created = $modelClass::query()->create($data);
+            if ($key === 'products' && $created instanceof Product) {
+                $this->syncProductRelations($created, $input);
+            }
+            if ($key === 'vendors' && $created instanceof Vendor) {
+                $this->syncVendorPriceHistories($created, $input);
+            }
+            $this->afterSave($key, $created, true);
+
+            return $created;
+        }, 3);
 
         return $this->detail($user, $key, (int) $model->getKey()) ?? $this->mapRecord($key, $def, $model->fresh(), true);
     }
@@ -398,12 +413,18 @@ class MobileModuleService
                 'message' => 'Perubahan data modul ini hanya tersedia di admin desktop.',
             ], 403));
         }
+        if ($key === 'team' && ! UserVisibility::actorIsSuperAdmin() && ! UserVisibility::isTeamOwner($user)) {
+            throw new HttpResponseException(response()->json([
+                'message' => 'Hanya pemilik paket yang dapat memperbarui anggota tim.',
+            ], 403));
+        }
 
         /** @var Model|null $model */
         $model = $this->scopedQuery($def)->find($id);
         if (! $model) {
             return null;
         }
+        Gate::forUser($user)->authorize('update', $model);
 
         $data = $this->validated($def, $input, $id);
         if ($key === 'simulasi' && array_key_exists('payment_simulation', $input)) {
@@ -441,6 +462,9 @@ class MobileModuleService
 
         /** @var Model|null $model */
         $model = $query->find($id);
+        if ($model) {
+            Gate::forUser($user)->authorize('view', $model);
+        }
 
         return $model ? $this->mapRecord($key, $def, $model, true) : null;
     }
@@ -450,7 +474,12 @@ class MobileModuleService
         $def = $this->definition($key);
         $this->assertAllowed($user, $def);
 
-        return $this->scopedQuery($def)->find($id);
+        $model = $this->scopedQuery($def)->find($id);
+        if ($model) {
+            Gate::forUser($user)->authorize('view', $model);
+        }
+
+        return $model;
     }
 
     /**
@@ -473,7 +502,11 @@ class MobileModuleService
      */
     private function allows(?User $user, array $def): bool
     {
-        if (UserVisibility::companyId($user) === null) {
+        if (! $user || UserVisibility::companyId($user) === null) {
+            return false;
+        }
+
+        if (! Gate::forUser($user)->allows('viewAny', $def['model'])) {
             return false;
         }
 
@@ -516,9 +549,13 @@ class MobileModuleService
     /**
      * @param  array<string, mixed>  $def
      */
-    private function canCreate(array $def): bool
+    private function canCreate(?User $user, array $def): bool
     {
         if (($def['can_create'] ?? true) === false) {
+            return false;
+        }
+
+        if (! $user || ! Gate::forUser($user)->allows('create', $def['model'])) {
             return false;
         }
 

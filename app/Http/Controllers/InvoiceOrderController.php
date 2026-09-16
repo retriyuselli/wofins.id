@@ -16,18 +16,19 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\View\View;
 
 class InvoiceOrderController extends Controller
 {
     /**
      * Display the invoice for the given order.
      *
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function show(Order $order)
     {
         Gate::authorize('view', $order);
-        
+
         // Get payment methods for the view
         $paymentMethods = PaymentMethod::where('is_cash', false)->get();
 
@@ -171,7 +172,7 @@ class InvoiceOrderController extends Controller
         }
 
         // Configure PDF options to handle page breaks properly
-        $pdf = PDF::loadView('invoices.pdf', compact(
+        $pdf = Pdf::loadView('invoices.pdf', compact(
             'order',
             'company',
             'paymentDetails',
@@ -215,7 +216,7 @@ class InvoiceOrderController extends Controller
         @ini_set('max_execution_time', '300');
         @ini_set('memory_limit', '512M');
         @set_time_limit(300);
-        
+
         // Get order details with eager loading
         $order = Order::with([
             'items.product.category',
@@ -226,7 +227,7 @@ class InvoiceOrderController extends Controller
         ])->findOrFail($order->id);
 
         // Configure PDF options
-        $pdf = PDF::loadView('invoices.simulation-pdf', compact('order'));
+        $pdf = Pdf::loadView('invoices.simulation-pdf', compact('order'));
 
         // Set PDF options for better rendering of multi-page documents
         $pdf->setPaper('a4', 'portrait');
@@ -245,7 +246,7 @@ class InvoiceOrderController extends Controller
     /**
      * Print the invoice for the given order.
      *
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function print(Order $order)
     {
@@ -287,7 +288,7 @@ class InvoiceOrderController extends Controller
 
         // Handle file upload if present
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('payment-proofs', 'public');
+            $path = $request->file('image')->store('payment-proofs', 'private');
             $validated['image'] = $path;
         }
 

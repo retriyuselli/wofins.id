@@ -1043,25 +1043,39 @@ struct FinanceReportSummary: Decodable {
 }
 
 enum MoneyFormat {
-    static func idr(_ value: Int?) -> String {
-        let number = value ?? 0
+    private static let formatterLock = NSLock()
+
+    private static let currencyFormatter: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.currencyCode = "IDR"
         formatter.currencySymbol = "Rp"
         formatter.maximumFractionDigits = 0
         formatter.locale = Locale(identifier: "id_ID")
-        return formatter.string(from: NSNumber(value: number)) ?? "Rp\(number)"
-    }
+        return formatter
+    }()
 
-    /// `14790000` → `14.790.000` (pemisah ribuan Indonesia).
-    static func grouped(_ value: Int) -> String {
+    private static let groupedFormatter: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.locale = Locale(identifier: "id_ID")
         formatter.maximumFractionDigits = 0
         formatter.usesGroupingSeparator = true
-        return formatter.string(from: NSNumber(value: value)) ?? "\(value)"
+        return formatter
+    }()
+
+    static func idr(_ value: Int?) -> String {
+        let number = value ?? 0
+        formatterLock.lock()
+        defer { formatterLock.unlock() }
+        return currencyFormatter.string(from: NSNumber(value: number)) ?? "Rp\(number)"
+    }
+
+    /// `14790000` → `14.790.000` (pemisah ribuan Indonesia).
+    static func grouped(_ value: Int) -> String {
+        formatterLock.lock()
+        defer { formatterLock.unlock() }
+        return groupedFormatter.string(from: NSNumber(value: value)) ?? "\(value)"
     }
 
     static func digits(in raw: String) -> String {

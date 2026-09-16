@@ -2,26 +2,34 @@
 
 namespace App\Services;
 
+use App\Enums\OrderStatus;
+use App\Enums\StatusPiutang;
+use App\Exports\FinanceReportExport;
 use App\Models\DataPembayaran;
 use App\Models\Expense;
 use App\Models\ExpenseOps;
 use App\Models\Order;
 use App\Models\OrderProduct;
-use App\Models\Piutang;
+use App\Models\PaymentMethod;
 use App\Models\PendapatanLain;
 use App\Models\PengeluaranLain;
+use App\Models\Piutang;
 use App\Models\Product;
+use App\Models\ProductPenambahan;
+use App\Models\ProductVendor;
 use App\Models\Prospect;
 use App\Models\User;
 use App\Models\Vendor;
-use App\Enums\OrderStatus;
-use App\Enums\StatusPiutang;
+use App\Support\CompanyBrand;
+use App\Support\CompanySubscription;
 use App\Support\UserVisibility;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class FinanceSummaryService
 {
@@ -43,6 +51,11 @@ class FinanceSummaryService
 
         if ($start->gt($end)) {
             [$start, $end] = [$end->copy(), $start->copy()];
+        }
+        if ($start->diffInDays($end) > 366) {
+            throw ValidationException::withMessages([
+                'from' => 'Rentang laporan maksimal 366 hari.',
+            ]);
         }
 
         return [
@@ -189,9 +202,9 @@ class FinanceSummaryService
      *
      * @return array{data: list<array<string, mixed>>, meta: array<string, int|string>}
      */
-    public function projectsByClosingMonth(User $user, ?string $month = null): array
+    public function projectsByClosingMonth(User $user, ?string $month = null, int $perPage = 25): array
     {
-        return $this->projectsByOverviewWidget($user, 'new_projects_month', $month);
+        return $this->projectsByOverviewWidget($user, 'new_projects_month', $month, $perPage);
     }
 
     /**
@@ -199,7 +212,7 @@ class FinanceSummaryService
      *
      * @return array{data: list<array<string, mixed>>, meta: array<string, int|string>}
      */
-    public function projectsByOverviewWidget(User $user, string $key, ?string $month = null): array
+    public function projectsByOverviewWidget(User $user, string $key, ?string $month = null, int $perPage = 25): array
     {
         $now = Carbon::now();
         $target = $this->resolveClosingMonth($month);
@@ -214,8 +227,7 @@ class FinanceSummaryService
             case 'new_projects_month':
             case 'monthly_revenue':
                 $query->whereNotNull('closing_date')
-                    ->whereMonth('closing_date', $target->month)
-                    ->whereYear('closing_date', $target->year)
+                    ->whereBetween('closing_date', [$target->copy()->startOfMonth(), $target->copy()->endOfMonth()])
                     ->orderByDesc('closing_date')
                     ->orderByDesc('id');
                 $title = $key === 'monthly_revenue' ? 'Revenue Bulanan' : 'Proyek Baru Bulan Ini';
@@ -224,7 +236,7 @@ class FinanceSummaryService
 
             case 'total_revenue':
                 $query->whereNotNull('closing_date')
-                    ->whereYear('closing_date', $now->year)
+                    ->whereBetween('closing_date', [$now->copy()->startOfYear(), $now->copy()->endOfYear()])
                     ->orderByDesc('closing_date')
                     ->orderByDesc('id');
                 $title = 'Total Pendapatan';
@@ -272,7 +284,8 @@ class FinanceSummaryService
                 ];
         }
 
-        $orders = $query->get();
+        $paginator = $query->paginate(min(max($perPage, 1), 50));
+        $orders = collect($paginator->items());
         $data = $orders->map(fn (Order $order) => $this->projectSummary($order))->values()->all();
 
         $metaTotals = [
@@ -292,7 +305,10 @@ class FinanceSummaryService
             'key' => $key,
             'title' => $title,
             'subtitle' => $subtitle,
-            'total' => count($data),
+            'current_page' => $paginator->currentPage(),
+            'last_page' => $paginator->lastPage(),
+            'per_page' => $paginator->perPage(),
+            'total' => $paginator->total(),
         ], $metaTotals);
 
         if (in_array($key, ['new_projects_month', 'monthly_revenue'], true)) {
@@ -344,22 +360,23 @@ class FinanceSummaryService
 
         $orders = $this->scopedOrdersQuery($user);
         $monthly = (clone $orders)
-            ->whereMonth('closing_date', $now->month)
-            ->whereYear('closing_date', $now->year)
+            ->whereBetween('closing_date', [$now->copy()->startOfMonth(), $now->copy()->endOfMonth()])
             ->selectRaw('COUNT(*) as total_projects')
             ->selectRaw('COALESCE(SUM(grand_total), 0) as monthly_revenue')
             ->first();
 
-        $processingIds = (clone $orders)->where('status', $processing)->pluck('id');
-        $customerPayments = (int) DataPembayaran::query()->whereIn('order_id', $processingIds)->sum('nominal');
-        $customerExpenses = (int) Expense::query()->whereIn('order_id', $processingIds)->sum('amount');
+        $processingIds = (clone $orders)->where('status', $processing)->select('orders.id');
+        $customerPayments = (int) DataPembayaran::query()->whereIn('order_id', clone $processingIds)->sum('nominal');
+        $customerExpenses = (int) Expense::query()->whereIn('order_id', clone $processingIds)->sum('amount');
         $netReceived = $customerPayments - $customerExpenses;
 
         $docsUploaded = (int) (clone $orders)->whereNotNull('doc_kontrak')->count();
         $docsPending = (int) (clone $orders)->whereNull('doc_kontrak')->count();
         $agreementUploaded = (int) (clone $orders)->whereNotNull('agreement_product')->count();
         $agreementPending = (int) (clone $orders)->whereNull('agreement_product')->count();
-        $yearRevenue = (int) (clone $orders)->whereYear('closing_date', $now->year)->sum('grand_total');
+        $yearRevenue = (int) (clone $orders)
+            ->whereBetween('closing_date', [$now->copy()->startOfYear(), $now->copy()->endOfYear()])
+            ->sum('grand_total');
         $expenseOps = (int) ExpenseOps::query()->sum('amount');
         $newProjects = (int) ($monthly->total_projects ?? 0);
         $monthlyRevenue = (int) ($monthly->monthly_revenue ?? 0);
@@ -498,10 +515,22 @@ class FinanceSummaryService
      */
     public function storeProspect(User $user, array $data): array
     {
-        $data['user_id'] = $user->id;
-        $data = UserVisibility::stampCompanyId($data, 'user_id');
+        $prospect = DB::transaction(function () use ($user, $data): Prospect {
+            $companyId = UserVisibility::companyId($user);
+            if ($companyId) {
+                DB::table('companies')->where('id', $companyId)->lockForUpdate()->first();
+            }
+            if (! CompanySubscription::canCreate(CompanySubscription::RESOURCE_PROSPECTS)) {
+                throw ValidationException::withMessages([
+                    'quota' => CompanySubscription::fullMessage(CompanySubscription::RESOURCE_PROSPECTS),
+                ]);
+            }
 
-        $prospect = Prospect::query()->create($data);
+            $data['user_id'] = $user->id;
+            $data = UserVisibility::stampCompanyId($data, 'user_id');
+
+            return Prospect::query()->create($data);
+        }, 3);
         $prospect->load(['user:id,name', 'latestOrder']);
 
         return $this->prospectSummary($prospect);
@@ -642,7 +671,9 @@ class FinanceSummaryService
         $finance = OrderFinance::for($order);
         $prospect = $order->prospect;
 
-        $contractUrl = $this->publicFileUrl($order->doc_kontrak)
+        $hasContract = $this->absoluteStoredPath($this->firstStoredPath($order->doc_kontrak)) !== null;
+        $hasAgreement = $this->absoluteStoredPath($this->firstStoredPath($order->agreement_product)) !== null;
+        $contractUrl = $hasContract
             ? url('/api/v1/finance/projects/'.$order->id.'/contract')
             : null;
         $invoiceName = 'Invoice-'.($prospect?->name_event ?: $order->number ?: 'proyek').'.pdf';
@@ -654,8 +685,8 @@ class FinanceSummaryService
             'employee_id' => $order->employee_id,
             'prospect_id' => $order->prospect_id,
             'note' => $this->plainText($order->note),
-            'has_doc_kontrak' => $this->publicFileUrl($order->doc_kontrak) !== null,
-            'has_agreement_product' => $this->publicFileUrl($order->agreement_product) !== null,
+            'has_doc_kontrak' => $hasContract,
+            'has_agreement_product' => $hasAgreement,
             'can_edit' => $this->actorCanEditOrder($user, $order),
             'can_edit_reason' => $this->actorCanEditOrder($user, $order)
                 ? null
@@ -735,7 +766,10 @@ class FinanceSummaryService
             return null;
         }
 
-        $absolute = Storage::disk('public')->path($path);
+        $absolute = Storage::disk('private')->path($path);
+        if (! is_file($absolute)) {
+            $absolute = Storage::disk('public')->path($path);
+        }
         if (! is_file($absolute)) {
             $publicPath = public_path('storage/'.$path);
             $absolute = is_file($publicPath) ? $publicPath : null;
@@ -759,7 +793,7 @@ class FinanceSummaryService
         /** @var DataPembayaran|null $payment */
         $payment = DataPembayaran::query()->find($id);
         $path = $this->latestStoredPath($payment?->image);
-        $absolute = $this->absolutePublicPath($path);
+        $absolute = $this->absoluteStoredPath($path);
 
         if ($absolute === null || $path === null) {
             return null;
@@ -943,17 +977,9 @@ class FinanceSummaryService
      *
      * @return array{data: list<array<string, mixed>>, meta: array<string, int>}
      */
-    public function transactions(string $from, string $to, ?string $type = null, int $limit = 100, ?string $direction = null): array
+    public function transactions(string $from, string $to, ?string $type = null, int $perPage = 50, ?string $direction = null, int $page = 1): array
     {
-        $rows = $this->cashLedgerRows($from, $to);
-
-        if ($type) {
-            $rows = $rows->filter(fn (array $r) => $r['type'] === $type)->values();
-        }
-
-        if ($direction) {
-            $rows = $rows->filter(fn (array $r) => $r['direction'] === $direction)->values();
-        }
+        $rows = $this->cashLedgerRows($from, $to, $type, $direction);
 
         $totalIn = (int) $rows->where('direction', 'in')->sum('amount');
         $totalOut = (int) $rows->where('direction', 'out')->sum('amount');
@@ -968,7 +994,10 @@ class FinanceSummaryService
         });
 
         // Newest first for mobile list; keep running_balance computed oldest→newest.
-        $data = $withBalance->sortByDesc('date')->take($limit)->values()->all();
+        $perPage = min(max($perPage, 1), 100);
+        $page = max($page, 1);
+        $all = $withBalance->sortByDesc('date')->values();
+        $data = $all->forPage($page, $perPage)->values()->all();
 
         return [
             'data' => $data,
@@ -977,6 +1006,10 @@ class FinanceSummaryService
                 'total_out' => $totalOut,
                 'net' => $totalIn - $totalOut,
                 'count' => count($data),
+                'current_page' => $page,
+                'last_page' => max(1, (int) ceil($all->count() / $perPage)),
+                'per_page' => $perPage,
+                'total' => $all->count(),
             ],
         ];
     }
@@ -1059,7 +1092,7 @@ class FinanceSummaryService
      */
     public function reportPdfPayload(User $user, string $from, string $to, string $mode = 'cash'): array
     {
-        \App\Support\CompanyBrand::remember($user);
+        CompanyBrand::remember($user);
 
         if ($mode === 'profit_loss') {
             return [
@@ -1077,7 +1110,7 @@ class FinanceSummaryService
                 'filterStartDate' => $from,
                 'filterEndDate' => $to,
                 'generatedDate' => now()->format('d M Y H:i'),
-                'companyLabel' => \App\Support\CompanyBrand::name(),
+                'companyLabel' => CompanyBrand::name(),
                 'rows' => $summary['by_type'] ?? [],
                 'totalIn' => $summary['total_in'] ?? 0,
                 'totalOut' => $summary['total_out'] ?? 0,
@@ -1088,7 +1121,7 @@ class FinanceSummaryService
     }
 
     /**
-     * @return array{export: \App\Exports\FinanceReportExport, filename: string}
+     * @return array{export: FinanceReportExport, filename: string}
      */
     public function reportExcelPayload(User $user, string $from, string $to, string $mode = 'cash'): array
     {
@@ -1096,7 +1129,7 @@ class FinanceSummaryService
         $kind = $mode === 'profit_loss' ? 'laba-rugi' : 'arus-kas';
 
         return [
-            'export' => new \App\Exports\FinanceReportExport($mode, $pdf['data']),
+            'export' => new FinanceReportExport($mode, $pdf['data']),
             'filename' => 'laporan-'.$kind.'-'.$from.'-'.$to.'.xlsx',
         ];
     }
@@ -1158,16 +1191,23 @@ class FinanceSummaryService
             'filterStartDate' => $from,
             'filterEndDate' => $to,
             'generatedDate' => now()->format('d M Y H:i'),
-            'companyLabel' => \App\Support\CompanyBrand::name(),
+            'companyLabel' => CompanyBrand::name(),
         ];
     }
 
     /**
      * @return Collection<int, array<string, mixed>>
      */
-    protected function cashLedgerRows(string $from, string $to): Collection
-    {
-        $weddingIn = DataPembayaran::query()
+    protected function cashLedgerRows(
+        string $from,
+        string $to,
+        ?string $type = null,
+        ?string $direction = null,
+    ): Collection {
+        $includes = static fn (string $candidateType, string $candidateDirection): bool => ($type === null || $type === $candidateType)
+            && ($direction === null || $direction === $candidateDirection);
+
+        $weddingIn = ! $includes('wedding_payment', 'in') ? collect() : DataPembayaran::query()
             ->with(['order:id,name,prospect_id', 'order.prospect:id,name_event', 'paymentMethod:id,name,no_rekening'])
             ->whereBetween('tgl_bayar', [$from, $to])
             ->get()
@@ -1188,7 +1228,7 @@ class FinanceSummaryService
                 ];
             });
 
-        $otherIn = PendapatanLain::query()
+        $otherIn = ! $includes('other_income', 'in') ? collect() : PendapatanLain::query()
             ->with(['paymentMethod:id,name,no_rekening'])
             ->whereBetween('tgl_bayar', [$from, $to])
             ->get()
@@ -1208,7 +1248,7 @@ class FinanceSummaryService
                 ];
             });
 
-        $weddingOut = Expense::query()
+        $weddingOut = ! $includes('wedding_expense', 'out') ? collect() : Expense::query()
             ->with(['order:id,name,prospect_id', 'order.prospect:id,name_event', 'vendor:id,name', 'paymentMethod:id,name,no_rekening'])
             ->whereBetween('date_expense', [$from, $to])
             ->get()
@@ -1228,7 +1268,7 @@ class FinanceSummaryService
                 ];
             });
 
-        $opsOut = ExpenseOps::query()
+        $opsOut = ! $includes('operational_expense', 'out') ? collect() : ExpenseOps::query()
             ->with(['paymentMethod:id,name,no_rekening'])
             ->whereBetween('date_expense', [$from, $to])
             ->get()
@@ -1248,7 +1288,7 @@ class FinanceSummaryService
                 ];
             });
 
-        $otherOut = PengeluaranLain::query()
+        $otherOut = ! $includes('other_expense', 'out') ? collect() : PengeluaranLain::query()
             ->with(['paymentMethod:id,name,no_rekening'])
             ->whereBetween('date_expense', [$from, $to])
             ->get()
@@ -1276,7 +1316,7 @@ class FinanceSummaryService
             ->values();
     }
 
-    protected function formatPaymentMethod(?\App\Models\PaymentMethod $method): ?string
+    protected function formatPaymentMethod(?PaymentMethod $method): ?string
     {
         if (! $method) {
             return null;
@@ -1485,7 +1525,7 @@ class FinanceSummaryService
     private function paymentProofUrl(DataPembayaran $payment): ?string
     {
         $path = $this->latestStoredPath($payment->image);
-        $absolute = $this->absolutePublicPath($path);
+        $absolute = $this->absoluteStoredPath($path);
         if ($absolute === null) {
             return null;
         }
@@ -1495,10 +1535,15 @@ class FinanceSummaryService
         return url('/api/v1/finance/payments/'.$payment->id.'/proof').'?v='.$version;
     }
 
-    private function absolutePublicPath(?string $path): ?string
+    private function absoluteStoredPath(?string $path): ?string
     {
         if ($path === null || $path === '') {
             return null;
+        }
+
+        $absolute = Storage::disk('private')->path($path);
+        if (is_file($absolute)) {
+            return $absolute;
         }
 
         $absolute = Storage::disk('public')->path($path);
@@ -1591,7 +1636,7 @@ class FinanceSummaryService
     }
 
     /**
-     * @param  \App\Models\ProductVendor  $item
+     * @param  ProductVendor  $item
      * @return array<string, mixed>
      */
     private function productVendorLine($item): array
@@ -1627,7 +1672,7 @@ class FinanceSummaryService
     }
 
     /**
-     * @param  \App\Models\ProductPenambahan  $item
+     * @param  ProductPenambahan  $item
      * @return array<string, mixed>
      */
     private function productAdditionLine($item): array

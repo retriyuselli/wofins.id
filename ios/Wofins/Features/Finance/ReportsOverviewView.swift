@@ -13,6 +13,8 @@ struct ReportsView: View {
     @State private var isDownloadingPdf = false
     @State private var isDownloadingExcel = false
     @State private var pdfShareItem: ReportShareItem?
+    @State private var temporaryShareURL: URL?
+    @State private var loadGeneration = 0
 
     private var isExporting: Bool { isDownloadingPdf || isDownloadingExcel }
 
@@ -65,7 +67,11 @@ struct ReportsView: View {
                 guard appState.allows(.basicFinance) else { return }
                 await load()
             }
-            .sheet(item: $pdfShareItem) { item in
+            .sheet(item: $pdfShareItem, onDismiss: {
+                TemporaryExportStore.remove(temporaryShareURL)
+                temporaryShareURL = nil
+                pdfShareItem = nil
+            }) { item in
                 ReportShareSheet(items: [item.url])
             }
             .alert("Laporan", isPresented: Binding(get: { notice != nil }, set: { if !$0 { notice = nil } })) {
@@ -278,13 +284,25 @@ struct ReportsView: View {
 
     private func setPeriod(_ preset: FinancePeriodPreset) { period.preset = preset; reloadToken += 1 }
     private func load() async {
-        isLoading = true; defer { isLoading = false }
-        do { report = try await appState.api.financeReportSummary(from: period.fromString, to: period.toString, mode: mode); errorMessage = nil }
+        loadGeneration += 1
+        let generation = loadGeneration
+        let from = period.fromString
+        let to = period.toString
+        let requestedMode = mode
+        isLoading = true
+        do {
+            let loaded = try await appState.api.financeReportSummary(from: from, to: to, mode: requestedMode)
+            guard !Task.isCancelled, generation == loadGeneration else { return }
+            report = loaded
+            errorMessage = nil
+        }
         catch {
+            guard !Task.isCancelled, generation == loadGeneration else { return }
             if let message = APILoadFailure.userMessage(for: error) {
                 errorMessage = message
             }
         }
+        if generation == loadGeneration { isLoading = false }
     }
 
     private func downloadPdf() async {
@@ -292,8 +310,15 @@ struct ReportsView: View {
         isDownloadingPdf = true
         defer { isDownloadingPdf = false }
         do {
-            let data = try await appState.api.financeReportPdf(from: period.fromString, to: period.toString, mode: mode)
-            try shareFile(data: data, fileName: reportFileName(ext: "pdf"))
+            let fileName = reportFileName(ext: "pdf")
+            let url = try await appState.api.financeReportPdfFile(
+                from: period.fromString,
+                to: period.toString,
+                mode: mode,
+                fileName: fileName
+            )
+            temporaryShareURL = url
+            pdfShareItem = ReportShareItem(url: url)
         } catch {
             APILoadFailure.assign(error, to: &notice)
         }
@@ -304,8 +329,15 @@ struct ReportsView: View {
         isDownloadingExcel = true
         defer { isDownloadingExcel = false }
         do {
-            let data = try await appState.api.financeReportExcel(from: period.fromString, to: period.toString, mode: mode)
-            try shareFile(data: data, fileName: reportFileName(ext: "xlsx"))
+            let fileName = reportFileName(ext: "xlsx")
+            let url = try await appState.api.financeReportExcelFile(
+                from: period.fromString,
+                to: period.toString,
+                mode: mode,
+                fileName: fileName
+            )
+            temporaryShareURL = url
+            pdfShareItem = ReportShareItem(url: url)
         } catch {
             APILoadFailure.assign(error, to: &notice)
         }
@@ -316,11 +348,6 @@ struct ReportsView: View {
         return "laporan-\(kind)-\(period.fromString)-\(period.toString).\(ext)"
     }
 
-    private func shareFile(data: Data, fileName: String) throws {
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
-        try data.write(to: url, options: .atomic)
-        pdfShareItem = ReportShareItem(url: url)
-    }
 }
 
 private struct ReportShareItem: Identifiable {

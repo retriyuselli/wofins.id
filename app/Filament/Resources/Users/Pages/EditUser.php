@@ -31,6 +31,11 @@ class EditUser extends EditRecord
         }
     }
 
+    protected function beforeSave(): void
+    {
+        abort_unless(UserVisibility::canEditUser($this->record), 403);
+    }
+
     /**
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>

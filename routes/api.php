@@ -24,7 +24,7 @@ Route::prefix('v1')->group(function () {
         ->middleware('throttle:10,1')
         ->name('api.v1.auth.google');
 
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'abilities:mobile', 'api.account.active'])->group(function () {
         Route::post('/auth/logout', [AuthController::class, 'logout'])
             ->name('api.v1.auth.logout');
 
@@ -73,10 +73,13 @@ Route::prefix('v1')->group(function () {
                     ->whereNumber('id')
                     ->name('api.v1.finance.payments.proof');
                 Route::get('/reports/summary', [FinanceController::class, 'reportSummary'])
+                    ->middleware('throttle:30,1')
                     ->name('api.v1.finance.reports.summary');
                 Route::get('/reports/pdf', [FinanceController::class, 'reportPdf'])
+                    ->middleware('throttle:10,1')
                     ->name('api.v1.finance.reports.pdf');
                 Route::get('/reports/excel', [FinanceController::class, 'reportExcel'])
+                    ->middleware('throttle:10,1')
                     ->name('api.v1.finance.reports.excel');
                 Route::get('/piutangs', [FinanceController::class, 'piutangs'])
                     ->name('api.v1.finance.piutangs');
@@ -102,6 +105,7 @@ Route::prefix('v1')->group(function () {
                     ->name('api.v1.finance.projects.overview');
                 Route::get('/projects/widgets/{key}', [FinanceController::class, 'projectsOverviewWidget'])
                     ->where('key', '[a-z0-9_]+')
+                    ->middleware('throttle:60,1')
                     ->name('api.v1.finance.projects.widgets');
                 Route::get('/projects/closing', [FinanceController::class, 'projectsClosing'])
                     ->name('api.v1.finance.projects.closing');

@@ -1,0 +1,77 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Http\Middleware\EnsureApiAccountActive;
+use App\Models\Documentation;
+use App\Models\User;
+use App\Support\HtmlSanitizer;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use Tests\TestCase;
+
+class SecurityHardeningTest extends TestCase
+{
+    public function test_mobile_api_routes_require_token_ability_and_active_account(): void
+    {
+        $route = Route::getRoutes()->getByName('api.v1.me');
+
+        $this->assertNotNull($route);
+        $middleware = $route->gatherMiddleware();
+        $this->assertContains('auth:sanctum', $middleware);
+        $this->assertContains('abilities:mobile', $middleware);
+        $this->assertContains('api.account.active', $middleware);
+    }
+
+    public function test_report_exports_are_throttled(): void
+    {
+        foreach (['api.v1.finance.reports.pdf', 'api.v1.finance.reports.excel'] as $name) {
+            $route = Route::getRoutes()->getByName($name);
+            $this->assertNotNull($route);
+            $this->assertContains('throttle:10,1', $route->gatherMiddleware());
+        }
+
+        $this->assertContains(
+            'throttle:60,1',
+            Route::getRoutes()->getByName('api.v1.finance.projects.widgets')?->gatherMiddleware() ?? []
+        );
+    }
+
+    public function test_inactive_api_account_is_rejected(): void
+    {
+        $user = new User;
+        $user->forceFill(['status' => 'inactive']);
+        $request = Request::create('/api/v1/me', 'GET');
+        $request->setUserResolver(fn () => $user);
+
+        $response = (new EnsureApiAccountActive)->handle($request, fn () => response()->json(['ok' => true]));
+
+        $this->assertSame(403, $response->getStatusCode());
+        $this->assertSame('Akun Anda tidak aktif. Hubungi administrator.', $response->getData(true)['message']);
+    }
+
+    public function test_documentation_content_is_sanitized_on_assignment(): void
+    {
+        $documentation = new Documentation;
+        $documentation->content = '<p onclick="evil()">A</p><script>alert(1)</script><a href="javascript:evil()">B</a>';
+
+        $content = (string) $documentation->content;
+        $this->assertStringContainsString('<p>A</p>', $content);
+        $this->assertStringNotContainsString('onclick', $content);
+        $this->assertStringNotContainsString('script', $content);
+        $this->assertStringNotContainsString('javascript:', $content);
+    }
+
+    public function test_sanitizer_preserves_safe_rich_text(): void
+    {
+        $clean = HtmlSanitizer::sanitize('<h2>Judul</h2><p><strong>Aman</strong></p>');
+
+        $this->assertSame('<h2>Judul</h2><p><strong>Aman</strong></p>', $clean);
+    }
+
+    public function test_sanctum_tokens_have_a_finite_default_expiration(): void
+    {
+        $this->assertSame(43200, config('sanctum.expiration'));
+        $this->assertSame(30, config('sanctum.mobile_token_expiration_days'));
+    }
+}

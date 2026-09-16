@@ -15,6 +15,7 @@ struct ProjectDetailView: View {
     @State private var showContractPreview = false
     @State private var isPreparingInvoice = false
     @State private var invoiceShareItem: ProjectShareItem?
+    @State private var temporaryInvoiceURL: URL?
     @State private var actionMessage: String?
     @State private var showEdit = false
 
@@ -120,7 +121,11 @@ struct ProjectDetailView: View {
                 )
             }
         }
-        .sheet(item: $invoiceShareItem) { item in
+        .sheet(item: $invoiceShareItem, onDismiss: {
+            TemporaryExportStore.remove(temporaryInvoiceURL)
+            temporaryInvoiceURL = nil
+            invoiceShareItem = nil
+        }) { item in
             ProjectShareSheet(items: [item.url])
         }
         .alert("Proyek", isPresented: Binding(
@@ -622,12 +627,11 @@ struct ProjectDetailView: View {
         isPreparingInvoice = true
         defer { isPreparingInvoice = false }
         do {
-            let data = try await appState.api.financeProjectInvoice(id: projectId)
             let safeName = invoiceFileName
                 .replacingOccurrences(of: "/", with: "-")
                 .replacingOccurrences(of: ":", with: "-")
-            let url = FileManager.default.temporaryDirectory.appendingPathComponent(safeName)
-            try data.write(to: url, options: .atomic)
+            let url = try await appState.api.financeProjectInvoiceFile(id: projectId, fileName: safeName)
+            temporaryInvoiceURL = url
             invoiceShareItem = ProjectShareItem(url: url)
         } catch {
             APILoadFailure.assign(error, to: &actionMessage)

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Pages;
 
+use App\Filament\Resources\Users\Schemas\UserForm;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\User;
 use App\Support\CompanySubscription;
@@ -12,8 +13,10 @@ use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
 class CreateUser extends CreateRecord
@@ -103,9 +106,9 @@ class CreateUser extends CreateRecord
                 );
                 $data['statuses'] = $sanitized !== []
                     ? $sanitized
-                    : (\App\Filament\Resources\Users\Schemas\UserForm::defaultAdminStatusIds() ?? []);
+                    : (UserForm::defaultAdminStatusIds() ?? []);
             } else {
-                $adminIds = \App\Filament\Resources\Users\Schemas\UserForm::defaultAdminStatusIds();
+                $adminIds = UserForm::defaultAdminStatusIds();
                 if ($adminIds) {
                     $data['statuses'] = $adminIds;
                 }
@@ -122,7 +125,20 @@ class CreateUser extends CreateRecord
 
     protected function handleRecordCreation(array $data): Model
     {
-        $user = parent::handleRecordCreation($data);
+        $user = DB::transaction(function () use ($data): Model {
+            $companyId = UserVisibility::companyId();
+            if ($companyId) {
+                DB::table('companies')->where('id', $companyId)->lockForUpdate()->first();
+            }
+
+            if (! UserVisibility::actorIsSuperAdmin() && ! UserVisibility::canCreateTeamUser()) {
+                throw ValidationException::withMessages([
+                    'roles' => CompanySubscription::seatFullMessage(),
+                ]);
+            }
+
+            return parent::handleRecordCreation($data);
+        }, 3);
 
         $this->generateTargetsForAccountManager($user);
         $this->sendTeamInviteEmail($user);

@@ -1,8 +1,28 @@
 <?php
 
+use App\Http\Middleware\CheckProjectAccess;
+use App\Http\Middleware\CheckUserExpiration;
+use App\Http\Middleware\EnforceHostSeparation;
+use App\Http\Middleware\EnsureAdminToolsAccess;
+use App\Http\Middleware\EnsureApiAccountActive;
+use App\Http\Middleware\EnsureProFeature;
+use App\Http\Middleware\EnsureSuperAdmin;
+use App\Http\Middleware\EnsureUserHasRole;
+use App\Http\Middleware\NoStoreResponse;
+use App\Http\Middleware\VerifyCsrfToken;
+use Filament\Http\Middleware\Authenticate;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
+use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Foundation\Http\Middleware\TrimStrings;
+use Illuminate\Foundation\Http\Middleware\ValidatePostSize;
+use Illuminate\Http\Middleware\HandleCors;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -15,12 +35,12 @@ return Application::configure(basePath: dirname(__DIR__))
         // Replace default CSRF middleware with patched version to fix Livewire Redirector compatibility.
         // @see app/Http/Middleware/VerifyCsrfToken.php
         $middleware->replace(
-            \Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class,
-            \App\Http\Middleware\VerifyCsrfToken::class,
+            PreventRequestForgery::class,
+            VerifyCsrfToken::class,
         );
 
         $middleware->use([
-            \Illuminate\Http\Middleware\HandleCors::class,
+            HandleCors::class,
         ]);
 
         // Redirect guest ke halaman login front (bukan route 'login' default)
@@ -55,37 +75,38 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Add middleware aliases for better organization
         $middleware->alias([
-            'filament.auth' => \Filament\Http\Middleware\Authenticate::class,
-            'check.expiration' => \App\Http\Middleware\CheckUserExpiration::class,
-            'project.access' => \App\Http\Middleware\CheckProjectAccess::class,
-            'no-store' => \App\Http\Middleware\NoStoreResponse::class,
-            'super-admin' => \App\Http\Middleware\EnsureSuperAdmin::class,
-            'admin-tools.access' => \App\Http\Middleware\EnsureAdminToolsAccess::class,
-            'role.required' => \App\Http\Middleware\EnsureUserHasRole::class,
-            'pro.feature' => \App\Http\Middleware\EnsureProFeature::class,
+            'filament.auth' => Authenticate::class,
+            'check.expiration' => CheckUserExpiration::class,
+            'project.access' => CheckProjectAccess::class,
+            'no-store' => NoStoreResponse::class,
+            'super-admin' => EnsureSuperAdmin::class,
+            'admin-tools.access' => EnsureAdminToolsAccess::class,
+            'role.required' => EnsureUserHasRole::class,
+            'pro.feature' => EnsureProFeature::class,
+            'api.account.active' => EnsureApiAccountActive::class,
         ]);
 
         // Ensure proper web middleware group for Niaga Hoster
         $middleware->web(append: [
-            \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
-            \Illuminate\Foundation\Http\Middleware\TrimStrings::class,
-            \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
+            ValidatePostSize::class,
+            TrimStrings::class,
+            ConvertEmptyStringsToNull::class,
         ]);
 
         // Apply CheckUserExpiration to web routes
-        $middleware->web(\App\Http\Middleware\CheckUserExpiration::class);
+        $middleware->web(CheckUserExpiration::class);
 
         // wofins.id = marketing, app.wofins.id = customer app (no-op jika host kosong)
         // Global agar juga menangkap /admin sebelum Filament domain mismatch → 404
-        $middleware->append(\App\Http\Middleware\EnforceHostSeparation::class);
+        $middleware->append(EnforceHostSeparation::class);
 
         // Handle method spoofing properly
         $middleware->web(prepend: [
-            \Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests::class,
+            HandlePrecognitiveRequests::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->render(function (Illuminate\Auth\AuthenticationException $e, $request) {
+        $exceptions->render(function (AuthenticationException $e, $request) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Unauthenticated'], 401);
             }
@@ -93,7 +114,7 @@ return Application::configure(basePath: dirname(__DIR__))
             return redirect()->guest(wofins_route('front.login'));
         });
 
-        $exceptions->render(function (Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException $e, $request) {
+        $exceptions->render(function (MethodNotAllowedHttpException $e, $request) {
             if ($request->expectsJson()) {
                 return response()->json([
                     'error' => 'Method Not Allowed',
@@ -101,16 +122,18 @@ return Application::configure(basePath: dirname(__DIR__))
                     'allowed_methods' => $e->getHeaders()['Allow'] ?? 'GET, POST',
                 ], 405);
             }
+
             return response()->redirectToRoute('home')->with('error', 'Method tidak diizinkan untuk halaman ini.');
         });
 
-        $exceptions->render(function (Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e, $request) {
+        $exceptions->render(function (NotFoundHttpException $e, $request) {
             if ($request->expectsJson()) {
                 return response()->json([
                     'error' => 'Not Found',
                     'message' => 'The requested resource was not found.',
                 ], 404);
             }
+
             return response()->redirectToRoute('home')->with('error', 'Halaman tidak ditemukan.');
         });
     })->create();

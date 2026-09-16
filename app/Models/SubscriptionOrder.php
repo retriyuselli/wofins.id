@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\PricingPlans;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
@@ -36,6 +37,7 @@ class SubscriptionOrder extends Model
     {
         static::deleting(function (self $order): void {
             if (filled($order->payment_proof_path)) {
+                Storage::disk('private')->delete($order->payment_proof_path);
                 Storage::disk('public')->delete($order->payment_proof_path);
             }
         });
@@ -52,12 +54,12 @@ class SubscriptionOrder extends Model
             return null;
         }
 
-        return Storage::disk('public')->url($this->payment_proof_path);
+        return route('secure-files.subscription-orders', $this);
     }
 
     public function getBillingLabelAttribute(): string
     {
-        return \App\Support\PricingPlans::billingLabel((string) $this->billing);
+        return PricingPlans::billingLabel((string) $this->billing);
     }
 
     public function getFormattedAmountAttribute(): string

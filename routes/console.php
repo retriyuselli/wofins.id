@@ -21,3 +21,13 @@ Schedule::command('targets:generate --update')
 Schedule::command('activitylog:clean')
     ->monthly()
     ->description('Clean old activity logs');
+
+Schedule::command('sanctum:prune-expired --hours=24')
+    ->dailyAt('02:15')
+    ->withoutOverlapping()
+    ->description('Prune expired Sanctum API tokens');
+
+Schedule::command('api:revoke-inactive-tokens')
+    ->hourly()
+    ->withoutOverlapping()
+    ->description('Revoke tokens for inactive accounts and subscriptions');

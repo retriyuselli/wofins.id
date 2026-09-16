@@ -2,9 +2,10 @@
 
 namespace App\Filament\Resources\Companies\Schemas;
 
-use App\Models\User;
 use App\Support\CompanySubscription;
+use App\Support\PricingPlans;
 use App\Support\ProFeatures;
+use App\Support\UserVisibility;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -168,7 +169,7 @@ class CompanyForm
                                             ->schema([
                                                 Select::make('subscription_plan')
                                                     ->label('Paket')
-                                                    ->options(\App\Support\PricingPlans::companyPlanOptions())
+                                                    ->options(PricingPlans::companyPlanOptions())
                                                     ->placeholder('Pilih paket')
                                                     ->disabled(! $isSuperAdmin)
                                                     ->dehydrated($isSuperAdmin)
@@ -315,7 +316,7 @@ class CompanyForm
                                             ->relationship(
                                                 'paymentMethod',
                                                 'bank_name',
-                                                fn ($query) => \App\Support\UserVisibility::constrainCompanyQuery($query)
+                                                fn ($query) => UserVisibility::constrainCompanyQuery($query)
                                             )
                                             ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->bank_name} - {$record->no_rekening} ({$record->name})")
                                             ->searchable()
@@ -370,7 +371,8 @@ class CompanyForm
                                             ->columns(2)
                                             ->schema([
                                                 FileUpload::make('legal_documents')
-                                                    ->disk('public')
+                                                    ->disk('private')
+                                                    ->visibility('private')
                                                     ->directory('company/legal')
                                                     ->acceptedFileTypes(['application/pdf'])
                                                     ->maxSize(5120)

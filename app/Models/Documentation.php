@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToCompany;
+use App\Support\HtmlSanitizer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
@@ -29,6 +30,10 @@ class Documentation extends Model
         'is_published' => 'boolean',
     ];
 
+    public function setContentAttribute(?string $value): void
+    {
+        $this->attributes['content'] = HtmlSanitizer::sanitize($value);
+    }
 
     public function getActivitylogOptions(): LogOptions
     {

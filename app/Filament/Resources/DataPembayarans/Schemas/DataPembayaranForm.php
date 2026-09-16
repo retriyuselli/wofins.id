@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\DataPembayarans\Schemas;
 
 use App\Models\Order;
+use App\Support\UserVisibility;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -20,7 +21,7 @@ class DataPembayaranForm
                     ->relationship(
                         'order',
                         'name',
-                        fn ($query) => \App\Support\UserVisibility::constrainOrdersQuery($query)
+                        fn ($query) => UserVisibility::constrainOrdersQuery($query)
                     )
                     ->searchable()
                     ->disabled()
@@ -75,13 +76,13 @@ class DataPembayaranForm
                     ->disabled(),
 
                 FileUpload::make('image')
+                    ->disk('private')
+                    ->visibility('private')
                     ->label('Payment Proof')
                     ->disabled()
                     ->image()
                     ->maxSize(1280)
-                    ->disk('public')
                     ->directory('payment-proofs/'.date('Y/m'))
-                    ->visibility('public')
                     ->downloadable()
                     ->openable()
                     ->acceptedFileTypes(['image/jpeg', 'image/png'])

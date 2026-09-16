@@ -52,6 +52,7 @@ enum LoginHostPolicy {
 enum APIConfig {
     static let apiPrefix = "/api/v1"
     static let hostSelectionKey = "wofins.apiHost"
+    private static let productionHosts: Set<String> = ["app.wofins.id", "maknafinance.id"]
 
     static var selectedHost: APIHostOption {
         get {
@@ -135,22 +136,42 @@ enum APIConfig {
     static func mediaURL(from raw: String?) -> URL? {
         guard let raw, !raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
               let url = URL(string: raw) else { return nil }
-        guard isLoopback(url) else { return url }
+        if isAllowedMediaURL(url) { return url }
+        guard isLoopback(url) else { return nil }
         #if DEBUG
         var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
         components?.scheme = baseURL.scheme
         components?.host = baseURL.host
         components?.port = baseURL.port
-        return components?.url ?? url
+        guard let rewritten = components?.url, isAllowedMediaURL(rewritten) else { return nil }
+        return rewritten
         #else
         return nil
         #endif
     }
 
     static func endpoint(_ path: String) -> URL? {
-        let root = baseURL.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        let suffix = path.hasPrefix("/") ? path : "/" + path
-        return URL(string: root + apiPrefix + suffix)
+        endpoint(path, queryItems: [])
+    }
+
+    static func endpoint(_ path: String, queryItems: [URLQueryItem]) -> URL? {
+        guard isAllowedAPIHost(baseURL),
+              var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false) else {
+            return nil
+        }
+        let rawPath: String
+        var combinedItems = queryItems
+        if let separator = path.firstIndex(of: "?") {
+            rawPath = String(path[..<separator])
+            let rawQuery = String(path[path.index(after: separator)...])
+            combinedItems.insert(contentsOf: URLComponents(string: "?\(rawQuery)")?.queryItems ?? [], at: 0)
+        } else {
+            rawPath = path
+        }
+        components.path = apiPrefix + (rawPath.hasPrefix("/") ? rawPath : "/" + rawPath)
+        components.queryItems = combinedItems.isEmpty ? nil : combinedItems
+        components.fragment = nil
+        return components.url
     }
 
     /// Halaman web Laravel di host yang sama dengan API (bukan `/api/v1`).
@@ -173,7 +194,7 @@ enum APIConfig {
 
     static func isAllowedAPIHost(_ url: URL) -> Bool {
         let host = (url.host ?? "").lowercased()
-        if host == "app.wofins.id" || host == "maknafinance.id" {
+        if productionHosts.contains(host) {
             return url.scheme?.lowercased() == "https" && !isLoopback(url)
         }
         #if DEBUG
@@ -185,13 +206,29 @@ enum APIConfig {
         return false
     }
 
+    static func isAllowedMediaURL(_ url: URL, apiBase: URL = baseURL) -> Bool {
+        let host = (url.host ?? "").lowercased()
+        if productionHosts.contains(host) {
+            return url.scheme?.lowercased() == "https" && normalizedPort(url) == 443
+        }
+        #if DEBUG
+        guard let apiHost = apiBase.host?.lowercased(), host == apiHost else { return false }
+        return normalizedPort(url) == normalizedPort(apiBase)
+        #else
+        return false
+        #endif
+    }
+
     static func isLoopback(_ url: URL) -> Bool {
         let host = (url.host ?? "").lowercased()
         return host == "127.0.0.1" || host == "localhost" || host == "::1"
     }
 
     static func isTrustedReleaseURL(_ url: URL) -> Bool {
-        url.scheme?.lowercased() == "https" && !isLoopback(url)
+        let host = (url.host ?? "").lowercased()
+        return url.scheme?.lowercased() == "https"
+            && productionHosts.contains(host)
+            && normalizedPort(url) == 443
     }
 
     private static func resolvedPlistURL(key: String = "BASE_URL") -> URL? {

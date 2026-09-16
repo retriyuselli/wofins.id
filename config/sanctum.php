@@ -50,7 +50,9 @@ return [
     |
     */
 
-    'expiration' => null,
+    'expiration' => (int) env('SANCTUM_EXPIRATION', 43200),
+
+    'mobile_token_expiration_days' => (int) env('SANCTUM_MOBILE_TOKEN_EXPIRATION_DAYS', 30),
 
     /*
     |--------------------------------------------------------------------------

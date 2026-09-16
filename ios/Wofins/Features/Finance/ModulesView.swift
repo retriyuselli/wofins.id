@@ -6,6 +6,7 @@ struct ModulesHubView: View {
     @State private var items: [MobileModuleCatalogItem] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var loadGeneration = 0
 
     private var grouped: [(String, [MobileModuleCatalogItem])] {
         Dictionary(grouping: items, by: \.groupTitle)
@@ -129,14 +130,19 @@ struct ModulesHubView: View {
     }
 
     private func load() async {
+        loadGeneration += 1
+        let generation = loadGeneration
         isLoading = true
-        defer { isLoading = false }
         do {
-            items = try await appState.api.moduleCatalog()
+            let loaded = try await appState.api.moduleCatalog()
+            guard !Task.isCancelled, generation == loadGeneration else { return }
+            items = loaded
             errorMessage = nil
         } catch {
+            guard !Task.isCancelled, generation == loadGeneration else { return }
             APILoadFailure.assign(error, to: &errorMessage)
         }
+        if generation == loadGeneration { isLoading = false }
     }
 }
 
@@ -155,6 +161,7 @@ struct ModuleListView: View {
     @State private var isLoadingMore = false
     @State private var selectedPaymentMethodId: String?
     @State private var rekeningFilterOptions: [ModuleFormOption] = []
+    @State private var loadGeneration = 0
 
     private var canCreateNow: Bool { meta?.can_create ?? item.canCreate }
     private var isBankStatement: Bool { item.key == "bank_statements" }
@@ -546,6 +553,8 @@ struct ModuleListView: View {
 
     private func load(reset: Bool = true) async {
         guard item.isAllowed else { return }
+        loadGeneration += 1
+        let generation = loadGeneration
         if reset {
             isLoading = true
             listPage = 1
@@ -554,17 +563,17 @@ struct ModuleListView: View {
             isLoadingMore = true
             listPage += 1
         }
-        defer {
-            isLoading = false
-            isLoadingMore = false
-        }
+        let requestedPage = listPage
+        let requestedSearch = searchText
+        let requestedFilters = activeListFilters
         do {
             let response = try await appState.api.moduleList(
                 key: item.key,
-                query: searchText,
-                page: listPage,
-                filters: activeListFilters
+                query: requestedSearch,
+                page: requestedPage,
+                filters: requestedFilters
             )
+            guard !Task.isCancelled, generation == loadGeneration else { return }
             if reset {
                 records = response.data
             } else {
@@ -580,8 +589,13 @@ struct ModuleListView: View {
             }
             errorMessage = nil
         } catch {
+            guard !Task.isCancelled, generation == loadGeneration else { return }
             if !reset { listPage = max(1, listPage - 1) }
             APILoadFailure.assign(error, to: &errorMessage)
+        }
+        if generation == loadGeneration {
+            isLoading = false
+            isLoadingMore = false
         }
     }
 }
@@ -601,10 +615,12 @@ struct ModuleDetailView: View {
     @State private var pdfPreviewURL: URL?
     @State private var isDownloadingPdf = false
     @State private var shareItem: ModulePdfShareItem?
+    @State private var temporaryShareURL: URL?
     @State private var showEdit = false
     @State private var showDesktopOnlyEdit = false
     @State private var productDetail: FinanceProductDetail?
     @State private var isLoadingProduct = false
+    @State private var loadGeneration = 0
 
     private var isSimulasi: Bool { item.key == "simulasi" }
     private var isProduct: Bool { item.key == "products" }
@@ -816,7 +832,10 @@ struct ModuleDetailView: View {
             .environmentObject(appState)
             .presentationDetents([.large])
         }
-        .fullScreenCover(isPresented: $showPdfPreview) {
+        .fullScreenCover(isPresented: $showPdfPreview, onDismiss: {
+            TemporaryExportStore.remove(pdfPreviewURL)
+            pdfPreviewURL = nil
+        }) {
             if let pdfPreviewURL {
                 ProjectDocumentView(
                     url: pdfPreviewURL,
@@ -825,7 +844,11 @@ struct ModuleDetailView: View {
                 )
             }
         }
-        .sheet(item: $shareItem) { item in
+        .sheet(item: $shareItem, onDismiss: {
+            TemporaryExportStore.remove(temporaryShareURL)
+            temporaryShareURL = nil
+            shareItem = nil
+        }) { item in
             ModulePdfShareSheet(items: [item.url])
         }
         .alert(actionAlertTitle, isPresented: Binding(
@@ -1114,35 +1137,41 @@ struct ModuleDetailView: View {
     }
 
     private func load() async {
+        loadGeneration += 1
+        let generation = loadGeneration
         isLoading = true
-        defer { isLoading = false }
         do {
             let detail = try await appState.api.moduleDetail(key: item.key, id: recordId)
+            guard !Task.isCancelled, generation == loadGeneration else { return }
             record = detail
             errorMessage = nil
             if isProduct {
-                await loadProductBreakdown(preferring: detail.product)
+                await loadProductBreakdown(preferring: detail.product, generation: generation)
             } else {
                 productDetail = nil
             }
         } catch {
+            guard !Task.isCancelled, generation == loadGeneration else { return }
             APILoadFailure.assign(error, to: &errorMessage)
         }
+        if generation == loadGeneration { isLoading = false }
     }
 
-    private func loadProductBreakdown(preferring bundled: FinanceProductDetail?) async {
+    private func loadProductBreakdown(preferring bundled: FinanceProductDetail?, generation: Int) async {
         if productDetail == nil {
             productDetail = bundled
         }
         isLoadingProduct = productDetail == nil
-        defer { isLoadingProduct = false }
         do {
-            productDetail = try await appState.api.financeProduct(id: recordId)
+            let loaded = try await appState.api.financeProduct(id: recordId)
+            guard !Task.isCancelled, generation == loadGeneration else { return }
+            productDetail = loaded
         } catch {
             if productDetail == nil {
                 productDetail = bundled
             }
         }
+        if generation == loadGeneration { isLoadingProduct = false }
     }
 
     private func downloadProductPdf() async {
@@ -1150,12 +1179,11 @@ struct ModuleDetailView: View {
         isDownloadingPdf = true
         defer { isDownloadingPdf = false }
         do {
-            let data = try await appState.api.financeProductPdf(id: recordId)
             let safeName = productPdfFileName
                 .replacingOccurrences(of: "/", with: "-")
                 .replacingOccurrences(of: ":", with: "-")
-            let url = FileManager.default.temporaryDirectory.appendingPathComponent(safeName)
-            try data.write(to: url, options: .atomic)
+            let url = try await appState.api.financeProductPdfFile(id: recordId, fileName: safeName)
+            temporaryShareURL = url
             shareItem = ModulePdfShareItem(url: url)
         } catch {
             APILoadFailure.assign(error, to: &actionMessage)
@@ -1180,6 +1208,7 @@ struct ModuleDetailView: View {
         defer { isSharingDraft = false }
         do {
             let url = try await cachedDraftPdf()
+            temporaryShareURL = url
             shareItem = ModulePdfShareItem(url: url)
         } catch {
             APILoadFailure.assign(error, to: &actionMessage)
@@ -1190,9 +1219,7 @@ struct ModuleDetailView: View {
         if let pdfPreviewURL, FileManager.default.fileExists(atPath: pdfPreviewURL.path) {
             return pdfPreviewURL
         }
-        let data = try await appState.api.moduleDraftKontrakPdf(id: recordId)
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent(draftFileName)
-        try data.write(to: url, options: .atomic)
+        let url = try await appState.api.moduleDraftKontrakPdfFile(id: recordId, fileName: draftFileName)
         pdfPreviewURL = url
         return url
     }

@@ -5,6 +5,8 @@ namespace App\Filament\Resources\SubscriptionOrders;
 use App\Filament\Resources\SubscriptionOrders\Pages\EditSubscriptionOrder;
 use App\Filament\Resources\SubscriptionOrders\Pages\ListSubscriptionOrders;
 use App\Models\SubscriptionOrder;
+use App\Support\CompanySubscription;
+use App\Support\PricingPlans;
 use App\Support\ProFeatures;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -21,7 +23,6 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 class SubscriptionOrderResource extends Resource
 {
@@ -72,13 +73,13 @@ class SubscriptionOrderResource extends Resource
             TextInput::make('billing')
                 ->label('Durasi')
                 ->formatStateUsing(fn (?string $state): string => $state
-                    ? \App\Support\PricingPlans::billingLabel($state)
+                    ? PricingPlans::billingLabel($state)
                     : '—')
                 ->disabled(),
             TextInput::make('projected_expires_at')
                 ->label('Berakhir')
                 ->formatStateUsing(fn ($state, ?SubscriptionOrder $record): string => $record
-                    ? (\App\Support\CompanySubscription::projectedExpiryLabelFromOrder($record) ?? '—')
+                    ? (CompanySubscription::projectedExpiryLabelFromOrder($record) ?? '—')
                     : '—')
                 ->helperText(fn (?SubscriptionOrder $record): string => match ($record?->status) {
                     'approved' => 'Tanggal berakhir paket di company (setelah disetujui).',
@@ -95,8 +96,9 @@ class SubscriptionOrderResource extends Resource
             TextInput::make('company_name')->label('Perusahaan')->disabled(),
             Textarea::make('notes')->label('Catatan')->disabled()->rows(2),
             FileUpload::make('payment_proof_path')
+                ->disk('private')
+                ->visibility('private')
                 ->label('Bukti pembayaran')
-                ->disk('public')
                 ->directory('subscription-orders')
                 ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'application/pdf'])
                 ->imagePreviewHeight('280')
@@ -126,10 +128,10 @@ class SubscriptionOrderResource extends Resource
                 TextColumn::make('plan_name')->label('Paket')->sortable(),
                 TextColumn::make('billing')
                     ->label('Durasi')
-                    ->formatStateUsing(fn (string $state): string => \App\Support\PricingPlans::billingLabel($state)),
+                    ->formatStateUsing(fn (string $state): string => PricingPlans::billingLabel($state)),
                 TextColumn::make('projected_expires_at')
                     ->label('Berakhir')
-                    ->state(fn (SubscriptionOrder $record): ?string => \App\Support\CompanySubscription::projectedExpiryLabelFromOrder($record))
+                    ->state(fn (SubscriptionOrder $record): ?string => CompanySubscription::projectedExpiryLabelFromOrder($record))
                     ->placeholder('—')
                     ->description(fn (SubscriptionOrder $record): ?string => $record->status === 'approved'
                         ? null
@@ -158,7 +160,7 @@ class SubscriptionOrderResource extends Resource
                     ->label('File bukti')
                     ->state(fn (SubscriptionOrder $record): string => filled($record->payment_proof_path) ? 'Buka' : '—')
                     ->url(fn (SubscriptionOrder $record): ?string => filled($record->payment_proof_path)
-                        ? Storage::disk('public')->url($record->payment_proof_path)
+                        ? $record->payment_proof_url
                         : null)
                     ->openUrlInNewTab()
                     ->color(fn (SubscriptionOrder $record): string => filled($record->payment_proof_path) ? 'primary' : 'gray')
@@ -192,7 +194,7 @@ class SubscriptionOrderResource extends Resource
                     ->label('Bukti')
                     ->icon('heroicon-o-photo')
                     ->url(fn (SubscriptionOrder $record): ?string => filled($record->payment_proof_path)
-                        ? Storage::disk('public')->url($record->payment_proof_path)
+                        ? $record->payment_proof_url
                         : null)
                     ->openUrlInNewTab()
                     ->visible(fn (SubscriptionOrder $record): bool => filled($record->payment_proof_path)),

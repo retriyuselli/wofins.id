@@ -11,8 +11,8 @@ final class AppState: ObservableObject {
     let api: APIClient
     private let keychain = KeychainStore()
 
-    init(api: APIClient = APIClient()) {
-        self.api = api
+    init(api: APIClient? = nil) {
+        self.api = api ?? APIClient()
         self.api.onUnauthorized = { [weak self] in
             Task { @MainActor in
                 self?.forceLogout(message: "Sesi berakhir. Silakan login lagi.")
@@ -27,14 +27,20 @@ final class AppState: ObservableObject {
             return
         }
         api.token = token
+        // A transient bootstrap failure must not destroy a valid local session.
+        // Keep the authenticated shell available and surface a recoverable error.
+        isAuthenticated = true
         do {
             currentUser = try await api.me()
-            isAuthenticated = true
+            globalError = nil
         } catch {
             if APILoadFailure.isCancellation(error) { return }
-            keychain.clearToken()
-            api.token = nil
-            isAuthenticated = false
+            if case .unauthorized? = error as? APIError {
+                forceLogout(message: "Sesi berakhir. Silakan login lagi.")
+            } else {
+                globalError = APILoadFailure.userMessage(for: error)
+                    ?? "Data akun belum dapat diperbarui. Tarik layar untuk mencoba lagi."
+            }
         }
     }
 

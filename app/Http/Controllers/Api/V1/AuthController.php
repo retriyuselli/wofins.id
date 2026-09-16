@@ -7,8 +7,10 @@ use App\Http\Resources\Api\V1\UserResource;
 use App\Models\User;
 use App\Services\GoogleAvatarSync;
 use App\Services\GoogleTokenVerifier;
+use App\Support\CompanySubscription;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -59,32 +61,47 @@ class AuthController extends Controller
             $payload['picture'] ?? null
         );
 
-        if ($googleId === '' || $email === '') {
+        if ($googleId === '' || $email === '' || ! $emailVerified) {
             throw ValidationException::withMessages([
-                'id_token' => ['Akun Google tidak menyediakan email yang valid.'],
+                'id_token' => ['Akun Google harus menyediakan email yang sudah diverifikasi.'],
             ]);
         }
 
+        $email = mb_strtolower($email);
+
         /** @var User|null $user */
-        $user = User::query()
-            ->where(function ($query) use ($googleId, $email) {
-                $query->where('google_id', $googleId)->orWhere('email', $email);
-            })
-            ->first();
+        $user = DB::transaction(function () use ($googleId, $email): ?User {
+            $byGoogleId = User::query()->where('google_id', $googleId)->lockForUpdate()->first();
+            if ($byGoogleId && mb_strtolower((string) $byGoogleId->email) !== $email) {
+                throw ValidationException::withMessages([
+                    'id_token' => ['Identitas Google tidak cocok dengan email akun WOFINS.'],
+                ]);
+            }
+
+            $byEmail = User::query()->whereRaw('LOWER(email) = ?', [$email])->lockForUpdate()->first();
+            if ($byEmail?->google_id && ! hash_equals((string) $byEmail->google_id, $googleId)) {
+                throw ValidationException::withMessages([
+                    'id_token' => ['Email ini sudah ditautkan ke akun Google lain.'],
+                ]);
+            }
+
+            $matched = $byGoogleId ?? $byEmail;
+            if (! $matched) {
+                return null;
+            }
+
+            $this->assertUserCanLogin($matched);
+
+            $matched->forceFill([
+                'google_id' => $matched->google_id ?: $googleId,
+                'email_verified_at' => $matched->email_verified_at ?: now(),
+            ])->save();
+
+            return $matched->fresh();
+        });
 
         if ($user) {
             $this->assertUserCanLogin($user);
-
-            $updates = [];
-            if (! $user->google_id) {
-                $updates['google_id'] = $googleId;
-            }
-            if ($emailVerified && ! $user->email_verified_at) {
-                $updates['email_verified_at'] = now();
-            }
-            if ($updates !== []) {
-                $user->forceFill($updates)->save();
-            }
 
             // Ambil foto Google sebagai avatar default jika user belum punya foto
             $avatarSync->sync($user, $picture);
@@ -149,16 +166,32 @@ class AuthController extends Controller
                 'email' => ['Akun Anda telah kedaluwarsa. Hubungi administrator.'],
             ]);
         }
+
+        if (! $user->hasRole('super_admin')) {
+            if (! $user->company || $user->company->isDeactivated()) {
+                throw ValidationException::withMessages([
+                    'email' => ['Perusahaan Anda tidak aktif. Hubungi administrator.'],
+                ]);
+            }
+
+            if (CompanySubscription::isExpired($user)) {
+                throw ValidationException::withMessages([
+                    'email' => ['Masa aktif paket perusahaan telah berakhir.'],
+                ]);
+            }
+        }
     }
 
     private function tokenResponse(User $user, string $deviceName): JsonResponse
     {
-        $token = $user->createToken($deviceName)->plainTextToken;
+        $expiresAt = now()->addDays(max(1, (int) config('sanctum.mobile_token_expiration_days', 30)));
+        $token = $user->createToken($deviceName, ['mobile'], $expiresAt)->plainTextToken;
 
         return response()->json([
             'message' => 'Login berhasil.',
             'token' => $token,
             'token_type' => 'Bearer',
+            'expires_at' => $expiresAt->toIso8601String(),
             'user' => new UserResource($user->loadMissing(['roles', 'company'])),
         ]);
     }

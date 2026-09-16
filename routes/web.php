@@ -1,43 +1,48 @@
 <?php
 
+use App\Enums\OrderStatus;
 use App\Http\Controllers\AccountManagerReportController;
 use App\Http\Controllers\BankReconciliationTemplateController;
 use App\Http\Controllers\BankStatementFileController;
-use App\Http\Controllers\NotaDinasInvoiceFileController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BrandController;
+use App\Http\Controllers\DocumentationController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\Front\AsetFeatureController;
 use App\Http\Controllers\Front\AuthController;
 use App\Http\Controllers\Front\BiayaFeatureController;
+use App\Http\Controllers\Front\CartController;
+use App\Http\Controllers\Front\ContactController;
 use App\Http\Controllers\Front\FiturDetailController;
 use App\Http\Controllers\Front\HomeController;
 use App\Http\Controllers\Front\InvoiceController as FrontInvoiceController;
 use App\Http\Controllers\Front\LaporanFeatureController;
 use App\Http\Controllers\Front\PayrollFeatureController;
 use App\Http\Controllers\Front\ProductCatalogController;
-use App\Http\Controllers\Front\ContactController;
-use App\Http\Controllers\Front\CartController;
 use App\Http\Controllers\Front\RegistrationController;
-use App\Http\Controllers\PublicCrewInviteController;
+use App\Http\Controllers\Front\SolusiController;
 use App\Http\Controllers\FrontendDataPribadiController;
 use App\Http\Controllers\InvoiceOrderController;
 use App\Http\Controllers\LaporanKeuanganController;
+use App\Http\Controllers\NotaDinasInvoiceFileController;
 use App\Http\Controllers\NotaDinasPdfController;
 use App\Http\Controllers\PayrollSlipController;
 use App\Http\Controllers\ProductDisplayController;
-use App\Http\Controllers\Profile\ProfileController;
 use App\Http\Controllers\Profile\AdminToolsController;
+use App\Http\Controllers\Profile\ProfileController;
 use App\Http\Controllers\ProspectAppController;
 use App\Http\Controllers\ProspectController;
+use App\Http\Controllers\PublicCrewInviteController;
 use App\Http\Controllers\ReconciliationController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SecureFileController;
 use App\Http\Controllers\SimulasiDisplayController;
 use App\Http\Controllers\SopPrintController;
 use App\Http\Controllers\UserFormPdfController;
-use App\Http\Controllers\DocumentationController;
-use App\Enums\OrderStatus;
 use App\Models\DataPembayaran;
+use App\Models\ProspectApp;
+use App\Models\SubscriptionOrder;
+use App\Support\CompanySubscription;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -48,6 +53,15 @@ $phpInfoMiddleware = [...$authNoStore, 'super-admin', 'throttle:10,1'];
 // agar user tanpa role tidak kena abort 403 dari canAccessPanel().
 $frontAuthNoStore = ['auth', 'no-store'];
 $frontAuthVerified = ['auth', 'verified', 'no-store'];
+
+Route::middleware($authNoStoreThrottle)->prefix('secure-files')->group(function () {
+    Route::get('/orders/{order}/{field}', [SecureFileController::class, 'order'])->name('secure-files.orders');
+    Route::get('/payments/{payment}', [SecureFileController::class, 'payment'])->name('secure-files.payments');
+    Route::get('/attachments/{attachment}', [SecureFileController::class, 'attachment'])->name('secure-files.attachments');
+    Route::get('/users/{user}/{field}/{index?}', [SecureFileController::class, 'userDocument'])->name('secure-files.users');
+    Route::get('/companies/{company}/legal/{index}', [SecureFileController::class, 'companyLegal'])->name('secure-files.companies.legal');
+    Route::get('/subscription-orders/{subscriptionOrder}', [SecureFileController::class, 'subscriptionProof'])->name('secure-files.subscription-orders');
+});
 
 Route::get('/_phpinfo', function () {
     ob_start();
@@ -182,7 +196,7 @@ Route::get('/crew/{token}/sukses', [PublicCrewInviteController::class, 'success'
     ->where('token', '[A-Za-z0-9]{32,64}')
     ->middleware(['no-store', 'throttle:60,1']);
 
-Route::get('/solusi/{slug}', [\App\Http\Controllers\Front\SolusiController::class, 'show'])
+Route::get('/solusi/{slug}', [SolusiController::class, 'show'])
     ->name('solusi.show')
     ->where('slug', 'owner|finance|hrd|operasional');
 
@@ -371,7 +385,7 @@ Route::middleware($frontAuthVerified)->group(function () {
             return redirect()->route('profile');
         }
 
-        $prospect = \App\Models\ProspectApp::query()
+        $prospect = ProspectApp::query()
             ->with('industry')
             ->where(function ($q) use ($user) {
                 $q->where('user_id', $user->id)
@@ -380,7 +394,7 @@ Route::middleware($frontAuthVerified)->group(function () {
             ->latest('id')
             ->first();
 
-        $orders = \App\Models\SubscriptionOrder::query()
+        $orders = SubscriptionOrder::query()
             ->where(function ($q) use ($user) {
                 $q->where('user_id', $user->id)
                     ->orWhere('email', $user->email);
@@ -400,7 +414,7 @@ Route::middleware($frontAuthVerified)->group(function () {
     })->name('account.pending');
 
     Route::get('/paket-berakhir', function () {
-        if (! \App\Support\CompanySubscription::isExpired()) {
+        if (! CompanySubscription::isExpired()) {
             if (Auth::user()?->canAccessAdmin()) {
                 return redirect('/admin');
             }
@@ -412,7 +426,7 @@ Route::middleware($frontAuthVerified)->group(function () {
     })->name('account.subscription-expired');
 
     Route::get('/perusahaan-nonaktif', function () {
-        $company = \App\Support\CompanySubscription::company();
+        $company = CompanySubscription::company();
 
         if (! $company || $company->isActive()) {
             if (Auth::user()?->canAccessAdmin()) {
