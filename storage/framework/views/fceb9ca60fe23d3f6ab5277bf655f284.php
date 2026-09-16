@@ -42,6 +42,7 @@
                 <ul class="space-y-2 text-sm">
                     <li><a href="<?php echo e(route('tentang')); ?>" class="hover:text-white">Tentang Kami</a></li>
                     <li><a href="<?php echo e(route('kontak')); ?>" class="hover:text-white">Kontak Kami</a></li>
+                    <li><a href="<?php echo e(route('kebijakan-privasi')); ?>" class="hover:text-white">Kebijakan Privasi</a></li>
                     <li><a href="<?php echo e(route('docs.index')); ?>" class="hover:text-white">Dokumentasi</a></li>
                 </ul>
             </div>

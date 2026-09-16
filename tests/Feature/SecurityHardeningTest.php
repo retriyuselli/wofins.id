@@ -39,6 +39,14 @@ class SecurityHardeningTest extends TestCase
         );
     }
 
+    public function test_privacy_policy_is_publicly_accessible(): void
+    {
+        $this->get('/kebijakan-privasi')
+            ->assertOk()
+            ->assertSee('Kebijakan Privasi WOFINS')
+            ->assertSee('support@wofins.id');
+    }
+
     public function test_inactive_api_account_is_rejected(): void
     {
         $user = new User;

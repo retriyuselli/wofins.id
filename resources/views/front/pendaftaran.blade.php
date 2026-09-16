@@ -542,6 +542,12 @@
                     <li>Anda berhak meminta penghapusan data Anda kapan saja.</li>
                     <li>Cookie digunakan untuk meningkatkan pengalaman pengguna.</li>
                 </ul>
+                <p>
+                    <a href="{{ route('kebijakan-privasi') }}" target="_blank" rel="noopener noreferrer"
+                       class="font-semibold text-[var(--wf-navy)] underline underline-offset-2">
+                        Baca Kebijakan Privasi lengkap
+                    </a>
+                </p>
             </div>
             <div class="px-6 py-4 border-t border-[var(--wf-line)] bg-[var(--wf-cream)] flex justify-end">
                 <button type="button" @click="privacyOpen = false" class="wf-btn-navy px-5 py-2.5 text-sm">Tutup</button>

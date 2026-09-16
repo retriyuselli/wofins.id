@@ -983,10 +983,11 @@ final class APIClient {
                     throw APIError.responseTooLarge
                 }
                 guard (200...299).contains(http.statusCode) else {
+                    let maximumErrorBytes = Self.maximumJSONBytes
                     let body = await Task.detached(priority: .utility) {
-                        Self.filePrefix(at: temporaryURL, maximumBytes: Self.maximumJSONBytes)
+                        Self.filePrefix(at: temporaryURL, maximumBytes: maximumErrorBytes)
                     }.value
-                    try validate(http: http, data: Data(body.prefix(Self.maximumJSONBytes)))
+                    try validate(http: http, data: Data(body.prefix(maximumErrorBytes)))
                     throw APIError.http(http.statusCode, nil)
                 }
                 if requiresPDF {
