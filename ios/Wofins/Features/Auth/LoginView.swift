@@ -61,7 +61,7 @@ struct LoginView: View {
                     }
                     .frame(maxWidth: .infinity)
                 }
-                .scrollDismissesKeyboard(.immediately)
+                .wofinsFormScrollBehavior()
                 .onTapGesture { dismissKeyboard() }
             }
         }
@@ -157,7 +157,7 @@ struct LoginView: View {
             VStack(spacing: 14) {
                 HStack(spacing: 12) {
                     logoBadge
-                        .highPriorityGesture(TapGesture().onEnded(handleLogoUnlockTap))
+                        .simultaneousGesture(TapGesture().onEnded(handleLogoUnlockTap))
                         .accessibilityLabel("WOFINS")
                     VStack(alignment: .leading, spacing: 2) {
                         Text("WOFINS")

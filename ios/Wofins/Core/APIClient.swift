@@ -103,11 +103,11 @@ final class APIClient {
 
     private static let maximumJSONBytes = 5 * 1_024 * 1_024
     private static let maximumProofBytes = 20 * 1_024 * 1_024
+    private static let maximumDownloadBytes = 100 * 1_024 * 1_024
     private static let requestTimeout: TimeInterval = 30
     private static let downloadTimeout: TimeInterval = 180
     private let session: URLSession
     private let decoder: JSONDecoder
-    private let encoder: JSONEncoder
     private var catalogTask: Task<[MobileModuleCatalogItem], Error>?
     private var catalogCache: (items: [MobileModuleCatalogItem], date: Date)?
     private let proofCache = NSCache<NSString, NSData>()
@@ -115,7 +115,6 @@ final class APIClient {
     init(session: URLSession? = nil) {
         self.session = session ?? APIClient.makeSession()
         self.decoder = JSONDecoder()
-        self.encoder = JSONEncoder()
         proofCache.totalCostLimit = 24 * 1_024 * 1_024
     }
 
@@ -642,7 +641,11 @@ final class APIClient {
 
     private struct EmptyBody: Encodable {}
 
-    struct MultipartFile {
+    private struct UnsafeTransfer<Value>: @unchecked Sendable {
+        let value: Value
+    }
+
+    struct MultipartFile: Sendable {
         let field: String
         let fileName: String
         let mimeType: String
@@ -693,23 +696,49 @@ final class APIClient {
             try applyAuthorization(to: &request)
         }
 
+        let uploadBytes = files.reduce(0) { $0 + $1.data.count }
+        guard uploadBytes <= 25 * 1_024 * 1_024 else {
+            throw APIError.message("Total file yang diunggah maksimal 25MB.")
+        }
+        let body = await Task.detached(priority: .userInitiated) {
+            Self.multipartBody(boundary: boundary, fields: fields, files: files)
+        }.value
+        request.httpBody = body
+
+        return try await perform(request)
+    }
+
+    nonisolated private static func multipartBody(
+        boundary: String,
+        fields: [String: String],
+        files: [MultipartFile]
+    ) -> Data {
         var body = Data()
         for (key, value) in fields {
+            let safeKey = multipartToken(key)
             body.append("--\(boundary)\r\n".data(using: .utf8)!)
-            body.append("Content-Disposition: form-data; name=\"\(key)\"\r\n\r\n".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"\(safeKey)\"\r\n\r\n".data(using: .utf8)!)
             body.append("\(value)\r\n".data(using: .utf8)!)
         }
         for file in files {
+            let safeField = multipartToken(file.field)
+            let safeName = multipartToken(URL(fileURLWithPath: file.fileName).lastPathComponent)
+            let safeMime = multipartToken(file.mimeType)
             body.append("--\(boundary)\r\n".data(using: .utf8)!)
-            body.append("Content-Disposition: form-data; name=\"\(file.field)\"; filename=\"\(file.fileName)\"\r\n".data(using: .utf8)!)
-            body.append("Content-Type: \(file.mimeType)\r\n\r\n".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"\(safeField)\"; filename=\"\(safeName)\"\r\n".data(using: .utf8)!)
+            body.append("Content-Type: \(safeMime)\r\n\r\n".data(using: .utf8)!)
             body.append(file.data)
             body.append("\r\n".data(using: .utf8)!)
         }
         body.append("--\(boundary)--\r\n".data(using: .utf8)!)
-        request.httpBody = body
+        return body
+    }
 
-        return try await perform(request)
+    nonisolated private static func multipartToken(_ value: String) -> String {
+        value
+            .replacingOccurrences(of: "\r", with: "")
+            .replacingOccurrences(of: "\n", with: "")
+            .replacingOccurrences(of: "\"", with: "")
     }
 
     private func fetchDocument(path: String) async throws -> Data {
@@ -729,7 +758,9 @@ final class APIClient {
                 onUnauthorized?()
                 throw APIError.unauthorized
             }
-            let classified = DocumentPayload.classify(data)
+            let classified = await Task.detached(priority: .utility) {
+                DocumentPayload.classify(data)
+            }.value
             if case .jsonMessage(let message) = classified {
                 throw APIError.http(http.statusCode, message)
             }
@@ -741,7 +772,10 @@ final class APIClient {
 
     private func fetchPDF(path: String) async throws -> Data {
         let data = try await fetchDocument(path: path)
-        switch DocumentPayload.classify(data) {
+        let classified = await Task.detached(priority: .utility) {
+            DocumentPayload.classify(data)
+        }.value
+        switch classified {
         case .pdf:
             return DocumentPayload.pdfBytes(in: data) ?? data
         case .jsonMessage(let message):
@@ -800,7 +834,10 @@ final class APIClient {
         }
 
         if let body {
-            request.httpBody = try encoder.encode(body)
+            let transferable = UnsafeTransfer(value: body)
+            request.httpBody = try await Task.detached(priority: .utility) {
+                try JSONEncoder().encode(transferable.value)
+            }.value
         }
 
         return try await perform(request)
@@ -811,7 +848,10 @@ final class APIClient {
         try validate(http: http, data: data)
 
         do {
-            return try decoder.decode(T.self, from: data)
+            let decoded = try await Task.detached(priority: .utility) {
+                UnsafeTransfer(value: try JSONDecoder().decode(T.self, from: data))
+            }.value
+            return decoded.value
         } catch {
             throw APIError.decoding(error)
         }
@@ -832,7 +872,7 @@ final class APIClient {
         var attempt = 0
         while true {
             do {
-                let (bytes, response) = try await session.bytes(for: request)
+                let (data, response) = try await session.data(for: request)
                 guard let http = response as? HTTPURLResponse else {
                     throw APIError.message("Respons tidak valid.")
                 }
@@ -844,14 +884,7 @@ final class APIClient {
                 if response.expectedContentLength > Int64(maximumBytes) {
                     throw APIError.responseTooLarge
                 }
-                var data = Data()
-                if response.expectedContentLength > 0 {
-                    data.reserveCapacity(min(maximumBytes, Int(response.expectedContentLength)))
-                }
-                for try await byte in bytes {
-                    guard data.count < maximumBytes else { throw APIError.responseTooLarge }
-                    data.append(byte)
-                }
+                guard data.count <= maximumBytes else { throw APIError.responseTooLarge }
                 return (data, http)
             } catch let api as APIError {
                 throw api
@@ -942,19 +975,32 @@ final class APIClient {
                     onUnauthorized?()
                     throw APIError.unauthorized
                 }
+                if response.expectedContentLength > Int64(Self.maximumDownloadBytes) {
+                    throw APIError.responseTooLarge
+                }
+                let downloadedSize = (try? temporaryURL.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+                if downloadedSize > Self.maximumDownloadBytes {
+                    throw APIError.responseTooLarge
+                }
                 guard (200...299).contains(http.statusCode) else {
-                    let body = (try? Data(contentsOf: temporaryURL, options: [.mappedIfSafe])) ?? Data()
+                    let body = await Task.detached(priority: .utility) {
+                        Self.filePrefix(at: temporaryURL, maximumBytes: Self.maximumJSONBytes)
+                    }.value
                     try validate(http: http, data: Data(body.prefix(Self.maximumJSONBytes)))
                     throw APIError.http(http.statusCode, nil)
                 }
                 if requiresPDF {
-                    let prefix = try FileHandle(forReadingFrom: temporaryURL)
-                    defer { try? prefix.close() }
-                    guard try prefix.read(upToCount: 5)?.starts(with: Data("%PDF-".utf8)) == true else {
+                    let isPDF = await Task.detached(priority: .utility) {
+                        Self.filePrefix(at: temporaryURL, maximumBytes: 5)
+                            .starts(with: Data("%PDF-".utf8))
+                    }.value
+                    guard isPDF else {
                         throw APIError.message("PDF tidak dapat dibuat. Coba lagi.")
                     }
                 }
-                return try TemporaryExportStore.persistDownloadedFile(at: temporaryURL, fileName: fileName)
+                return try await Task.detached(priority: .utility) {
+                    try TemporaryExportStore.persistDownloadedFile(at: temporaryURL, fileName: fileName)
+                }.value
             } catch let api as APIError {
                 throw api
             } catch {
@@ -970,6 +1016,12 @@ final class APIClient {
 
     private func queryItems(_ pairs: (String, String?)...) -> [URLQueryItem] {
         pairs.compactMap { name, value in value.map { URLQueryItem(name: name, value: $0) } }
+    }
+
+    nonisolated private static func filePrefix(at url: URL, maximumBytes: Int) -> Data {
+        guard let handle = try? FileHandle(forReadingFrom: url) else { return Data() }
+        defer { try? handle.close() }
+        return (try? handle.read(upToCount: maximumBytes)) ?? Data()
     }
 
     private func applyAuthorization(to request: inout URLRequest) throws {

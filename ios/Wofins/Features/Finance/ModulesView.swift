@@ -133,6 +133,9 @@ struct ModulesHubView: View {
         loadGeneration += 1
         let generation = loadGeneration
         isLoading = true
+        defer {
+            if generation == loadGeneration { isLoading = false }
+        }
         do {
             let loaded = try await appState.api.moduleCatalog()
             guard !Task.isCancelled, generation == loadGeneration else { return }
@@ -142,7 +145,6 @@ struct ModulesHubView: View {
             guard !Task.isCancelled, generation == loadGeneration else { return }
             APILoadFailure.assign(error, to: &errorMessage)
         }
-        if generation == loadGeneration { isLoading = false }
     }
 }
 
@@ -553,13 +555,21 @@ struct ModuleListView: View {
 
     private func load(reset: Bool = true) async {
         guard item.isAllowed else { return }
+        if !reset {
+            guard canLoadMore, !isLoadingMore else { return }
+        }
         loadGeneration += 1
         let generation = loadGeneration
+        defer {
+            if generation == loadGeneration {
+                isLoading = false
+                isLoadingMore = false
+            }
+        }
         if reset {
             isLoading = true
             listPage = 1
         } else {
-            guard canLoadMore, !isLoadingMore else { return }
             isLoadingMore = true
             listPage += 1
         }
@@ -592,10 +602,6 @@ struct ModuleListView: View {
             guard !Task.isCancelled, generation == loadGeneration else { return }
             if !reset { listPage = max(1, listPage - 1) }
             APILoadFailure.assign(error, to: &errorMessage)
-        }
-        if generation == loadGeneration {
-            isLoading = false
-            isLoadingMore = false
         }
     }
 }
@@ -1140,6 +1146,9 @@ struct ModuleDetailView: View {
         loadGeneration += 1
         let generation = loadGeneration
         isLoading = true
+        defer {
+            if generation == loadGeneration { isLoading = false }
+        }
         do {
             let detail = try await appState.api.moduleDetail(key: item.key, id: recordId)
             guard !Task.isCancelled, generation == loadGeneration else { return }
@@ -1154,7 +1163,6 @@ struct ModuleDetailView: View {
             guard !Task.isCancelled, generation == loadGeneration else { return }
             APILoadFailure.assign(error, to: &errorMessage)
         }
-        if generation == loadGeneration { isLoading = false }
     }
 
     private func loadProductBreakdown(preferring bundled: FinanceProductDetail?, generation: Int) async {
@@ -1162,6 +1170,9 @@ struct ModuleDetailView: View {
             productDetail = bundled
         }
         isLoadingProduct = productDetail == nil
+        defer {
+            if generation == loadGeneration { isLoadingProduct = false }
+        }
         do {
             let loaded = try await appState.api.financeProduct(id: recordId)
             guard !Task.isCancelled, generation == loadGeneration else { return }
@@ -1171,7 +1182,6 @@ struct ModuleDetailView: View {
                 productDetail = bundled
             }
         }
-        if generation == loadGeneration { isLoadingProduct = false }
     }
 
     private func downloadProductPdf() async {
@@ -1303,7 +1313,7 @@ struct ModuleCreateView: View {
                         .padding(16)
                         .padding(.bottom, 28)
                     }
-                    .scrollDismissesKeyboard(.immediately)
+                    .wofinsFormScrollBehavior()
                     .wofinsKeyboardDoneButton()
                 }
             }
@@ -1380,7 +1390,8 @@ struct ModuleCreateView: View {
                 case "textarea":
                     TextField(field.placeholder ?? field.label, text: stringBinding(field.name), axis: .vertical)
                         .font(.poppins(.subheadline))
-                        .lineLimit(field.name == "content" || field.name == "summary" ? 4...12 : 3...6)
+                        .lineLimit(3...)
+                        .scrollDisabled(true)
                         .padding(12)
                         .moduleSurface()
                         .disabled(field.readonly == true)
@@ -1611,7 +1622,11 @@ struct ModuleShortcutsView: View {
 extension View {
     func moduleSurface() -> some View {
         background(WofinsTheme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay { RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(WofinsTheme.border.opacity(0.75)) }
+            .overlay {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(WofinsTheme.border.opacity(0.75))
+                    .allowsHitTesting(false)
+            }
             .wofinsSoftShadow()
     }
 }

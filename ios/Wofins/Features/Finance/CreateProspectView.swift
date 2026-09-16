@@ -63,7 +63,7 @@ struct CreateProspectView: View {
         VStack(spacing: 0) {
             header
             ScrollView(showsIndicators: false) {
-                LazyVStack(spacing: 16) {
+                VStack(spacing: 16) {
                     if let errorMessage {
                         Text(errorMessage)
                             .font(.poppins(.caption))
@@ -101,7 +101,7 @@ struct CreateProspectView: View {
                 .padding(.bottom, 28)
                 .frame(maxWidth: .infinity)
             }
-            .scrollDismissesKeyboard(.immediately)
+            .wofinsFormScrollBehavior()
 
             Button {
                 dismissKeyboard()
@@ -128,7 +128,6 @@ struct CreateProspectView: View {
             .background(WofinsTheme.background.ignoresSafeArea(edges: .bottom))
         }
         .background(WofinsTheme.background.ignoresSafeArea())
-        .wofinsDismissKeyboardOnOutsideTap()
         .wofinsHidesNavigationBar()
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
@@ -211,7 +210,8 @@ struct CreateProspectView: View {
                 Group {
                     if axis {
                         TextField("", text: text, axis: .vertical)
-                            .lineLimit(3...6)
+                            .lineLimit(3...)
+                            .scrollDisabled(true)
                     } else {
                         TextField("", text: text)
                             .lineLimit(1)
@@ -234,6 +234,7 @@ struct CreateProspectView: View {
             .overlay {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .stroke(WofinsTheme.border, lineWidth: 1)
+                    .allowsHitTesting(false)
             }
         }
     }

@@ -1876,7 +1876,7 @@ struct JSONDictionary: Encodable {
     }
 }
 
-enum DocumentPayload: Equatable {
+enum DocumentPayload: Equatable, Sendable {
     case pdf
     case html
     case jsonMessage(String)

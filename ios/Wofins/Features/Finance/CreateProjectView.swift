@@ -90,6 +90,18 @@ struct CreateProjectView: View {
         let data: Data
     }
 
+    private enum PDFLoadError: LocalizedError {
+        case unreadable
+        case tooLarge
+
+        var errorDescription: String? {
+            switch self {
+            case .unreadable: return "File PDF tidak dapat dibaca."
+            case .tooLarge: return "File PDF maksimal 10MB."
+            }
+        }
+    }
+
     private var selectedProspect: ProjectFormProspectOption? {
         options?.prospects.first { $0.id == prospectId }
     }
@@ -191,12 +203,11 @@ struct CreateProjectView: View {
                     .padding(.top, 16)
                     .padding(.bottom, 8)
                 }
-                .scrollDismissesKeyboard(.immediately)
+                .wofinsFormScrollBehavior()
                 footer
             }
         }
         .background(WofinsTheme.background.ignoresSafeArea())
-        .wofinsDismissKeyboardOnOutsideTap()
         .wofinsKeyboardDoneButton()
         .wofinsHidesNavigationBar()
         .task { await loadOptions() }
@@ -658,7 +669,8 @@ struct CreateProjectView: View {
                 Group {
                     if axis {
                         TextField("", text: text, axis: .vertical)
-                            .lineLimit(3...6)
+                            .lineLimit(3...)
+                            .scrollDisabled(true)
                     } else {
                         TextField("", text: text)
                             .lineLimit(1)
@@ -1051,20 +1063,36 @@ struct CreateProjectView: View {
     private func handlePDF(_ result: Result<URL, Error>, assign: Binding<PickedFile?>) {
         switch result {
         case .success(let url):
-            let accessed = url.startAccessingSecurityScopedResource()
-            defer { if accessed { url.stopAccessingSecurityScopedResource() } }
-            guard let data = try? Data(contentsOf: url) else {
-                errorMessage = "File PDF tidak dapat dibaca."
-                return
+            Task {
+                do {
+                    assign.wrappedValue = try await Self.loadPDF(from: url)
+                } catch {
+                    errorMessage = (error as? LocalizedError)?.errorDescription
+                        ?? "File PDF tidak dapat dibaca."
+                }
             }
-            if data.count > 10 * 1024 * 1024 {
-                errorMessage = "File PDF maksimal 10MB."
-                return
-            }
-            assign.wrappedValue = PickedFile(name: url.lastPathComponent, data: data)
         case .failure:
             break
         }
+    }
+
+    private static func loadPDF(from url: URL) async throws -> PickedFile {
+        try await Task.detached(priority: .userInitiated) {
+            let accessed = url.startAccessingSecurityScopedResource()
+            defer { if accessed { url.stopAccessingSecurityScopedResource() } }
+
+            let values = try? url.resourceValues(forKeys: [.fileSizeKey])
+            if let size = values?.fileSize, size > 10 * 1024 * 1024 {
+                throw PDFLoadError.tooLarge
+            }
+            guard let data = try? Data(contentsOf: url, options: .mappedIfSafe) else {
+                throw PDFLoadError.unreadable
+            }
+            guard data.count <= 10 * 1024 * 1024 else {
+                throw PDFLoadError.tooLarge
+            }
+            return PickedFile(name: url.lastPathComponent, data: data)
+        }.value
     }
 
     private func dismissKeyboard() {

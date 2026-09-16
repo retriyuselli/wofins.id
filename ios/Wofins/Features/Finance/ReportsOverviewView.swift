@@ -14,6 +14,7 @@ struct ReportsView: View {
     @State private var isDownloadingExcel = false
     @State private var pdfShareItem: ReportShareItem?
     @State private var temporaryShareURL: URL?
+    @State private var exportTask: Task<Void, Never>?
     @State private var loadGeneration = 0
 
     private var isExporting: Bool { isDownloadingPdf || isDownloadingExcel }
@@ -87,6 +88,11 @@ struct ReportsView: View {
                                 .font(.poppins(.subheadline, weight: .semibold))
                                 .foregroundStyle(WofinsTheme.ink)
                                 .multilineTextAlignment(.center)
+                            Button("Batalkan") {
+                                exportTask?.cancel()
+                            }
+                            .font(.poppins(.caption, weight: .semibold))
+                            .foregroundStyle(WofinsTheme.danger)
                         }
                         .padding(22)
                         .frame(maxWidth: 260)
@@ -95,6 +101,9 @@ struct ReportsView: View {
                     }
                     .allowsHitTesting(true)
                 }
+            }
+            .onDisappear {
+                exportTask?.cancel()
             }
         }
     }
@@ -105,7 +114,7 @@ struct ReportsView: View {
             VStack(alignment: .leading, spacing: 2) { Text("Laporan").font(.poppins(.headline, weight: .bold)).foregroundStyle(.white); Text(appState.currentUser?.companyDisplayName ?? "Performa keuangan").font(.poppins(.caption)).foregroundStyle(.white.opacity(0.72)).lineLimit(1) }
             Spacer()
             Button {
-                Task { await downloadPdf() }
+                startPdfDownload()
             } label: {
                 Image(systemName: "arrow.down.to.line")
                     .font(.system(size: 17, weight: .bold))
@@ -234,7 +243,7 @@ struct ReportsView: View {
         VStack(spacing: 10) {
             HStack(spacing: 12) {
                 Button {
-                    Task { await downloadPdf() }
+                    startPdfDownload()
                 } label: {
                     Label("Unduh PDF", systemImage: "arrow.down.doc.fill")
                         .font(.poppins(.caption, weight: .semibold))
@@ -250,7 +259,7 @@ struct ReportsView: View {
                 .disabled(isExporting)
 
                 Button {
-                    Task { await downloadExcel() }
+                    startExcelDownload()
                 } label: {
                     Label("Ekspor Excel", systemImage: "tablecells.fill")
                         .font(.poppins(.caption, weight: .semibold))
@@ -290,6 +299,9 @@ struct ReportsView: View {
         let to = period.toString
         let requestedMode = mode
         isLoading = true
+        defer {
+            if generation == loadGeneration { isLoading = false }
+        }
         do {
             let loaded = try await appState.api.financeReportSummary(from: from, to: to, mode: requestedMode)
             guard !Task.isCancelled, generation == loadGeneration else { return }
@@ -302,13 +314,15 @@ struct ReportsView: View {
                 errorMessage = message
             }
         }
-        if generation == loadGeneration { isLoading = false }
     }
 
     private func downloadPdf() async {
         guard appState.allows(.basicFinance), !isExporting else { return }
         isDownloadingPdf = true
-        defer { isDownloadingPdf = false }
+        defer {
+            isDownloadingPdf = false
+            exportTask = nil
+        }
         do {
             let fileName = reportFileName(ext: "pdf")
             let url = try await appState.api.financeReportPdfFile(
@@ -327,7 +341,10 @@ struct ReportsView: View {
     private func downloadExcel() async {
         guard appState.allows(.basicFinance), !isExporting else { return }
         isDownloadingExcel = true
-        defer { isDownloadingExcel = false }
+        defer {
+            isDownloadingExcel = false
+            exportTask = nil
+        }
         do {
             let fileName = reportFileName(ext: "xlsx")
             let url = try await appState.api.financeReportExcelFile(
@@ -346,6 +363,16 @@ struct ReportsView: View {
     private func reportFileName(ext: String) -> String {
         let kind = mode == "profit_loss" ? "laba-rugi" : "arus-kas"
         return "laporan-\(kind)-\(period.fromString)-\(period.toString).\(ext)"
+    }
+
+    private func startPdfDownload() {
+        guard exportTask == nil else { return }
+        exportTask = Task { await downloadPdf() }
+    }
+
+    private func startExcelDownload() {
+        guard exportTask == nil else { return }
+        exportTask = Task { await downloadExcel() }
     }
 
 }
@@ -368,7 +395,11 @@ private struct ReportShareSheet: UIViewControllerRepresentable {
 private extension View {
     func reportSurface() -> some View {
         background(WofinsTheme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay { RoundedRectangle(cornerRadius: 18).stroke(WofinsTheme.border.opacity(0.75)) }
+            .overlay {
+                RoundedRectangle(cornerRadius: 18)
+                    .stroke(WofinsTheme.border.opacity(0.75))
+                    .allowsHitTesting(false)
+            }
             .wofinsSoftShadow()
     }
 }

@@ -72,9 +72,11 @@ struct EditProfileView: View {
                     Text("Operasional").tag("operasional")
                 }
                 TextField("Alamat", text: $address, axis: .vertical)
-                    .lineLimit(2...4)
+                    .lineLimit(2...)
+                    .scrollDisabled(true)
                 TextField("Kontak darurat", text: $emergency, axis: .vertical)
-                    .lineLimit(2...4)
+                    .lineLimit(2...)
+                    .scrollDisabled(true)
             }
 
             Section("Kepegawaian") {
@@ -119,7 +121,7 @@ struct EditProfileView: View {
         .navigationTitle("Edit Profil")
         .navigationBarTitleDisplayMode(.inline)
         .wofinsSwipeBack()
-        .scrollDismissesKeyboard(.immediately)
+        .wofinsFormScrollBehavior()
         .wofinsKeyboardDoneButton()
         .onAppear { loadUser() }
         .onChange(of: photoItem) { _, item in
@@ -195,11 +197,19 @@ struct EditProfileView: View {
         isUploadingPhoto = true
         defer { isUploadingPhoto = false }
         do {
-            guard let data = try await item.loadTransferable(type: Data.self),
-                  let image = UIImage(data: data),
-                  let jpeg = image.jpegData(compressionQuality: 0.82)
-            else {
+            guard let data = try await item.loadTransferable(type: Data.self) else {
                 errorMessage = "Foto tidak dapat dibaca."
+                return
+            }
+            let processed = await Task.detached(priority: .userInitiated) {
+                guard let image = PaymentProofImageDecoder.image(from: data, maximumPixelSize: 1_024),
+                      let jpeg = image.jpegData(compressionQuality: 0.82) else {
+                    return Optional<(UIImage, Data)>.none
+                }
+                return (image, jpeg)
+            }.value
+            guard let (image, jpeg) = processed else {
+                errorMessage = "Foto tidak dapat diproses."
                 return
             }
             avatarImage = image
@@ -282,7 +292,7 @@ struct ChangePasswordView: View {
         }
         .navigationTitle("Ganti Password")
         .wofinsSwipeBack()
-        .scrollDismissesKeyboard(.immediately)
+        .wofinsFormScrollBehavior()
         .wofinsKeyboardDoneButton()
     }
 

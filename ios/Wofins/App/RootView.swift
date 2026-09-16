@@ -58,7 +58,6 @@ struct RootView: View {
             }
         }
         .animation(.easeInOut(duration: 0.2), value: appState.isAuthenticated)
-        .wofinsDismissKeyboardOnOutsideTap()
         .task {
             await appState.bootstrap()
         }
@@ -303,14 +302,6 @@ extension View {
             .ignoresSafeArea(edges: .top)
     }
 
-    func wofinsDismissKeyboardOnOutsideTap() -> some View {
-        background {
-            WofinsKeyboardDismissProbe()
-                .frame(width: 1, height: 1)
-                .accessibilityHidden(true)
-        }
-    }
-
     func wofinsKeyboardDoneButton() -> some View {
         toolbar {
             ToolbarItemGroup(placement: .keyboard) {
@@ -322,11 +313,17 @@ extension View {
         }
     }
 
+    /// Keeps vertical form scrolling responsive while a multiline field owns focus.
+    func wofinsFormScrollBehavior() -> some View {
+        scrollDismissesKeyboard(.interactively)
+    }
+
     func projectSurface() -> some View {
         background(WofinsTheme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .stroke(WofinsTheme.border.opacity(0.75), lineWidth: 1)
+                    .allowsHitTesting(false)
             }
             .wofinsSoftShadow()
     }
@@ -339,78 +336,5 @@ extension View {
     /// Slightly stronger shadow for one-off hero cards (balance / cash summary).
     func wofinsHeroShadow() -> some View {
         shadow(color: Color.black.opacity(0.08), radius: 6, y: 3)
-    }
-}
-
-private struct WofinsKeyboardDismissProbe: UIViewControllerRepresentable {
-    func makeUIViewController(context: Context) -> WofinsKeyboardDismissController {
-        WofinsKeyboardDismissController()
-    }
-
-    func updateUIViewController(_ uiViewController: WofinsKeyboardDismissController, context: Context) {}
-}
-
-private final class WofinsKeyboardDismissController: UIViewController, UIGestureRecognizerDelegate {
-    private weak var installedWindow: UIWindow?
-    private var recognizer: UITapGestureRecognizer?
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        view.backgroundColor = .clear
-        view.isUserInteractionEnabled = false
-    }
-
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        install()
-    }
-
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        uninstall()
-    }
-
-    private func install() {
-        guard recognizer == nil, let window = view.window else { return }
-        if window.gestureRecognizers?.contains(where: { $0.name == "wofins.dismissKeyboard" }) == true {
-            return
-        }
-        let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
-        tap.cancelsTouchesInView = false
-        tap.delegate = self
-        tap.name = "wofins.dismissKeyboard"
-        window.addGestureRecognizer(tap)
-        recognizer = tap
-        installedWindow = window
-    }
-
-    private func uninstall() {
-        if let recognizer {
-            installedWindow?.removeGestureRecognizer(recognizer)
-        }
-        recognizer = nil
-        installedWindow = nil
-    }
-
-    @objc private func dismissKeyboard() {
-        installedWindow?.endEditing(true)
-    }
-
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
-        var view = touch.view
-        while let current = view {
-            if current is UITextField || current is UITextView {
-                return false
-            }
-            view = current.superview
-        }
-        return true
-    }
-
-    func gestureRecognizer(
-        _ gestureRecognizer: UIGestureRecognizer,
-        shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
-    ) -> Bool {
-        true
     }
 }

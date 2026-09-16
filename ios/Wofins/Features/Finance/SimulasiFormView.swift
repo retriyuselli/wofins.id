@@ -98,7 +98,8 @@ struct SimulasiFormView: View {
                                 labeledField("Catatan") {
                                     TextField("Catatan simulasi", text: $notes, axis: .vertical)
                                         .font(.poppins(.subheadline))
-                                        .lineLimit(3...6)
+                                        .lineLimit(3...)
+                                        .scrollDisabled(true)
                                 }
                             }
 
@@ -155,7 +156,7 @@ struct SimulasiFormView: View {
                         .padding(16)
                         .padding(.bottom, 28)
                     }
-                    .scrollDismissesKeyboard(.immediately)
+                    .wofinsFormScrollBehavior()
                     .wofinsKeyboardDoneButton()
                 }
             }

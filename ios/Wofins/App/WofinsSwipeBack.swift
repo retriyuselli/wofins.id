@@ -137,7 +137,7 @@ final class WofinsSwipeBackController: UIViewController, UIGestureRecognizerDele
             let x = max(0, translation)
             host.transform = CGAffineTransform(translationX: x, y: 0)
             host.alpha = 1 - min(0.18, x / width * 0.18)
-        case .ended, .cancelled:
+        case .ended:
             let velocity = gesture.velocity(in: host).x
             if WofinsSwipeBackPolicy.shouldFinishDismiss(translation: translation, velocity: velocity) {
                 UIView.animate(withDuration: 0.22, delay: 0, options: [.curveEaseOut]) {
@@ -149,26 +149,32 @@ final class WofinsSwipeBackController: UIViewController, UIGestureRecognizerDele
                     self.onEdgeDismiss?()
                 }
             } else {
-                UIView.animate(withDuration: 0.2, delay: 0, options: [.curveEaseOut]) {
-                    host.transform = .identity
-                    host.alpha = 1
-                }
+                reset(host)
             }
+        case .cancelled, .failed:
+            reset(host)
         default:
             break
         }
     }
 
-    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-        gestureRecognizer == dismissPan && isPresentedScreen
+    private func reset(_ host: UIView) {
+        UIView.animate(withDuration: 0.2, delay: 0, options: [.curveEaseOut, .beginFromCurrentState]) {
+            host.transform = .identity
+            host.alpha = 1
+        }
     }
 
-    func gestureRecognizer(
-        _ gestureRecognizer: UIGestureRecognizer,
-        shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer
-    ) -> Bool {
-        gestureRecognizer == dismissPan
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        guard gestureRecognizer == dismissPan,
+              isPresentedScreen,
+              let pan = gestureRecognizer as? UIScreenEdgePanGestureRecognizer else {
+            return false
+        }
+        let velocity = pan.velocity(in: panHost)
+        return velocity.x > 0 && abs(velocity.x) > abs(velocity.y)
     }
+
 }
 
 private final class WofinsPopGestureBridge: NSObject, UIGestureRecognizerDelegate {
@@ -178,12 +184,6 @@ private final class WofinsPopGestureBridge: NSObject, UIGestureRecognizerDelegat
         WofinsSwipeBackPolicy.canPop(controllerCount: navigationController?.viewControllers.count ?? 0)
     }
 
-    func gestureRecognizer(
-        _ gestureRecognizer: UIGestureRecognizer,
-        shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer
-    ) -> Bool {
-        gestureRecognizer == navigationController?.interactivePopGestureRecognizer
-    }
 }
 
 private enum WofinsPopGestureStorage {

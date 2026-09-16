@@ -982,7 +982,11 @@ private extension View {
 
     func accountPageSurface() -> some View {
         background(WofinsTheme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay { RoundedRectangle(cornerRadius: 18).stroke(WofinsTheme.border.opacity(0.75)) }
+            .overlay {
+                RoundedRectangle(cornerRadius: 18)
+                    .stroke(WofinsTheme.border.opacity(0.75))
+                    .allowsHitTesting(false)
+            }
             .wofinsSoftShadow()
     }
 }

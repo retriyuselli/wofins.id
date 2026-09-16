@@ -404,6 +404,7 @@ private extension View {
             .overlay {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .stroke(WofinsTheme.border.opacity(0.75), lineWidth: 1)
+                    .allowsHitTesting(false)
             }
             .wofinsSoftShadow()
     }

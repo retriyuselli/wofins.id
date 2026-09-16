@@ -42,6 +42,12 @@ enum TemporaryExportStore {
 
     static func remove(_ url: URL?) {
         guard let url else { return }
+        Task.detached(priority: .utility) {
+            removeImmediately(url)
+        }
+    }
+
+    private static func removeImmediately(_ url: URL) {
         let directory = (try? exportDirectory())?.standardizedFileURL
         let candidate = url.standardizedFileURL
         guard let directory, candidate.path.hasPrefix(directory.path + "/") else { return }

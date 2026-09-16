@@ -91,7 +91,7 @@ struct ProductFormView: View {
                         .padding(16)
                         .padding(.bottom, 28)
                     }
-                    .scrollDismissesKeyboard(.immediately)
+                    .wofinsFormScrollBehavior()
                     .wofinsKeyboardDoneButton()
                 }
             }
@@ -271,7 +271,8 @@ struct ProductFormView: View {
 
             TextField("Fasilitas / keterangan", text: bindingItem(index, \.description), axis: .vertical)
                 .font(.poppins(.subheadline))
-                .lineLimit(2...4)
+                .lineLimit(2...)
+                .scrollDisabled(true)
                 .padding(12)
                 .moduleSurface()
         }
@@ -298,7 +299,8 @@ struct ProductFormView: View {
             editableMoney("Nilai", text: bindingDiscount(index, \.amountText))
             TextField("Keterangan", text: bindingDiscount(index, \.notes), axis: .vertical)
                 .font(.poppins(.subheadline))
-                .lineLimit(2...4)
+                .lineLimit(2...)
+                .scrollDisabled(true)
                 .padding(12)
                 .moduleSurface()
         }
@@ -340,7 +342,8 @@ struct ProductFormView: View {
             }
             TextField("Keterangan", text: bindingAddition(index, \.description), axis: .vertical)
                 .font(.poppins(.subheadline))
-                .lineLimit(2...4)
+                .lineLimit(2...)
+                .scrollDisabled(true)
                 .padding(12)
                 .moduleSurface()
         }
@@ -380,7 +383,8 @@ struct ProductFormView: View {
             Text(title).font(.poppins(.caption, weight: .semibold)).foregroundStyle(WofinsTheme.ink)
             TextField(title, text: stringBinding(key), axis: .vertical)
                 .font(.poppins(.subheadline))
-                .lineLimit(3...6)
+                .lineLimit(3...)
+                .scrollDisabled(true)
                 .padding(12)
                 .moduleSurface()
         }

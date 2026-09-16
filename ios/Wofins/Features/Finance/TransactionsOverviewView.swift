@@ -413,6 +413,9 @@ struct TransactionsView: View {
         let from = period.fromString
         let to = period.toString
         isLoading = true
+        defer {
+            if generation == loadGeneration { isLoading = false }
+        }
         do {
             let response = try await appState.api.financeTransactions(from: from, to: to,
                 type: nil, direction: nil, limit: 200)
@@ -429,7 +432,6 @@ struct TransactionsView: View {
             guard !Task.isCancelled, generation == loadGeneration else { return }
             catalog = loadedCatalog
         }
-        if generation == loadGeneration { isLoading = false }
     }
 }
 
@@ -669,6 +671,9 @@ struct TransactionCategoryView: View {
         let from = period.fromString
         let to = period.toString
         isLoading = true
+        defer {
+            if generation == loadGeneration { isLoading = false }
+        }
         do {
             let response = try await appState.api.financeTransactions(
                 from: from,
@@ -684,7 +689,6 @@ struct TransactionCategoryView: View {
             guard !Task.isCancelled, generation == loadGeneration else { return }
             APILoadFailure.assign(error, to: &errorMessage)
         }
-        if generation == loadGeneration { isLoading = false }
     }
 }
 
@@ -971,10 +975,16 @@ struct PaymentProofView: View {
         loadGeneration += 1
         let generation = loadGeneration
         isLoading = true
+        defer {
+            if generation == loadGeneration { isLoading = false }
+        }
         do {
             let data = try await appState.api.financePaymentProof(id: paymentId, urlString: proofURL)
+            let decoded = await Task.detached(priority: .userInitiated) {
+                PaymentProofImageDecoder.image(from: data)
+            }.value
             guard !Task.isCancelled, generation == loadGeneration else { return }
-            image = PaymentProofImageDecoder.image(from: data)
+            image = decoded
             failed = image == nil
         } catch {
             guard !Task.isCancelled, generation == loadGeneration else { return }
@@ -982,7 +992,6 @@ struct PaymentProofView: View {
                 failed = true
             }
         }
-        if generation == loadGeneration { isLoading = false }
     }
 }
 
@@ -1239,7 +1248,11 @@ private enum TransactionDates {
 private extension View {
     func transactionSurface() -> some View {
         background(WofinsTheme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay { RoundedRectangle(cornerRadius: 18).stroke(WofinsTheme.border.opacity(0.75), lineWidth: 1) }
+            .overlay {
+                RoundedRectangle(cornerRadius: 18)
+                    .stroke(WofinsTheme.border.opacity(0.75), lineWidth: 1)
+                    .allowsHitTesting(false)
+            }
             .wofinsSoftShadow()
     }
 }

@@ -14,6 +14,7 @@ struct ProjectDetailView: View {
     @State private var showInvoicePreview = false
     @State private var showContractPreview = false
     @State private var isPreparingInvoice = false
+    @State private var invoiceTask: Task<Void, Never>?
     @State private var invoiceShareItem: ProjectShareItem?
     @State private var temporaryInvoiceURL: URL?
     @State private var actionMessage: String?
@@ -89,6 +90,11 @@ struct ProjectDetailView: View {
                             .font(.poppins(.subheadline, weight: .semibold))
                             .foregroundStyle(WofinsTheme.ink)
                             .multilineTextAlignment(.center)
+                        Button("Batalkan") {
+                            invoiceTask?.cancel()
+                        }
+                        .font(.poppins(.caption, weight: .semibold))
+                        .foregroundStyle(WofinsTheme.danger)
                     }
                     .padding(22)
                     .frame(maxWidth: 260)
@@ -101,6 +107,9 @@ struct ProjectDetailView: View {
         .background(WofinsTheme.background.ignoresSafeArea())
         .wofinsHidesNavigationBar()
         .task { await load() }
+        .onDisappear {
+            invoiceTask?.cancel()
+        }
         .navigationDestination(isPresented: $showInvoicePreview) {
             if let invoiceURL {
                 ProjectDocumentView(
@@ -183,7 +192,7 @@ struct ProjectDetailView: View {
                 }
                 .disabled(detail == nil)
                 Button {
-                    Task { await downloadInvoice() }
+                    startInvoiceDownload()
                 } label: {
                     Label("Download Invoice", systemImage: "arrow.down.doc.fill")
                 }
@@ -625,7 +634,10 @@ struct ProjectDetailView: View {
 
     private func downloadInvoice() async {
         isPreparingInvoice = true
-        defer { isPreparingInvoice = false }
+        defer {
+            isPreparingInvoice = false
+            invoiceTask = nil
+        }
         do {
             let safeName = invoiceFileName
                 .replacingOccurrences(of: "/", with: "-")
@@ -636,6 +648,11 @@ struct ProjectDetailView: View {
         } catch {
             APILoadFailure.assign(error, to: &actionMessage)
         }
+    }
+
+    private func startInvoiceDownload() {
+        guard invoiceTask == nil else { return }
+        invoiceTask = Task { await downloadInvoice() }
     }
 }
 

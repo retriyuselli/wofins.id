@@ -78,7 +78,7 @@ struct VendorFormView: View {
                         .padding(16)
                         .padding(.bottom, 28)
                     }
-                    .scrollDismissesKeyboard(.immediately)
+                    .wofinsFormScrollBehavior()
                     .wofinsKeyboardDoneButton()
                 }
             }
@@ -235,7 +235,8 @@ struct VendorFormView: View {
             Text(title).font(.poppins(.caption, weight: .semibold)).foregroundStyle(WofinsTheme.ink)
             TextField(title, text: stringBinding(key), axis: .vertical)
                 .font(.poppins(.subheadline))
-                .lineLimit(3...6)
+                .lineLimit(3...)
+                .scrollDisabled(true)
                 .padding(12)
                 .moduleSurface()
         }

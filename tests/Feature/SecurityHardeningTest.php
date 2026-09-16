@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Support\HtmlSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Laravel\Sanctum\Http\Middleware\CheckAbilities;
 use Tests\TestCase;
 
 class SecurityHardeningTest extends TestCase
@@ -21,6 +22,7 @@ class SecurityHardeningTest extends TestCase
         $this->assertContains('auth:sanctum', $middleware);
         $this->assertContains('abilities:mobile', $middleware);
         $this->assertContains('api.account.active', $middleware);
+        $this->assertSame(CheckAbilities::class, app('router')->getMiddleware()['abilities'] ?? null);
     }
 
     public function test_report_exports_are_throttled(): void

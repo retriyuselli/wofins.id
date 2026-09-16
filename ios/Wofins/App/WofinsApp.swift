@@ -47,9 +47,21 @@ private struct AppBootstrap: View {
 
     private func dismissSplashWhenReady() async {
         let hold = SplashTiming.minimumHoldNanoseconds(reduceMotion: reduceMotion)
-        try? await Task.sleep(nanoseconds: hold)
-        while appState.isBootstrapping {
-            try? await Task.sleep(nanoseconds: 50_000_000)
+        do {
+            try await Task.sleep(nanoseconds: hold)
+        } catch {
+            return
+        }
+
+        // Never leave a non-interactive splash over the app for a slow network.
+        let deadline = Date().addingTimeInterval(2.5)
+        while appState.isBootstrapping && Date() < deadline {
+            guard !Task.isCancelled else { return }
+            do {
+                try await Task.sleep(nanoseconds: 50_000_000)
+            } catch {
+                return
+            }
         }
         if reduceMotion {
             showsAnimatedSplash = false
