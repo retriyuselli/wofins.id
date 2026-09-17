@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\UserResource;
 use App\Models\User;
+use App\Services\AppleTokenVerifier;
 use App\Services\GoogleAvatarSync;
 use App\Services\GoogleTokenVerifier;
 use App\Support\CompanySubscription;
@@ -108,11 +109,75 @@ class AuthController extends Controller
             $user->refresh();
         } else {
             throw ValidationException::withMessages([
-                'id_token' => ['Akun Google belum terdaftar di WOFINS. Hubungi administrator company Anda, atau beli paket untuk mendaftar.'],
+                'id_token' => ['Akun Google belum terdaftar di WOFINS. Hubungi administrator company Anda.'],
             ]);
         }
 
         return $this->tokenResponse($user, $data['device_name'] ?? 'ios-wofins-google');
+    }
+
+    public function apple(Request $request, AppleTokenVerifier $verifier): JsonResponse
+    {
+        $data = $request->validate([
+            'identity_token' => ['required', 'string'],
+            'device_name' => ['nullable', 'string', 'max:120'],
+            'account_email' => ['nullable', 'email'],
+            'account_password' => ['nullable', 'string', 'required_with:account_email'],
+        ]);
+
+        $payload = $verifier->verify($data['identity_token']);
+        $appleId = (string) $payload['sub'];
+        $email = mb_strtolower(trim((string) ($payload['email'] ?? '')));
+        $emailVerified = filter_var($payload['email_verified'] ?? false, FILTER_VALIDATE_BOOL);
+
+        /** @var User|null $user */
+        $user = DB::transaction(function () use ($appleId, $email, $emailVerified, $data): ?User {
+            $byAppleId = User::query()->where('apple_id', $appleId)->lockForUpdate()->first();
+            if ($byAppleId) {
+                $this->assertUserCanLogin($byAppleId);
+
+                return $byAppleId;
+            }
+
+            $byEmail = null;
+            if ($email !== '' && $emailVerified) {
+                $byEmail = User::query()->whereRaw('LOWER(email) = ?', [$email])->lockForUpdate()->first();
+            }
+
+            if (! $byEmail && filled($data['account_email'] ?? null)) {
+                $accountEmail = mb_strtolower(trim((string) $data['account_email']));
+                $candidate = User::query()->whereRaw('LOWER(email) = ?', [$accountEmail])->lockForUpdate()->first();
+                if ($candidate && Hash::check((string) ($data['account_password'] ?? ''), $candidate->password)) {
+                    $byEmail = $candidate;
+                }
+            }
+
+            if (! $byEmail) {
+                return null;
+            }
+
+            if ($byEmail->apple_id && ! hash_equals((string) $byEmail->apple_id, $appleId)) {
+                throw ValidationException::withMessages([
+                    'identity_token' => ['Email ini sudah ditautkan ke akun Apple lain.'],
+                ]);
+            }
+
+            $this->assertUserCanLogin($byEmail);
+            $byEmail->forceFill([
+                'apple_id' => $appleId,
+                'email_verified_at' => $byEmail->email_verified_at ?: now(),
+            ])->save();
+
+            return $byEmail->fresh();
+        });
+
+        if (! $user) {
+            throw ValidationException::withMessages([
+                'identity_token' => ['Akun Apple belum terhubung. Isi email dan password WOFINS, lalu pilih Sign in with Apple sekali lagi untuk menautkan akun.'],
+            ]);
+        }
+
+        return $this->tokenResponse($user, $data['device_name'] ?? 'ios-wofins-apple');
     }
 
     /**

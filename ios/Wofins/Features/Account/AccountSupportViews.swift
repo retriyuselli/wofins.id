@@ -157,7 +157,6 @@ struct CompanyInfoView: View {
 
 struct SubscriptionPlanView: View {
     @EnvironmentObject private var appState: AppState
-    @State private var showPlans = false
 
     private var user: UserProfile? { appState.currentUser }
     private var company: UserCompany? { user?.company }
@@ -203,15 +202,6 @@ struct SubscriptionPlanView: View {
                         }
                     }
 
-                    Button { showPlans = true } label: {
-                        Text("Lihat semua paket")
-                            .font(.poppins(.subheadline, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(WofinsTheme.primary, in: Capsule())
-                    }
-                    .buttonStyle(.plain)
                 }
             }
             .padding(.horizontal, 16)
@@ -224,10 +214,6 @@ struct SubscriptionPlanView: View {
         .toolbar(.visible, for: .navigationBar)
         .wofinsSwipeBack()
         .refreshable { await appState.refreshMe() }
-        .sheet(isPresented: $showPlans) {
-            PlansCatalogSheet()
-                .environmentObject(appState)
-        }
     }
 }
 
@@ -425,7 +411,6 @@ struct HelpCenterView: View {
     @EnvironmentObject private var appState: AppState
     @Environment(\.openURL) private var openURL
     @State private var showContact = false
-    @State private var showPlans = false
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -435,17 +420,13 @@ struct HelpCenterView: View {
                     Divider()
                     faq("Lupa password?", "Atur ulang lewat tautan di bawah. Halaman web memakai host yang sama dengan API aplikasi.")
                     Divider()
-                    faq("Fitur bertanda Pro atau Business?", "Fitur mengikuti paket company. Buka Paket Aktif atau Lihat paket untuk daftar lengkap.")
+                    faq("Fitur bertanda Pro atau Business?", "Fitur mengikuti akses company yang dikelola administrator perusahaan.")
                 }
 
                 VStack(spacing: 10) {
                     webButton("Atur ulang password", path: "/forgot-password")
                     Button { showContact = true } label: {
                         helpActionLabel("Hubungi kami")
-                    }
-                    .buttonStyle(.plain)
-                    Button { showPlans = true } label: {
-                        helpActionLabel("Lihat paket")
                     }
                     .buttonStyle(.plain)
                 }
@@ -461,10 +442,6 @@ struct HelpCenterView: View {
         .wofinsSwipeBack()
         .sheet(isPresented: $showContact) {
             ContactUsSheet()
-                .environmentObject(appState)
-        }
-        .sheet(isPresented: $showPlans) {
-            PlansCatalogSheet()
                 .environmentObject(appState)
         }
     }
@@ -539,61 +516,6 @@ enum SupportContact {
     }
 }
 
-struct WofinsPlanCatalogItem: Identifiable, Equatable {
-    let id: String
-    let name: String
-    let monthlyPrice: Int
-    let summary: String
-    let note: String?
-    let highlights: [String]
-    let popular: Bool
-
-    var priceLine: String {
-        "Rp \(MoneyFormat.grouped(monthlyPrice))/bulan"
-    }
-}
-
-enum WofinsPlanCatalog {
-    static let plans: [WofinsPlanCatalogItem] = [
-        WofinsPlanCatalogItem(
-            id: "starter",
-            name: "Starter",
-            monthlyPrice: 110_000,
-            summary: "Proyek wedding, kas, dan laporan dasar — untuk WO solo.",
-            note: nil,
-            highlights: ["1 pengguna", "Prospek, vendor, produk, proyek", "Nota dinas & kas/bank", "Laporan keuangan dasar"],
-            popular: false
-        ),
-        WofinsPlanCatalogItem(
-            id: "professional",
-            name: "Professional",
-            monthlyPrice: 180_000,
-            summary: "Simulasi klien, rekonsiliasi bank, dan payroll — satu akun pemilik.",
-            note: nil,
-            highlights: ["Semua kemampuan Starter", "Simulasi wedding & draft kontrak", "Aset tetap & rekonsiliasi", "Payroll"],
-            popular: true
-        ),
-        WofinsPlanCatalogItem(
-            id: "business",
-            name: "Business",
-            monthlyPrice: 295_000,
-            summary: "Banyak proyek dan tim lintas fungsi, hingga 3 pengguna.",
-            note: nil,
-            highlights: ["Hingga 3 pengguna", "Semua fitur Professional", "Crew freelance & dokumen/SOP", "Laporan lanjutan"],
-            popular: false
-        ),
-        WofinsPlanCatalogItem(
-            id: "enterprise",
-            name: "Enterprise",
-            monthlyPrice: 333_333,
-            summary: "Hosting, domain, dan kustomisasi alur.",
-            note: "Minimal berlangganan 2 tahun",
-            highlights: ["Semua fitur Business", "Kuota unlimited", "Domain & hosting", "Support langsung pengembang"],
-            popular: false
-        ),
-    ]
-}
-
 private struct AccountBottomSheet<Content: View>: View {
     let title: String
     let content: Content
@@ -638,13 +560,13 @@ struct ContactUsSheet: View {
     private var defaultMessage: String {
         let name = appState.currentUser?.name ?? "pengguna WOFINS"
         let company = appState.currentUser?.company?.name ?? appState.currentUser?.companyDisplayName ?? "company"
-        return "Halo, saya \(name) dari \(company). Saya ingin konsultasi WOFINS."
+        return "Halo, saya \(name) dari \(company). Saya membutuhkan bantuan penggunaan WOFINS."
     }
 
     var body: some View {
         AccountBottomSheet(title: "Hubungi kami") {
             VStack(alignment: .leading, spacing: 14) {
-                Text("Jadwalkan demo atau tanyakan paket. Tim WOFINS siap membantu.")
+                Text("Hubungi tim dukungan jika Anda membutuhkan bantuan penggunaan WOFINS.")
                     .font(.poppins(.subheadline))
                     .foregroundStyle(WofinsTheme.muted)
                     .fixedSize(horizontal: false, vertical: true)
@@ -744,95 +666,6 @@ struct ContactUsSheet: View {
         if let url = SupportContact.mailURL(subject: "Konsultasi WOFINS", body: defaultMessage) {
             openURL(url)
         }
-    }
-}
-
-struct PlansCatalogSheet: View {
-    @EnvironmentObject private var appState: AppState
-
-    private var currentPlanKey: String? {
-        appState.currentUser?.entitlements?.plan ?? appState.currentUser?.company?.subscription_plan
-    }
-
-    var body: some View {
-        AccountBottomSheet(title: "Paket WOFINS") {
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Harga bulanan. Pilih paket sesuai skala tim wedding organizer Anda.")
-                    .font(.poppins(.subheadline))
-                    .foregroundStyle(WofinsTheme.muted)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                ForEach(WofinsPlanCatalog.plans) { plan in
-                    planCard(plan, isCurrent: currentPlanKey == plan.id)
-                }
-            }
-        }
-    }
-
-    private func planCard(_ plan: WofinsPlanCatalogItem, isCurrent: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(plan.name)
-                    .font(.poppins(.headline, weight: .bold))
-                    .foregroundStyle(WofinsTheme.ink)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .frame(minWidth: 0)
-                if plan.popular {
-                    Text("Populer")
-                        .font(.poppins(.caption2, weight: .semibold))
-                        .foregroundStyle(WofinsTheme.primary)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(WofinsTheme.yellow.opacity(0.28), in: Capsule())
-                        .fixedSize()
-                }
-                if isCurrent {
-                    Text("Paket Anda")
-                        .font(.poppins(.caption2, weight: .semibold))
-                        .foregroundStyle(WofinsTheme.success)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(WofinsTheme.success.opacity(0.14), in: Capsule())
-                        .fixedSize()
-                }
-            }
-            Text(plan.priceLine)
-                .font(.poppins(.subheadline, weight: .bold))
-                .foregroundStyle(WofinsTheme.primary)
-            if let note = plan.note {
-                Text(note)
-                    .font(.poppins(.caption2, weight: .semibold))
-                    .foregroundStyle(WofinsTheme.muted)
-            }
-            Text(plan.summary)
-                .font(.poppins(.caption))
-                .foregroundStyle(WofinsTheme.muted)
-                .fixedSize(horizontal: false, vertical: true)
-            VStack(alignment: .leading, spacing: 6) {
-                ForEach(plan.highlights, id: \.self) { item in
-                    HStack(alignment: .top, spacing: 8) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 13))
-                            .foregroundStyle(WofinsTheme.success)
-                            .padding(.top, 1)
-                        Text(item)
-                            .font(.poppins(.caption))
-                            .foregroundStyle(WofinsTheme.ink)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .frame(minWidth: 0)
-                    }
-                }
-            }
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(plan.popular || isCurrent ? WofinsTheme.yellow.opacity(0.9) : WofinsTheme.border.opacity(0.75), lineWidth: plan.popular || isCurrent ? 1.5 : 1)
-        }
-        .accountPageSurface()
     }
 }
 

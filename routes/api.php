@@ -23,6 +23,9 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/google', [AuthController::class, 'google'])
         ->middleware('throttle:10,1')
         ->name('api.v1.auth.google');
+    Route::post('/auth/apple', [AuthController::class, 'apple'])
+        ->middleware('throttle:10,1')
+        ->name('api.v1.auth.apple');
 
     Route::middleware(['auth:sanctum', 'abilities:mobile', 'api.account.active'])->group(function () {
         Route::post('/auth/logout', [AuthController::class, 'logout'])

@@ -59,6 +59,16 @@ final class AppState: ObservableObject {
         applySession(response)
     }
 
+    func loginWithApple(identityToken: String, accountEmail: String?, accountPassword: String?) async throws {
+        let response = try await api.loginWithApple(
+            identityToken: identityToken,
+            accountEmail: accountEmail,
+            accountPassword: accountPassword,
+            deviceName: "ios-wofins-apple"
+        )
+        applySession(response)
+    }
+
     private func applySession(_ response: LoginResponse) {
         keychain.saveToken(response.token)
         api.token = response.token

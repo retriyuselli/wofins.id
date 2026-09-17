@@ -42,4 +42,8 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI', rtrim(env('APP_URL', 'http://127.0.0.1:8000'), '/').'/auth/google/callback'),
     ],
 
+    'apple' => [
+        'client_id' => env('APPLE_CLIENT_ID', 'id.wofins.app'),
+    ],
+
 ];

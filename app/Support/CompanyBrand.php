@@ -4,8 +4,6 @@ namespace App\Support;
 
 use App\Models\Company;
 use App\Models\User;
-use App\Support\ProFeatures;
-use App\Support\UserVisibility;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Cookie;
@@ -100,7 +98,14 @@ class CompanyBrand
 
     public static function version(): int
     {
-        return (int) static::resolved()['version'];
+        $brand = static::resolved();
+        $fileVersions = [
+            @filemtime((string) $brand['logo_path']),
+            @filemtime((string) $brand['favicon_path']),
+            @filemtime((string) $brand['login_image_path']),
+        ];
+
+        return max((int) $brand['version'], ...array_map('intval', $fileVersions));
     }
 
     public static function logoUrl(): string

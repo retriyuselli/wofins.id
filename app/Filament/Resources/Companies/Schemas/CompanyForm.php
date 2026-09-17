@@ -82,7 +82,7 @@ class CompanyForm
                                 Section::make('Kontak & Alamat')
                                     ->schema([
                                         Grid::make()
-                                            ->columns(2)
+                                            ->columns(['default' => 1, 'sm' => 2])
                                             ->schema([
                                                 TextInput::make('email')
                                                     ->label('Email address')
@@ -136,14 +136,19 @@ class CompanyForm
                                                     ->maxSize(5120),
                                             ]),
                                         Grid::make()
-                                            ->columns(2)
+                                            ->columns(['default' => 1, 'sm' => 2])
                                             ->schema([
                                                 FileUpload::make('favicon_url')
                                                     ->disk('public')
                                                     ->directory('company/favicon')
-                                                    ->acceptedFileTypes(['image/png', 'image/x-icon', 'image/svg+xml'])
+                                                    ->image()
+                                                    ->imageCropAspectRatio('1:1')
+                                                    ->imageResizeTargetWidth('128')
+                                                    ->imageResizeTargetHeight('128')
+                                                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                                                     ->imagePreviewHeight('64')
-                                                    ->maxSize(5120),
+                                                    ->maxSize(2048)
+                                                    ->helperText('Ikon persegi, otomatis dioptimalkan ke 128×128 px.'),
                                                 FileUpload::make('image_login')
                                                     ->label('Image Login')
                                                     ->disk('public')

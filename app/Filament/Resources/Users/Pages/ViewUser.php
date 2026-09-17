@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
+use App\Support\CompanySubscription;
 use App\Support\UserVisibility;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
@@ -45,6 +46,10 @@ class ViewUser extends ViewRecord
                     try {
                         if (! UserVisibility::canEditUser($record)) {
                             throw new \RuntimeException('Anda tidak berhak mengirim undangan untuk user ini.');
+                        }
+
+                        if (! CompanySubscription::canSendTeamInvitation($record)) {
+                            throw new \RuntimeException('Kirim undangan hanya tersedia untuk company dengan paket Business aktif.');
                         }
 
                         $plainPassword = filled($data['password'] ?? null)
@@ -118,7 +123,8 @@ class ViewUser extends ViewRecord
                             ->send();
                     }
                 })
-                ->visible(fn (): bool => UserVisibility::canEditUser($this->record)
+                ->visible(fn (): bool => CompanySubscription::canSendTeamInvitation($this->record)
+                    && UserVisibility::canEditUser($this->record)
                     && ! $this->record->hasRole('super_admin')),
             EditAction::make()
                 ->visible(fn ($record): bool => UserVisibility::canEditUser($record)),

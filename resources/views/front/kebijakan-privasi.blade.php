@@ -125,12 +125,15 @@
                             <li>Memenuhi kewajiban hukum serta menjaga keberlangsungan layanan.</li>
                         </ul>
 
-                        <h2>5. Google Sign-In dan layanan pihak ketiga</h2>
+                        <h2>5. Layanan login dan pihak ketiga</h2>
                         <p>
-                            Jika Anda memilih Google Sign-In, kami menerima informasi dasar yang diizinkan,
-                            seperti identitas akun dan alamat email, untuk memverifikasi login. Penggunaan
-                            layanan Google juga tunduk pada
+                            Jika Anda memilih Google Sign-In atau Sign in with Apple, kami menerima informasi
+                            dasar yang Anda izinkan, seperti identitas akun, nama, dan alamat email, untuk
+                            memverifikasi serta menautkan login. Sign in with Apple mendukung alamat email relay
+                            privat. Penggunaan layanan Google juga tunduk pada
                             <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Kebijakan Privasi Google</a>.
+                            Sign in with Apple tunduk pada
+                            <a href="https://www.apple.com/legal/privacy/" target="_blank" rel="noopener noreferrer">Kebijakan Privasi Apple</a>.
                         </p>
                         <p>
                             Kami dapat menggunakan penyedia infrastruktur, penyimpanan, email, atau layanan

@@ -25,6 +25,15 @@ class SecurityHardeningTest extends TestCase
         $this->assertSame(CheckAbilities::class, app('router')->getMiddleware()['abilities'] ?? null);
     }
 
+    public function test_apple_login_endpoint_is_throttled_and_uses_native_bundle_audience(): void
+    {
+        $route = Route::getRoutes()->getByName('api.v1.auth.apple');
+
+        $this->assertNotNull($route);
+        $this->assertContains('throttle:10,1', $route->gatherMiddleware());
+        $this->assertSame('id.wofins.app', config('services.apple.client_id'));
+    }
+
     public function test_report_exports_are_throttled(): void
     {
         foreach (['api.v1.finance.reports.pdf', 'api.v1.finance.reports.excel'] as $name) {

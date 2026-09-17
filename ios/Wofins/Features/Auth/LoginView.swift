@@ -1,3 +1,4 @@
+import AuthenticationServices
 import LocalAuthentication
 import SwiftUI
 import UIKit
@@ -75,12 +76,6 @@ struct LoginView: View {
                 set: { if !$0 { googleInfoMessage = nil } }
             )
         ) {
-            if selectedHost == .wofins {
-                Button("Beli paket") {
-                    openPurchasePage()
-                    googleInfoMessage = nil
-                }
-            }
             Button("Mengerti", role: .cancel) { googleInfoMessage = nil }
         } message: {
             Text(googleInfoMessage ?? "")
@@ -117,15 +112,6 @@ struct LoginView: View {
         dismissKeyboard()
         guard let url = APIConfig.websiteURL("/forgot-password") else {
             errorMessage = "Halaman atur ulang password tidak tersedia."
-            return
-        }
-        UIApplication.shared.open(url)
-    }
-
-    private func openPurchasePage() {
-        dismissKeyboard()
-        guard let url = APIConfig.websiteURL("/harga") else {
-            errorMessage = "Halaman pembelian paket tidak tersedia."
             return
         }
         UIApplication.shared.open(url)
@@ -232,7 +218,13 @@ struct LoginView: View {
                         .font(.poppins(size: 14))
                         .foregroundStyle(navy.opacity(0.55))
                         .frame(width: 20)
-                    TextField("nama@email.com", text: $email)
+                    TextField(
+                        "",
+                        text: $email,
+                        prompt: Text("nama@email.com")
+                            .font(.poppins(size: 15))
+                            .foregroundStyle(Color.gray)
+                    )
                         .textContentType(.username)
                         .keyboardType(.emailAddress)
                         .textInputAutocapitalization(.never)
@@ -353,6 +345,19 @@ struct LoginView: View {
             }
             .buttonStyle(.plain)
             .padding(.top, 14)
+            .disabled(isLoading)
+            .opacity(isLoading ? 0.65 : 1)
+
+            SignInWithAppleButton(.signIn) { request in
+                request.requestedScopes = [.fullName, .email]
+            } onCompletion: { result in
+                handleAppleSignIn(result)
+            }
+            .signInWithAppleButtonStyle(.whiteOutline)
+            .frame(maxWidth: .infinity)
+            .frame(height: 50)
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .padding(.top, 10)
             .disabled(isLoading)
             .opacity(isLoading ? 0.65 : 1)
 
@@ -562,7 +567,7 @@ struct LoginView: View {
             let message = APILoadFailure.userMessage(for: error) ?? error.localizedDescription
             if isGoogleAccountNotRegistered(message) {
                 googleInfoMessage = selectedHost == .wofins
-                    ? "Akun Google belum terdaftar di WOFINS. Hubungi administrator company Anda, atau beli paket untuk mendaftar."
+                    ? "Akun Google belum terdaftar di WOFINS. Hubungi administrator company Anda."
                     : message
             } else {
                 errorMessage = message
@@ -573,6 +578,50 @@ struct LoginView: View {
     private func isGoogleAccountNotRegistered(_ message: String) -> Bool {
         let text = message.lowercased()
         return text.contains("belum terdaftar") || text.contains("hubungi administrator")
+    }
+
+    private func handleAppleSignIn(_ result: Result<ASAuthorization, Error>) {
+        switch result {
+        case let .success(authorization):
+            guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+                  let tokenData = credential.identityToken,
+                  let identityToken = String(data: tokenData, encoding: .utf8)
+            else {
+                errorMessage = "Token Sign in with Apple tidak tersedia."
+                return
+            }
+            Task { await loginWithApple(identityToken: identityToken) }
+        case let .failure(error as ASAuthorizationError) where error.code == .canceled:
+            break
+        case let .failure(error):
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func loginWithApple(identityToken: String) async {
+        dismissKeyboard()
+        errorMessage = nil
+        googleInfoMessage = nil
+        faceNote = ""
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            let accountEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+            try await appState.loginWithApple(
+                identityToken: identityToken,
+                accountEmail: accountEmail.isEmpty ? nil : accountEmail,
+                accountPassword: password.isEmpty ? nil : password
+            )
+            keychain.clearCredentials()
+            if rememberMe, let savedEmail = appState.currentUser?.email {
+                UserDefaults.standard.set(savedEmail, forKey: "wofins.savedEmail")
+            }
+        } catch let error as URLError where error.code == .cannotConnectToHost || error.code == .timedOut || error.code == .networkConnectionLost {
+            errorMessage = APIConfig.connectionErrorMessage
+        } catch {
+            APILoadFailure.assign(error, to: &errorMessage)
+        }
     }
 
     private func loginWithFaceID() async {

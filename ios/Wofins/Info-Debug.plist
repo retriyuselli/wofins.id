@@ -4,8 +4,6 @@
 <dict>
 	<key>BASE_URL</key>
 	<string>$(BASE_URL)</string>
-	<key>DEVICE_BASE_URL</key>
-	<string>$(DEVICE_BASE_URL)</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -22,8 +20,6 @@
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>
-	<key>CFBundleVersion</key>
-	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -37,27 +33,31 @@
 			</array>
 		</dict>
 	</array>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>DEVICE_BASE_URL</key>
+	<string>$(DEVICE_BASE_URL)</string>
 	<key>GIDClientID</key>
 	<string>$(GID_CLIENT_ID)</string>
 	<key>GIDServerClientID</key>
 	<string>$(GID_SERVER_CLIENT_ID)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>whatsapp</string>
 	</array>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>WOFINS memakai galeri untuk foto profil dan bukti pembayaran.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>Wofins perlu akses jaringan lokal untuk terhubung ke server development di Mac Anda.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>WOFINS memakai Face ID untuk masuk kembali dengan aman.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Wofins perlu akses jaringan lokal untuk terhubung ke server development di Mac Anda.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>WOFINS memakai galeri untuk foto profil dan bukti pembayaran.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Poppins-Regular.ttf</string>

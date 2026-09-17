@@ -9,6 +9,8 @@ use App\Models\Company;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\MobileModuleService;
+use App\Support\CompanyBrand;
+use App\Support\CompanySubscription;
 use App\Support\PricingPlans;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Schema\Blueprint;
@@ -16,6 +18,7 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class TenantIsolationHardeningTest extends TestCase
@@ -27,6 +30,7 @@ class TenantIsolationHardeningTest extends TestCase
         Schema::create('companies', function (Blueprint $table): void {
             $table->id();
             $table->string('company_name');
+            $table->string('favicon_url')->nullable();
             $table->string('subscription_plan')->nullable();
             $table->timestamp('subscription_expires_at')->nullable();
             $table->boolean('is_active')->default(true);
@@ -188,6 +192,48 @@ class TenantIsolationHardeningTest extends TestCase
     {
         $this->assertTrue(PricingPlans::allows('enterprise', PricingPlans::FEATURE_ADVANCED_REPORTS));
         $this->assertNull(PricingPlans::limit('enterprise', 'orders'));
+    }
+
+    public function test_each_company_uses_its_own_uploaded_favicon(): void
+    {
+        Storage::fake('public');
+        [$companyA, $companyB] = $this->companies();
+
+        Storage::disk('public')->put('company/favicon/a.png', 'favicon-a');
+        Storage::disk('public')->put('company/favicon/b.png', 'favicon-b');
+        DB::table('companies')->where('id', $companyA->id)->update(['favicon_url' => 'company/favicon/a.png']);
+        DB::table('companies')->where('id', $companyB->id)->update(['favicon_url' => 'company/favicon/b.png']);
+
+        $this->actingAsCompany($companyA);
+        CompanyBrand::forgetCache($companyA->id);
+        $this->assertSame(
+            Storage::disk('public')->path('company/favicon/a.png'),
+            CompanyBrand::faviconFilePath(),
+        );
+
+        $this->actingAsCompany($companyB);
+        CompanyBrand::forgetCache($companyB->id);
+        $this->assertSame(
+            Storage::disk('public')->path('company/favicon/b.png'),
+            CompanyBrand::faviconFilePath(),
+        );
+    }
+
+    public function test_team_invitation_is_only_available_for_active_business_company(): void
+    {
+        [$business, $professional] = $this->companies();
+        $professional->forceFill(['subscription_plan' => 'professional']);
+
+        $businessUser = (new User)->forceFill(['company_id' => $business->id]);
+        $businessUser->setRelation('company', $business);
+        $professionalUser = (new User)->forceFill(['company_id' => $professional->id]);
+        $professionalUser->setRelation('company', $professional);
+
+        $this->assertTrue(CompanySubscription::canSendTeamInvitation($businessUser));
+        $this->assertFalse(CompanySubscription::canSendTeamInvitation($professionalUser));
+
+        $business->forceFill(['subscription_expires_at' => now()->subDay()]);
+        $this->assertFalse(CompanySubscription::canSendTeamInvitation($businessUser));
     }
 
     /**

@@ -699,6 +699,29 @@ class CompanySubscription
         return static::canCreate(self::RESOURCE_USERS);
     }
 
+    public static function canSendTeamInvitation(?User $target): bool
+    {
+        if (! $target?->company_id) {
+            return false;
+        }
+
+        $company = $target->relationLoaded('company')
+            ? $target->getRelation('company')
+            : $target->company()->first();
+
+        if (! $company instanceof Company || $company->isDeactivated()) {
+            return false;
+        }
+
+        if (PricingPlans::normalizeKey($company->subscription_plan) !== 'business') {
+            return false;
+        }
+
+        $expiresAt = $company->subscription_expires_at;
+
+        return ! $expiresAt || now()->lessThanOrEqualTo($expiresAt->copy()->endOfDay());
+    }
+
     public static function seatSummary(): string
     {
         return static::summary(self::RESOURCE_USERS);

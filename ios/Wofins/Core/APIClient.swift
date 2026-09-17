@@ -148,6 +148,31 @@ final class APIClient {
         )
     }
 
+    func loginWithApple(
+        identityToken: String,
+        accountEmail: String?,
+        accountPassword: String?,
+        deviceName: String
+    ) async throws -> LoginResponse {
+        struct Body: Encodable {
+            let identity_token: String
+            let account_email: String?
+            let account_password: String?
+            let device_name: String
+        }
+        return try await request(
+            method: "POST",
+            path: "/auth/apple",
+            body: Body(
+                identity_token: identityToken,
+                account_email: accountEmail,
+                account_password: accountPassword,
+                device_name: deviceName
+            ),
+            authorized: false
+        )
+    }
+
     func logout() async throws {
         let _: MessageResponse = try await request(method: "POST", path: "/auth/logout")
     }

@@ -164,17 +164,8 @@ enum PlanFeature: String, CaseIterable {
     }
 
     func upgradeMessage(planLabel: String?) -> String {
-        let plan = planLabel ?? "paket saat ini"
-        switch self {
-        case .documents, .advancedReports, .crewFreelance:
-            return "Fitur ini tidak termasuk \(plan). Upgrade ke Business untuk membuka akses."
-        case .roleManagement:
-            return "Fitur ini tidak termasuk \(plan). Upgrade ke Enterprise untuk membuka akses."
-        case .projects, .basicFinance, .notaDinas:
-            return "Fitur ini tidak termasuk \(plan)."
-        default:
-            return "Fitur ini tidak termasuk \(plan). Upgrade ke Professional atau Business untuk membuka akses."
-        }
+        let plan = planLabel ?? "akses perusahaan saat ini"
+        return "Fitur ini tidak tersedia pada \(plan). Hubungi administrator perusahaan Anda untuk bantuan akses."
     }
 }
 
@@ -226,6 +217,7 @@ struct AuthSessionDevice: Decodable, Identifiable, Equatable {
         switch name {
         case "ios-wofins": return "iPhone (email)"
         case "ios-wofins-google": return "iPhone (Google)"
+        case "ios-wofins-apple": return "iPhone (Apple)"
         case "ios-app": return "Aplikasi iOS"
         case let value? where !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty:
             return value

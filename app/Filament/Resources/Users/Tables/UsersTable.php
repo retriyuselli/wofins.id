@@ -3,10 +3,13 @@
 namespace App\Filament\Resources\Users\Tables;
 
 use App\Enums\ProspectAppStatus;
-use App\Models\Status;
 use App\Models\ProspectApp;
+use App\Models\Status;
+use App\Models\SubscriptionOrder;
 use App\Models\User;
+use App\Services\TenantOnboardingService;
 use App\Support\CompanySubscription;
+use App\Support\PricingPlans;
 use App\Support\UserVisibility;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -201,7 +204,7 @@ class UsersTable
                     ->sortable()
                     ->wrap()
                     ->description(fn (User $record): ?string => $record->company?->subscription_plan
-                        ? \App\Support\PricingPlans::shortLabel($record->company->subscription_plan)
+                        ? PricingPlans::shortLabel($record->company->subscription_plan)
                         : null)
                     ->toggleable(),
 
@@ -559,6 +562,10 @@ class UsersTable
                                     throw new \RuntimeException('Anda tidak berhak mengirim undangan untuk user ini.');
                                 }
 
+                                if (! CompanySubscription::canSendTeamInvitation($record)) {
+                                    throw new \RuntimeException('Kirim undangan hanya tersedia untuk company dengan paket Business aktif.');
+                                }
+
                                 if ($record->hasRole('super_admin')) {
                                     throw new \RuntimeException('Tidak dapat mengirim undangan ke super admin.');
                                 }
@@ -640,7 +647,8 @@ class UsersTable
                                 return false;
                             }
 
-                            return UserVisibility::canEditUser($record);
+                            return CompanySubscription::canSendTeamInvitation($record)
+                                && UserVisibility::canEditUser($record);
                         }),
 
                     Action::make('approve_user')
@@ -650,19 +658,19 @@ class UsersTable
                         ->requiresConfirmation()
                         ->modalHeading('Approve User')
                         ->modalDescription(function (User $record) {
-                            $order = \App\Models\SubscriptionOrder::readyForUserApproval($record);
-                            $onboarding = app(\App\Services\TenantOnboardingService::class);
+                            $order = SubscriptionOrder::readyForUserApproval($record);
+                            $onboarding = app(TenantOnboardingService::class);
                             $prospect = $onboarding->findProspectFor($record);
 
-                            $planKey = \App\Support\PricingPlans::normalizeKey($order?->plan_key);
+                            $planKey = PricingPlans::normalizeKey($order?->plan_key);
                             if (! $planKey && $order?->plan_key) {
-                                $found = \App\Support\PricingPlans::find($order->plan_key);
+                                $found = PricingPlans::find($order->plan_key);
                                 $planKey = $found['key'] ?? null;
                             }
-                            $planKey ??= \App\Support\PricingPlans::normalizeKey($prospect?->service);
+                            $planKey ??= PricingPlans::normalizeKey($prospect?->service);
 
                             $planLabel = $planKey
-                                ? \App\Support\PricingPlans::shortLabel($planKey)
+                                ? PricingPlans::shortLabel($planKey)
                                 : '—';
                             $billing = $order?->billing_label ?? '—';
                             $companyName = $order?->company_name
@@ -679,7 +687,7 @@ class UsersTable
                         ->action(function (User $record): void {
                             try {
                                 DB::transaction(function () use ($record) {
-                                    $order = \App\Models\SubscriptionOrder::readyForUserApproval($record);
+                                    $order = SubscriptionOrder::readyForUserApproval($record);
 
                                     if (! $order) {
                                         throw new \RuntimeException(
@@ -687,13 +695,13 @@ class UsersTable
                                         );
                                     }
 
-                                    $onboarding = app(\App\Services\TenantOnboardingService::class);
+                                    $onboarding = app(TenantOnboardingService::class);
                                     $prospect = $onboarding->findProspectFor($record);
                                     $company = $onboarding->provisionOwnerCompany($record, $prospect);
 
-                                    $planKey = \App\Support\PricingPlans::normalizeKey($order->plan_key);
+                                    $planKey = PricingPlans::normalizeKey($order->plan_key);
                                     if (! $planKey) {
-                                        $found = \App\Support\PricingPlans::find($order->plan_key);
+                                        $found = PricingPlans::find($order->plan_key);
                                         $planKey = $found['key'] ?? null;
                                     }
 
@@ -710,7 +718,7 @@ class UsersTable
                                         $company->refresh();
                                     }
 
-                                    $seatLimit = \App\Support\PricingPlans::limit(
+                                    $seatLimit = PricingPlans::limit(
                                         $planKey,
                                         CompanySubscription::RESOURCE_USERS
                                     );
@@ -774,7 +782,7 @@ class UsersTable
                                 }
 
                                 $plan = $record->company?->subscription_plan
-                                    ? \App\Support\PricingPlans::shortLabel($record->company->subscription_plan)
+                                    ? PricingPlans::shortLabel($record->company->subscription_plan)
                                     : '—';
 
                                 Notification::make()
@@ -806,7 +814,7 @@ class UsersTable
                             }
 
                             // Wajib sudah checkout paket + lampirkan bukti pembayaran
-                            if (! \App\Models\SubscriptionOrder::readyForUserApproval($record)) {
+                            if (! SubscriptionOrder::readyForUserApproval($record)) {
                                 return false;
                             }
 
@@ -828,12 +836,12 @@ class UsersTable
                         ->modalDescription(fn (User $record) => "Buat/tautkan Company WO untuk {$record->name} dari data Prospect App (perbaikan user yang sudah di-approve sebelum multi-tenant).")
                         ->action(function (User $record): void {
                             try {
-                                $company = app(\App\Services\TenantOnboardingService::class)
+                                $company = app(TenantOnboardingService::class)
                                     ->provisionOwnerCompany($record);
 
                                 Notification::make()
                                     ->title('Company siap')
-                                    ->body("{$company->company_name} · Paket: ".\App\Support\PricingPlans::shortLabel($company->subscription_plan))
+                                    ->body("{$company->company_name} · Paket: ".PricingPlans::shortLabel($company->subscription_plan))
                                     ->success()
                                     ->send();
                             } catch (Throwable $e) {
