@@ -42,7 +42,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: id.wofins.app
         PRODUCT_NAME: Wofins
         MARKETING_VERSION: "1.0.0"
-        CURRENT_PROJECT_VERSION: "4"
+        CURRENT_PROJECT_VERSION: "5"
         TARGETED_DEVICE_FAMILY: "1"
         SWIFT_VERSION: "5.0"
         CODE_SIGN_ENTITLEMENTS: Wofins/Wofins.entitlements
