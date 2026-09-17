@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Documentation;
 use App\Models\DocumentationCategory;
+use App\Support\PricingPlans;
 use App\Support\ProFeatures;
 use App\Support\UserVisibility;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
 class DocumentationController extends Controller
@@ -52,7 +54,7 @@ class DocumentationController extends Controller
      * Company user: platform + docs company sendiri.
      * SA: semua.
      *
-     * @param  Builder<\Illuminate\Database\Eloquent\Model>  $query
+     * @param  Builder<Model>  $query
      */
     private function applyDocsVisibility(Builder $query): void
     {
@@ -65,7 +67,7 @@ class DocumentationController extends Controller
 
         $query->withoutGlobalScope('tenant_company');
 
-        if ($companyId === null) {
+        if ($companyId === null || ! ProFeatures::allows(PricingPlans::FEATURE_DOCUMENTS)) {
             $query->whereNull($table.'.company_id');
 
             return;

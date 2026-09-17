@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Support\ProFeatures;
+use App\Support\UserVisibility;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
@@ -16,12 +18,10 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
-use App\Support\ProFeatures;
-use App\Support\UserVisibility;
 
 class DataPribadi extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -79,7 +79,6 @@ class DataPribadi extends Model
     /**
      * Encrypt sensitive data mutator - GAJI
      */
-
     protected static function booted(): void
     {
         static::addGlobalScope('tenant_company', function (Builder $builder) {
@@ -101,6 +100,16 @@ class DataPribadi extends Model
             }
 
             $builder->where("{$table}.company_id", $companyId);
+        });
+
+        static::creating(function (DataPribadi $dataPribadi): void {
+            if (ProFeatures::actorIsSuperAdmin()) {
+                return;
+            }
+
+            if ($companyId = UserVisibility::companyId()) {
+                $dataPribadi->company_id = $companyId;
+            }
         });
     }
 

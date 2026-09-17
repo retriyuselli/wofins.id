@@ -17,9 +17,12 @@ use App\Models\Piutang;
 use App\Models\Product;
 use App\Models\Prospect;
 use App\Models\SimulasiProduk;
+use App\Models\SubscriptionOrder;
 use App\Models\User;
 use App\Models\Vendor;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
@@ -117,13 +120,13 @@ class CompanySubscription
     }
 
     /**
-     * Apakah perusahaan sudah memilih paket Starter / Professional / Business.
+     * Apakah perusahaan memakai paket yang dikenali, termasuk paket legacy Enterprise.
      */
     public static function hasConfiguredPlan(): bool
     {
         $key = static::company()?->subscription_plan;
 
-        return in_array((string) $key, PricingPlans::selectableKeys(), true);
+        return PricingPlans::find((string) $key) !== null;
     }
 
     public static function planKey(): string
@@ -131,11 +134,11 @@ class CompanySubscription
         $company = static::company();
         $key = $company?->subscription_plan;
 
-        if (in_array((string) $key, PricingPlans::selectableKeys(), true)) {
+        if (PricingPlans::find((string) $key) !== null) {
             return (string) $key;
         }
 
-        // Nilai lama "enterprise"/custom atau kosong: belum dikonfigurasi di app ini
+        // Nilai kosong/tidak dikenal: fail-safe ke Starter.
         return (string) config('wofins.default_subscription_plan', self::DEFAULT_PLAN);
     }
 
@@ -147,11 +150,6 @@ class CompanySubscription
     public static function planLabel(): string
     {
         if (! static::hasConfiguredPlan()) {
-            $raw = static::company()?->subscription_plan;
-            if ($raw === 'enterprise') {
-                return 'Enterprise (produk terpisah) — belum dipetakan';
-            }
-
             return 'Paket belum diatur';
         }
 
@@ -162,15 +160,10 @@ class CompanySubscription
      * Batas efektif untuk resource (override perusahaan menang).
      * null = tak terbatas.
      *
-     * Jika paket belum diatur / masih "enterprise" lama: tidak dibatasi
-     * sampai admin memilih Starter / Professional / Business.
+     * Paket kosong/tidak dikenal memakai batas Starter (fail-safe).
      */
     public static function limit(string $resource): ?int
     {
-        if (! static::hasConfiguredPlan()) {
-            return null;
-        }
-
         $company = static::company();
         $override = match ($resource) {
             self::RESOURCE_USERS, 'seats' => $company?->seat_limit_override,
@@ -571,7 +564,7 @@ class CompanySubscription
     }
 
     /**
-     * @param  Builder<\Illuminate\Database\Eloquent\Model>  $query
+     * @param  Builder<Model>  $query
      */
     private static function countViaCompanyOrders(Builder $query, ?Company $company = null): int
     {
@@ -596,7 +589,7 @@ class CompanySubscription
     }
 
     /**
-     * @param  Builder<\Illuminate\Database\Eloquent\Model>  $query
+     * @param  Builder<Model>  $query
      */
     private static function countViaCompanyPaymentMethods(Builder $query, ?Company $company = null): int
     {
@@ -677,7 +670,7 @@ class CompanySubscription
      * Kuota selalu dihitung per tim untuk non–super_admin
      * (bukan lewat actorSeesGlobalAggregates / finance).
      *
-     * @param  Builder<\Illuminate\Database\Eloquent\Model>  $query
+     * @param  Builder<Model>  $query
      */
     private static function applyTeamOwnerScope(Builder $query, string $column): void
     {
@@ -794,12 +787,12 @@ class CompanySubscription
     /**
      * Tanggal akhir masa aktif paket perusahaan (null = tidak dibatasi).
      */
-    public static function expiresAt(?User $actor = null): ?\Carbon\CarbonInterface
+    public static function expiresAt(?User $actor = null): ?CarbonInterface
     {
         $company = static::company($actor);
         $expires = $company?->subscription_expires_at;
 
-        return $expires instanceof \Carbon\CarbonInterface ? $expires : null;
+        return $expires instanceof CarbonInterface ? $expires : null;
     }
 
     public static function hasExpiry(?User $actor = null): bool
@@ -900,7 +893,7 @@ class CompanySubscription
      * Aktifkan / perpanjang paket perusahaan dari pesanan yang disetujui.
      * Durasi mengikuti billing: 1 / 12 / 24 / 48 bulan.
      */
-    public static function activateFromOrder(\App\Models\SubscriptionOrder $order): ?Company
+    public static function activateFromOrder(SubscriptionOrder $order): ?Company
     {
         $planKey = PricingPlans::normalizeKey($order->plan_key);
 
@@ -939,7 +932,7 @@ class CompanySubscription
         $currentExpiry = $company->subscription_expires_at;
         $base = now();
 
-        if ($currentExpiry instanceof \Carbon\CarbonInterface && $currentExpiry->greaterThan($base)) {
+        if ($currentExpiry instanceof CarbonInterface && $currentExpiry->greaterThan($base)) {
             $base = $currentExpiry->copy();
         }
 
@@ -962,7 +955,7 @@ class CompanySubscription
      * - Belum approved: dari sekarang (atau sisa masa aktif company jika masih jalan)
      * - Sudah approved + company punya expires_at: tampilkan expires_at company
      */
-    public static function projectedExpiryFromOrder(\App\Models\SubscriptionOrder $order): ?\Carbon\CarbonInterface
+    public static function projectedExpiryFromOrder(SubscriptionOrder $order): ?CarbonInterface
     {
         $planKey = PricingPlans::normalizeKey($order->plan_key);
         if (! $planKey) {
@@ -995,14 +988,14 @@ class CompanySubscription
 
         $base = now();
         $currentExpiry = $company?->subscription_expires_at;
-        if ($currentExpiry instanceof \Carbon\CarbonInterface && $currentExpiry->greaterThan($base)) {
+        if ($currentExpiry instanceof CarbonInterface && $currentExpiry->greaterThan($base)) {
             $base = $currentExpiry->copy();
         }
 
         return $base->copy()->addMonthsNoOverflow($months)->endOfDay();
     }
 
-    public static function projectedExpiryLabelFromOrder(\App\Models\SubscriptionOrder $order): ?string
+    public static function projectedExpiryLabelFromOrder(SubscriptionOrder $order): ?string
     {
         return static::projectedExpiryFromOrder($order)
             ?->timezone(config('app.timezone'))

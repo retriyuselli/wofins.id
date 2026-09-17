@@ -39,6 +39,40 @@ class SecurityHardeningTest extends TestCase
         );
     }
 
+    public function test_sensitive_web_routes_require_active_subscription_and_plan_feature(): void
+    {
+        $expectations = [
+            'simulasi.show' => 'pro.feature:simulasi',
+            'bank-statements.download' => 'pro.feature:reconciliation',
+            'reconciliation.auto-match' => 'pro.feature:reconciliation',
+            'reconciliation.mark-matched' => 'pro.feature:reconciliation',
+            'reconciliation.unmark' => 'pro.feature:reconciliation',
+            'account-manager.report.pdf' => 'pro.feature:advanced_reports',
+            'profile.compensation' => 'pro.feature:payroll',
+        ];
+
+        foreach ($expectations as $name => $featureMiddleware) {
+            $route = Route::getRoutes()->getByName($name);
+
+            $this->assertNotNull($route, "Route {$name} tidak ditemukan.");
+            $middleware = $route->gatherMiddleware();
+            $this->assertContains($featureMiddleware, $middleware);
+            $this->assertContains('company.subscription.active', $middleware);
+        }
+    }
+
+    public function test_reconciliation_rejects_arbitrary_source_tables_before_querying_database(): void
+    {
+        $this->withoutMiddleware();
+
+        $this->postJson(route('reconciliation.unmark'), [
+            'source_id' => 1,
+            'source_table' => 'users',
+            'bank_item_id' => 1,
+        ])->assertUnprocessable()
+            ->assertJsonValidationErrors('source_table');
+    }
+
     public function test_privacy_policy_is_publicly_accessible(): void
     {
         $this->get('/kebijakan-privasi')

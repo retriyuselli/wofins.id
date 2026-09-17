@@ -5,6 +5,7 @@ use App\Http\Middleware\CheckUserExpiration;
 use App\Http\Middleware\EnforceHostSeparation;
 use App\Http\Middleware\EnsureAdminToolsAccess;
 use App\Http\Middleware\EnsureApiAccountActive;
+use App\Http\Middleware\EnsureCompanySubscriptionActive;
 use App\Http\Middleware\EnsureProFeature;
 use App\Http\Middleware\EnsureSuperAdmin;
 use App\Http\Middleware\EnsureUserHasRole;
@@ -86,6 +87,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role.required' => EnsureUserHasRole::class,
             'pro.feature' => EnsureProFeature::class,
             'api.account.active' => EnsureApiAccountActive::class,
+            'company.subscription.active' => EnsureCompanySubscriptionActive::class,
             'abilities' => CheckAbilities::class,
             'ability' => CheckForAnyAbility::class,
         ]);

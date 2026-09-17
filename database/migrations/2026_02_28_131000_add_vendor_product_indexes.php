@@ -9,6 +9,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         $db = DB::getDatabaseName();
 
         // Vendors table indexes
@@ -72,6 +76,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         $db = DB::getDatabaseName();
 
         if (Schema::hasTable('vendors')) {

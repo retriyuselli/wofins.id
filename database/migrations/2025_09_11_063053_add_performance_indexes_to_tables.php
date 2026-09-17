@@ -12,6 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         $dbName = DB::getDatabaseName();
 
         // Add compound index for nota_dinas_details
@@ -80,6 +84,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         $dbName = DB::getDatabaseName();
         $notaIndexExists = DB::table('information_schema.statistics')
             ->where('table_schema', $dbName)

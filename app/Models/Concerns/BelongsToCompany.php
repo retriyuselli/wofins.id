@@ -6,6 +6,7 @@ use App\Models\Company;
 use App\Support\ProFeatures;
 use App\Support\UserVisibility;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Schema;
 
@@ -47,16 +48,13 @@ trait BelongsToCompany
                 return;
             }
 
-            if (! empty($model->company_id)) {
-                return;
-            }
-
             if (ProFeatures::actorIsSuperAdmin()) {
                 return;
             }
 
             $companyId = UserVisibility::companyId();
             if ($companyId !== null) {
+                // Authenticated tenant input may never choose another company.
                 $model->company_id = $companyId;
             }
         });
@@ -65,8 +63,8 @@ trait BelongsToCompany
     /**
      * Katalog / help publik platform (bukan data tenant).
      *
-     * @param  Builder<\Illuminate\Database\Eloquent\Model>  $query
-     * @return Builder<\Illuminate\Database\Eloquent\Model>
+     * @param  Builder<Model>  $query
+     * @return Builder<Model>
      */
     public function scopePlatformPublic(Builder $query): Builder
     {

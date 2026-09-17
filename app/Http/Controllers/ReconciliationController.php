@@ -3,17 +3,36 @@
 namespace App\Http\Controllers;
 
 use App\Models\BankReconciliationItem;
+use App\Models\DataPembayaran;
+use App\Models\Expense;
+use App\Models\ExpenseOps;
 use App\Models\PaymentMethod;
+use App\Models\PendapatanLain;
+use App\Models\PengeluaranLain;
 use App\Services\ReconciliationService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 class ReconciliationController extends Controller
 {
+    /** @var array<string, class-string<Model>> */
+    private const SOURCE_MODELS = [
+        'data_pembayarans' => DataPembayaran::class,
+        'pendapatan_lains' => PendapatanLain::class,
+        'expenses' => Expense::class,
+        'expense_ops' => ExpenseOps::class,
+        'pengeluaran_lains' => PengeluaranLain::class,
+    ];
+
     protected $reconciliationService;
 
     public function __construct()
@@ -34,7 +53,7 @@ class ReconciliationController extends Controller
 
         try {
             $paymentMethod = PaymentMethod::findOrFail($request->payment_method_id);
-            \Illuminate\Support\Facades\Gate::authorize('view', $paymentMethod);
+            Gate::authorize('view', $paymentMethod);
 
             $results = $this->reconciliationService->reconcile(
                 $request->payment_method_id,
@@ -57,15 +76,17 @@ class ReconciliationController extends Controller
                 'unmatchedBank' => $unmatchedBank,
                 'statistics' => $statistics,
                 'timestamp' => now()->format('d F Y H:i:s'),
-                'user' => \Illuminate\Support\Facades\Auth::check() ? \Illuminate\Support\Facades\Auth::user()->name : 'System',
+                'user' => Auth::check() ? Auth::user()->name : 'System',
             ])->setPaper('a4', 'landscape');
 
-            $filename = 'Reconciliation_Report_' . str_replace([' ', '/'], '_', $paymentMethod->no_rekening) . '_' . $request->start_date . '.pdf';
+            $filename = 'Reconciliation_Report_'.str_replace([' ', '/'], '_', $paymentMethod->no_rekening).'_'.$request->start_date.'.pdf';
 
             return $pdf->download($filename);
 
+        } catch (AuthorizationException|ModelNotFoundException|HttpExceptionInterface $e) {
+            throw $e;
         } catch (Exception $e) {
-            return back()->with('error', 'Gagal generate PDF: ' . $e->getMessage());
+            return back()->with('error', 'Gagal generate PDF: '.$e->getMessage());
         }
     }
 
@@ -75,52 +96,38 @@ class ReconciliationController extends Controller
     public function markMatched(Request $request)
     {
         $request->validate([
-            'source_id'    => 'required|integer',
-            'source_table' => 'required|string',
+            'source_id' => 'required|integer',
+            'source_table' => ['required', 'string', Rule::in(array_keys(self::SOURCE_MODELS))],
             'bank_item_id' => 'required|integer',
-            'confidence'   => 'required|numeric',
+            'confidence' => 'required|numeric',
         ]);
 
         try {
-            // Authorization via bank item
-            $bankItem = BankReconciliationItem::findOrFail($request->bank_item_id);
-            \Illuminate\Support\Facades\Gate::authorize('update', $bankItem);
+            $bankItem = $this->authorizedBankItem((int) $request->bank_item_id);
+            $source = $this->sourceRecord(
+                (string) $request->source_table,
+                (int) $request->source_id,
+                (int) $bankItem->bankStatement->payment_method_id,
+            );
 
-            $table = $request->source_table;
-
-            if (! Schema::hasColumn($table, 'reconciliation_status')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => "Table {$table} does not have reconciliation_status field",
-                ], 400);
-            }
-
-            $updated = DB::table($table)
-                ->where('id', $request->source_id)
-                ->update([
-                    'reconciliation_status' => 'matched',
-                    'matched_bank_item_id'  => $bankItem->id,
-                    'match_confidence'      => $request->confidence,
-                    'reconciliation_notes'  => 'Manually matched at ' . now()->format('Y-m-d H:i:s'),
-                    'updated_at'            => now(),
-                ]);
-
-            if ($updated === 0) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Transaction not found',
-                ], 404);
-            }
+            $source->update([
+                'reconciliation_status' => 'matched',
+                'matched_bank_item_id' => $bankItem->id,
+                'match_confidence' => $request->confidence,
+                'reconciliation_notes' => 'Manually matched at '.now()->format('Y-m-d H:i:s'),
+            ]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Transaksi berhasil ditandai sebagai cocok',
             ]);
 
+        } catch (AuthorizationException|ModelNotFoundException|HttpExceptionInterface $e) {
+            throw $e;
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menandai transaksi: ' . $e->getMessage(),
+                'message' => 'Gagal menandai transaksi: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -138,7 +145,7 @@ class ReconciliationController extends Controller
 
         try {
             $paymentMethod = PaymentMethod::findOrFail($request->payment_method_id);
-            \Illuminate\Support\Facades\Gate::authorize('view', $paymentMethod);
+            Gate::authorize('update', $paymentMethod);
 
             $results = $this->reconciliationService->reconcile(
                 $request->payment_method_id,
@@ -166,6 +173,8 @@ class ReconciliationController extends Controller
                 'message' => "$matchedCount transaksi berhasil di-match otomatis",
             ]);
 
+        } catch (AuthorizationException|ModelNotFoundException|HttpExceptionInterface $e) {
+            throw $e;
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -181,52 +190,32 @@ class ReconciliationController extends Controller
     {
         $request->validate([
             'source_id' => 'required|integer',
-            'source_table' => 'required|string',
+            'source_table' => ['required', 'string', Rule::in(array_keys(self::SOURCE_MODELS))],
             'bank_item_id' => 'required|integer',
         ]);
 
         try {
-            // Get bank item and authorize
-            $bankItem = BankReconciliationItem::findOrFail($request->bank_item_id);
-            \Illuminate\Support\Facades\Gate::authorize('update', $bankItem);
+            $bankItem = $this->authorizedBankItem((int) $request->bank_item_id);
+            $source = $this->sourceRecord(
+                (string) $request->source_table,
+                (int) $request->source_id,
+                (int) $bankItem->bankStatement->payment_method_id,
+            );
 
-            // Reset reconciliation status in source table
-            $table = $request->source_table;
-
-            // Check if the table has reconciliation fields
-            if (! Schema::hasColumn($table, 'reconciliation_status')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => "Table {$table} does not have reconciliation_status field",
-                ], 400);
-            }
-
-            // Reset the source transaction
-            $updated = DB::table($table)
-                ->where('id', $request->source_id)
-                ->update([
-                    'reconciliation_status' => 'unmatched',
-                    'matched_bank_item_id' => null,
-                    'match_confidence' => null,
-                    'reconciliation_notes' => 'Manually unmarked at '.now()->format('Y-m-d H:i:s'),
-                    'updated_at' => now(),
-                ]);
-
-            if ($updated === 0) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Transaction not found or already unmatched',
-                ], 404);
-            }
-
-            // Note: bank_reconciliation_items table doesn't need to be updated
-            // as it doesn't track match status - only source tables do
+            $source->update([
+                'reconciliation_status' => 'unmatched',
+                'matched_bank_item_id' => null,
+                'match_confidence' => null,
+                'reconciliation_notes' => 'Manually unmarked at '.now()->format('Y-m-d H:i:s'),
+            ]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Match berhasil dibatalkan',
             ]);
 
+        } catch (AuthorizationException|ModelNotFoundException|HttpExceptionInterface $e) {
+            throw $e;
         } catch (Exception $e) {
             Log::error('Unmark failed: '.$e->getMessage(), [
                 'source_id' => $request->source_id,
@@ -239,5 +228,31 @@ class ReconciliationController extends Controller
                 'message' => 'Gagal membatalkan match: '.$e->getMessage(),
             ], 500);
         }
+    }
+
+    private function authorizedBankItem(int $id): BankReconciliationItem
+    {
+        $bankItem = BankReconciliationItem::query()
+            ->whereHas('bankStatement')
+            ->with('bankStatement')
+            ->findOrFail($id);
+
+        Gate::authorize('update', $bankItem->bankStatement);
+
+        return $bankItem;
+    }
+
+    private function sourceRecord(string $table, int $id, int $paymentMethodId): Model
+    {
+        $modelClass = self::SOURCE_MODELS[$table];
+        $record = $modelClass::query()->findOrFail($id);
+
+        abort_unless(
+            (int) $record->getAttribute('payment_method_id') === $paymentMethodId,
+            422,
+            'Transaksi dan rekening koran harus menggunakan rekening yang sama.',
+        );
+
+        return $record;
     }
 }

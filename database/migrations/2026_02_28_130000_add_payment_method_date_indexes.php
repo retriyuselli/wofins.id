@@ -9,6 +9,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         $db = DB::getDatabaseName();
 
         $existsExpenses = DB::table('information_schema.statistics')
@@ -47,6 +51,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         $db = DB::getDatabaseName();
 
         $existsExpenses = DB::table('information_schema.statistics')

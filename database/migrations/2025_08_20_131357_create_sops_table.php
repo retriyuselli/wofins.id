@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -33,7 +34,9 @@ return new class extends Migration
             $table->index(['version']);
             $table->index(['effective_date']);
             $table->index(['review_date']);
-            $table->fullText(['title', 'description', 'keywords']);
+            if (DB::getDriverName() !== 'sqlite') {
+                $table->fullText(['title', 'description', 'keywords']);
+            }
         });
     }
 

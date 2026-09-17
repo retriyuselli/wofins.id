@@ -891,6 +891,8 @@ class MobileModuleService
         $discounts = is_array($input['discounts'] ?? null) ? $input['discounts'] : [];
         $additions = is_array($input['additions'] ?? null) ? $input['additions'] : [];
 
+        $this->assertProductVendorsBelongToCompany($product, [...$items, ...$additions]);
+
         $product->items()->delete();
         $product->pengurangans()->delete();
         $product->penambahanHarga()->delete();
@@ -973,6 +975,38 @@ class MobileModuleService
             'penambahan_vendor' => $totalAddVendor,
             'price' => $finalPrice,
         ])->save();
+    }
+
+    /**
+     * @param  list<mixed>  $rows
+     */
+    private function assertProductVendorsBelongToCompany(Product $product, array $rows): void
+    {
+        $vendorIds = collect($rows)
+            ->filter(fn ($row) => is_array($row))
+            ->map(fn (array $row) => (int) ($row['vendor_id'] ?? 0))
+            ->filter(fn (int $id) => $id > 0)
+            ->unique()
+            ->values();
+
+        if ($vendorIds->isEmpty()) {
+            return;
+        }
+
+        $companyId = (int) ($product->company_id ?? 0);
+        $validCount = $companyId > 0
+            ? Vendor::query()
+                ->withoutGlobalScope('tenant_company')
+                ->where('company_id', $companyId)
+                ->whereKey($vendorIds->all())
+                ->count()
+            : 0;
+
+        if ($validCount !== $vendorIds->count()) {
+            throw new HttpResponseException(response()->json([
+                'message' => 'Vendor produk harus berasal dari perusahaan yang sama.',
+            ], 422));
+        }
     }
 
     /**

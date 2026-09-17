@@ -50,6 +50,16 @@ class Category extends Model
 
             $builder->where('company_id', $companyId);
         });
+
+        static::creating(function (Category $category): void {
+            if (ProFeatures::actorIsSuperAdmin()) {
+                return;
+            }
+
+            if ($companyId = UserVisibility::companyId()) {
+                $category->company_id = $companyId;
+            }
+        });
     }
 
     public function getActivitylogOptions(): LogOptions

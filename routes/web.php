@@ -46,7 +46,7 @@ use App\Support\CompanySubscription;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-$authNoStore = ['filament.auth', 'no-store'];
+$authNoStore = ['filament.auth', 'company.subscription.active', 'no-store'];
 $authNoStoreThrottle = [...$authNoStore, 'throttle:60,1'];
 $phpInfoMiddleware = [...$authNoStore, 'super-admin', 'throttle:10,1'];
 // Portal front/profile: auth Laravel biasa (bukan filament.auth),
@@ -74,7 +74,7 @@ Route::get('/_phpinfo', function () {
 // Bank Reconciliation Template Route
 Route::get('/bank-reconciliation/template', [BankReconciliationTemplateController::class, 'downloadTemplate'])
     ->name('bank-reconciliation.template')
-    ->middleware($authNoStoreThrottle);
+    ->middleware([...$authNoStoreThrottle, 'pro.feature:reconciliation']);
 
 Route::get('/brand/logo', [BrandController::class, 'logo'])->name('brand.logo');
 Route::get('/brand/favicon', [BrandController::class, 'favicon'])->name('brand.favicon');
@@ -90,17 +90,17 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 // Rute untuk preview HTML simulasi produk
 Route::get('/simulasi/{record:slug}', [SimulasiDisplayController::class, 'show'])
     ->name('simulasi.show')
-    ->middleware($authNoStore);
+    ->middleware([...$authNoStore, 'pro.feature:simulasi']);
 
 // Rute untuk download PDF simulasi produk
 Route::get('/simulasi/{record:slug}/download-pdf', [SimulasiDisplayController::class, 'downloadPdf'])
     ->name('simulasi.pdf')
-    ->middleware($authNoStoreThrottle);
+    ->middleware([...$authNoStoreThrottle, 'pro.feature:simulasi']);
 
 // Rute untuk draft kontrak simulasi produk
 Route::get('/simulasi/{record:slug}/draft-kontrak', [SimulasiDisplayController::class, 'draftKontrak'])
     ->name('simulasi.draft-kontrak')
-    ->middleware($authNoStoreThrottle);
+    ->middleware([...$authNoStoreThrottle, 'pro.feature:simulasi']);
 
 // USER REGISTRATION FORM PDF
 // Rute untuk generate form pendaftaran karyawan kosong (PDF)
@@ -245,10 +245,10 @@ Route::middleware($authNoStore)->group(function () {
 
     Route::get('/bank-statements/{bankStatement}/download', [BankStatementFileController::class, 'download'])
         ->name('bank-statements.download')
-        ->middleware('throttle:60,1');
+        ->middleware(['pro.feature:reconciliation', 'throttle:60,1']);
     Route::get('/bank-statements/{bankStatement}/reconciliation/download', [BankStatementFileController::class, 'downloadReconciliation'])
         ->name('bank-statements.reconciliation.download')
-        ->middleware('throttle:60,1');
+        ->middleware(['pro.feature:reconciliation', 'throttle:60,1']);
 });
 
 // WIDGET ROUTE
@@ -445,7 +445,9 @@ Route::middleware(array_merge($frontAuthVerified, ['role.required']))->group(fun
     Route::get('/profile', [ProfileController::class, 'overview'])->name('profile');
     Route::get('/profile/show', [ProfileController::class, 'overview'])->name('profile.show');
     Route::get('/profile/overview', [ProfileController::class, 'overview'])->name('profile.overview');
-    Route::get('/profile/compensation', [ProfileController::class, 'compensation'])->name('profile.compensation');
+    Route::get('/profile/compensation', [ProfileController::class, 'compensation'])
+        ->name('profile.compensation')
+        ->middleware(['company.subscription.active', 'pro.feature:payroll']);
     Route::get('/profile/schedule', [ProfileController::class, 'schedule'])->name('profile.schedule');
     Route::get('/profile/laporan-keuangan', [ProfileController::class, 'financialReport'])
         ->name('profile.financial-report')
@@ -519,16 +521,20 @@ Route::post('/prospect-app/check-email', [ProspectAppController::class, 'checkEm
 // Route untuk Download PDF Rekonsiliasi
 Route::get('/admin/reconciliation/download-pdf', [ReconciliationController::class, 'downloadPdf'])
     ->name('reconciliation.download-pdf')
-    ->middleware($authNoStoreThrottle);
+    ->middleware([...$authNoStoreThrottle, 'pro.feature:reconciliation']);
 
 // Routes untuk Auto-Match dan Unmark Rekonsiliasi
 Route::post('/admin/reconciliation/auto-match', [ReconciliationController::class, 'autoMatch'])
     ->name('reconciliation.auto-match')
-    ->middleware($authNoStoreThrottle);
+    ->middleware([...$authNoStoreThrottle, 'pro.feature:reconciliation']);
+
+Route::post('/admin/reconciliation/mark-matched', [ReconciliationController::class, 'markMatched'])
+    ->name('reconciliation.mark-matched')
+    ->middleware([...$authNoStoreThrottle, 'pro.feature:reconciliation']);
 
 Route::post('/admin/reconciliation/unmark', [ReconciliationController::class, 'unmarkMatched'])
     ->name('reconciliation.unmark')
-    ->middleware($authNoStoreThrottle);
+    ->middleware([...$authNoStoreThrottle, 'pro.feature:reconciliation']);
 
 if (app()->environment('local')) {
     Route::get('/debug-report', function () {
@@ -565,19 +571,19 @@ Route::get('/laporan-keuangan/download-pdf-direct', [LaporanKeuanganController::
 // ACCOUNT MANAGER REPORT
 Route::get('/account-manager/report/html', [AccountManagerReportController::class, 'downloadHtmlReport'])
     ->name('account-manager.report.html')
-    ->middleware($authNoStore);
+    ->middleware([...$authNoStore, 'pro.feature:advanced_reports']);
 
 Route::get('/account-manager/report/pdf', [AccountManagerReportController::class, 'downloadPdfReport'])
     ->name('account-manager.report.pdf')
-    ->middleware($authNoStoreThrottle);
+    ->middleware([...$authNoStoreThrottle, 'pro.feature:advanced_reports']);
 
 Route::get('/account-manager/report/stream', [AccountManagerReportController::class, 'streamPdfReport'])
     ->name('account-manager.report.stream')
-    ->middleware($authNoStoreThrottle);
+    ->middleware([...$authNoStoreThrottle, 'pro.feature:advanced_reports']);
 
 Route::get('/account-manager/report/show', [AccountManagerReportController::class, 'showReport'])
     ->name('account-manager.report.show')
-    ->middleware($authNoStore);
+    ->middleware([...$authNoStore, 'pro.feature:advanced_reports']);
 // NOTA DINAS ROUTES
 Route::get('/nota-dinas/{notaDinas}/preview-web', [NotaDinasPdfController::class, 'previewWeb'])
     ->name('nota-dinas.preview-web')

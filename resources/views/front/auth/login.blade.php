@@ -135,8 +135,9 @@
                 <div class="wf-auth-panel relative min-h-[220px] lg:min-h-[560px] text-white"
                      style="background: linear-gradient(145deg, #071526 0%, #0b1f3a 55%, #14335a 100%);">
                     @include('front.partials.wf-deco-shapes')
-                    <div class="absolute inset-0 opacity-25">
-                        <img src="{{ route('brand.login-image') }}" alt="" class="w-full h-full object-cover" loading="lazy" decoding="async">
+                    <div class="absolute inset-0">
+                        <img src="{{ route('brand.login-image') }}?v={{ $companyBrandVersion ?? 1 }}" alt="" class="h-full w-full object-cover object-center opacity-70" loading="lazy" decoding="async">
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#071526] via-[#071526]/55 to-[#071526]/10"></div>
                     </div>
                     <div class="relative z-10 h-full flex flex-col justify-end p-8 sm:p-10">
                         <p class="text-xs font-bold tracking-[0.2em] uppercase text-[var(--wf-gold)]">WOFINS</p>

@@ -92,6 +92,15 @@ class PublicCrewInviteController extends Controller
 
     private static function companyAllowsCrewFreelance(Company $company): bool
     {
+        if ($company->isDeactivated()) {
+            return false;
+        }
+
+        $expiresAt = $company->subscription_expires_at;
+        if ($expiresAt && now()->greaterThan($expiresAt->copy()->endOfDay())) {
+            return false;
+        }
+
         return PricingPlans::allows(
             $company->subscription_plan,
             PricingPlans::FEATURE_CREW_FREELANCE
