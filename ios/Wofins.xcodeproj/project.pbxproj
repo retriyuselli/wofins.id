@@ -25,6 +25,7 @@
 		490D124C13CEEBFFA1F021D3 /* WofinsSwipeBack.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADBC85C3684765BFE0C2CEB6 /* WofinsSwipeBack.swift */; };
 		50B6B2DF767A01521E2749D9 /* AccountOverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C56D6CF361CC4647D05759AA /* AccountOverviewView.swift */; };
 		5757E36A7661C106465DCCA9 /* AppColorTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8C2CB193F96CE7B67311C2A /* AppColorTheme.swift */; };
+		5A3383EFE5EEB3CAD10F9543 /* AppleSignInService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B159C69C610A7886AB19FD26 /* AppleSignInService.swift */; };
 		6157224A1BA4F6A74F58817A /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB270F9D6E7E2C018D3FE1AD /* RootView.swift */; };
 		631E97F8C29DABB5695958D7 /* BankReconciliationComparisonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE9DA55EB1985F8114C79901 /* BankReconciliationComparisonView.swift */; };
 		66567BAC64354D9982F41B3D /* AccountSupportViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5691BD2A257F78CA68391180 /* AccountSupportViews.swift */; };
@@ -77,10 +78,10 @@
 		3109EF10B23E08C0C2129085 /* ProductFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductFormView.swift; sourceTree = "<group>"; };
 		344A7AE80446155283D87DCB /* ModulesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModulesView.swift; sourceTree = "<group>"; };
 		4377770D0A19A5521A0F1D15 /* Poppins-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Poppins-Medium.ttf"; sourceTree = "<group>"; };
-		46F62323D466E9BB6888B561 /* Wofins.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Wofins.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		46F62323D466E9BB6888B561 /* Wofins.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Wofins.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4DA63BBA7AD52019549529BD /* CreateProspectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateProspectView.swift; sourceTree = "<group>"; };
 		4FB9916E757B7C0F62A44D0D /* OrderOverviewProjectsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderOverviewProjectsView.swift; sourceTree = "<group>"; };
-		4FD833A25656F177B63F5BEC /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		4FD833A25656F177B63F5BEC /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		5691BD2A257F78CA68391180 /* AccountSupportViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSupportViews.swift; sourceTree = "<group>"; };
 		59DAD90DEC3B74E3C5A8E81A /* Wofins.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Wofins.entitlements; sourceTree = "<group>"; };
 		5D7C0DEF4E29A558884A0034 /* VendorDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VendorDetailView.swift; sourceTree = "<group>"; };
@@ -98,13 +99,14 @@
 		A8C2CB193F96CE7B67311C2A /* AppColorTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppColorTheme.swift; sourceTree = "<group>"; };
 		ABCD950C88B25F749D0C89E0 /* Poppins-Light.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Poppins-Light.ttf"; sourceTree = "<group>"; };
 		ADBC85C3684765BFE0C2CEB6 /* WofinsSwipeBack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WofinsSwipeBack.swift; sourceTree = "<group>"; };
+		B159C69C610A7886AB19FD26 /* AppleSignInService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleSignInService.swift; sourceTree = "<group>"; };
 		BF72C60297D2D0F40EE36C0E /* APIModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIModels.swift; sourceTree = "<group>"; };
 		BFA430F656989A0F725AE426 /* TransactionsOverviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionsOverviewView.swift; sourceTree = "<group>"; };
 		C3E405D0D93962DA87A4FF9A /* TransactionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionsView.swift; sourceTree = "<group>"; };
 		C56D6CF361CC4647D05759AA /* AccountOverviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountOverviewView.swift; sourceTree = "<group>"; };
 		CA268E25E92B4035B23DF706 /* APIConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConfig.swift; sourceTree = "<group>"; };
 		CC7882A8984A13FF7A56C5A2 /* SimulasiFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulasiFormView.swift; sourceTree = "<group>"; };
-		D6ADAE80BECA7F2C7D1CEFFF /* WofinsTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = WofinsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D6ADAE80BECA7F2C7D1CEFFF /* WofinsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WofinsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D839C0D5C282780676C64491 /* Poppins-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Poppins-Bold.ttf"; sourceTree = "<group>"; };
 		DB270F9D6E7E2C018D3FE1AD /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		DF6F026948E02B49C80F9235 /* TemporaryExportStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemporaryExportStore.swift; sourceTree = "<group>"; };
@@ -228,6 +230,7 @@
 		986B81E3D1C518DAF0F5029C /* Auth */ = {
 			isa = PBXGroup;
 			children = (
+				B159C69C610A7886AB19FD26 /* AppleSignInService.swift */,
 				8645D50A042315D4079AC879 /* GoogleSignInService.swift */,
 				686D73F0C67F4833B617C3E4 /* LoginView.swift */,
 				208F8A27219120B2D2573A31 /* PrivacyStatementView.swift */,
@@ -344,7 +347,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1600;
+				LastUpgradeCheck = 2700;
 				TargetAttributes = {
 					599DCF76841C9E28C7B9EB8D = {
 						DevelopmentTeam = LHH9LVRYVY;
@@ -450,6 +453,7 @@
 				8E8515140DF29B26E177D369 /* AccountView.swift in Sources */,
 				5757E36A7661C106465DCCA9 /* AppColorTheme.swift in Sources */,
 				3A973815646972D73173A701 /* AppState.swift in Sources */,
+				5A3383EFE5EEB3CAD10F9543 /* AppleSignInService.swift in Sources */,
 				631E97F8C29DABB5695958D7 /* BankReconciliationComparisonView.swift in Sources */,
 				BD1DDC063377980C0853FA6C /* CompensationView.swift in Sources */,
 				37D7048F11247DFDD8C94F7B /* CreateProjectView.swift in Sources */,
@@ -506,7 +510,6 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = LHH9LVRYVY;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -531,7 +534,6 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 4;
-				DEVELOPMENT_TEAM = LHH9LVRYVY;
 				DEVICE_BASE_URL = "";
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -589,6 +591,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = LHH9LVRYVY;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -604,6 +607,7 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
@@ -619,7 +623,6 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 4;
-				DEVELOPMENT_TEAM = LHH9LVRYVY;
 				GENERATE_INFOPLIST_FILE = NO;
 				GID_CLIENT_ID = "408651692876-vea73ugad9mapivcldjfrc4hmd3tirv0.apps.googleusercontent.com";
 				GID_SERVER_CLIENT_ID = "408651692876-ju4su29c4t3l08ee9kjajdmavkr0afj1.apps.googleusercontent.com";
@@ -674,6 +677,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = LHH9LVRYVY;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -696,6 +700,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -707,7 +712,6 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = LHH9LVRYVY;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (

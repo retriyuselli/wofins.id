@@ -1,4 +1,3 @@
-import AuthenticationServices
 import LocalAuthentication
 import SwiftUI
 import UIKit
@@ -348,15 +347,26 @@ struct LoginView: View {
             .disabled(isLoading)
             .opacity(isLoading ? 0.65 : 1)
 
-            SignInWithAppleButton(.signIn) { request in
-                request.requestedScopes = [.fullName, .email]
-            } onCompletion: { result in
-                handleAppleSignIn(result)
+            Button {
+                Task { await startAppleSignIn() }
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "apple.logo")
+                        .font(.system(size: 18, weight: .medium))
+                    Text("Apple")
+                        .font(.poppins(size: 15, weight: .semibold))
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 50)
+                .foregroundStyle(navy)
+                .background(WofinsTheme.card)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(navy.opacity(0.18), lineWidth: 1.2)
+                )
             }
-            .signInWithAppleButtonStyle(.whiteOutline)
-            .frame(maxWidth: .infinity)
-            .frame(height: 50)
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .buttonStyle(.plain)
             .padding(.top, 10)
             .disabled(isLoading)
             .opacity(isLoading ? 0.65 : 1)
@@ -580,25 +590,7 @@ struct LoginView: View {
         return text.contains("belum terdaftar") || text.contains("hubungi administrator")
     }
 
-    private func handleAppleSignIn(_ result: Result<ASAuthorization, Error>) {
-        switch result {
-        case let .success(authorization):
-            guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
-                  let tokenData = credential.identityToken,
-                  let identityToken = String(data: tokenData, encoding: .utf8)
-            else {
-                errorMessage = "Token Sign in with Apple tidak tersedia."
-                return
-            }
-            Task { await loginWithApple(identityToken: identityToken) }
-        case let .failure(error as ASAuthorizationError) where error.code == .canceled:
-            break
-        case let .failure(error):
-            errorMessage = error.localizedDescription
-        }
-    }
-
-    private func loginWithApple(identityToken: String) async {
+    private func startAppleSignIn() async {
         dismissKeyboard()
         errorMessage = nil
         googleInfoMessage = nil
@@ -607,9 +599,10 @@ struct LoginView: View {
         defer { isLoading = false }
 
         do {
+            let credential = try await AppleSignInService.shared.signIn()
             let accountEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
             try await appState.loginWithApple(
-                identityToken: identityToken,
+                identityToken: credential.identityToken,
                 accountEmail: accountEmail.isEmpty ? nil : accountEmail,
                 accountPassword: password.isEmpty ? nil : password
             )
@@ -617,6 +610,8 @@ struct LoginView: View {
             if rememberMe, let savedEmail = appState.currentUser?.email {
                 UserDefaults.standard.set(savedEmail, forKey: "wofins.savedEmail")
             }
+        } catch let error as AppleSignInError where error == .cancelled {
+            // User cancelled — no error banner.
         } catch let error as URLError where error.code == .cannotConnectToHost || error.code == .timedOut || error.code == .networkConnectionLost {
             errorMessage = APIConfig.connectionErrorMessage
         } catch {
