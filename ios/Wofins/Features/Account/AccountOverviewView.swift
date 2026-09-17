@@ -14,88 +14,37 @@ struct AccountView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                VStack(spacing: 0) {
-                    header
+            VStack(spacing: 0) {
+                header
 
-                    ScrollView(showsIndicators: false) {
-                        LazyVStack(spacing: 16) {
-                            profileCard
-                            subscriptionCard
-                            themeSection
-                            accountSection
-                            modulesSection
-                            securitySection
-                            helpSection
-                            logoutButton
-                            Text(AppRelease.label).font(.poppins(.caption2)).foregroundStyle(WofinsTheme.muted)
-                        }
-                        .padding(.top, 16)
-                        .padding(.bottom, 28)
+                ScrollView(showsIndicators: false) {
+                    LazyVStack(spacing: 16) {
+                        profileCard
+                        subscriptionCard
+                        themeSection
+                        accountSection
+                        AccountModulesSection()
+                        securitySection
+                        helpSection
+                        logoutButton
+                        Text(AppRelease.label).font(.poppins(.caption2)).foregroundStyle(WofinsTheme.muted)
                     }
-                    .refreshable { await appState.refreshMe() }
+                    .padding(.top, 16)
+                    .padding(.bottom, 28)
                 }
-                .background(WofinsTheme.background.ignoresSafeArea())
-
-                logoutConfirmModal
+                .refreshable { await appState.refreshMe() }
             }
+            .background(WofinsTheme.background.ignoresSafeArea())
             .wofinsHidesNavigationBar()
+            .overlay {
+                AccountLogoutConfirmModal(isPresented: $confirmLogout) {
+                    Task { await appState.logout() }
+                }
+            }
             .sheet(isPresented: $showPrivacy) {
                 PrivacyStatementView()
             }
         }
-    }
-
-    @ViewBuilder
-    private var logoutConfirmModal: some View {
-        ZStack {
-            if confirmLogout {
-                Color.black.opacity(0.28)
-                    .ignoresSafeArea()
-                    .onTapGesture { confirmLogout = false }
-                    .transition(.opacity)
-
-                VStack(spacing: 16) {
-                    Text("Keluar dari akun?")
-                        .font(.poppins(.headline, weight: .semibold))
-                        .foregroundStyle(WofinsTheme.ink)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-
-                    Button {
-                        confirmLogout = false
-                        Task { await appState.logout() }
-                    } label: {
-                        Text("Keluar")
-                            .font(.poppins(.subheadline, weight: .bold))
-                            .foregroundStyle(WofinsTheme.danger)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 48)
-                            .background(WofinsTheme.background, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    }
-                    .buttonStyle(.plain)
-
-                    Button("Batal") { confirmLogout = false }
-                        .font(.poppins(.subheadline, weight: .semibold))
-                        .foregroundStyle(WofinsTheme.muted)
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 2)
-                }
-                .padding(22)
-                .frame(maxWidth: 320)
-                .background(WofinsTheme.card, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .stroke(WofinsTheme.border, lineWidth: 1)
-                }
-                .shadow(color: Color.black.opacity(0.16), radius: 28, y: 12)
-                .padding(.horizontal, 28)
-                .transition(.scale(scale: 0.94).combined(with: .opacity))
-                .accessibilityAddTraits(.isModal)
-            }
-        }
-        .allowsHitTesting(confirmLogout)
-        .animation(.easeInOut(duration: 0.22), value: confirmLogout)
     }
 
     private var header: some View {
@@ -248,42 +197,6 @@ struct AccountView: View {
         }
     }
 
-    private var modulesSection: some View {
-        settingsGroup("Modul Perusahaan") {
-            NavigationLink { ModuleListView(item: .placeholder(key: "nota_dinas", title: "Nota Dinas", feature: "nota_dinas", allowed: appState.allows(.notaDinas), icon: "doc.text.fill")) } label: {
-                settingRow("Nota Dinas", "doc.text.fill")
-            }
-            Divider().padding(.leading, 47)
-            NavigationLink { ModuleListView(item: .placeholder(key: "simulasi", title: "Simulasi", feature: "simulasi", allowed: appState.allows(.simulasi), badge: "Pro", icon: "doc.badge.plus")) } label: {
-                settingRow("Simulasi", "doc.badge.plus", badge: appState.allows(.simulasi) ? nil : "Pro")
-            }
-            Divider().padding(.leading, 47)
-            NavigationLink { ModuleListView(item: .placeholder(key: "fixed_assets", title: "Aset Tetap", feature: "fixed_assets", allowed: appState.allows(.fixedAssets), badge: "Pro", icon: "building.2.fill")) } label: {
-                settingRow("Aset Tetap", "building.2.fill", badge: appState.allows(.fixedAssets) ? nil : "Pro")
-            }
-            Divider().padding(.leading, 47)
-            NavigationLink { ModuleListView(item: .placeholder(key: "bank_statements", title: "Rekonsiliasi", feature: "reconciliation", allowed: appState.allows(.reconciliation), badge: "Pro", icon: "arrow.left.arrow.right")) } label: {
-                settingRow("Rekonsiliasi", "arrow.left.arrow.right", badge: appState.allows(.reconciliation) ? nil : "Pro")
-            }
-            Divider().padding(.leading, 47)
-            NavigationLink { ModuleListView(item: .placeholder(key: "documents", title: "Dokumen", feature: "documents", allowed: appState.allows(.documents), badge: "Business", icon: "folder.fill")) } label: {
-                settingRow("Dokumen & SOP", "folder.fill", badge: appState.allows(.documents) ? nil : "Business")
-            }
-            Divider().padding(.leading, 47)
-            NavigationLink { ModuleListView(item: .placeholder(key: "data_pribadis", title: "Crew Freelance", feature: "crew_freelance", allowed: appState.allows(.crewFreelance), badge: "Business", icon: "person.crop.rectangle.fill")) } label: {
-                settingRow("Crew Freelance", "person.crop.rectangle.fill", badge: appState.allows(.crewFreelance) ? nil : "Business")
-            }
-            Divider().padding(.leading, 47)
-            NavigationLink { ModuleListView(item: .placeholder(key: "payrolls", title: "Payroll", feature: "payroll", allowed: appState.allows(.payroll), badge: "Pro", icon: "banknote.fill")) } label: {
-                settingRow("Payroll Tim", "person.crop.rectangle.stack.fill", badge: appState.allows(.payroll) ? nil : "Pro")
-            }
-            Divider().padding(.leading, 47)
-            NavigationLink { ModuleListView(item: .placeholder(key: "employees", title: "Karyawan", feature: "payroll", allowed: appState.allows(.payroll), badge: "Pro", icon: "person.2.fill")) } label: {
-                settingRow("Karyawan", "person.2.fill", badge: appState.allows(.payroll) ? nil : "Pro")
-            }
-        }
-    }
-
     private var helpSection: some View {
         settingsGroup("Bantuan") {
             NavigationLink { HelpCenterView() } label: { settingRow("Pusat Bantuan", "questionmark.circle.fill") }
@@ -332,6 +245,201 @@ struct AccountView: View {
                 .overlay { RoundedRectangle(cornerRadius: 15).stroke(WofinsTheme.danger.opacity(0.7)) }
         }.buttonStyle(.plain).padding(.horizontal, 16)
     }
+}
+
+private struct AccountModulesSection: View {
+    @EnvironmentObject private var appState: AppState
+
+    var body: some View {
+        accountSettingsGroup("Modul Perusahaan") {
+            moduleLink(
+                key: "nota_dinas",
+                title: "Nota Dinas",
+                feature: "nota_dinas",
+                allowed: appState.allows(.notaDinas),
+                icon: "doc.text.fill"
+            )
+            Divider().padding(.leading, 47)
+            moduleLink(
+                key: "simulasi",
+                title: "Simulasi",
+                feature: "simulasi",
+                allowed: appState.allows(.simulasi),
+                badge: "Pro",
+                icon: "doc.badge.plus"
+            )
+            Divider().padding(.leading, 47)
+            moduleLink(
+                key: "fixed_assets",
+                title: "Aset Tetap",
+                feature: "fixed_assets",
+                allowed: appState.allows(.fixedAssets),
+                badge: "Pro",
+                icon: "building.2.fill"
+            )
+            Divider().padding(.leading, 47)
+            moduleLink(
+                key: "bank_statements",
+                title: "Rekonsiliasi",
+                feature: "reconciliation",
+                allowed: appState.allows(.reconciliation),
+                badge: "Pro",
+                icon: "arrow.left.arrow.right"
+            )
+            Divider().padding(.leading, 47)
+            moduleLink(
+                key: "documents",
+                title: "Dokumen & SOP",
+                feature: "documents",
+                allowed: appState.allows(.documents),
+                badge: "Business",
+                icon: "folder.fill",
+                listTitle: "Dokumen"
+            )
+            Divider().padding(.leading, 47)
+            moduleLink(
+                key: "data_pribadis",
+                title: "Crew Freelance",
+                feature: "crew_freelance",
+                allowed: appState.allows(.crewFreelance),
+                badge: "Business",
+                icon: "person.crop.rectangle.fill"
+            )
+            Divider().padding(.leading, 47)
+            moduleLink(
+                key: "payrolls",
+                title: "Payroll Tim",
+                feature: "payroll",
+                allowed: appState.allows(.payroll),
+                badge: "Pro",
+                icon: "banknote.fill",
+                listTitle: "Payroll",
+                rowIcon: "person.crop.rectangle.stack.fill"
+            )
+            Divider().padding(.leading, 47)
+            moduleLink(
+                key: "employees",
+                title: "Karyawan",
+                feature: "payroll",
+                allowed: appState.allows(.payroll),
+                badge: "Pro",
+                icon: "person.2.fill"
+            )
+        }
+    }
+
+    @ViewBuilder
+    private func moduleLink(
+        key: String,
+        title: String,
+        feature: String,
+        allowed: Bool,
+        badge: String? = nil,
+        icon: String,
+        listTitle: String? = nil,
+        rowIcon: String? = nil
+    ) -> some View {
+        NavigationLink {
+            ModuleListView(
+                item: .placeholder(
+                    key: key,
+                    title: listTitle ?? title,
+                    feature: feature,
+                    allowed: allowed,
+                    badge: badge,
+                    icon: icon
+                )
+            )
+        } label: {
+            accountSettingRow(title, rowIcon ?? icon, badge: allowed ? nil : badge)
+        }
+    }
+}
+
+private struct AccountLogoutConfirmModal: View {
+    @Binding var isPresented: Bool
+    let onConfirm: () -> Void
+
+    var body: some View {
+        ZStack {
+            if isPresented {
+                Color.black.opacity(0.28)
+                    .ignoresSafeArea()
+                    .onTapGesture { isPresented = false }
+                    .transition(.opacity)
+
+                VStack(spacing: 16) {
+                    Text("Keluar dari akun?")
+                        .font(.poppins(.headline, weight: .semibold))
+                        .foregroundStyle(WofinsTheme.ink)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+
+                    Button {
+                        isPresented = false
+                        onConfirm()
+                    } label: {
+                        Text("Keluar")
+                            .font(.poppins(.subheadline, weight: .bold))
+                            .foregroundStyle(WofinsTheme.danger)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .background(WofinsTheme.background, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+
+                    Button("Batal") { isPresented = false }
+                        .font(.poppins(.subheadline, weight: .semibold))
+                        .foregroundStyle(WofinsTheme.muted)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 2)
+                }
+                .padding(22)
+                .frame(maxWidth: 320)
+                .background(WofinsTheme.card, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .stroke(WofinsTheme.border, lineWidth: 1)
+                }
+                .shadow(color: Color.black.opacity(0.16), radius: 28, y: 12)
+                .padding(.horizontal, 28)
+                .transition(.scale(scale: 0.94).combined(with: .opacity))
+                .accessibilityAddTraits(.isModal)
+            }
+        }
+        .allowsHitTesting(isPresented)
+        .animation(.easeInOut(duration: 0.22), value: isPresented)
+    }
+}
+
+private func accountSettingsGroup<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+    VStack(alignment: .leading, spacing: 0) {
+        Text(title).font(.poppins(.headline, weight: .bold)).foregroundStyle(WofinsTheme.primary).padding(.bottom, 8)
+        content()
+    }.padding(16).accountSurface().padding(.horizontal, 16)
+}
+
+private func accountSettingRow(_ title: String, _ icon: String, badge: String? = nil) -> some View {
+    HStack(spacing: 12) {
+        Image(systemName: icon).font(.system(size: 14, weight: .semibold)).foregroundStyle(WofinsTheme.primary)
+            .frame(width: 35, height: 35).background(WofinsTheme.primary.opacity(0.09), in: Circle())
+        Text(title)
+            .font(.poppins(.subheadline))
+            .foregroundStyle(WofinsTheme.ink)
+            .lineLimit(1)
+            .minimumScaleFactor(0.85)
+            .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+        if let badge {
+            Text(badge)
+                .font(.poppins(.caption2, weight: .semibold))
+                .foregroundStyle(badge == "Tersedia" ? WofinsTheme.success : WofinsTheme.primary)
+                .padding(.horizontal, 9)
+                .padding(.vertical, 5)
+                .background((badge == "Tersedia" ? WofinsTheme.success : WofinsTheme.yellow).opacity(0.18), in: Capsule())
+                .fixedSize()
+        }
+        Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(WofinsTheme.muted)
+    }.padding(.vertical, 8).contentShape(Rectangle())
 }
 
 private struct UserAvatarView: View {

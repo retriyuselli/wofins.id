@@ -18,6 +18,15 @@ use Symfony\Component\HttpFoundation\Response;
 class VerifyCsrfToken extends PreventRequestForgery
 {
     /**
+     * Apple form_post callback tidak menyertakan CSRF token Laravel.
+     *
+     * @var list<string>
+     */
+    protected $except = [
+        'auth/apple/callback',
+    ];
+
+    /**
      * Add the CSRF token to the response cookies.
      *
      * Overrides parent to guard against non-Response objects (e.g. Livewire Redirector)

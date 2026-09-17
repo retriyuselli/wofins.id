@@ -42,6 +42,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
         'name',
         'email',
         'google_id',
+        'apple_id',
         'email_verified_at',
         'password', // Required field, tapi akan di-hash otomatis
         'created_by',

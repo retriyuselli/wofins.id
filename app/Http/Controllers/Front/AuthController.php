@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\AppleTokenVerifier;
 use App\Services\GoogleAvatarSync;
 use App\Support\CompanyBrand;
 use Illuminate\Auth\Events\Verified;
@@ -283,6 +284,143 @@ class AuthController extends Controller
     }
 
     /**
+     * Redirect to Sign in with Apple (web Services ID).
+     */
+    public function redirectToApple()
+    {
+        $clientId = trim((string) config('services.apple.web_client_id'));
+        $redirectUri = $this->appleRedirectUri();
+
+        if ($clientId === '' || $redirectUri === '') {
+            return redirect()
+                ->route('front.login')
+                ->with('error', 'Login Apple belum dikonfigurasi. Hubungi administrator.');
+        }
+
+        $query = http_build_query([
+            'client_id' => $clientId,
+            'redirect_uri' => $redirectUri,
+            'response_type' => 'code id_token',
+            'response_mode' => 'form_post',
+            'scope' => 'name email',
+            'state' => $this->makeAppleOAuthState(),
+        ], '', '&', PHP_QUERY_RFC3986);
+
+        return redirect()->away('https://appleid.apple.com/auth/authorize?'.$query);
+    }
+
+    /**
+     * Handle Apple form_post callback (id_token).
+     */
+    public function handleAppleCallback(Request $request, AppleTokenVerifier $verifier)
+    {
+        if ($request->filled('error')) {
+            return redirect()
+                ->route('front.login')
+                ->with('error', 'Login Apple dibatalkan.');
+        }
+
+        if (! $this->assertAppleOAuthState($request->input('state'))) {
+            return redirect()
+                ->route('front.login')
+                ->with('error', 'Sesi login Apple tidak valid. Silakan coba lagi.');
+        }
+
+        $identityToken = trim((string) $request->input('id_token', ''));
+        if ($identityToken === '') {
+            return redirect()
+                ->route('front.login')
+                ->with('error', 'Token Sign in with Apple tidak tersedia.');
+        }
+
+        try {
+            $payload = $verifier->verify($identityToken);
+        } catch (ValidationException $e) {
+            $message = collect($e->errors())->flatten()->first() ?: 'Token Sign in with Apple tidak valid.';
+
+            return redirect()
+                ->route('front.login')
+                ->with('error', $message);
+        } catch (Throwable $e) {
+            Log::warning('Apple Sign In callback failed', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return redirect()
+                ->route('front.login')
+                ->with('error', 'Gagal masuk dengan Apple. Silakan coba lagi.');
+        }
+
+        $appleId = (string) ($payload['sub'] ?? '');
+        $email = mb_strtolower(trim((string) ($payload['email'] ?? '')));
+        $emailVerified = filter_var($payload['email_verified'] ?? true, FILTER_VALIDATE_BOOL);
+
+        $appleUser = $this->parseAppleUserPayload($request->input('user'));
+        if ($email === '' && filled($appleUser['email'] ?? null)) {
+            $email = mb_strtolower(trim((string) $appleUser['email']));
+        }
+
+        if ($appleId === '') {
+            return redirect()
+                ->route('front.login')
+                ->with('error', 'Identitas akun Apple tidak tersedia.');
+        }
+
+        $user = User::query()->where('apple_id', $appleId)->first();
+
+        if (! $user && $email !== '') {
+            $user = User::query()->whereRaw('LOWER(email) = ?', [$email])->first();
+        }
+
+        if ($user) {
+            if ($reason = $this->loginBlockReason($user)) {
+                return redirect()
+                    ->route('front.login')
+                    ->with('error', $reason);
+            }
+
+            if ($user->apple_id && ! hash_equals((string) $user->apple_id, $appleId)) {
+                return redirect()
+                    ->route('front.login')
+                    ->with('error', 'Email ini sudah ditautkan ke akun Apple lain.');
+            }
+
+            $updates = [];
+            if (! $user->apple_id) {
+                $updates['apple_id'] = $appleId;
+            }
+            if ($emailVerified && ! $user->email_verified_at) {
+                $updates['email_verified_at'] = now();
+            }
+            if ($updates !== []) {
+                $user->forceFill($updates)->save();
+            }
+        } else {
+            if ($email === '') {
+                return redirect()
+                    ->route('front.login')
+                    ->with('error', 'Akun Apple tidak menyediakan email. Izinkan berbagi email, atau masuk dengan email & password lalu tautkan Apple.');
+            }
+
+            $name = trim((string) ($appleUser['name'] ?? ''));
+            $user = User::create([
+                'name' => $name !== '' ? $name : Str::before($email, '@'),
+                'email' => $email,
+                'apple_id' => $appleId,
+                'email_verified_at' => $emailVerified ? now() : null,
+                'password' => Str::password(32),
+                'status' => 'active',
+            ]);
+        }
+
+        Auth::login($user, true);
+        $request->session()->regenerate();
+        CompanyBrand::remember($user);
+
+        return $this->redirectAfterAuth($user);
+    }
+
+    /**
      * Handle logout request
      */
     public function logout(Request $request)
@@ -379,6 +517,81 @@ class AuthController extends Controller
         // Gunakan URL aplikasi saat ini agar local/production tetap cocok
         // (daftarkan kedua URI di Google Cloud Console bila perlu).
         return route('auth.google.callback', absolute: true);
+    }
+
+    protected function appleRedirectUri(): string
+    {
+        $configured = trim((string) config('services.apple.redirect'));
+        if ($configured !== '') {
+            return $configured;
+        }
+
+        return route('auth.apple.callback', absolute: true);
+    }
+
+    protected function makeAppleOAuthState(): string
+    {
+        $payload = json_encode([
+            'n' => Str::random(32),
+            't' => time(),
+        ], JSON_THROW_ON_ERROR);
+
+        return rtrim(strtr(base64_encode($payload), '+/', '-_'), '=').'.'.hash_hmac('sha256', $payload, (string) config('app.key'));
+    }
+
+    protected function assertAppleOAuthState(mixed $state): bool
+    {
+        if (! is_string($state) || ! str_contains($state, '.')) {
+            return false;
+        }
+
+        [$encoded, $signature] = explode('.', $state, 2);
+        $payload = base64_decode(strtr($encoded, '-_', '+/'), true);
+        if ($payload === false || $payload === '') {
+            return false;
+        }
+
+        $expected = hash_hmac('sha256', $payload, (string) config('app.key'));
+        if (! hash_equals($expected, $signature)) {
+            return false;
+        }
+
+        try {
+            /** @var array{n?: string, t?: int} $data */
+            $data = json_decode($payload, true, 512, JSON_THROW_ON_ERROR);
+        } catch (Throwable) {
+            return false;
+        }
+
+        $issuedAt = (int) ($data['t'] ?? 0);
+
+        return $issuedAt > 0 && abs(time() - $issuedAt) <= 600;
+    }
+
+    /**
+     * @return array{name?: string, email?: string}
+     */
+    protected function parseAppleUserPayload(mixed $raw): array
+    {
+        if (! is_string($raw) || trim($raw) === '') {
+            return [];
+        }
+
+        try {
+            /** @var array{name?: array{firstName?: string, lastName?: string}, email?: string} $decoded */
+            $decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+        } catch (Throwable) {
+            return [];
+        }
+
+        $first = trim((string) ($decoded['name']['firstName'] ?? ''));
+        $last = trim((string) ($decoded['name']['lastName'] ?? ''));
+        $name = trim($first.' '.$last);
+
+        return array_filter([
+            'name' => $name !== '' ? $name : null,
+            'email' => filled($decoded['email'] ?? null) ? (string) $decoded['email'] : null,
+        ], fn ($value) => $value !== null && $value !== '');
     }
 
     /**

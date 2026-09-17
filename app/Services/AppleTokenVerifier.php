@@ -34,10 +34,14 @@ class AppleTokenVerifier
         }
 
         $audience = $payload['aud'] ?? null;
-        $allowedAudience = (string) config('services.apple.client_id', 'id.wofins.app');
+        $allowedAudiences = array_values(array_filter([
+            (string) config('services.apple.client_id', 'id.wofins.app'),
+            (string) config('services.apple.web_client_id'),
+        ], fn (string $value): bool => $value !== ''));
+
         $audienceMatches = is_array($audience)
-            ? in_array($allowedAudience, $audience, true)
-            : hash_equals($allowedAudience, (string) $audience);
+            ? count(array_intersect($allowedAudiences, $audience)) > 0
+            : in_array((string) $audience, $allowedAudiences, true);
 
         if (($payload['iss'] ?? null) !== 'https://appleid.apple.com' || ! $audienceMatches) {
             throw ValidationException::withMessages([

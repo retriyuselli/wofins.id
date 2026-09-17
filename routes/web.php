@@ -344,6 +344,10 @@ Route::middleware(['guest', 'no-store'])->group(function () {
     Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
     Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
+    // Sign in with Apple (web)
+    Route::get('/auth/apple', [AuthController::class, 'redirectToApple'])->name('auth.apple')->middleware('throttle:10,1');
+    Route::post('/auth/apple/callback', [AuthController::class, 'handleAppleCallback'])->name('auth.apple.callback')->middleware('throttle:10,1');
+
     // Forgot & Reset Password
     Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->name('front.password.request');
     Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('front.password.email')->middleware('throttle:5,1');

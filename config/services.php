@@ -43,7 +43,11 @@ return [
     ],
 
     'apple' => [
+        // App ID / Bundle ID — audience token native iOS
         'client_id' => env('APPLE_CLIENT_ID', 'id.wofins.app'),
+        // Services ID — audience token Sign in with Apple di web
+        'web_client_id' => env('APPLE_WEB_CLIENT_ID'),
+        'redirect' => env('APPLE_REDIRECT_URI', rtrim(env('APP_URL', 'http://127.0.0.1:8000'), '/').'/auth/apple/callback'),
     ],
 
 ];

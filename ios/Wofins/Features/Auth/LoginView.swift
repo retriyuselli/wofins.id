@@ -601,10 +601,13 @@ struct LoginView: View {
         do {
             let credential = try await AppleSignInService.shared.signIn()
             let accountEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+            // Hanya kirim pasangan email+password untuk menautkan akun.
+            // Email tersimpan (remember me) tanpa password tidak boleh dikirim sendiri.
+            let canLinkAccount = !accountEmail.isEmpty && !password.isEmpty
             try await appState.loginWithApple(
                 identityToken: credential.identityToken,
-                accountEmail: accountEmail.isEmpty ? nil : accountEmail,
-                accountPassword: password.isEmpty ? nil : password
+                accountEmail: canLinkAccount ? accountEmail : nil,
+                accountPassword: canLinkAccount ? password : nil
             )
             keychain.clearCredentials()
             if rememberMe, let savedEmail = appState.currentUser?.email {
