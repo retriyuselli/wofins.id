@@ -344,17 +344,25 @@ Route::middleware(['guest', 'no-store'])->group(function () {
     Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
     Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
-    // Sign in with Apple (web)
-    Route::get('/auth/apple', [AuthController::class, 'redirectToApple'])->name('auth.apple')->middleware('throttle:10,1');
-    Route::get('/auth/apple/callback', [AuthController::class, 'showAppleCallback'])->name('auth.apple.callback.show');
-    Route::post('/auth/apple/callback', [AuthController::class, 'handleAppleCallback'])->name('auth.apple.callback')->middleware('throttle:10,1');
-
     // Forgot & Reset Password
     Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->name('front.password.request');
     Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('front.password.email')->middleware('throttle:5,1');
     Route::get('/reset-password/{token}', [AuthController::class, 'showResetPasswordForm'])->name('password.reset');
     Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('front.password.update')->middleware('throttle:5,1');
 
+});
+
+// Sign in with Apple callback harus di luar middleware guest:
+// Apple form_post + sesi login di tengah request tidak boleh di-redirect guest.
+Route::middleware(['no-store'])->group(function () {
+    Route::get('/auth/apple', [AuthController::class, 'redirectToApple'])->name('auth.apple')->middleware(['guest', 'throttle:10,1']);
+    Route::match(['get', 'post'], '/auth/apple/callback', function (\Illuminate\Http\Request $request, \App\Services\AppleTokenVerifier $verifier) {
+        $controller = app(\App\Http\Controllers\Front\AuthController::class);
+
+        return $request->isMethod('post')
+            ? $controller->handleAppleCallback($request, $verifier)
+            : $controller->showAppleCallback();
+    })->name('auth.apple.callback')->middleware('throttle:10,1');
 });
 
 // Klik tautan dari email: tidak wajib session login

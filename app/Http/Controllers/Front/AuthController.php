@@ -315,6 +315,14 @@ class AuthController extends Controller
     public function handleAppleCallback(Request $request, AppleTokenVerifier $verifier)
     {
         try {
+            Log::info('Apple Sign In callback received', [
+                'keys' => array_keys($request->except(['id_token', 'code', 'user'])),
+                'has_id_token' => $request->filled('id_token'),
+                'has_code' => $request->filled('code'),
+                'has_state' => $request->filled('state'),
+                'has_error' => $request->filled('error'),
+            ]);
+
             return $this->completeAppleCallback($request, $verifier);
         } catch (Throwable $e) {
             Log::error('Apple Sign In callback crashed', [
@@ -322,14 +330,10 @@ class AuthController extends Controller
                 'exception' => $e::class,
             ]);
 
-            session()->flash('error', 'Gagal masuk dengan Apple. Pastikan migrasi apple_id sudah dijalankan di server, lalu coba lagi.');
-
-            return response()
-                ->view('front.auth.apple-callback-bridge', [
-                    'redirectUrl' => route('front.login'),
-                    'message' => 'Gagal masuk dengan Apple. Mengalihkan ke halaman masuk…',
-                ])
-                ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
+            return $this->appleBridgeInline(
+                route('front.login'),
+                'Gagal masuk dengan Apple. Silakan coba lagi dari halaman masuk.'
+            );
         }
     }
 
@@ -338,9 +342,10 @@ class AuthController extends Controller
      */
     public function showAppleCallback()
     {
-        return redirect()
-            ->route('front.login')
-            ->with('error', 'Login Apple harus dimulai dari tombol Masuk dengan Apple.');
+        return $this->appleBridgeInline(
+            route('front.login'),
+            'Login Apple harus dimulai dari tombol Masuk dengan Apple.'
+        );
     }
 
     protected function completeAppleCallback(Request $request, AppleTokenVerifier $verifier)
@@ -445,11 +450,54 @@ class AuthController extends Controller
 
     protected function appleBridgeRedirect(string $redirectUrl, ?string $message = null)
     {
-        return response()
-            ->view('front.auth.apple-callback-bridge', [
-                'redirectUrl' => $redirectUrl,
-                'message' => $message,
-            ])
+        try {
+            return response()
+                ->view('front.auth.apple-callback-bridge', [
+                    'redirectUrl' => $redirectUrl,
+                    'message' => $message,
+                ])
+                ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
+        } catch (Throwable) {
+            return $this->appleBridgeInline($redirectUrl, $message);
+        }
+    }
+
+    /**
+     * Fallback HTML tanpa Blade — agar callback tidak pernah putih polos.
+     */
+    protected function appleBridgeInline(string $redirectUrl, ?string $message = null)
+    {
+        $safeUrl = e($redirectUrl);
+        $safeMessage = e($message ?: 'Mengalihkan ke WOFINS…');
+        $jsonUrl = json_encode($redirectUrl, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT);
+
+        $html = <<<HTML
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="refresh" content="0;url={$safeUrl}">
+<title>Mengalihkan — WOFINS</title>
+<style>
+body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:system-ui,-apple-system,sans-serif;background:#f4f6f9;color:#0b1f3a;padding:24px;text-align:center}
+.card{max-width:360px;background:#fff;border-radius:16px;padding:28px 24px;box-shadow:0 12px 40px rgba(11,31,58,.08)}
+a{display:inline-block;margin-top:12px;color:#0b1f3a;font-weight:700}
+</style>
+</head>
+<body>
+<div class="card">
+<p><strong>WOFINS</strong></p>
+<p>{$safeMessage}</p>
+<p><a href="{$safeUrl}">Lanjutkan ke WOFINS</a></p>
+</div>
+<script>window.location.replace({$jsonUrl});</script>
+</body>
+</html>
+HTML;
+
+        return response($html, 200)
+            ->header('Content-Type', 'text/html; charset=UTF-8')
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
     }
 

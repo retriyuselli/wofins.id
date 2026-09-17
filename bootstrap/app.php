@@ -42,6 +42,11 @@ return Application::configure(basePath: dirname(__DIR__))
             VerifyCsrfToken::class,
         );
 
+        // Apple form_post dari appleid.apple.com tidak membawa CSRF token Laravel.
+        $middleware->validateCsrfTokens(except: [
+            'auth/apple/callback',
+        ]);
+
         $middleware->use([
             HandleCors::class,
         ]);
