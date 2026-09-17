@@ -314,6 +314,32 @@ class AuthController extends Controller
      */
     public function handleAppleCallback(Request $request, AppleTokenVerifier $verifier)
     {
+        try {
+            return $this->completeAppleCallback($request, $verifier);
+        } catch (Throwable $e) {
+            Log::error('Apple Sign In callback crashed', [
+                'message' => $e->getMessage(),
+                'exception' => $e::class,
+            ]);
+
+            return redirect()
+                ->route('front.login')
+                ->with('error', 'Gagal masuk dengan Apple. Pastikan migrasi apple_id sudah dijalankan di server, lalu coba lagi.');
+        }
+    }
+
+    /**
+     * GET ke Return URL (bukan form_post Apple) — arahkan ke login.
+     */
+    public function showAppleCallback()
+    {
+        return redirect()
+            ->route('front.login')
+            ->with('error', 'Login Apple harus dimulai dari tombol Masuk dengan Apple.');
+    }
+
+    protected function completeAppleCallback(Request $request, AppleTokenVerifier $verifier)
+    {
         if ($request->filled('error')) {
             return redirect()
                 ->route('front.login')
@@ -341,14 +367,6 @@ class AuthController extends Controller
             return redirect()
                 ->route('front.login')
                 ->with('error', $message);
-        } catch (Throwable $e) {
-            Log::warning('Apple Sign In callback failed', [
-                'message' => $e->getMessage(),
-            ]);
-
-            return redirect()
-                ->route('front.login')
-                ->with('error', 'Gagal masuk dengan Apple. Silakan coba lagi.');
         }
 
         $appleId = (string) ($payload['sub'] ?? '');

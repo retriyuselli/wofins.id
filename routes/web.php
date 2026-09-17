@@ -346,6 +346,7 @@ Route::middleware(['guest', 'no-store'])->group(function () {
 
     // Sign in with Apple (web)
     Route::get('/auth/apple', [AuthController::class, 'redirectToApple'])->name('auth.apple')->middleware('throttle:10,1');
+    Route::get('/auth/apple/callback', [AuthController::class, 'showAppleCallback'])->name('auth.apple.callback.show');
     Route::post('/auth/apple/callback', [AuthController::class, 'handleAppleCallback'])->name('auth.apple.callback')->middleware('throttle:10,1');
 
     // Forgot & Reset Password
