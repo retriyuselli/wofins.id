@@ -14,36 +14,88 @@ struct AccountView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                header
+            ZStack {
+                VStack(spacing: 0) {
+                    header
 
-                ScrollView(showsIndicators: false) {
-                    LazyVStack(spacing: 16) {
-                        profileCard
-                        subscriptionCard
-                        themeSection
-                        accountSection
-                        modulesSection
-                        securitySection
-                        helpSection
-                        logoutButton
-                        Text(AppRelease.label).font(.poppins(.caption2)).foregroundStyle(WofinsTheme.muted)
+                    ScrollView(showsIndicators: false) {
+                        LazyVStack(spacing: 16) {
+                            profileCard
+                            subscriptionCard
+                            themeSection
+                            accountSection
+                            modulesSection
+                            securitySection
+                            helpSection
+                            logoutButton
+                            Text(AppRelease.label).font(.poppins(.caption2)).foregroundStyle(WofinsTheme.muted)
+                        }
+                        .padding(.top, 16)
+                        .padding(.bottom, 28)
                     }
-                    .padding(.top, 16)
-                    .padding(.bottom, 28)
+                    .refreshable { await appState.refreshMe() }
                 }
-                .refreshable { await appState.refreshMe() }
+                .background(WofinsTheme.background.ignoresSafeArea())
+
+                logoutConfirmModal
             }
-            .background(WofinsTheme.background.ignoresSafeArea())
             .wofinsHidesNavigationBar()
-            .confirmationDialog("Keluar dari akun?", isPresented: $confirmLogout, titleVisibility: .visible) {
-                Button("Keluar", role: .destructive) { Task { await appState.logout() } }
-                Button("Batal", role: .cancel) {}
-            }
             .sheet(isPresented: $showPrivacy) {
                 PrivacyStatementView()
             }
         }
+    }
+
+    @ViewBuilder
+    private var logoutConfirmModal: some View {
+        ZStack {
+            if confirmLogout {
+                Color.black.opacity(0.28)
+                    .ignoresSafeArea()
+                    .onTapGesture { confirmLogout = false }
+                    .transition(.opacity)
+
+                VStack(spacing: 16) {
+                    Text("Keluar dari akun?")
+                        .font(.poppins(.headline, weight: .semibold))
+                        .foregroundStyle(WofinsTheme.ink)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+
+                    Button {
+                        confirmLogout = false
+                        Task { await appState.logout() }
+                    } label: {
+                        Text("Keluar")
+                            .font(.poppins(.subheadline, weight: .bold))
+                            .foregroundStyle(WofinsTheme.danger)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .background(WofinsTheme.background, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+
+                    Button("Batal") { confirmLogout = false }
+                        .font(.poppins(.subheadline, weight: .semibold))
+                        .foregroundStyle(WofinsTheme.muted)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 2)
+                }
+                .padding(22)
+                .frame(maxWidth: 320)
+                .background(WofinsTheme.card, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .stroke(WofinsTheme.border, lineWidth: 1)
+                }
+                .shadow(color: Color.black.opacity(0.16), radius: 28, y: 12)
+                .padding(.horizontal, 28)
+                .transition(.scale(scale: 0.94).combined(with: .opacity))
+                .accessibilityAddTraits(.isModal)
+            }
+        }
+        .allowsHitTesting(confirmLogout)
+        .animation(.easeInOut(duration: 0.22), value: confirmLogout)
     }
 
     private var header: some View {
