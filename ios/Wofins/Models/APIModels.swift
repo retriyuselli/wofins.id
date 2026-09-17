@@ -67,9 +67,20 @@ struct UserProfile: Decodable, Identifiable, Equatable {
     let is_expired: Bool?
     let is_expiring_soon: Bool?
     let days_until_expiration: Int?
+    let is_subscription_expired: Bool?
+    let can_manage_subscription: Bool?
+    let subscription_expires_label: String?
 
     let company: UserCompany?
     let entitlements: PlanEntitlements?
+
+    var hasExpiredSubscription: Bool {
+        is_subscription_expired == true
+    }
+
+    var canManageSubscription: Bool {
+        can_manage_subscription == true
+    }
 
     var roleLabel: String {
         roles?.joined(separator: ", ").capitalized ?? "Karyawan"

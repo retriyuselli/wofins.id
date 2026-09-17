@@ -8,7 +8,6 @@ use App\Models\User;
 use App\Services\AppleTokenVerifier;
 use App\Services\GoogleAvatarSync;
 use App\Services\GoogleTokenVerifier;
-use App\Support\CompanySubscription;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -239,11 +238,8 @@ class AuthController extends Controller
                 ]);
             }
 
-            if (CompanySubscription::isExpired($user)) {
-                throw ValidationException::withMessages([
-                    'email' => ['Masa aktif paket perusahaan telah berakhir.'],
-                ]);
-            }
+            // Paket company expired: tetap boleh login (sama seperti web),
+            // lalu iOS menampilkan layar perpanjang paket.
         }
     }
 

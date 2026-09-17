@@ -178,7 +178,7 @@ struct SubscriptionPlanView: View {
                             .fixedSize(horizontal: false, vertical: true)
                         Text(company?.name ?? user?.companyDisplayName ?? "Perusahaan")
                             .font(.poppins(.caption, weight: .semibold))
-                            .foregroundStyle(user?.is_expired == true ? WofinsTheme.yellow : Color.green.opacity(0.9))
+                            .foregroundStyle(user?.hasExpiredSubscription == true || user?.is_expired == true ? WofinsTheme.yellow : Color.green.opacity(0.9))
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -189,7 +189,8 @@ struct SubscriptionPlanView: View {
                     )
 
                     infoCard("Masa berlaku") {
-                        infoRow("Berlaku hingga", AccountDateFormat.display(company?.subscription_expires_at ?? user?.expire_date))
+                        infoRow("Berlaku hingga", user?.subscription_expires_label ?? AccountDateFormat.display(company?.subscription_expires_at ?? user?.expire_date))
+                        infoRow("Status paket", user?.hasExpiredSubscription == true ? "Masa aktif berakhir" : "Aktif")
                         infoRow("Status akun", user?.is_expired == true ? "Masa aktif berakhir" : "Aktif")
                         if let seats = entitlements?.seat_limit {
                             infoRow("Kuota pengguna", "\(seats) orang")

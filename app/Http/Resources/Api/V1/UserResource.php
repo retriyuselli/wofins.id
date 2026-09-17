@@ -35,9 +35,21 @@ class UserResource extends JsonResource
             'is_expired' => $this->isExpired(),
             'is_expiring_soon' => $this->isExpiringSoon(),
             'days_until_expiration' => $this->getDaysUntilExpiration(),
+            'is_subscription_expired' => $this->isCompanySubscriptionExpired(),
+            'can_manage_subscription' => \App\Support\CompanySubscription::canManageSubscription($this->resource),
+            'subscription_expires_label' => \App\Support\CompanySubscription::expiresAtLabel($this->resource),
             'company' => $this->companyPayload(),
             'entitlements' => $this->entitlementsPayload(),
         ];
+    }
+
+    private function isCompanySubscriptionExpired(): bool
+    {
+        if (method_exists($this->resource, 'hasRole') && $this->resource->hasRole('super_admin')) {
+            return false;
+        }
+
+        return \App\Support\CompanySubscription::isExpired($this->resource);
     }
 
     /**
