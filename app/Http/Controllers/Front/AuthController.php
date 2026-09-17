@@ -322,9 +322,14 @@ class AuthController extends Controller
                 'exception' => $e::class,
             ]);
 
-            return redirect()
-                ->route('front.login')
-                ->with('error', 'Gagal masuk dengan Apple. Pastikan migrasi apple_id sudah dijalankan di server, lalu coba lagi.');
+            session()->flash('error', 'Gagal masuk dengan Apple. Pastikan migrasi apple_id sudah dijalankan di server, lalu coba lagi.');
+
+            return response()
+                ->view('front.auth.apple-callback-bridge', [
+                    'redirectUrl' => route('front.login'),
+                    'message' => 'Gagal masuk dengan Apple. Mengalihkan ke halaman masuk…',
+                ])
+                ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
         }
     }
 
@@ -341,22 +346,16 @@ class AuthController extends Controller
     protected function completeAppleCallback(Request $request, AppleTokenVerifier $verifier)
     {
         if ($request->filled('error')) {
-            return redirect()
-                ->route('front.login')
-                ->with('error', 'Login Apple dibatalkan.');
+            return $this->appleBridgeToLogin('Login Apple dibatalkan.');
         }
 
         if (! $this->assertAppleOAuthState($request->input('state'))) {
-            return redirect()
-                ->route('front.login')
-                ->with('error', 'Sesi login Apple tidak valid. Silakan coba lagi.');
+            return $this->appleBridgeToLogin('Sesi login Apple tidak valid. Silakan coba lagi.');
         }
 
         $identityToken = trim((string) $request->input('id_token', ''));
         if ($identityToken === '') {
-            return redirect()
-                ->route('front.login')
-                ->with('error', 'Token Sign in with Apple tidak tersedia.');
+            return $this->appleBridgeToLogin('Token Sign in with Apple tidak tersedia.');
         }
 
         try {
@@ -364,9 +363,7 @@ class AuthController extends Controller
         } catch (ValidationException $e) {
             $message = collect($e->errors())->flatten()->first() ?: 'Token Sign in with Apple tidak valid.';
 
-            return redirect()
-                ->route('front.login')
-                ->with('error', $message);
+            return $this->appleBridgeToLogin($message);
         }
 
         $appleId = (string) ($payload['sub'] ?? '');
@@ -379,9 +376,7 @@ class AuthController extends Controller
         }
 
         if ($appleId === '') {
-            return redirect()
-                ->route('front.login')
-                ->with('error', 'Identitas akun Apple tidak tersedia.');
+            return $this->appleBridgeToLogin('Identitas akun Apple tidak tersedia.');
         }
 
         $user = User::query()->where('apple_id', $appleId)->first();
@@ -392,15 +387,11 @@ class AuthController extends Controller
 
         if ($user) {
             if ($reason = $this->loginBlockReason($user)) {
-                return redirect()
-                    ->route('front.login')
-                    ->with('error', $reason);
+                return $this->appleBridgeToLogin($reason);
             }
 
             if ($user->apple_id && ! hash_equals((string) $user->apple_id, $appleId)) {
-                return redirect()
-                    ->route('front.login')
-                    ->with('error', 'Email ini sudah ditautkan ke akun Apple lain.');
+                return $this->appleBridgeToLogin('Email ini sudah ditautkan ke akun Apple lain.');
             }
 
             $updates = [];
@@ -415,9 +406,9 @@ class AuthController extends Controller
             }
         } else {
             if ($email === '') {
-                return redirect()
-                    ->route('front.login')
-                    ->with('error', 'Akun Apple tidak menyediakan email. Izinkan berbagi email, atau masuk dengan email & password lalu tautkan Apple.');
+                return $this->appleBridgeToLogin(
+                    'Akun Apple tidak menyediakan email. Izinkan berbagi email, atau masuk dengan email & password lalu tautkan Apple.'
+                );
             }
 
             $name = trim((string) ($appleUser['name'] ?? ''));
@@ -435,7 +426,31 @@ class AuthController extends Controller
         $request->session()->regenerate();
         CompanyBrand::remember($user);
 
-        return $this->redirectAfterAuth($user);
+        $redirect = $this->redirectAfterAuth($user);
+        $target = $redirect instanceof \Illuminate\Http\RedirectResponse
+            ? $redirect->getTargetUrl()
+            : route('profile');
+
+        // form_post Apple = cross-site POST. Jangan 302 langsung:
+        // kembalikan HTML 200 agar cookie sesi menempel, lalu redirect via JS.
+        return $this->appleBridgeRedirect($target, 'Login Apple berhasil. Mengalihkan…');
+    }
+
+    protected function appleBridgeToLogin(string $message)
+    {
+        session()->flash('error', $message);
+
+        return $this->appleBridgeRedirect(route('front.login'), $message);
+    }
+
+    protected function appleBridgeRedirect(string $redirectUrl, ?string $message = null)
+    {
+        return response()
+            ->view('front.auth.apple-callback-bridge', [
+                'redirectUrl' => $redirectUrl,
+                'message' => $message,
+            ])
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
     }
 
     /**
