@@ -93,6 +93,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'pro.feature' => EnsureProFeature::class,
             'api.account.active' => EnsureApiAccountActive::class,
             'company.subscription.active' => EnsureCompanySubscriptionActive::class,
+            'subscription.agreement' => \App\Http\Middleware\EnsureSubscriptionAgreementAccepted::class,
             'abilities' => CheckAbilities::class,
             'ability' => CheckForAnyAbility::class,
         ]);

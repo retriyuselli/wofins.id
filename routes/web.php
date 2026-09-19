@@ -38,6 +38,8 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SecureFileController;
 use App\Http\Controllers\SimulasiDisplayController;
 use App\Http\Controllers\SopPrintController;
+use App\Http\Controllers\SubscriptionAgreementController;
+use App\Http\Controllers\SubscriptionAgreementGateController;
 use App\Http\Controllers\UserFormPdfController;
 use App\Models\DataPembayaran;
 use App\Models\ProspectApp;
@@ -236,6 +238,14 @@ Route::middleware($authNoStore)->group(function () {
     Route::get('/invoice/{order}/download', [InvoiceOrderController::class, 'download'])
         ->name('invoice.download')
         ->middleware('throttle:60,1');
+    Route::get('/companies/{company}/perjanjian-berlangganan', [SubscriptionAgreementController::class, 'stream'])
+        ->name('companies.subscription-agreement')
+        ->middleware('throttle:30,1');
+    Route::get('/setujui-perjanjian', [SubscriptionAgreementGateController::class, 'show'])
+        ->name('subscription-agreement.gate');
+    Route::post('/setujui-perjanjian', [SubscriptionAgreementGateController::class, 'accept'])
+        ->name('subscription-agreement.accept')
+        ->middleware('throttle:10,1');
     Route::get('/invoice/{order}/print', [InvoiceOrderController::class, 'print'])
         ->name('invoice.print')
         ->middleware('throttle:60,1');

@@ -91,6 +91,7 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 RedirectUnauthenticatedToAppUrl::class,
                 Authenticate::class,
+                \App\Http\Middleware\EnsureSubscriptionAgreementAccepted::class,
                 \App\Http\Middleware\EnsureCompanySubscriptionActive::class,
             ])
             ->plugins([

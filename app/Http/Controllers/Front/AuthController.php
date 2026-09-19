@@ -554,6 +554,10 @@ HTML;
                 ->with('info', 'Akun Anda berhasil masuk. Lanjutkan pendaftaran melalui aplikasi WOFINS untuk mengaktifkan akses.');
         }
 
+        if (app(\App\Services\SubscriptionAgreementAcceptanceService::class)->needsAcceptance($user)) {
+            return redirect()->route('subscription-agreement.gate');
+        }
+
         return redirect()->intended(route('profile'));
     }
 

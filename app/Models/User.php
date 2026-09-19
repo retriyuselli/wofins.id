@@ -299,6 +299,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
         return $this->belongsTo(Company::class);
     }
 
+    public function subscriptionAgreementAcceptances(): HasMany
+    {
+        return $this->hasMany(SubscriptionAgreementAcceptance::class);
+    }
+
     public function teamMembers(): HasMany
     {
         return $this->hasMany(self::class, 'created_by');

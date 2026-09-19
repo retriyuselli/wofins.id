@@ -20,14 +20,23 @@ class EditCompany extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        if (! ProFeatures::actorIsSuperAdmin()) {
-            return [];
-        }
-
         /** @var Company $company */
         $company = $this->getRecord();
 
-        return [
+        $actions = [
+            Action::make('subscriptionAgreement')
+                ->label('Kontrak')
+                ->icon('heroicon-o-document-text')
+                ->color('gray')
+                ->url(fn (): string => route('companies.subscription-agreement', $company))
+                ->openUrlInNewTab(),
+        ];
+
+        if (! ProFeatures::actorIsSuperAdmin()) {
+            return $actions;
+        }
+
+        return array_merge($actions, [
             Action::make('deactivate')
                 ->label('Nonaktifkan')
                 ->icon('heroicon-o-pause-circle')
@@ -114,6 +123,6 @@ class EditCompany extends EditRecord
                             ->send();
                     }
                 }),
-        ];
+        ]);
     }
 }
