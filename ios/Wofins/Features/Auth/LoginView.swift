@@ -577,7 +577,7 @@ struct LoginView: View {
             let message = APILoadFailure.userMessage(for: error) ?? error.localizedDescription
             if isGoogleAccountNotRegistered(message) {
                 googleInfoMessage = selectedHost == .wofins
-                    ? "Akun Google belum terdaftar di WOFINS. Hubungi administrator company Anda."
+                    ? "Akun Google belum tersedia di WOFINS. Gunakan akun yang sudah diundang ke perusahaan Anda."
                     : message
             } else {
                 errorMessage = message
@@ -587,7 +587,9 @@ struct LoginView: View {
 
     private func isGoogleAccountNotRegistered(_ message: String) -> Bool {
         let text = message.lowercased()
-        return text.contains("belum terdaftar") || text.contains("hubungi administrator")
+        return text.contains("belum tersedia")
+            || text.contains("belum terdaftar")
+            || text.contains("sudah diundang")
     }
 
     private func startAppleSignIn() async {
@@ -600,14 +602,9 @@ struct LoginView: View {
 
         do {
             let credential = try await AppleSignInService.shared.signIn()
-            let accountEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
-            // Hanya kirim pasangan email+password untuk menautkan akun.
-            // Email tersimpan (remember me) tanpa password tidak boleh dikirim sendiri.
-            let canLinkAccount = !accountEmail.isEmpty && !password.isEmpty
             try await appState.loginWithApple(
                 identityToken: credential.identityToken,
-                accountEmail: canLinkAccount ? accountEmail : nil,
-                accountPassword: canLinkAccount ? password : nil
+                fullName: credential.fullName
             )
             keychain.clearCredentials()
             if rememberMe, let savedEmail = appState.currentUser?.email {

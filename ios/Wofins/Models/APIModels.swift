@@ -78,6 +78,10 @@ struct UserProfile: Decodable, Identifiable, Equatable {
         is_subscription_expired == true
     }
 
+    var hasPendingCompany: Bool {
+        !isSuperAdmin && company == nil
+    }
+
     var canManageSubscription: Bool {
         can_manage_subscription == true
     }
@@ -176,7 +180,7 @@ enum PlanFeature: String, CaseIterable {
 
     func upgradeMessage(planLabel: String?) -> String {
         let plan = planLabel ?? "akses perusahaan saat ini"
-        return "Fitur ini tidak tersedia pada \(plan). Hubungi administrator perusahaan Anda untuk bantuan akses."
+        return "Fitur ini tidak tersedia pada \(plan)."
     }
 }
 

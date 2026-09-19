@@ -100,7 +100,7 @@ class SecurityHardeningTest extends TestCase
         $response = (new EnsureApiAccountActive)->handle($request, fn () => response()->json(['ok' => true]));
 
         $this->assertSame(403, $response->getStatusCode());
-        $this->assertSame('Akun Anda tidak aktif. Hubungi administrator.', $response->getData(true)['message']);
+        $this->assertSame('Akun Anda tidak aktif.', $response->getData(true)['message']);
     }
 
     public function test_documentation_content_is_sanitized_on_assignment(): void

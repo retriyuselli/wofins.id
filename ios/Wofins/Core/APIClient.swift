@@ -150,14 +150,12 @@ final class APIClient {
 
     func loginWithApple(
         identityToken: String,
-        accountEmail: String?,
-        accountPassword: String?,
+        fullName: String?,
         deviceName: String
     ) async throws -> LoginResponse {
         struct Body: Encodable {
             let identity_token: String
-            let account_email: String?
-            let account_password: String?
+            let full_name: String?
             let device_name: String
         }
         return try await request(
@@ -165,8 +163,7 @@ final class APIClient {
             path: "/auth/apple",
             body: Body(
                 identity_token: identityToken,
-                account_email: accountEmail,
-                account_password: accountPassword,
+                full_name: fullName,
                 device_name: deviceName
             ),
             authorized: false

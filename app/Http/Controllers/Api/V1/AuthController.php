@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -108,7 +109,7 @@ class AuthController extends Controller
             $user->refresh();
         } else {
             throw ValidationException::withMessages([
-                'id_token' => ['Akun Google belum terdaftar di WOFINS. Hubungi administrator company Anda.'],
+                'id_token' => ['Akun Google belum tersedia di WOFINS. Gunakan akun yang sudah diundang ke perusahaan Anda.'],
             ]);
         }
 
@@ -120,17 +121,17 @@ class AuthController extends Controller
         $data = $request->validate([
             'identity_token' => ['required', 'string'],
             'device_name' => ['nullable', 'string', 'max:120'],
-            'account_email' => ['nullable', 'email'],
-            'account_password' => ['nullable', 'string', 'required_with:account_email'],
+            'full_name' => ['nullable', 'string', 'max:120'],
         ]);
 
         $payload = $verifier->verify($data['identity_token']);
         $appleId = (string) $payload['sub'];
         $email = mb_strtolower(trim((string) ($payload['email'] ?? '')));
-        $emailVerified = filter_var($payload['email_verified'] ?? false, FILTER_VALIDATE_BOOL);
+        $emailVerified = filter_var($payload['email_verified'] ?? true, FILTER_VALIDATE_BOOL);
+        $fullName = trim((string) ($data['full_name'] ?? ''));
 
-        /** @var User|null $user */
-        $user = DB::transaction(function () use ($appleId, $email, $emailVerified, $data): ?User {
+        /** @var User $user */
+        $user = DB::transaction(function () use ($appleId, $email, $emailVerified, $fullName): User {
             $byAppleId = User::query()->where('apple_id', $appleId)->lockForUpdate()->first();
             if ($byAppleId) {
                 $this->assertUserCanLogin($byAppleId);
@@ -139,42 +140,47 @@ class AuthController extends Controller
             }
 
             $byEmail = null;
-            if ($email !== '' && $emailVerified) {
+            if ($email !== '') {
                 $byEmail = User::query()->whereRaw('LOWER(email) = ?', [$email])->lockForUpdate()->first();
             }
 
-            if (! $byEmail && filled($data['account_email'] ?? null)) {
-                $accountEmail = mb_strtolower(trim((string) $data['account_email']));
-                $candidate = User::query()->whereRaw('LOWER(email) = ?', [$accountEmail])->lockForUpdate()->first();
-                if ($candidate && Hash::check((string) ($data['account_password'] ?? ''), $candidate->password)) {
-                    $byEmail = $candidate;
+            if ($byEmail) {
+                if ($byEmail->apple_id && ! hash_equals((string) $byEmail->apple_id, $appleId)) {
+                    throw ValidationException::withMessages([
+                        'identity_token' => ['Email dari Apple sudah ditautkan ke akun lain.'],
+                    ]);
                 }
+
+                $this->assertUserCanLogin($byEmail);
+                $byEmail->forceFill([
+                    'apple_id' => $appleId,
+                    'email_verified_at' => $byEmail->email_verified_at ?: ($emailVerified ? now() : null),
+                ])->save();
+
+                return $byEmail->fresh();
             }
 
-            if (! $byEmail) {
-                return null;
-            }
-
-            if ($byEmail->apple_id && ! hash_equals((string) $byEmail->apple_id, $appleId)) {
+            if ($email === '') {
                 throw ValidationException::withMessages([
-                    'identity_token' => ['Email ini sudah ditautkan ke akun Apple lain.'],
+                    'identity_token' => ['Sign in with Apple membutuhkan email dari Apple. Izinkan berbagi email, lalu coba lagi.'],
                 ]);
             }
 
-            $this->assertUserCanLogin($byEmail);
-            $byEmail->forceFill([
+            $name = $fullName !== '' ? $fullName : Str::before($email, '@');
+
+            $created = User::create([
+                'name' => $name,
+                'email' => $email,
                 'apple_id' => $appleId,
-                'email_verified_at' => $byEmail->email_verified_at ?: now(),
-            ])->save();
-
-            return $byEmail->fresh();
-        });
-
-        if (! $user) {
-            throw ValidationException::withMessages([
-                'identity_token' => ['Akun Apple belum terhubung. Isi email dan password WOFINS, lalu pilih Sign in with Apple sekali lagi untuk menautkan akun.'],
+                'email_verified_at' => $emailVerified ? now() : null,
+                'password' => Str::password(32),
+                'status' => 'active',
             ]);
-        }
+
+            $this->assertUserCanLogin($created);
+
+            return $created;
+        });
 
         return $this->tokenResponse($user, $data['device_name'] ?? 'ios-wofins-apple');
     }
@@ -221,25 +227,27 @@ class AuthController extends Controller
     {
         if (in_array($user->status, ['terminated', 'inactive'], true)) {
             throw ValidationException::withMessages([
-                'email' => ['Akun Anda tidak aktif. Hubungi administrator.'],
+                'email' => ['Akun Anda tidak aktif.'],
             ]);
         }
 
         if ($user->isExpired()) {
             throw ValidationException::withMessages([
-                'email' => ['Akun Anda telah kedaluwarsa. Hubungi administrator.'],
+                'email' => ['Akun Anda telah kedaluwarsa.'],
             ]);
         }
 
         if (! $user->hasRole('super_admin')) {
-            if (! $user->company || $user->company->isDeactivated()) {
+            // Akun tanpa company (mis. Sign in with Apple baru) tetap boleh login;
+            // iOS menampilkan status pending tanpa CTA pembelian.
+            if ($user->company?->isDeactivated()) {
                 throw ValidationException::withMessages([
-                    'email' => ['Perusahaan Anda tidak aktif. Hubungi administrator.'],
+                    'email' => ['Perusahaan Anda tidak aktif.'],
                 ]);
             }
 
             // Paket company expired: tetap boleh login (sama seperti web),
-            // lalu iOS menampilkan layar perpanjang paket.
+            // lalu iOS menampilkan layar status akses.
         }
     }
 

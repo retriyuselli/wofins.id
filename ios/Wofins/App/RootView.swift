@@ -54,6 +54,8 @@ struct RootView: View {
             } else if appState.isAuthenticated {
                 if appState.currentUser?.hasExpiredSubscription == true {
                     SubscriptionExpiredView()
+                } else if appState.currentUser?.hasPendingCompany == true {
+                    CompanyPendingView()
                 } else {
                     MainTabView()
                 }
@@ -63,6 +65,7 @@ struct RootView: View {
         }
         .animation(.easeInOut(duration: 0.2), value: appState.isAuthenticated)
         .animation(.easeInOut(duration: 0.2), value: appState.currentUser?.hasExpiredSubscription)
+        .animation(.easeInOut(duration: 0.2), value: appState.currentUser?.hasPendingCompany)
         .task {
             await appState.bootstrap()
         }
@@ -146,6 +149,100 @@ struct PlanLockedView: View {
     }
 }
 
+struct CompanyPendingView: View {
+    @EnvironmentObject private var appState: AppState
+
+    var body: some View {
+        ZStack {
+            WofinsTheme.background.ignoresSafeArea()
+
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 0) {
+                    HStack {
+                        WofinsCompactMark()
+                        Text("WOFINS")
+                            .font(.poppins(.headline, weight: .bold))
+                            .foregroundStyle(.white)
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(WofinsTheme.primary.ignoresSafeArea(edges: .top))
+
+                    VStack(alignment: .leading, spacing: 18) {
+                        Image(systemName: "building.2")
+                            .font(.system(size: 22, weight: .semibold))
+                            .foregroundStyle(WofinsTheme.yellow)
+                            .frame(width: 48, height: 48)
+                            .background(WofinsTheme.yellow.opacity(0.14), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("AKUN TERVERIFIKASI")
+                                .font(.poppins(size: 11, weight: .bold))
+                                .tracking(1.4)
+                                .foregroundStyle(WofinsTheme.yellow)
+
+                            Text("Menunggu akses perusahaan")
+                                .font(.poppins(.title3, weight: .bold))
+                                .foregroundStyle(WofinsTheme.ink)
+                                .fixedSize(horizontal: false, vertical: true)
+
+                            Text("Sign in with Apple berhasil. Akun Anda sudah aktif, tetapi belum terhubung ke perusahaan. Dashboard akan tersedia setelah akses perusahaan ditetapkan.")
+                                .font(.poppins(.subheadline))
+                                .foregroundStyle(WofinsTheme.muted)
+                                .fixedSize(horizontal: false, vertical: true)
+
+                            Text("Tarik layar ini untuk memperbarui status setelah akses tersedia.")
+                                .font(.poppins(.subheadline))
+                                .foregroundStyle(WofinsTheme.muted)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+
+                        VStack(spacing: 10) {
+                            Button {
+                                Task { await appState.refreshMe() }
+                            } label: {
+                                Text("Perbarui status")
+                                    .font(.poppins(.subheadline, weight: .bold))
+                                    .foregroundStyle(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 50)
+                                    .background(WofinsTheme.primary, in: Capsule())
+                            }
+                            .buttonStyle(.plain)
+
+                            Button {
+                                Task { await appState.logout() }
+                            } label: {
+                                Text("Keluar dari akun")
+                                    .font(.poppins(.subheadline, weight: .semibold))
+                                    .foregroundStyle(WofinsTheme.danger)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 44)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(.top, 4)
+                    }
+                    .padding(22)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(WofinsTheme.card, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 22, style: .continuous)
+                            .stroke(WofinsTheme.border.opacity(0.75), lineWidth: 1)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 20)
+                    .padding(.bottom, 28)
+                }
+            }
+            .refreshable { await appState.refreshMe() }
+        }
+        .preferredColorScheme(.light)
+    }
+}
+
 struct SubscriptionExpiredView: View {
     @EnvironmentObject private var appState: AppState
 
@@ -199,22 +296,18 @@ struct SubscriptionExpiredView: View {
                                 .foregroundStyle(WofinsTheme.ink)
                                 .fixedSize(horizontal: false, vertical: true)
 
-                            Text("Paket \(planLabel) aktif sampai \(expiresLabel) dan sudah berakhir. Seluruh tim di perusahaan Anda terdampak sampai paket diperpanjang.")
+                            Text("Masa akses \(planLabel) berakhir pada \(expiresLabel). Dashboard perusahaan sementara tidak dapat dibuka.")
                                 .font(.poppins(.subheadline))
                                 .foregroundStyle(WofinsTheme.muted)
                                 .fixedSize(horizontal: false, vertical: true)
 
-                            Text(
-                                user?.canManageSubscription == true
-                                    ? "Sebagai admin perusahaan, Anda dapat perpanjang paket agar semua user kembali aktif."
-                                    : "Hubungi admin perusahaan Anda untuk perpanjang paket. Staf tidak perlu memesan sendiri."
-                            )
-                            .font(.poppins(.subheadline))
-                            .foregroundStyle(WofinsTheme.muted)
-                            .fixedSize(horizontal: false, vertical: true)
+                            Text("Jika akses sudah tersedia lagi, tarik layar ini atau ketuk Perbarui status.")
+                                .font(.poppins(.subheadline))
+                                .foregroundStyle(WofinsTheme.muted)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
 
-                        Text("Masa aktif paket perusahaan sudah berakhir. Perpanjang paket agar seluruh tim kembali bisa memakai dashboard.")
+                        Text("Dashboard sementara tidak tersedia karena masa akses perusahaan telah berakhir.")
                             .font(.poppins(.caption))
                             .foregroundStyle(WofinsTheme.danger)
                             .padding(12)
@@ -226,24 +319,10 @@ struct SubscriptionExpiredView: View {
                             }
 
                         VStack(spacing: 10) {
-                            if user?.canManageSubscription == true {
-                                Button {
-                                    openURL("https://wofins.id/harga")
-                                } label: {
-                                    Text("Perpanjang paket")
-                                        .font(.poppins(.subheadline, weight: .bold))
-                                        .foregroundStyle(WofinsTheme.ink)
-                                        .frame(maxWidth: .infinity)
-                                        .frame(height: 50)
-                                        .background(WofinsTheme.yellow, in: Capsule())
-                                }
-                                .buttonStyle(.plain)
-                            }
-
                             Button {
-                                openURL("https://wofins.id/kontak")
+                                Task { await appState.refreshMe() }
                             } label: {
-                                Text(user?.canManageSubscription == true ? "Hubungi support WOFINS" : "Hubungi support")
+                                Text("Perbarui status")
                                     .font(.poppins(.subheadline, weight: .bold))
                                     .foregroundStyle(.white)
                                     .frame(maxWidth: .infinity)
@@ -280,11 +359,6 @@ struct SubscriptionExpiredView: View {
             .refreshable { await appState.refreshMe() }
         }
         .preferredColorScheme(.light)
-    }
-
-    private func openURL(_ string: String) {
-        guard let url = URL(string: string) else { return }
-        UIApplication.shared.open(url)
     }
 }
 

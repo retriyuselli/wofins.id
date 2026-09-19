@@ -762,17 +762,7 @@ class CompanySubscription
     {
         $plan = static::planLabel();
 
-        $businessOnly = [
-            PricingPlans::FEATURE_DOCUMENTS,
-            PricingPlans::FEATURE_ADVANCED_REPORTS,
-            PricingPlans::FEATURE_CREW_FREELANCE,
-        ];
-
-        $target = in_array($feature, $businessOnly, true)
-            ? 'Business'
-            : 'Professional atau Business';
-
-        return "Fitur ini tidak termasuk {$plan}. Upgrade ke {$target} untuk membuka akses.";
+        return "Fitur ini tidak termasuk {$plan}.";
     }
 
     public static function seatFullMessage(): string
@@ -797,14 +787,14 @@ class CompanySubscription
         $base = "Kuota {$plan} sudah penuh ({$used}/{$limit} pengguna).";
 
         if (in_array($planKey, ['starter', 'professional'], true)) {
-            return $base.' Paket ini hanya 1 seat (owner). Upgrade ke Business (hingga 3 pengguna) untuk menambah anggota tim.';
+            return $base.' Paket ini hanya 1 seat (owner).';
         }
 
         if ($planKey === 'business') {
-            return $base.' Nonaktifkan pengguna yang tidak dipakai, atau hubungi support untuk paket Custom.';
+            return $base.' Nonaktifkan pengguna yang tidak dipakai.';
         }
 
-        return $base.' Upgrade paket atau hapus pengguna yang tidak dipakai.';
+        return $base.' Hapus pengguna yang tidak dipakai untuk menambah seat.';
     }
 
     /**

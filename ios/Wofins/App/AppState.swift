@@ -59,11 +59,10 @@ final class AppState: ObservableObject {
         applySession(response)
     }
 
-    func loginWithApple(identityToken: String, accountEmail: String?, accountPassword: String?) async throws {
+    func loginWithApple(identityToken: String, fullName: String?) async throws {
         let response = try await api.loginWithApple(
             identityToken: identityToken,
-            accountEmail: accountEmail,
-            accountPassword: accountPassword,
+            fullName: fullName,
             deviceName: "ios-wofins-apple"
         )
         applySession(response)

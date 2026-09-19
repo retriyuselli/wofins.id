@@ -421,13 +421,13 @@ struct HelpCenterView: View {
                     Divider()
                     faq("Lupa password?", "Atur ulang lewat tautan di bawah. Halaman web memakai host yang sama dengan API aplikasi.")
                     Divider()
-                    faq("Fitur bertanda Pro atau Business?", "Fitur mengikuti akses company yang dikelola administrator perusahaan.")
+                    faq("Fitur bertanda Pro atau Business?", "Fitur mengikuti akses yang sudah ditetapkan untuk perusahaan Anda.")
                 }
 
                 VStack(spacing: 10) {
                     webButton("Atur ulang password", path: "/forgot-password")
                     Button { showContact = true } label: {
-                        helpActionLabel("Hubungi kami")
+                        helpActionLabel("Bantuan teknis")
                     }
                     .buttonStyle(.plain)
                 }
@@ -565,9 +565,9 @@ struct ContactUsSheet: View {
     }
 
     var body: some View {
-        AccountBottomSheet(title: "Hubungi kami") {
+        AccountBottomSheet(title: "Bantuan teknis") {
             VStack(alignment: .leading, spacing: 14) {
-                Text("Hubungi tim dukungan jika Anda membutuhkan bantuan penggunaan WOFINS.")
+                Text("Jika Anda mengalami kendala teknis saat memakai WOFINS, kirim detail masalah ke email dukungan.")
                     .font(.poppins(.subheadline))
                     .foregroundStyle(WofinsTheme.muted)
                     .fixedSize(horizontal: false, vertical: true)
@@ -579,37 +579,19 @@ struct ContactUsSheet: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
-                contactRow(title: "WhatsApp", value: SupportContact.whatsAppDisplay, icon: "phone.fill") {
-                    copy(SupportContact.whatsAppDisplay)
-                }
-                contactRow(title: "Email", value: SupportContact.email, icon: "envelope.fill") {
+                contactRow(title: "Email dukungan", value: SupportContact.email, icon: "envelope.fill") {
                     copy(SupportContact.email)
                 }
-                contactRow(title: "Lokasi", value: SupportContact.location, icon: "mappin.and.ellipse") {
-                    copy(SupportContact.location)
-                }
-
-                Button {
-                    sendWhatsApp()
-                } label: {
-                    Label("Kirim WhatsApp", systemImage: "paperplane.fill")
-                        .font(.poppins(.subheadline, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(WofinsTheme.success, in: Capsule())
-                }
-                .buttonStyle(.plain)
 
                 Button {
                     sendEmail()
                 } label: {
-                    Label("Kirim email", systemImage: "envelope.fill")
+                    Label("Kirim email dukungan", systemImage: "envelope.fill")
                         .font(.poppins(.subheadline, weight: .semibold))
-                        .foregroundStyle(WofinsTheme.primary)
+                        .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
-                        .background(WofinsTheme.primary.opacity(0.08), in: Capsule())
+                        .background(WofinsTheme.primary, in: Capsule())
                 }
                 .buttonStyle(.plain)
             }
@@ -652,19 +634,8 @@ struct ContactUsSheet: View {
         notice = "Disalin: \(value)"
     }
 
-    private func sendWhatsApp() {
-        guard let url = SupportContact.whatsAppURL(message: defaultMessage),
-              UIApplication.shared.canOpenURL(url)
-        else {
-            copy(SupportContact.whatsAppDisplay)
-            notice = "WhatsApp tidak terpasang. Nomor sudah disalin."
-            return
-        }
-        openURL(url)
-    }
-
     private func sendEmail() {
-        if let url = SupportContact.mailURL(subject: "Konsultasi WOFINS", body: defaultMessage) {
+        if let url = SupportContact.mailURL(subject: "Bantuan teknis WOFINS", body: defaultMessage) {
             openURL(url)
         }
     }

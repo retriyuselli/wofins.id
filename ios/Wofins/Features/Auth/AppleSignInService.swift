@@ -20,6 +20,8 @@ enum AppleSignInError: LocalizedError, Equatable {
 
 struct AppleSignInCredential: Sendable {
     let identityToken: String
+    let fullName: String?
+    let email: String?
 }
 
 @MainActor
@@ -65,7 +67,17 @@ extension AppleSignInService: ASAuthorizationControllerDelegate {
             return
         }
 
-        resume(with: .success(AppleSignInCredential(identityToken: identityToken)))
+        resume(with: .success(AppleSignInCredential(
+            identityToken: identityToken,
+            fullName: {
+                let name = [credential.fullName?.givenName, credential.fullName?.familyName]
+                    .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+                    .filter { !$0.isEmpty }
+                    .joined(separator: " ")
+                return name.isEmpty ? nil : name
+            }(),
+            email: credential.email
+        )))
     }
 
     func authorizationController(

@@ -34,7 +34,7 @@ class EnsureApiAccountActive
         }
 
         if (in_array($user->status, ['inactive', 'terminated'], true) || $user->isExpired()) {
-            return $this->deny($request, 'Akun Anda tidak aktif. Hubungi administrator.', revokeToken: true);
+            return $this->deny($request, 'Akun Anda tidak aktif.', revokeToken: true);
         }
 
         if ($user->hasRole('super_admin')) {
@@ -42,8 +42,23 @@ class EnsureApiAccountActive
         }
 
         $company = $user->company;
-        if (! $company || $company->isDeactivated()) {
-            return $this->deny($request, 'Perusahaan Anda tidak aktif. Hubungi administrator.', revokeToken: true);
+        if (! $company) {
+            // Akun pending (belum terhubung company): izinkan /me + logout saja.
+            if ($this->allowsWhenSubscriptionExpired($request)) {
+                return $next($request);
+            }
+
+            return $this->deny(
+                $request,
+                'Akun belum terhubung ke perusahaan. Fitur dashboard belum tersedia.',
+                status: 403,
+                code: 'company_pending',
+                revokeToken: false,
+            );
+        }
+
+        if ($company->isDeactivated()) {
+            return $this->deny($request, 'Perusahaan Anda tidak aktif.', revokeToken: true);
         }
 
         if (CompanySubscription::isExpired($user)) {
@@ -55,7 +70,7 @@ class EnsureApiAccountActive
 
             return $this->deny(
                 $request,
-                "Masa aktif paket perusahaan telah berakhir (hingga {$expiresLabel}). Perpanjang paket untuk memakai dashboard.",
+                "Masa aktif paket perusahaan telah berakhir (hingga {$expiresLabel}). Akses dashboard sementara ditangguhkan.",
                 status: 403,
                 code: 'subscription_expired',
                 revokeToken: false,
