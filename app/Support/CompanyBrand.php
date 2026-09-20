@@ -23,7 +23,7 @@ class CompanyBrand
 
     public const DEFAULT_FAVICON = 'images/favicon_makna.png';
 
-    public const DEFAULT_LOGIN_IMAGE = 'images/image depan .jpg';
+    public const DEFAULT_LOGIN_IMAGE = 'images/login-default.jpg';
 
     /** @var array<string, mixed>|null */
     protected static ?array $memo = null;

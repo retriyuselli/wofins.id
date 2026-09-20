@@ -131,23 +131,15 @@
 
         <div class="wf-auth-main">
         <div class="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid lg:grid-cols-2 rounded-3xl overflow-hidden border border-[var(--wf-line)] bg-white shadow-[0_24px_60px_-28px_rgba(11,31,58,0.35)]">
-                <div class="wf-auth-panel relative min-h-[220px] lg:min-h-[560px] text-white"
-                     style="background: linear-gradient(145deg, #071526 0%, #0b1f3a 55%, #14335a 100%);">
-                    @include('front.partials.wf-deco-shapes')
-                    <div class="absolute inset-0">
-                        <img src="{{ route('brand.login-image') }}?v={{ $companyBrandVersion ?? 1 }}" alt="" class="h-full w-full object-cover object-center opacity-70" loading="lazy" decoding="async">
-                        <div class="absolute inset-0 bg-gradient-to-t from-[#071526] via-[#071526]/55 to-[#071526]/10"></div>
-                    </div>
-                    <div class="relative z-10 h-full flex flex-col justify-end p-8 sm:p-10">
-                        <p class="text-xs font-bold tracking-[0.2em] uppercase text-[var(--wf-gold)]">WOFINS</p>
-                        <h2 class="mt-3 text-2xl sm:text-3xl font-bold leading-tight">
-                            Kelola keuangan wedding organizer dengan lebih rapi
-                        </h2>
-                        <p class="mt-3 text-sm text-white/75 max-w-sm">
-                            Proyek, rekonsiliasi, payroll, dan laporan — dalam satu sistem.
-                        </p>
-                    </div>
+            <div class="grid lg:grid-cols-2 lg:items-stretch rounded-3xl overflow-hidden border border-[var(--wf-line)] bg-white shadow-[0_24px_60px_-28px_rgba(11,31,58,0.35)]">
+                <div class="wf-auth-panel relative bg-[#f7f7f7] min-h-[280px] lg:min-h-full flex items-stretch">
+                    <img
+                        src="{{ route('brand.login-image') }}?v={{ $companyBrandVersion ?? 1 }}"
+                        alt="WOFINS"
+                        class="block w-full h-full min-h-[280px] lg:min-h-[640px] object-cover object-top"
+                        loading="eager"
+                        decoding="async"
+                    >
                 </div>
 
                 <div class="p-6 sm:p-10 flex items-center">

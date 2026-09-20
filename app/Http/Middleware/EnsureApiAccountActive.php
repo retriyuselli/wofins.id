@@ -20,6 +20,7 @@ class EnsureApiAccountActive
     private array $allowedWhenSubscriptionExpired = [
         'api/v1/me',
         'api/v1/auth/logout',
+        'api/v1/billing/apple/*',
     ];
 
     /**

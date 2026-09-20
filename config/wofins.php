@@ -88,4 +88,16 @@ return [
         'skip_super_admin' => (bool) env('WOFINS_AGREEMENT_SKIP_SUPER_ADMIN', true),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Apple In-App Purchase
+    |--------------------------------------------------------------------------
+    */
+
+    'apple_iap' => [
+        'bundle_id' => env('APPLE_IAP_BUNDLE_ID', 'id.wofins.app'),
+        // Hanya local/testing: lewati verifikasi tanda tangan JWS (lihat AppleJwsVerifier).
+        'skip_verify' => (bool) env('APPLE_IAP_SKIP_VERIFY', false),
+    ],
+
 ];

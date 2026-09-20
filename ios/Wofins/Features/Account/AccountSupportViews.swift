@@ -203,6 +203,13 @@ struct SubscriptionPlanView: View {
                         }
                     }
 
+                    if user?.canManageSubscription == true {
+                        SubscriptionPaywallView(
+                            title: "Kelola paket",
+                            subtitle: "Upgrade atau perpanjang lewat In-App Purchase. Langganan yang dibeli di web tetap berlaku.",
+                            showsLogout: false
+                        )
+                    }
                 }
             }
             .padding(.horizontal, 16)

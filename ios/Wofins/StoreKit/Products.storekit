@@ -1,0 +1,210 @@
+{
+  "identifier" : "WOFINS Plans",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_applicationInternalID" : "0",
+    "_developerTeamID" : "LHH9LVRYVY",
+    "_failTransactionsEnabled" : false,
+    "_locale" : "id_ID",
+    "_storefront" : "IDN",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "wofins_plans",
+      "localizations" : [
+        {
+          "description" : "Paket langganan WOFINS",
+          "displayName" : "WOFINS Plans",
+          "locale" : "en_US"
+        }
+      ],
+      "name" : "WOFINS Plans",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "110000",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "starter_monthly",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Paket Starter bulanan",
+              "displayName" : "Starter Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "wofins.starter.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Starter Monthly",
+          "subscriptionGroupID" : "wofins_plans",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "1320000",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "starter_yearly",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Paket Starter tahunan",
+              "displayName" : "Starter Yearly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "wofins.starter.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Starter Yearly",
+          "subscriptionGroupID" : "wofins_plans",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "180000",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "pro_monthly",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Paket Professional bulanan",
+              "displayName" : "Professional Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "wofins.professional.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Professional Monthly",
+          "subscriptionGroupID" : "wofins_plans",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "2160000",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "pro_yearly",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Paket Professional tahunan",
+              "displayName" : "Professional Yearly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "wofins.professional.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Professional Yearly",
+          "subscriptionGroupID" : "wofins_plans",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "295000",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "biz_monthly",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Paket Business bulanan",
+              "displayName" : "Business Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "wofins.business.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Business Monthly",
+          "subscriptionGroupID" : "wofins_plans",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "3540000",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "biz_yearly",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Paket Business tahunan",
+              "displayName" : "Business Yearly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "wofins.business.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Business Yearly",
+          "subscriptionGroupID" : "wofins_plans",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

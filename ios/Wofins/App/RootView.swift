@@ -318,31 +318,22 @@ struct SubscriptionExpiredView: View {
                                     .stroke(WofinsTheme.danger.opacity(0.35), lineWidth: 1)
                             }
 
-                        VStack(spacing: 10) {
-                            Button {
-                                Task { await appState.refreshMe() }
-                            } label: {
-                                Text("Perbarui status")
-                                    .font(.poppins(.subheadline, weight: .bold))
-                                    .foregroundStyle(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 50)
-                                    .background(WofinsTheme.primary, in: Capsule())
-                            }
-                            .buttonStyle(.plain)
+                        SubscriptionPaywallView(
+                            title: "Perbarui paket",
+                            subtitle: "Beli atau pulihkan langganan lewat In-App Purchase untuk mengaktifkan kembali akses perusahaan.",
+                            showsLogout: true
+                        )
 
-                            Button {
-                                Task { await appState.logout() }
-                            } label: {
-                                Text("Keluar dari akun")
-                                    .font(.poppins(.subheadline, weight: .semibold))
-                                    .foregroundStyle(WofinsTheme.danger)
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 44)
-                            }
-                            .buttonStyle(.plain)
+                        Button {
+                            Task { await appState.refreshMe() }
+                        } label: {
+                            Text("Perbarui status")
+                                .font(.poppins(.subheadline, weight: .semibold))
+                                .foregroundStyle(WofinsTheme.primary)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 44)
                         }
-                        .padding(.top, 4)
+                        .buttonStyle(.plain)
                     }
                     .padding(22)
                     .frame(maxWidth: .infinity, alignment: .leading)

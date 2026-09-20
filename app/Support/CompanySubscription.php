@@ -964,6 +964,47 @@ class CompanySubscription
     }
 
     /**
+     * Aktifkan / perpanjang paket dari pembelian In-App Purchase Apple.
+     */
+    public static function activateFromAppleIap(
+        Company $company,
+        string $planKey,
+        string $billing,
+        ?\Carbon\CarbonInterface $appleExpiresAt = null,
+    ): Company {
+        $planKey = PricingPlans::normalizeKey($planKey) ?: $planKey;
+        if (! PricingPlans::find($planKey)) {
+            return $company;
+        }
+
+        if ($appleExpiresAt instanceof \Carbon\CarbonInterface) {
+            $expires = $appleExpiresAt->copy()->endOfDay();
+        } else {
+            $pricing = PricingPlans::resolveBillingPrice(
+                PricingPlans::find($planKey),
+                $billing === 'annual' ? 'annual' : 'monthly'
+            );
+            $months = max(1, (int) ($pricing['months'] ?? ($billing === 'annual' ? 12 : 1)));
+
+            $currentExpiry = $company->subscription_expires_at;
+            $base = now();
+            if ($currentExpiry instanceof \Carbon\CarbonInterface && $currentExpiry->greaterThan($base)) {
+                $base = $currentExpiry->copy();
+            }
+            $expires = $base->copy()->addMonthsNoOverflow($months)->endOfDay();
+        }
+
+        $company->forceFill([
+            'subscription_plan' => $planKey,
+            'subscription_expires_at' => $expires,
+        ])->save();
+
+        static::forgetCache($company->id);
+
+        return $company->fresh();
+    }
+
+    /**
      * Perkiraan / tanggal berakhir dari pesanan (sama rumus activateFromOrder).
      * - Belum approved: dari sekarang (atau sisa masa aktif company jika masih jalan)
      * - Sudah approved + company punya expires_at: tampilkan expires_at company

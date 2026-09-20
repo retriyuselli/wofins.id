@@ -228,6 +228,24 @@ final class APIClient {
         return envelope.data
     }
 
+    func verifyAppleSubscription(signedTransaction: String) async throws -> AppleBillingResponse {
+        struct Body: Encodable { let signed_transaction: String }
+        return try await request(
+            method: "POST",
+            path: "/billing/apple/verify",
+            body: Body(signed_transaction: signedTransaction)
+        )
+    }
+
+    func restoreAppleSubscriptions(signedTransactions: [String]) async throws -> AppleBillingResponse {
+        struct Body: Encodable { let signed_transactions: [String] }
+        return try await request(
+            method: "POST",
+            path: "/billing/apple/restore",
+            body: Body(signed_transactions: signedTransactions)
+        )
+    }
+
     // MARK: - Finance
 
     func financeDashboard(from: String? = nil, to: String? = nil) async throws -> FinanceDashboardData {

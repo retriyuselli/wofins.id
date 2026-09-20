@@ -1,0 +1,36 @@
+App Store Review Notes — WOFINS iOS (IAP)
+
+Demo account
+- Use the owner/admin account provided in App Review Information (company owner).
+- The account must belong to a company so subscription management is available.
+
+How to test In-App Purchase
+1. Sign in with the demo owner account.
+2. If the company subscription is expired, the paywall is shown immediately.
+3. Or open Account → Paket Aktif to see “Kelola paket”.
+4. Purchase any of: Starter / Professional / Business (Monthly or Yearly) using a Sandbox Apple ID.
+5. After purchase, dashboard access refreshes for the company.
+6. Use “Pulihkan pembelian” to restore.
+
+Multiplatform (Guideline 3.1.3(b))
+- WOFINS is a multiplatform B2B SaaS (web + iOS).
+- Subscriptions purchased on the web continue to unlock the same digital features in iOS.
+- The same plan tiers are also available for purchase in iOS via In-App Purchase.
+
+Product IDs
+- wofins.starter.monthly / wofins.starter.yearly
+- wofins.professional.monthly / wofins.professional.yearly
+- wofins.business.monthly / wofins.business.yearly
+
+Server Notifications V2
+- https://app.wofins.id/api/v1/billing/apple/notifications
+
+Suggested reply to Guideline 3.1.1
+Hello App Review Team,
+
+We have implemented In-App Purchase for WOFINS company subscription plans (Starter, Professional, Business — monthly and yearly). Paid digital functionality accessed in the iOS app is now available to purchase using IAP. Customers may also continue to access multiplatform subscriptions acquired outside the app in accordance with guideline 3.1.3(b).
+
+Please review the latest build.
+
+Thank you,
+WOFINS Team

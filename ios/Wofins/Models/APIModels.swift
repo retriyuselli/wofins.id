@@ -46,6 +46,15 @@ struct LoginResponse: Decodable {
     let user: UserProfile
 }
 
+struct AppleBillingResponse: Decodable {
+    let message: String?
+    let transaction_id: String?
+    let plan: String?
+    let billing: String?
+    let expires_at: String?
+    let user: UserProfile?
+}
+
 struct UserProfile: Decodable, Identifiable, Equatable {
     let id: Int
     let employee_id: String?

@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		007D49C9AAF31685607F0291 /* VendorFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8044E0B6B3FC433882660F57 /* VendorFormView.swift */; };
+		01C413E452912253F79702A5 /* StoreKitSubscriptionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610BB929FB3B4524180EEE4B /* StoreKitSubscriptionService.swift */; };
 		03574C02893BCC8590178A5C /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 4FD833A25656F177B63F5BEC /* PrivacyInfo.xcprivacy */; };
 		03AD763118BF5DA1471A2FCD /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80D236068B7DE1DA8572115F /* KeychainStore.swift */; };
 		059180338D92E2767CC39D37 /* ModulesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 344A7AE80446155283D87DCB /* ModulesView.swift */; };
@@ -42,9 +43,11 @@
 		C0216F215333A94A9F576659 /* WofinsLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F043165A4D8D8A7D9DC25970 /* WofinsLogicTests.swift */; };
 		C3406EAD9F8064F53375A160 /* OrderOverviewProjectsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FB9916E757B7C0F62A44D0D /* OrderOverviewProjectsView.swift */; };
 		C8C46F58C00FB734A47C35AE /* Poppins-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = ABCD950C88B25F749D0C89E0 /* Poppins-Light.ttf */; };
+		D40C164AD02F477EB480CA9A /* SubscriptionPaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24D82D9C2561FCD47F728619 /* SubscriptionPaywallView.swift */; };
 		D56AE45B32E583A3FD49CA6C /* GoogleSignInService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8645D50A042315D4079AC879 /* GoogleSignInService.swift */; };
 		D6860999E91AED9CF14E9F9E /* Poppins-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1645796E74E3A38F46085014 /* Poppins-Regular.ttf */; };
 		D7CF918D6DC5DC2321403830 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = E1130BB5A7028338F7A666CA /* GoogleSignIn */; };
+		D94A222785C7CBE563434F66 /* Products.storekit in Resources */ = {isa = PBXBuildFile; fileRef = F1C531DC5BC19399FBCDD0DA /* Products.storekit */; };
 		E3EEA90A5CE61CF439691A86 /* APIModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF72C60297D2D0F40EE36C0E /* APIModels.swift */; };
 		EF5B825D1FC02E91BBB9B576 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 686D73F0C67F4833B617C3E4 /* LoginView.swift */; };
 		F21E3760BE167E9AB0CBD048 /* VendorDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D7C0DEF4E29A558884A0034 /* VendorDetailView.swift */; };
@@ -74,18 +77,20 @@
 		1BA7C7798BF15FD393540E64 /* ProductDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductDetailView.swift; sourceTree = "<group>"; };
 		1C2972523AD19542CB2D8F7A /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
 		208F8A27219120B2D2573A31 /* PrivacyStatementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyStatementView.swift; sourceTree = "<group>"; };
+		24D82D9C2561FCD47F728619 /* SubscriptionPaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionPaywallView.swift; sourceTree = "<group>"; };
 		2E5B0759775E1392314F7A97 /* ProspectDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProspectDetailView.swift; sourceTree = "<group>"; };
 		3109EF10B23E08C0C2129085 /* ProductFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductFormView.swift; sourceTree = "<group>"; };
 		344A7AE80446155283D87DCB /* ModulesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModulesView.swift; sourceTree = "<group>"; };
 		4377770D0A19A5521A0F1D15 /* Poppins-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Poppins-Medium.ttf"; sourceTree = "<group>"; };
-		46F62323D466E9BB6888B561 /* Wofins.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Wofins.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		46F62323D466E9BB6888B561 /* Wofins.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Wofins.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4DA63BBA7AD52019549529BD /* CreateProspectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateProspectView.swift; sourceTree = "<group>"; };
 		4FB9916E757B7C0F62A44D0D /* OrderOverviewProjectsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderOverviewProjectsView.swift; sourceTree = "<group>"; };
-		4FD833A25656F177B63F5BEC /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		4FD833A25656F177B63F5BEC /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		5691BD2A257F78CA68391180 /* AccountSupportViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSupportViews.swift; sourceTree = "<group>"; };
 		59DAD90DEC3B74E3C5A8E81A /* Wofins.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Wofins.entitlements; sourceTree = "<group>"; };
 		5D7C0DEF4E29A558884A0034 /* VendorDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VendorDetailView.swift; sourceTree = "<group>"; };
 		5E6D09ACF3EBC6ED0A2E716A /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		610BB929FB3B4524180EEE4B /* StoreKitSubscriptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreKitSubscriptionService.swift; sourceTree = "<group>"; };
 		65967F9044D62AFFCF093112 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		686D73F0C67F4833B617C3E4 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		6AF9342BEC6D810CA52935BB /* ProjectDocumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectDocumentView.swift; sourceTree = "<group>"; };
@@ -106,7 +111,7 @@
 		C56D6CF361CC4647D05759AA /* AccountOverviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountOverviewView.swift; sourceTree = "<group>"; };
 		CA268E25E92B4035B23DF706 /* APIConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConfig.swift; sourceTree = "<group>"; };
 		CC7882A8984A13FF7A56C5A2 /* SimulasiFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulasiFormView.swift; sourceTree = "<group>"; };
-		D6ADAE80BECA7F2C7D1CEFFF /* WofinsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WofinsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D6ADAE80BECA7F2C7D1CEFFF /* WofinsTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = WofinsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D839C0D5C282780676C64491 /* Poppins-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Poppins-Bold.ttf"; sourceTree = "<group>"; };
 		DB270F9D6E7E2C018D3FE1AD /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		DF6F026948E02B49C80F9235 /* TemporaryExportStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemporaryExportStore.swift; sourceTree = "<group>"; };
@@ -115,6 +120,7 @@
 		EDF3E253264C0388C4DEC91E /* FinancePeriodPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FinancePeriodPicker.swift; sourceTree = "<group>"; };
 		EEC4659AE76F8A0E80509CE3 /* AccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountView.swift; sourceTree = "<group>"; };
 		F043165A4D8D8A7D9DC25970 /* WofinsLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WofinsLogicTests.swift; sourceTree = "<group>"; };
+		F1C531DC5BC19399FBCDD0DA /* Products.storekit */ = {isa = PBXFileReference; path = Products.storekit; sourceTree = "<group>"; };
 		FE9DA55EB1985F8114C79901 /* BankReconciliationComparisonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BankReconciliationComparisonView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -141,6 +147,7 @@
 				85E21784EA0F26FF403F8DE5 /* Features */,
 				A053B53462EA3EFD249B73A9 /* Models */,
 				86FC636D64E70B0C6F61A585 /* Resources */,
+				A5FC006D12C418AB04806E9B /* StoreKit */,
 			);
 			path = Wofins;
 			sourceTree = "<group>";
@@ -188,6 +195,15 @@
 			path = Compensation;
 			sourceTree = "<group>";
 		};
+		4752F488262D94F595EEE6AC /* Billing */ = {
+			isa = PBXGroup;
+			children = (
+				610BB929FB3B4524180EEE4B /* StoreKitSubscriptionService.swift */,
+				24D82D9C2561FCD47F728619 /* SubscriptionPaywallView.swift */,
+			);
+			path = Billing;
+			sourceTree = "<group>";
+		};
 		73F9E0F61C361ECCC8ADD9B1 /* Core */ = {
 			isa = PBXGroup;
 			children = (
@@ -212,6 +228,7 @@
 			children = (
 				B38D31BFC1EE25E64D9B4C8C /* Account */,
 				986B81E3D1C518DAF0F5029C /* Auth */,
+				4752F488262D94F595EEE6AC /* Billing */,
 				408CC02AD7300BC9F1B84185 /* Compensation */,
 				093F8DFC770FE942E6E9F68A /* Finance */,
 			);
@@ -256,6 +273,14 @@
 				BF72C60297D2D0F40EE36C0E /* APIModels.swift */,
 			);
 			path = Models;
+			sourceTree = "<group>";
+		};
+		A5FC006D12C418AB04806E9B /* StoreKit */ = {
+			isa = PBXGroup;
+			children = (
+				F1C531DC5BC19399FBCDD0DA /* Products.storekit */,
+			);
+			path = StoreKit;
 			sourceTree = "<group>";
 		};
 		A98BFFF04CDAB21FABB9E0F6 /* Fonts */ = {
@@ -347,7 +372,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 2700;
+				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					599DCF76841C9E28C7B9EB8D = {
 						DevelopmentTeam = LHH9LVRYVY;
@@ -394,6 +419,7 @@
 				D6860999E91AED9CF14E9F9E /* Poppins-Regular.ttf in Resources */,
 				FD03342FABCEFD6F31F49572 /* Poppins-SemiBold.ttf in Resources */,
 				03574C02893BCC8590178A5C /* PrivacyInfo.xcprivacy in Resources */,
+				D94A222785C7CBE563434F66 /* Products.storekit in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -475,6 +501,8 @@
 				3E4F4E1FD8BE181028EC18CC /* ReportsOverviewView.swift in Sources */,
 				6157224A1BA4F6A74F58817A /* RootView.swift in Sources */,
 				FA23EDE747329E0C8F217DA8 /* SimulasiFormView.swift in Sources */,
+				01C413E452912253F79702A5 /* StoreKitSubscriptionService.swift in Sources */,
+				D40C164AD02F477EB480CA9A /* SubscriptionPaywallView.swift in Sources */,
 				F96DD64486432F773BB46954 /* TemporaryExportStore.swift in Sources */,
 				9791363DEEC5307D2E8A0F9D /* TransactionsOverviewView.swift in Sources */,
 				A5D11915EEB51CCBC8442910 /* TransactionsView.swift in Sources */,
@@ -510,6 +538,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = LHH9LVRYVY;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -533,7 +562,8 @@
 				CODE_SIGN_ENTITLEMENTS = Wofins/Wofins.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
+				DEVELOPMENT_TEAM = LHH9LVRYVY;
 				DEVICE_BASE_URL = "";
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -541,8 +571,6 @@
 				GID_CLIENT_ID = "408651692876-vea73ugad9mapivcldjfrc4hmd3tirv0.apps.googleusercontent.com";
 				GID_SERVER_CLIENT_ID = "408651692876-pp16jkl7kdtdjh9g2htnu89amv05kjmr.apps.googleusercontent.com";
 				INFOPLIST_FILE = "Wofins/Info-Debug.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = WOFINS;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -593,7 +621,6 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = LHH9LVRYVY;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -609,7 +636,6 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
@@ -624,13 +650,12 @@
 				CODE_SIGN_ENTITLEMENTS = Wofins/Wofins.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
+				DEVELOPMENT_TEAM = LHH9LVRYVY;
 				GENERATE_INFOPLIST_FILE = NO;
 				GID_CLIENT_ID = "408651692876-vea73ugad9mapivcldjfrc4hmd3tirv0.apps.googleusercontent.com";
 				GID_SERVER_CLIENT_ID = "408651692876-ju4su29c4t3l08ee9kjajdmavkr0afj1.apps.googleusercontent.com";
 				INFOPLIST_FILE = Wofins/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = WOFINS;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -681,7 +706,6 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = LHH9LVRYVY;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -704,7 +728,6 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -716,6 +739,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = LHH9LVRYVY;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (

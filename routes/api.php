@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AppleBillingController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\FinanceController;
 use App\Http\Controllers\Api\V1\MeController;
@@ -27,6 +28,11 @@ Route::prefix('v1')->group(function () {
         ->middleware('throttle:10,1')
         ->name('api.v1.auth.apple');
 
+    // App Store Server Notifications V2 (tanpa auth user).
+    Route::post('/billing/apple/notifications', [AppleBillingController::class, 'notifications'])
+        ->middleware('throttle:120,1')
+        ->name('api.v1.billing.apple.notifications');
+
     Route::middleware(['auth:sanctum', 'abilities:mobile', 'api.account.active'])->group(function () {
         Route::post('/auth/logout', [AuthController::class, 'logout'])
             ->name('api.v1.auth.logout');
@@ -38,6 +44,17 @@ Route::prefix('v1')->group(function () {
             ->middleware('throttle:5,1')
             ->name('api.v1.me.password');
         Route::get('/me/devices', [MeController::class, 'devices'])->name('api.v1.me.devices');
+
+        Route::prefix('billing/apple')->group(function () {
+            Route::get('/products', [AppleBillingController::class, 'products'])
+                ->name('api.v1.billing.apple.products');
+            Route::post('/verify', [AppleBillingController::class, 'verify'])
+                ->middleware('throttle:20,1')
+                ->name('api.v1.billing.apple.verify');
+            Route::post('/restore', [AppleBillingController::class, 'restore'])
+                ->middleware('throttle:10,1')
+                ->name('api.v1.billing.apple.restore');
+        });
 
         Route::get('/me/compensation', [MeController::class, 'compensation'])
             ->middleware('pro.feature:payroll')
