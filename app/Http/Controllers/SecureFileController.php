@@ -8,18 +8,19 @@ use App\Models\DocumentAttachment;
 use App\Models\Order;
 use App\Models\SubscriptionOrder;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 
 class SecureFileController extends Controller
 {
-    public function order(Order $order, string $field): Response
+    public function order(Request $request, Order $order, string $field): Response
     {
         abort_unless(in_array($field, ['doc_kontrak', 'agreement_product'], true), 404);
         Gate::authorize('view', $order);
 
-        return $this->stream($order->{$field});
+        return $this->stream($order->{$field}, download: $request->boolean('download'));
     }
 
     public function payment(DataPembayaran $payment): Response
@@ -64,19 +65,33 @@ class SecureFileController extends Controller
         return $this->stream($subscriptionOrder->payment_proof_path);
     }
 
-    private function stream(mixed $value, ?string $downloadName = null): Response
+    private function stream(mixed $value, ?string $downloadName = null, bool $download = false): Response
     {
         $path = $this->path($value);
         abort_if($path === null, 404);
 
+        $headers = [
+            'Cache-Control' => 'private, no-store, no-cache, must-revalidate, max-age=0',
+            'X-Content-Type-Options' => 'nosniff',
+        ];
+        $filename = $downloadName ?: basename($path);
+
         foreach (['private', 'public'] as $disk) {
-            if (Storage::disk($disk)->exists($path)) {
-                return response()->file(Storage::disk($disk)->path($path), [
-                    'Content-Disposition' => 'inline; filename="'.str_replace('"', '', $downloadName ?: basename($path)).'"',
-                    'Cache-Control' => 'private, no-store, no-cache, must-revalidate, max-age=0',
-                    'X-Content-Type-Options' => 'nosniff',
-                ]);
+            if (! Storage::disk($disk)->exists($path)) {
+                continue;
             }
+
+            if ($disk === 'public' && ! Storage::disk('private')->exists($path)) {
+                $stream = Storage::disk('public')->readStream($path);
+                if (is_resource($stream)) {
+                    Storage::disk('private')->writeStream($path, $stream);
+                    fclose($stream);
+                }
+            }
+
+            return $download
+                ? Storage::disk($disk)->download($path, $filename, $headers)
+                : Storage::disk($disk)->response($path, $filename, $headers);
         }
 
         abort(404);
@@ -84,6 +99,16 @@ class SecureFileController extends Controller
 
     private function path(mixed $value): ?string
     {
+        if (is_string($value)) {
+            $trimmed = trim($value);
+            if (str_starts_with($trimmed, '[') || str_starts_with($trimmed, '{')) {
+                $decoded = json_decode($trimmed, true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $value = $decoded;
+                }
+            }
+        }
+
         if (is_array($value)) {
             $value = collect($value)->filter(fn ($item) => is_string($item) && $item !== '')->last();
         }
@@ -92,8 +117,11 @@ class SecureFileController extends Controller
             return null;
         }
 
-        $path = ltrim(trim($value), '/');
+        $path = ltrim(str_replace('\\', '/', trim($value)), '/');
+        if (str_starts_with($path, 'storage/')) {
+            $path = substr($path, strlen('storage/'));
+        }
 
-        return str_contains($path, '..') ? null : $path;
+        return ($path === '' || str_contains($path, '..')) ? null : $path;
     }
 }
