@@ -217,18 +217,23 @@ struct LoginView: View {
                         .font(.poppins(size: 14))
                         .foregroundStyle(navy.opacity(0.55))
                         .frame(width: 20)
-                    TextField(
-                        "",
-                        text: $email,
-                        prompt: Text("nama@email.com")
+                    ZStack(alignment: .leading) {
+                        // Prompt SwiftUI ikut .tint app (bisa biru); overlay agar tetap abu-abu.
+                        if email.isEmpty {
+                            Text("nama@email.com")
+                                .font(.poppins(size: 15))
+                                .foregroundStyle(muted)
+                                .allowsHitTesting(false)
+                        }
+                        TextField("", text: $email)
                             .font(.poppins(size: 15))
-                            .foregroundStyle(Color.gray)
-                    )
-                        .textContentType(.username)
-                        .keyboardType(.emailAddress)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .focused($focusedField, equals: .email)
+                            .foregroundStyle(navyDeep)
+                            .textContentType(.username)
+                            .keyboardType(.emailAddress)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .focused($focusedField, equals: .email)
+                    }
                 }
             }
             .padding(.top, 22)
