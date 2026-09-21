@@ -162,15 +162,16 @@ struct SubscriptionPaywallView: View {
             let response = try await appState.api.verifyAppleSubscription(signedTransaction: jws)
             if let user = response.user {
                 appState.currentUser = user
-            } else {
-                await appState.refreshMe()
             }
+            await appState.refreshMe()
             notice = response.message ?? "Langganan aktif."
             onFinished?()
         } catch let error as StoreKitSubscriptionError where error == .userCancelled {
             // no banner
         } catch {
-            errorMessage = APILoadFailure.userMessage(for: error) ?? error.localizedDescription
+            // Apple sheet bisa sukses dulu; aktivasi server yang gagal harus terlihat jelas.
+            errorMessage = "Pembelian Apple berhasil, tetapi aktivasi di server gagal: "
+                + (APILoadFailure.userMessage(for: error) ?? error.localizedDescription)
         }
     }
 

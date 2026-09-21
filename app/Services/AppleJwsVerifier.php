@@ -36,6 +36,11 @@ class AppleJwsVerifier
             ]);
         }
 
+        // StoreKit Configuration (Xcode) memakai JWS lokal tanpa rantai sertifikat Apple produksi.
+        if ($this->isXcodeStoreKitPayload($payload) && app()->environment(['local', 'testing'])) {
+            return $payload;
+        }
+
         if ($this->shouldSkipCrypto()) {
             return $payload;
         }
@@ -43,7 +48,7 @@ class AppleJwsVerifier
         $x5c = $header['x5c'] ?? null;
         if (! is_array($x5c) || $x5c === []) {
             throw ValidationException::withMessages([
-                'signed_transaction' => ['Sertifikat transaksi Apple tidak ditemukan.'],
+                'signed_transaction' => ['Sertifikat transaksi Apple tidak ditemukan. Uji Xcode StoreKit hanya didukung di API local.'],
             ]);
         }
 
@@ -55,7 +60,9 @@ class AppleJwsVerifier
             ]);
         }
 
-        $signature = $this->base64UrlDecode($signatureB64, raw: true);
+        $signature = $this->joseEs256SignatureToDer(
+            $this->base64UrlDecode($signatureB64, raw: true)
+        );
         $signedData = $headerB64.'.'.$payloadB64;
         $ok = openssl_verify($signedData, $signature, $publicKey, OPENSSL_ALGO_SHA256);
         if ($ok !== 1) {
@@ -67,6 +74,29 @@ class AppleJwsVerifier
         $this->assertAppleCertificateChain($x5c);
 
         return $payload;
+    }
+
+    /**
+     * JWS ES256 memakai R||S (64 byte); OpenSSL membutuhkan DER.
+     */
+    private function joseEs256SignatureToDer(string $raw): string
+    {
+        if (strlen($raw) !== 64) {
+            return $raw;
+        }
+
+        $r = ltrim(substr($raw, 0, 32), "\x00");
+        $s = ltrim(substr($raw, 32, 32), "\x00");
+        if ($r === '' || ord($r[0]) > 0x7f) {
+            $r = "\x00".$r;
+        }
+        if ($s === '' || ord($s[0]) > 0x7f) {
+            $s = "\x00".$s;
+        }
+
+        return "\x30".chr(2 + strlen($r) + 2 + strlen($s))
+            ."\x02".chr(strlen($r)).$r
+            ."\x02".chr(strlen($s)).$s;
     }
 
     /**
@@ -94,6 +124,16 @@ class AppleJwsVerifier
         }
 
         return app()->environment(['local', 'testing']);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function isXcodeStoreKitPayload(array $payload): bool
+    {
+        $environment = strtolower((string) ($payload['environment'] ?? ''));
+
+        return in_array($environment, ['xcode', 'local', 'storekit'], true);
     }
 
     private function x5cToPem(string $x5c): string
