@@ -166,6 +166,7 @@ class ProductDisplayController extends Controller
     {
         return $product->load([
             'category',
+            'parent',
             'items.vendor',
             'pengurangans',
             'penambahanHarga.vendor',
