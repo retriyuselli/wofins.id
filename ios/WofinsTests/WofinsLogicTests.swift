@@ -11,6 +11,7 @@ final class APIConfigTests: XCTestCase {
     func testTrustedReleaseURL() {
         XCTAssertTrue(APIConfig.isTrustedReleaseURL(URL(string: "https://app.wofins.id")!))
         XCTAssertTrue(APIConfig.isTrustedReleaseURL(URL(string: "https://maknafinance.id")!))
+        XCTAssertTrue(APIConfig.isTrustedReleaseURL(URL(string: "https://saranafinance.com")!))
         XCTAssertFalse(APIConfig.isTrustedReleaseURL(URL(string: "https://app.example.com")!))
         XCTAssertFalse(APIConfig.isTrustedReleaseURL(URL(string: "http://app.example.com")!))
         XCTAssertFalse(APIConfig.isTrustedReleaseURL(URL(string: "https://127.0.0.1")!))
@@ -86,6 +87,7 @@ final class APIConfigTests: XCTestCase {
     func testAllowlistAcceptsProductionHosts() {
         XCTAssertTrue(APIConfig.isAllowedAPIHost(URL(string: "https://app.wofins.id")!))
         XCTAssertTrue(APIConfig.isAllowedAPIHost(URL(string: "https://maknafinance.id")!))
+        XCTAssertTrue(APIConfig.isAllowedAPIHost(URL(string: "https://saranafinance.com")!))
         XCTAssertTrue(APIConfig.isAllowedAPIHost(URL(string: "https://app.wofins.id/api/v1/me")!))
     }
 
@@ -94,11 +96,14 @@ final class APIConfigTests: XCTestCase {
         XCTAssertFalse(APIConfig.isAllowedAPIHost(URL(string: "https://wofins.id")!))
         XCTAssertFalse(APIConfig.isAllowedAPIHost(URL(string: "http://maknafinance.id")!))
         XCTAssertFalse(APIConfig.isAllowedAPIHost(URL(string: "https://maknafinance.id.evil.test")!))
+        XCTAssertFalse(APIConfig.isAllowedAPIHost(URL(string: "http://saranafinance.com")!))
+        XCTAssertFalse(APIConfig.isAllowedAPIHost(URL(string: "https://saranafinance.com.evil.test")!))
     }
 
     func testMediaAllowlistRejectsForeignAndLookalikeHosts() {
         XCTAssertTrue(APIConfig.isAllowedMediaURL(URL(string: "https://app.wofins.id/storage/a.jpg")!))
         XCTAssertTrue(APIConfig.isAllowedMediaURL(URL(string: "https://maknafinance.id/storage/a.jpg")!))
+        XCTAssertTrue(APIConfig.isAllowedMediaURL(URL(string: "https://saranafinance.com/storage/a.jpg")!))
         XCTAssertFalse(APIConfig.isAllowedMediaURL(URL(string: "https://cdn.example.com/a.jpg")!))
         XCTAssertFalse(APIConfig.isAllowedMediaURL(URL(string: "https://app.wofins.id.evil.test/a.jpg")!))
         XCTAssertFalse(APIConfig.isAllowedMediaURL(URL(string: "http://app.wofins.id/a.jpg")!))
@@ -118,20 +123,77 @@ final class APIConfigTests: XCTestCase {
     }
 
     func testPublicLoginStaysOnWofinsUntilInternalUnlock() {
-        XCTAssertEqual(LoginHostPolicy.resolvedHost(unlocked: false, current: .makna), .wofins)
-        XCTAssertEqual(LoginHostPolicy.resolvedHost(unlocked: true, current: .makna), .makna)
-        XCTAssertEqual(LoginHostPolicy.accountHint(for: .makna, unlocked: false), "Gunakan email akun WOFINS Anda")
-        XCTAssertEqual(LoginHostPolicy.accountHint(for: .makna, unlocked: true), "Gunakan email akun internal")
-        XCTAssertEqual(APIHostOption.makna.title, "Internal")
+        let makna = APIHostOption.resolveStored("makna")
+        let sarana = APIHostOption.resolveStored("sarana")
+        XCTAssertEqual(LoginHostPolicy.resolvedHost(unlocked: false, current: makna), .wofins)
+        XCTAssertEqual(LoginHostPolicy.resolvedHost(unlocked: true, current: makna), makna)
+        XCTAssertEqual(LoginHostPolicy.resolvedHost(unlocked: false, current: sarana), .wofins)
+        XCTAssertEqual(LoginHostPolicy.resolvedHost(unlocked: true, current: sarana), sarana)
+        XCTAssertEqual(LoginHostPolicy.accountHint(for: makna, unlocked: false), "Gunakan email akun WOFINS Anda")
+        XCTAssertEqual(LoginHostPolicy.accountHint(for: makna, unlocked: true), "Gunakan email akun internal")
+        XCTAssertEqual(LoginHostPolicy.accountHint(for: sarana, unlocked: true), "Gunakan email akun internal")
+        XCTAssertEqual(makna.title, "Makna")
+        XCTAssertEqual(sarana.title, "Sarana")
+    }
+
+    func testPurchaseDomainRevealsMatchingInternalHostOnly() {
+        let previous = LoginHostPolicy.revealedInternalHosts
+        defer { LoginHostPolicy.revealedInternalHosts = previous }
+
+        LoginHostPolicy.clearRevealedHosts()
+        XCTAssertEqual(LoginHostPolicy.visibleHostOptions(revealed: []), [.wofins])
+        XCTAssertNil(APIHostOption.fromPurchaseDomain("app.wofins.id", companyName: nil))
+        XCTAssertNil(APIHostOption.fromPurchaseDomain("bukan-domain", companyName: nil))
+
+        let sarana = APIHostOption.fromPurchaseDomain("https://www.saranafinance.com/admin", companyName: "Sarana Finance")
+        XCTAssertEqual(sarana?.host, "saranafinance.com")
+        XCTAssertEqual(LoginHostPolicy.reveal(sarana!), sarana)
+        XCTAssertEqual(LoginHostPolicy.visibleHostOptions(), [.wofins, sarana!])
+        XCTAssertTrue(APIConfig.allowedProductionHosts.contains("saranafinance.com"))
+
+        let makna = APIHostOption.fromPurchaseDomain("maknafinance.id", companyName: "Makna")
+        XCTAssertEqual(LoginHostPolicy.reveal(makna!), makna)
+        XCTAssertEqual(
+            Set(LoginHostPolicy.visibleHostOptions().map(\.host)),
+            Set(["app.wofins.id", "maknafinance.id", "saranafinance.com"])
+        )
+    }
+
+    func testPurchaseCodeFormatRequiresUUID() {
+        XCTAssertTrue(ItemPurchaseCodeClient.isPurchaseCodeFormat("550e8400-e29b-41d4-a716-446655440000"))
+        XCTAssertFalse(ItemPurchaseCodeClient.isPurchaseCodeFormat("makna"))
+        XCTAssertFalse(ItemPurchaseCodeClient.isPurchaseCodeFormat("sarana"))
+        XCTAssertFalse(ItemPurchaseCodeClient.isPurchaseCodeFormat(""))
     }
 
     func testMaknaHostUsesAllowlistedProductionURL() {
         let previous = APIConfig.selectedHost
-        defer { APIConfig.selectedHost = previous }
-        APIConfig.selectedHost = .makna
+        let previousRevealed = LoginHostPolicy.revealedInternalHosts
+        defer {
+            APIConfig.selectedHost = previous
+            LoginHostPolicy.revealedInternalHosts = previousRevealed
+        }
+        let makna = APIHostOption.resolveStored("maknafinance.id")
+        _ = LoginHostPolicy.reveal(makna)
+        APIConfig.selectedHost = makna
         XCTAssertEqual(APIConfig.baseURL.scheme, "https")
         XCTAssertEqual(APIConfig.baseURL.host, "maknafinance.id")
         XCTAssertTrue(APIConfig.endpoint("/auth/login")?.absoluteString.hasPrefix("https://maknafinance.id/api/v1/auth/login") == true)
+    }
+
+    func testSaranaHostUsesAllowlistedProductionURL() {
+        let previous = APIConfig.selectedHost
+        let previousRevealed = LoginHostPolicy.revealedInternalHosts
+        defer {
+            APIConfig.selectedHost = previous
+            LoginHostPolicy.revealedInternalHosts = previousRevealed
+        }
+        let sarana = APIHostOption.resolveStored("saranafinance.com")
+        _ = LoginHostPolicy.reveal(sarana)
+        APIConfig.selectedHost = sarana
+        XCTAssertEqual(APIConfig.baseURL.scheme, "https")
+        XCTAssertEqual(APIConfig.baseURL.host, "saranafinance.com")
+        XCTAssertTrue(APIConfig.endpoint("/auth/login")?.absoluteString.hasPrefix("https://saranafinance.com/api/v1/auth/login") == true)
     }
 }
 
@@ -172,11 +234,12 @@ final class APIHostSwitchTests: XCTestCase {
         XCTAssertEqual(state.api.token, "host-switch-token")
         XCTAssertTrue(state.isAuthenticated)
 
-        state.selectAPIHost(.makna)
+        let makna = APIHostOption.resolveStored("maknafinance.id")
+        state.selectAPIHost(makna)
         XCTAssertNil(state.api.token)
         XCTAssertFalse(state.isAuthenticated)
         XCTAssertNil(state.currentUser)
-        XCTAssertEqual(APIConfig.selectedHost, .makna)
+        XCTAssertEqual(APIConfig.selectedHost.host, "maknafinance.id")
     }
 }
 

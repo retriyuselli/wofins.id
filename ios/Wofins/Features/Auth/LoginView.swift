@@ -16,10 +16,14 @@ struct LoginView: View {
     @State private var selectedHost = APIConfig.selectedHost
     @State private var showInternalHostPicker = LoginHostPolicy.isInternalUnlocked
     @State private var logoUnlockTaps = 0
+    @State private var internalAccessCode = ""
+    @State private var revealedInternalHosts = LoginHostPolicy.revealedInternalHosts
+    @State private var hostCodeNotice: String?
+    @State private var isVerifyingHostCode = false
     @FocusState private var focusedField: Field?
 
     private enum Field {
-        case email, password
+        case email, password, hostCode
     }
 
     private var navy: Color { WofinsTheme.primary }
@@ -96,6 +100,16 @@ struct LoginView: View {
             )
             if publicHost != selectedHost {
                 applyHost(publicHost)
+            }
+            if showInternalHostPicker {
+                var revealed = LoginHostPolicy.revealedInternalHosts
+                if selectedHost.isInternalHost {
+                    revealed.insert(selectedHost)
+                    LoginHostPolicy.revealedInternalHosts = revealed
+                }
+                revealedInternalHosts = revealed
+            } else {
+                revealedInternalHosts = []
             }
             if let saved = UserDefaults.standard.string(forKey: "wofins.savedEmail"), !saved.isEmpty {
                 email = saved
@@ -427,10 +441,27 @@ struct LoginView: View {
         let unlocked = !LoginHostPolicy.isInternalUnlocked
         LoginHostPolicy.isInternalUnlocked = unlocked
         showInternalHostPicker = unlocked
-        if !unlocked {
+        hostCodeNotice = nil
+        internalAccessCode = ""
+        if unlocked {
+            if selectedHost.isInternalHost {
+                var revealed = LoginHostPolicy.revealedInternalHosts
+                revealed.insert(selectedHost)
+                LoginHostPolicy.revealedInternalHosts = revealed
+                revealedInternalHosts = revealed
+            } else {
+                revealedInternalHosts = LoginHostPolicy.revealedInternalHosts
+            }
+        } else {
+            LoginHostPolicy.clearRevealedHosts()
+            revealedInternalHosts = []
             applyHost(.wofins)
         }
         UINotificationFeedbackGenerator().notificationOccurred(unlocked ? .success : .warning)
+    }
+
+    private var visibleHostOptions: [APIHostOption] {
+        LoginHostPolicy.visibleHostOptions(revealed: revealedInternalHosts)
     }
 
     private var hostPicker: some View {
@@ -440,7 +471,79 @@ struct LoginView: View {
                 .foregroundStyle(navy)
 
             HStack(spacing: 8) {
-                ForEach(APIHostOption.allCases) { option in
+                ZStack(alignment: .leading) {
+                    if internalAccessCode.isEmpty {
+                        Text("Item Purchase Code")
+                            .font(.poppins(size: 13))
+                            .foregroundStyle(muted)
+                            .allowsHitTesting(false)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                    }
+                    TextField("", text: $internalAccessCode)
+                        .font(.poppins(size: 13))
+                        .foregroundStyle(navyDeep)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .keyboardType(.asciiCapable)
+                        .textContentType(.none)
+                        .submitLabel(.go)
+                        .focused($focusedField, equals: .hostCode)
+                        .onSubmit { Task { await submitInternalAccessCode() } }
+                }
+                .padding(.horizontal, 12)
+                .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44)
+                .background(canvas)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(line, lineWidth: 1)
+                )
+
+                Button {
+                    Task { await submitInternalAccessCode() }
+                } label: {
+                    Group {
+                        if isVerifyingHostCode {
+                            ProgressView()
+                                .tint(.white)
+                        } else {
+                            Text("Buka")
+                                .font(.poppins(size: 13, weight: .semibold))
+                                .lineLimit(1)
+                        }
+                    }
+                    .frame(height: 44)
+                    .padding(.horizontal, 14)
+                    .foregroundStyle(Color.white)
+                    .background(navy)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .disabled(
+                    isLoading
+                        || isVerifyingHostCode
+                        || internalAccessCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                )
+                .accessibilityLabel("Buka host dengan purchase code")
+            }
+            .frame(maxWidth: .infinity)
+
+            if let hostCodeNotice {
+                Text(hostCodeNotice)
+                    .font(.poppins(size: 11))
+                    .foregroundStyle(hostCodeNoticeHasError ? WofinsTheme.danger : muted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            LazyVGrid(
+                columns: [
+                    GridItem(.flexible(), spacing: 8),
+                    GridItem(.flexible(), spacing: 8),
+                ],
+                spacing: 8
+            ) {
+                ForEach(visibleHostOptions) { option in
                     Button {
                         applyHost(option)
                     } label: {
@@ -472,6 +575,57 @@ struct LoginView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
+        }
+    }
+
+    private var hostCodeNoticeHasError: Bool {
+        guard let hostCodeNotice else { return false }
+        let lower = hostCodeNotice.lowercased()
+        return lower.contains("tidak")
+            || lower.contains("gagal")
+            || lower.contains("habis")
+            || lower.contains("dicabut")
+            || lower.contains("invalid")
+    }
+
+    private func submitInternalAccessCode() async {
+        dismissKeyboard()
+        let code = internalAccessCode.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !code.isEmpty else { return }
+        guard ItemPurchaseCodeClient.isPurchaseCodeFormat(code) else {
+            hostCodeNotice = "Purchase code harus UUID dari maknafinance.id."
+            UINotificationFeedbackGenerator().notificationOccurred(.error)
+            return
+        }
+
+        isVerifyingHostCode = true
+        hostCodeNotice = nil
+        defer { isVerifyingHostCode = false }
+
+        do {
+            let result = try await ItemPurchaseCodeClient.verify(code: code)
+            guard result.valid else {
+                hostCodeNotice = result.message.isEmpty ? "Purchase code tidak valid." : result.message
+                UINotificationFeedbackGenerator().notificationOccurred(.error)
+                return
+            }
+            guard let domain = result.domain,
+                  let host = APIHostOption.fromPurchaseDomain(domain, companyName: result.company_name) else {
+                hostCodeNotice = "Purchase code valid, tetapi domain belum terisi di maknafinance.id."
+                UINotificationFeedbackGenerator().notificationOccurred(.error)
+                return
+            }
+            let revealed = LoginHostPolicy.reveal(host) ?? host
+            revealedInternalHosts = LoginHostPolicy.revealedInternalHosts
+            internalAccessCode = ""
+            hostCodeNotice = "Host \(revealed.title) terbuka (\(revealed.host))."
+            applyHost(revealed)
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+        } catch {
+            hostCodeNotice = APILoadFailure.userMessage(for: error)
+                ?? (error as? LocalizedError)?.errorDescription
+                ?? "Gagal verifikasi purchase code."
+            UINotificationFeedbackGenerator().notificationOccurred(.error)
         }
     }
 
@@ -581,7 +735,7 @@ struct LoginView: View {
         } catch {
             let message = APILoadFailure.userMessage(for: error) ?? error.localizedDescription
             if isGoogleAccountNotRegistered(message) {
-                googleInfoMessage = selectedHost == .wofins
+                googleInfoMessage = !selectedHost.isInternalHost
                     ? "Akun Google belum tersedia di WOFINS. Gunakan akun yang sudah diundang ke perusahaan Anda."
                     : message
             } else {

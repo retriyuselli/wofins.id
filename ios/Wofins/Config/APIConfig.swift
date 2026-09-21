@@ -1,40 +1,112 @@
 import Foundation
 
-enum APIHostOption: String, CaseIterable, Identifiable {
-    case wofins
-    case makna
+struct APIHostOption: Identifiable, Hashable, Codable {
+    let host: String
+    var title: String
+    var companyName: String?
 
-    var id: String { rawValue }
+    var id: String { host }
+    var subtitle: String { host }
+    var productionURL: URL { URL(string: "https://\(host)")! }
+    var isInternalHost: Bool { host != Self.wofinsHost }
 
-    var title: String {
-        switch self {
-        case .wofins: return "WOFINS"
-        case .makna: return "Internal"
+    static let wofinsHost = "app.wofins.id"
+    static let licenseServerHost = "maknafinance.id"
+
+    static let wofins = APIHostOption(host: wofinsHost, title: "WOFINS")
+
+    static func == (lhs: APIHostOption, rhs: APIHostOption) -> Bool {
+        lhs.host == rhs.host
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(host)
+    }
+
+    static func displayTitle(host: String, companyName: String?) -> String {
+        switch host {
+        case wofinsHost: return "WOFINS"
+        case "maknafinance.id": return "Makna"
+        case "saranafinance.com": return "Sarana"
+        default:
+            let name = companyName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            if !name.isEmpty {
+                return String(name.prefix(18))
+            }
+            return host
         }
     }
 
-    var subtitle: String {
-        switch self {
-        case .wofins: return "app.wofins.id"
-        case .makna: return "maknafinance.id"
+    /// Migrasi key lama (`wofins` / `makna` / `sarana`) + hostname.
+    static func resolveStored(_ raw: String) -> APIHostOption {
+        let value = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        switch value {
+        case "", "wofins", wofinsHost:
+            return .wofins
+        case "makna", "maknafinance.id":
+            return APIHostOption(host: "maknafinance.id", title: "Makna")
+        case "sarana", "saranafinance.com":
+            return APIHostOption(host: "saranafinance.com", title: "Sarana")
+        default:
+            guard let host = normalizeHost(value) else { return .wofins }
+            return APIHostOption(host: host, title: displayTitle(host: host, companyName: nil))
         }
     }
 
-    var productionURL: URL {
-        switch self {
-        case .wofins: return URL(string: "https://app.wofins.id")!
-        case .makna: return URL(string: "https://maknafinance.id")!
+    static func fromPurchaseDomain(_ domain: String, companyName: String?) -> APIHostOption? {
+        guard let host = normalizeHost(domain), host != wofinsHost else { return nil }
+        return APIHostOption(
+            host: host,
+            title: displayTitle(host: host, companyName: companyName),
+            companyName: companyName
+        )
+    }
+
+    static func normalizeHost(_ value: String?) -> String? {
+        var value = (value ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !value.isEmpty else { return nil }
+        if let schemeRange = value.range(of: "://") {
+            value = String(value[schemeRange.upperBound...])
         }
+        if value.hasPrefix("www.") {
+            value = String(value.dropFirst(4))
+        }
+        value = value.split(separator: "/").first.map(String.init) ?? value
+        value = value.split(separator: ":").first.map(String.init) ?? value
+        guard value.contains("."), !value.contains(" "), !value.hasPrefix(".") else { return nil }
+        return value
     }
 }
 
 enum LoginHostPolicy {
     static let unlockTapCount = 7
     static let unlockKey = "wofins.internalHostUnlocked"
+    static let revealedHostsKey = "wofins.revealedInternalHosts"
 
     static var isInternalUnlocked: Bool {
         get { UserDefaults.standard.bool(forKey: unlockKey) }
         set { UserDefaults.standard.set(newValue, forKey: unlockKey) }
+    }
+
+    static var revealedInternalHosts: Set<APIHostOption> {
+        get {
+            if let data = UserDefaults.standard.data(forKey: revealedHostsKey),
+               let decoded = try? JSONDecoder().decode([APIHostOption].self, from: data) {
+                return Set(decoded.filter(\.isInternalHost))
+            }
+            let legacy = UserDefaults.standard.stringArray(forKey: revealedHostsKey) ?? []
+            return Set(legacy.map(APIHostOption.resolveStored).filter(\.isInternalHost))
+        }
+        set {
+            let list = Array(newValue.filter(\.isInternalHost)).sorted { $0.title < $1.title }
+            if let data = try? JSONEncoder().encode(list) {
+                UserDefaults.standard.set(data, forKey: revealedHostsKey)
+            }
+        }
+    }
+
+    static var revealedHostnames: Set<String> {
+        Set(revealedInternalHosts.map(\.host))
     }
 
     static func resolvedHost(unlocked: Bool, current: APIHostOption) -> APIHostOption {
@@ -42,30 +114,124 @@ enum LoginHostPolicy {
     }
 
     static func accountHint(for host: APIHostOption, unlocked: Bool) -> String {
-        if unlocked, host == .makna {
+        if unlocked, host.isInternalHost {
             return "Gunakan email akun internal"
         }
         return "Gunakan email akun WOFINS Anda"
+    }
+
+    @discardableResult
+    static func reveal(_ host: APIHostOption) -> APIHostOption? {
+        guard host.isInternalHost else { return nil }
+        var revealed = revealedInternalHosts
+        if let existing = revealed.first(where: { $0.host == host.host }) {
+            var updated = existing
+            if let companyName = host.companyName, !companyName.isEmpty {
+                updated.companyName = companyName
+                updated.title = APIHostOption.displayTitle(host: host.host, companyName: companyName)
+            }
+            revealed.remove(existing)
+            revealed.insert(updated)
+            revealedInternalHosts = revealed
+            return updated
+        }
+        revealed.insert(host)
+        revealedInternalHosts = revealed
+        return host
+    }
+
+    static func clearRevealedHosts() {
+        UserDefaults.standard.removeObject(forKey: revealedHostsKey)
+    }
+
+    /// Host yang boleh dipilih di picker: WOFINS + yang sudah dibuka via purchase code.
+    static func visibleHostOptions(revealed: Set<APIHostOption> = revealedInternalHosts) -> [APIHostOption] {
+        [.wofins] + revealed.filter(\.isInternalHost).sorted { $0.title < $1.title }
+    }
+}
+
+enum ItemPurchaseCodeClient {
+    struct VerifyResponse: Decodable {
+        let valid: Bool
+        let status: String
+        let message: String
+        let domain: String?
+        let company_name: String?
+    }
+
+    static func isPurchaseCodeFormat(_ raw: String) -> Bool {
+        UUID(uuidString: raw.trimmingCharacters(in: .whitespacesAndNewlines)) != nil
+    }
+
+    /// Verifikasi ke maknafinance.id tanpa bind domain (hanya untuk membuka host di app).
+    static func verify(code: String, session: URLSession = .shared) async throws -> VerifyResponse {
+        let trimmed = code.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard isPurchaseCodeFormat(trimmed) else {
+            throw APIError.message("Purchase code harus berupa UUID.")
+        }
+        guard let url = URL(string: "https://\(APIHostOption.licenseServerHost)/api/item-purchase-codes/verify") else {
+            throw APIError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 20
+        // domain kosong + bind false: jangan ikat kode ke host request iOS.
+        request.httpBody = try JSONSerialization.data(withJSONObject: [
+            "code": trimmed,
+            "domain": "",
+            "bind": false,
+        ])
+
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await session.data(for: request)
+        } catch {
+            throw APITransportMapper.map(error)
+        }
+
+        let http = response as? HTTPURLResponse
+        let decoded = try? JSONDecoder().decode(VerifyResponse.self, from: data)
+        if let decoded {
+            return decoded
+        }
+        let body = String(data: data, encoding: .utf8)
+        throw APIError.http(http?.statusCode ?? 0, body)
     }
 }
 
 enum APIConfig {
     static let apiPrefix = "/api/v1"
     static let hostSelectionKey = "wofins.apiHost"
-    private static let productionHosts: Set<String> = ["app.wofins.id", "maknafinance.id"]
+    private static let builtinProductionHosts: Set<String> = [
+        APIHostOption.wofinsHost,
+        "maknafinance.id",
+        "saranafinance.com",
+    ]
+
+    static var allowedProductionHosts: Set<String> {
+        builtinProductionHosts.union(LoginHostPolicy.revealedHostnames)
+    }
 
     static var selectedHost: APIHostOption {
         get {
-            APIHostOption(rawValue: UserDefaults.standard.string(forKey: hostSelectionKey) ?? "") ?? .wofins
+            let raw = UserDefaults.standard.string(forKey: hostSelectionKey) ?? ""
+            let resolved = APIHostOption.resolveStored(raw)
+            if let revealed = LoginHostPolicy.revealedInternalHosts.first(where: { $0.host == resolved.host }) {
+                return revealed
+            }
+            return resolved
         }
         set {
-            UserDefaults.standard.set(newValue.rawValue, forKey: hostSelectionKey)
+            UserDefaults.standard.set(newValue.host, forKey: hostSelectionKey)
         }
     }
 
     static var baseURL: URL {
-        if selectedHost == .makna, isAllowedAPIHost(APIHostOption.makna.productionURL) {
-            return APIHostOption.makna.productionURL
+        if selectedHost.isInternalHost, isAllowedAPIHost(selectedHost.productionURL) {
+            return selectedHost.productionURL
         }
         if let plistURL = resolvedPlistURL() {
             #if DEBUG
@@ -194,7 +360,7 @@ enum APIConfig {
 
     static func isAllowedAPIHost(_ url: URL) -> Bool {
         let host = (url.host ?? "").lowercased()
-        if productionHosts.contains(host) {
+        if allowedProductionHosts.contains(host) {
             return url.scheme?.lowercased() == "https" && !isLoopback(url)
         }
         #if DEBUG
@@ -208,7 +374,7 @@ enum APIConfig {
 
     static func isAllowedMediaURL(_ url: URL, apiBase: URL = baseURL) -> Bool {
         let host = (url.host ?? "").lowercased()
-        if productionHosts.contains(host) {
+        if allowedProductionHosts.contains(host) {
             return url.scheme?.lowercased() == "https" && normalizedPort(url) == 443
         }
         #if DEBUG
@@ -227,7 +393,7 @@ enum APIConfig {
     static func isTrustedReleaseURL(_ url: URL) -> Bool {
         let host = (url.host ?? "").lowercased()
         return url.scheme?.lowercased() == "https"
-            && productionHosts.contains(host)
+            && allowedProductionHosts.contains(host)
             && normalizedPort(url) == 443
     }
 
