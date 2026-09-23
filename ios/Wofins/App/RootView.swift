@@ -153,93 +153,94 @@ struct CompanyPendingView: View {
     @EnvironmentObject private var appState: AppState
 
     var body: some View {
-        ZStack {
-            WofinsTheme.background.ignoresSafeArea()
+        VStack(spacing: 0) {
+            brandHeader
 
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 0) {
-                    HStack {
-                        WofinsCompactMark()
-                        Text("WOFINS")
-                            .font(.poppins(.headline, weight: .bold))
-                            .foregroundStyle(.white)
-                        Spacer(minLength: 0)
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(WofinsTheme.primary.ignoresSafeArea(edges: .top))
+                VStack(alignment: .leading, spacing: 18) {
+                    Image(systemName: "building.2")
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundStyle(WofinsTheme.yellow)
+                        .frame(width: 48, height: 48)
+                        .background(WofinsTheme.yellow.opacity(0.14), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
 
-                    VStack(alignment: .leading, spacing: 18) {
-                        Image(systemName: "building.2")
-                            .font(.system(size: 22, weight: .semibold))
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("AKUN TERVERIFIKASI")
+                            .font(.poppins(size: 11, weight: .bold))
+                            .tracking(1.4)
                             .foregroundStyle(WofinsTheme.yellow)
-                            .frame(width: 48, height: 48)
-                            .background(WofinsTheme.yellow.opacity(0.14), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
 
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("AKUN TERVERIFIKASI")
-                                .font(.poppins(size: 11, weight: .bold))
-                                .tracking(1.4)
-                                .foregroundStyle(WofinsTheme.yellow)
+                        Text("Menunggu akses perusahaan")
+                            .font(.poppins(.title3, weight: .bold))
+                            .foregroundStyle(WofinsTheme.ink)
+                            .fixedSize(horizontal: false, vertical: true)
 
-                            Text("Menunggu akses perusahaan")
-                                .font(.poppins(.title3, weight: .bold))
-                                .foregroundStyle(WofinsTheme.ink)
-                                .fixedSize(horizontal: false, vertical: true)
+                        Text("Sign in with Apple berhasil. Akun Anda sudah aktif, tetapi belum terhubung ke perusahaan. Dashboard akan tersedia setelah akses perusahaan ditetapkan.")
+                            .font(.poppins(.subheadline))
+                            .foregroundStyle(WofinsTheme.muted)
+                            .fixedSize(horizontal: false, vertical: true)
 
-                            Text("Sign in with Apple berhasil. Akun Anda sudah aktif, tetapi belum terhubung ke perusahaan. Dashboard akan tersedia setelah akses perusahaan ditetapkan.")
-                                .font(.poppins(.subheadline))
-                                .foregroundStyle(WofinsTheme.muted)
-                                .fixedSize(horizontal: false, vertical: true)
-
-                            Text("Tarik layar ini untuk memperbarui status setelah akses tersedia.")
-                                .font(.poppins(.subheadline))
-                                .foregroundStyle(WofinsTheme.muted)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-
-                        VStack(spacing: 10) {
-                            Button {
-                                Task { await appState.refreshMe() }
-                            } label: {
-                                Text("Perbarui status")
-                                    .font(.poppins(.subheadline, weight: .bold))
-                                    .foregroundStyle(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 50)
-                                    .background(WofinsTheme.primary, in: Capsule())
-                            }
-                            .buttonStyle(.plain)
-
-                            Button {
-                                Task { await appState.logout() }
-                            } label: {
-                                Text("Keluar dari akun")
-                                    .font(.poppins(.subheadline, weight: .semibold))
-                                    .foregroundStyle(WofinsTheme.danger)
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 44)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                        .padding(.top, 4)
+                        Text("Tarik layar ini untuk memperbarui status setelah akses tersedia.")
+                            .font(.poppins(.subheadline))
+                            .foregroundStyle(WofinsTheme.muted)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
-                    .padding(22)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(WofinsTheme.card, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 22, style: .continuous)
-                            .stroke(WofinsTheme.border.opacity(0.75), lineWidth: 1)
+
+                    VStack(spacing: 10) {
+                        Button {
+                            Task { await appState.refreshMe() }
+                        } label: {
+                            Text("Perbarui status")
+                                .font(.poppins(.subheadline, weight: .bold))
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 50)
+                                .background(WofinsTheme.primary, in: Capsule())
+                        }
+                        .buttonStyle(.plain)
+
+                        Button {
+                            Task { await appState.logout() }
+                        } label: {
+                            Text("Keluar dari akun")
+                                .font(.poppins(.subheadline, weight: .semibold))
+                                .foregroundStyle(WofinsTheme.danger)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 44)
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 20)
-                    .padding(.bottom, 28)
+                    .padding(.top, 4)
                 }
+                .padding(22)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(WofinsTheme.card, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .stroke(WofinsTheme.border.opacity(0.75), lineWidth: 1)
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 20)
+                .padding(.bottom, 28)
             }
             .refreshable { await appState.refreshMe() }
         }
+        .background(WofinsTheme.background.ignoresSafeArea())
         .preferredColorScheme(.light)
+    }
+
+    private var brandHeader: some View {
+        HStack {
+            WofinsCompactMark()
+            Text("WOFINS")
+                .font(.poppins(.headline, weight: .bold))
+                .foregroundStyle(.white)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(WofinsTheme.primary.ignoresSafeArea(edges: .top))
     }
 }
 
@@ -261,95 +262,96 @@ struct SubscriptionExpiredView: View {
     }
 
     var body: some View {
-        ZStack {
-            WofinsTheme.background.ignoresSafeArea()
+        VStack(spacing: 0) {
+            brandHeader
 
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 0) {
-                    HStack {
-                        WofinsCompactMark()
-                        Text("WOFINS")
-                            .font(.poppins(.headline, weight: .bold))
-                            .foregroundStyle(.white)
-                        Spacer(minLength: 8)
+                VStack(alignment: .leading, spacing: 18) {
+                    Image(systemName: "calendar.badge.exclamationmark")
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundStyle(WofinsTheme.danger)
+                        .frame(width: 48, height: 48)
+                        .background(WofinsTheme.danger.opacity(0.10), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("MASA AKTIF BERAKHIR")
+                            .font(.poppins(size: 11, weight: .bold))
+                            .tracking(1.4)
+                            .foregroundStyle(WofinsTheme.yellow)
+
+                        Text("Akses dashboard ditangguhkan")
+                            .font(.poppins(.title3, weight: .bold))
+                            .foregroundStyle(WofinsTheme.ink)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        Text("Masa akses \(planLabel) berakhir pada \(expiresLabel). Dashboard perusahaan sementara tidak dapat dibuka.")
+                            .font(.poppins(.subheadline))
+                            .foregroundStyle(WofinsTheme.muted)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        Text("Jika akses sudah tersedia lagi, tarik layar ini atau ketuk Perbarui status.")
+                            .font(.poppins(.subheadline))
+                            .foregroundStyle(WofinsTheme.muted)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 12)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(WofinsTheme.primary.ignoresSafeArea(edges: .top))
 
-                    VStack(alignment: .leading, spacing: 18) {
-                        Image(systemName: "calendar.badge.exclamationmark")
-                            .font(.system(size: 22, weight: .semibold))
-                            .foregroundStyle(WofinsTheme.danger)
-                            .frame(width: 48, height: 48)
-                            .background(WofinsTheme.danger.opacity(0.10), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("MASA AKTIF BERAKHIR")
-                                .font(.poppins(size: 11, weight: .bold))
-                                .tracking(1.4)
-                                .foregroundStyle(WofinsTheme.yellow)
-
-                            Text("Akses dashboard ditangguhkan")
-                                .font(.poppins(.title3, weight: .bold))
-                                .foregroundStyle(WofinsTheme.ink)
-                                .fixedSize(horizontal: false, vertical: true)
-
-                            Text("Masa akses \(planLabel) berakhir pada \(expiresLabel). Dashboard perusahaan sementara tidak dapat dibuka.")
-                                .font(.poppins(.subheadline))
-                                .foregroundStyle(WofinsTheme.muted)
-                                .fixedSize(horizontal: false, vertical: true)
-
-                            Text("Jika akses sudah tersedia lagi, tarik layar ini atau ketuk Perbarui status.")
-                                .font(.poppins(.subheadline))
-                                .foregroundStyle(WofinsTheme.muted)
-                                .fixedSize(horizontal: false, vertical: true)
+                    Text("Dashboard sementara tidak tersedia karena masa akses perusahaan telah berakhir.")
+                        .font(.poppins(.caption))
+                        .foregroundStyle(WofinsTheme.danger)
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(WofinsTheme.danger.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .stroke(WofinsTheme.danger.opacity(0.35), lineWidth: 1)
                         }
 
-                        Text("Dashboard sementara tidak tersedia karena masa akses perusahaan telah berakhir.")
-                            .font(.poppins(.caption))
-                            .foregroundStyle(WofinsTheme.danger)
-                            .padding(12)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(WofinsTheme.danger.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                            .overlay {
-                                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .stroke(WofinsTheme.danger.opacity(0.35), lineWidth: 1)
-                            }
+                    SubscriptionPaywallView(
+                        title: "Perbarui paket",
+                        subtitle: "Beli atau pulihkan langganan lewat In-App Purchase untuk mengaktifkan kembali akses perusahaan.",
+                        showsLogout: true
+                    )
 
-                        SubscriptionPaywallView(
-                            title: "Perbarui paket",
-                            subtitle: "Beli atau pulihkan langganan lewat In-App Purchase untuk mengaktifkan kembali akses perusahaan.",
-                            showsLogout: true
-                        )
-
-                        Button {
-                            Task { await appState.refreshMe() }
-                        } label: {
-                            Text("Perbarui status")
-                                .font(.poppins(.subheadline, weight: .semibold))
-                                .foregroundStyle(WofinsTheme.primary)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 44)
-                        }
-                        .buttonStyle(.plain)
+                    Button {
+                        Task { await appState.refreshMe() }
+                    } label: {
+                        Text("Perbarui status")
+                            .font(.poppins(.subheadline, weight: .semibold))
+                            .foregroundStyle(WofinsTheme.primary)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 44)
                     }
-                    .padding(22)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(WofinsTheme.card, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 22, style: .continuous)
-                            .stroke(WofinsTheme.border.opacity(0.75), lineWidth: 1)
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 20)
-                    .padding(.bottom, 28)
+                    .buttonStyle(.plain)
                 }
+                .padding(22)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(WofinsTheme.card, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .stroke(WofinsTheme.border.opacity(0.75), lineWidth: 1)
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 20)
+                .padding(.bottom, 28)
             }
             .refreshable { await appState.refreshMe() }
         }
+        .background(WofinsTheme.background.ignoresSafeArea())
         .preferredColorScheme(.light)
+    }
+
+    private var brandHeader: some View {
+        HStack {
+            WofinsCompactMark()
+            Text("WOFINS")
+                .font(.poppins(.headline, weight: .bold))
+                .foregroundStyle(.white)
+            Spacer(minLength: 8)
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(WofinsTheme.primary.ignoresSafeArea(edges: .top))
     }
 }
 
