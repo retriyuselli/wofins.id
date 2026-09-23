@@ -773,7 +773,7 @@
 				B225017DDD974B846588B324 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 		376AB96B3E79C290CCBCD3DE /* Build configuration list for PBXProject "Wofins" */ = {
 			isa = XCConfigurationList;
@@ -782,7 +782,7 @@
 				6E83B081EB7488DEFB62E920 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 		A1AD563232BD850E2AB8D34E /* Build configuration list for PBXNativeTarget "Wofins" */ = {
 			isa = XCConfigurationList;
@@ -791,7 +791,7 @@
 				797A7FB7B3647162CDA0AFB3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 
