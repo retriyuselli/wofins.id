@@ -277,14 +277,7 @@ enum APIConfig {
     }
 
     static var connectionErrorMessage: String {
-        #if DEBUG
-        if !isSimulator && isLoopback(baseURL) {
-            return "iPhone tidak bisa memakai 127.0.0.1 (itu HP Anda, bukan Mac). Build ulang Debug dari Mac, satu Wi‑Fi, lalu izinkan Jaringan Lokal."
-        }
-        return "Tidak terhubung ke \(baseURL.absoluteString). Pastikan API Mac nyala, satu Wi‑Fi, dan izinkan Jaringan Lokal."
-        #else
-        return "Tidak terhubung ke server. Periksa koneksi internet."
-        #endif
+        "Tidak terhubung. Periksa koneksi internet Anda."
     }
 
     static var environmentLabel: String {

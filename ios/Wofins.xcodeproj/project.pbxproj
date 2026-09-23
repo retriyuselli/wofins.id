@@ -32,6 +32,7 @@
 		66567BAC64354D9982F41B3D /* AccountSupportViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5691BD2A257F78CA68391180 /* AccountSupportViews.swift */; };
 		6B1AEF406276BB8201F8AB01 /* FinancePeriodPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDF3E253264C0388C4DEC91E /* FinancePeriodPicker.swift */; };
 		83F6083A1FEABD3BF861E5CE /* PrivacyStatementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208F8A27219120B2D2573A31 /* PrivacyStatementView.swift */; };
+		A7E9C2F1B4D6083A5E17C9D2 /* ForgotPasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4B8E1A0F3D7296C5A18E0B7 /* ForgotPasswordView.swift */; };
 		8E8515140DF29B26E177D369 /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC4659AE76F8A0E80509CE3 /* AccountView.swift */; };
 		9791363DEEC5307D2E8A0F9D /* TransactionsOverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA430F656989A0F725AE426 /* TransactionsOverviewView.swift */; };
 		97E5F1D0331B861C22F80097 /* WofinsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6876B4085C7B752E9174A88 /* WofinsApp.swift */; };
@@ -77,6 +78,7 @@
 		1BA7C7798BF15FD393540E64 /* ProductDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductDetailView.swift; sourceTree = "<group>"; };
 		1C2972523AD19542CB2D8F7A /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
 		208F8A27219120B2D2573A31 /* PrivacyStatementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyStatementView.swift; sourceTree = "<group>"; };
+		C4B8E1A0F3D7296C5A18E0B7 /* ForgotPasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgotPasswordView.swift; sourceTree = "<group>"; };
 		24D82D9C2561FCD47F728619 /* SubscriptionPaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionPaywallView.swift; sourceTree = "<group>"; };
 		2E5B0759775E1392314F7A97 /* ProspectDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProspectDetailView.swift; sourceTree = "<group>"; };
 		3109EF10B23E08C0C2129085 /* ProductFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductFormView.swift; sourceTree = "<group>"; };
@@ -250,6 +252,7 @@
 				B159C69C610A7886AB19FD26 /* AppleSignInService.swift */,
 				8645D50A042315D4079AC879 /* GoogleSignInService.swift */,
 				686D73F0C67F4833B617C3E4 /* LoginView.swift */,
+				C4B8E1A0F3D7296C5A18E0B7 /* ForgotPasswordView.swift */,
 				208F8A27219120B2D2573A31 /* PrivacyStatementView.swift */,
 			);
 			path = Auth;
@@ -492,6 +495,7 @@
 				059180338D92E2767CC39D37 /* ModulesView.swift in Sources */,
 				C3406EAD9F8064F53375A160 /* OrderOverviewProjectsView.swift in Sources */,
 				83F6083A1FEABD3BF861E5CE /* PrivacyStatementView.swift in Sources */,
+				A7E9C2F1B4D6083A5E17C9D2 /* ForgotPasswordView.swift in Sources */,
 				FFE35A2D1042D46A6A3EFE65 /* ProductDetailView.swift in Sources */,
 				A21C1225306088B731DA9328 /* ProductFormView.swift in Sources */,
 				410298A35790AF15E1810FC8 /* ProjectDetailView.swift in Sources */,

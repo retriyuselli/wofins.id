@@ -27,6 +27,9 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/apple', [AuthController::class, 'apple'])
         ->middleware('throttle:10,1')
         ->name('api.v1.auth.apple');
+    Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])
+        ->middleware('throttle:5,1')
+        ->name('api.v1.auth.forgot-password');
 
     // App Store Server Notifications V2 (tanpa auth user).
     Route::post('/billing/apple/notifications', [AppleBillingController::class, 'notifications'])

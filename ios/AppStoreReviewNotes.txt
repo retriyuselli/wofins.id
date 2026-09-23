@@ -17,7 +17,7 @@ Multiplatform (Guideline 3.1.3(b))
 - Subscriptions purchased on the web continue to unlock the same digital features in iOS.
 - The same plan tiers are also available for purchase in iOS via In-App Purchase.
 
-Product IDs
+Product IDs (auto-renewable subscriptions — group “WOFINS Plans”)
 - wofins.starter.monthly / wofins.starter.yearly
 - wofins.professional.monthly / wofins.professional.yearly
 - wofins.business.monthly / wofins.business.yearly
@@ -25,12 +25,42 @@ Product IDs
 Server Notifications V2
 - https://app.wofins.id/api/v1/billing/apple/notifications
 
-Suggested reply to Guideline 3.1.1
+────────────────────────────────────────
+Checklist before resubmit (Guideline 2.1(b) + 2.3.2)
+────────────────────────────────────────
+App Store Connect → Monetization → Subscriptions → group “WOFINS Plans”
+For EACH of the 6 products:
+  [ ] Localization (en_US + id if used): Display Name + Description
+  [ ] Pricing / availability for territories (at least Indonesia)
+  [ ] App Review Screenshot uploaded (paywall / “Pilih paket” screen) — required for review
+  [ ] Review Notes filled (can paste “How to test” above)
+  [ ] Status Ready to Submit → Add for Review
+Then:
+  [ ] Add ALL 6 subscriptions + the subscription group to the SAME submission as the new binary
+  [ ] Upload a new app binary (build number +1)
+  [ ] App description + screenshots clearly state paid plans require In-App Purchase / subscription
+
+Suggested App Description add-on (Guideline 2.3.2)
+EN:
+Some company features and plan tiers (Starter, Professional, Business) require an active subscription purchased via In-App Purchase, or an existing multiplatform subscription managed outside the app.
+
+ID:
+Beberapa fitur perusahaan dan paket (Starter, Professional, Business) memerlukan langganan aktif yang dibeli melalui In-App Purchase, atau langganan multiplatform yang sudah aktif di luar aplikasi.
+
+Screenshot caption / overlay examples
+- “Paket langganan — dibeli lewat In-App Purchase”
+- “Subscription plans — In-App Purchase required”
+
+Suggested reply to Guideline 2.1(b) + 2.3.2
 Hello App Review Team,
 
-We have implemented In-App Purchase for WOFINS company subscription plans (Starter, Professional, Business — monthly and yearly). Paid digital functionality accessed in the iOS app is now available to purchase using IAP. Customers may also continue to access multiplatform subscriptions acquired outside the app in accordance with guideline 3.1.3(b).
+Thank you for the feedback.
 
-Please review the latest build.
+Guideline 2.1(b): We have submitted all associated auto-renewable In-App Purchase subscription products (wofins.starter / professional / business — monthly and yearly) for review together with this new binary, including App Review screenshots for each product. In the app, “paket” refers to these company subscription plans.
+
+Guideline 2.3.2: We updated the App Store description and screenshots to clearly indicate that paid plan features require a separate In-App Purchase / subscription purchase.
+
+How to verify: sign in with the demo owner account → open Account → Paket Aktif → Kelola paket (or the paywall if the company plan is expired) → purchase any listed subscription with a Sandbox Apple ID.
 
 Thank you,
 WOFINS Team

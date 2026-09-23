@@ -1,0 +1,306 @@
+<?php $__env->startSection('title', 'Masuk — WOFINS'); ?>
+
+<?php $__env->startPush('styles'); ?>
+<?php echo $__env->make('front.partials.wf-front-base-styles', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<style>
+        .wf-auth {
+            font-family: 'Poppins', system-ui, sans-serif;
+            color: var(--wf-ink);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            background:
+                radial-gradient(ellipse 80% 50% at 10% 20%, rgba(201, 162, 39, 0.12), transparent 55%),
+                radial-gradient(ellipse 60% 40% at 90% 80%, rgba(11, 31, 58, 0.08), transparent 50%),
+                linear-gradient(180deg, #fff 0%, var(--wf-cream) 100%);
+        }
+
+        .wf-auth > header,
+        .wf-auth > .wf-auth-main {
+            position: relative;
+            z-index: 1;
+        }
+
+        .wf-auth-main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            padding-top: 2.5rem;
+            padding-bottom: 3.5rem;
+        }
+
+        @media (min-width: 640px) {
+            .wf-auth-main {
+                padding-top: 3.5rem;
+                padding-bottom: 4rem;
+            }
+        }
+
+        .wf-auth-panel {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wf-auth-panel .wf-deco__blob--a {
+            opacity: 0.55;
+            background: radial-gradient(circle at 30% 30%, rgba(201, 162, 39, 0.5), transparent 70%);
+        }
+
+        .wf-auth-panel .wf-deco__ring--a,
+        .wf-auth-panel .wf-deco__ring--b {
+            border-color: rgba(255, 255, 255, 0.18);
+        }
+
+        .wf-auth-panel .wf-deco__sq--a {
+            border-color: rgba(201, 162, 39, 0.45);
+        }
+
+        .wf-auth-panel .wf-deco__dot--a {
+            background: var(--wf-gold-soft);
+            opacity: 0.7;
+        }
+
+        .wf-auth-input {
+            width: 100%;
+            border: 1px solid var(--wf-line);
+            border-radius: 0.85rem;
+            padding: 0.8rem 1rem;
+            font-size: 0.9rem;
+            background: #fff;
+            color: var(--wf-ink);
+            outline: none;
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+
+        .wf-auth-input:focus {
+            border-color: rgba(201, 162, 39, 0.7);
+            box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.15);
+        }
+
+        .wf-btn-google {
+            border: 1.5px solid var(--wf-line);
+            color: var(--wf-ink);
+            background: #fff;
+            border-radius: 999px;
+            font-weight: 700;
+            transition: background .2s ease, border-color .2s ease, transform .2s ease;
+        }
+
+        .wf-btn-google:hover {
+            background: var(--wf-cream);
+            border-color: #d0cbc0;
+            transform: translateY(-1px);
+        }
+
+        .wf-auth-divider {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            color: var(--wf-muted);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .wf-auth-divider::before,
+        .wf-auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--wf-line);
+        }
+    </style>
+<?php $__env->stopPush(); ?>
+
+<?php $__env->startSection('content'); ?>
+    <div class="wf-auth">
+        <?php echo $__env->make('front.partials.wf-deco-shapes', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+
+        <header class="shrink-0 border-b border-[var(--wf-line)]/70 bg-white/70 backdrop-blur-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center">
+                <a href="<?php echo e(route('home')); ?>" class="inline-flex items-center gap-2 text-2xl font-bold text-[var(--wf-navy)] tracking-wide">
+                    WOFINS
+                </a>
+            </div>
+        </header>
+
+        <div class="wf-auth-main">
+        <div class="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-2 lg:items-stretch rounded-3xl overflow-hidden border border-[var(--wf-line)] bg-white shadow-[0_24px_60px_-28px_rgba(11,31,58,0.35)]">
+                <div class="wf-auth-panel relative bg-[#f7f7f7] min-h-[280px] lg:min-h-full flex items-stretch">
+                    <img
+                        src="<?php echo e(route('brand.login-image')); ?>?v=<?php echo e($companyBrandVersion ?? 1); ?>"
+                        alt="WOFINS"
+                        class="block w-full h-full min-h-[280px] lg:min-h-[640px] object-cover object-top"
+                        loading="eager"
+                        decoding="async"
+                    >
+                </div>
+
+                <div class="p-6 sm:p-10 flex items-center">
+                    <div class="w-full max-w-md mx-auto">
+                        <h1 class="text-3xl font-bold text-[var(--wf-navy)]">Masuk</h1>
+                        <p class="mt-1 text-sm text-[var(--wf-muted)]">Masuk ke akun WOFINS Anda.</p>
+
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(session('status')): ?>
+                            <div class="mt-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+                                <p class="text-sm text-emerald-700"><?php echo e(session('status')); ?></p>
+                            </div>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(session('success')): ?>
+                            <div class="mt-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+                                <p class="text-sm text-emerald-700"><?php echo e(session('success')); ?></p>
+                            </div>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(session('error')): ?>
+                            <div class="mt-4 p-3 rounded-xl bg-red-50 border border-red-200">
+                                <p class="text-sm text-red-700"><?php echo e(session('error')); ?></p>
+                            </div>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(session('warning')): ?>
+                            <div class="mt-4 p-3 rounded-xl bg-amber-50 border border-amber-200">
+                                <p class="text-sm text-amber-800"><?php echo e(session('warning')); ?></p>
+                            </div>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+                        <?php
+                            $googleEnabled = filled(config('services.google.client_id'))
+                                && filled(config('services.google.client_secret'));
+                            $appleEnabled = filled(config('services.apple.web_client_id'));
+                        ?>
+
+                        <div class="mt-8 space-y-4">
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($googleEnabled): ?>
+                                <a href="<?php echo e(route('auth.google')); ?>"
+                                   class="wf-btn-google w-full inline-flex items-center justify-center gap-3 px-5 py-3.5 text-sm">
+                                    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+                                        <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303C33.654 32.657 29.227 36 24 36c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
+                                        <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 16.108 18.961 13 24 13c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/>
+                                        <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>
+                                        <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 01-4.084 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/>
+                                    </svg>
+                                    Masuk dengan Google
+                                </a>
+                            <?php else: ?>
+                                <button type="button" disabled
+                                    class="wf-btn-google w-full inline-flex items-center justify-center gap-3 px-5 py-3.5 text-sm opacity-50 cursor-not-allowed"
+                                    title="Isi GOOGLE_CLIENT_ID dan GOOGLE_CLIENT_SECRET di .env">
+                                    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+                                        <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303C33.654 32.657 29.227 36 24 36c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
+                                        <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 16.108 18.961 13 24 13c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/>
+                                        <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>
+                                        <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 01-4.084 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/>
+                                    </svg>
+                                    Masuk dengan Google
+                                </button>
+                                <p class="text-xs text-center text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                                    Login Google belum aktif — isi <code class="font-semibold">GOOGLE_CLIENT_ID</code> &amp; <code class="font-semibold">GOOGLE_CLIENT_SECRET</code> di <code>.env</code>, lalu <code>php artisan config:clear</code>.
+                                </p>
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($appleEnabled): ?>
+                                <a href="<?php echo e(route('auth.apple')); ?>"
+                                   class="wf-btn-google w-full inline-flex items-center justify-center gap-3 px-5 py-3.5 text-sm">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+                                        <path d="M16.365 1.43c0 1.14-.42 2.2-1.18 3.02-.8.88-2.12 1.56-3.24 1.47-.14-1.1.44-2.26 1.2-3.04.8-.84 2.2-1.46 3.22-1.45zM20.7 17.4c-.56 1.28-.82 1.85-1.54 2.98-1 1.56-2.4 3.5-4.14 3.52-1.54.02-1.94-1-4.04-1-2.1 0-2.54.98-4.06 1.02-1.72.04-3.04-1.7-4.04-3.26-2.8-4.34-3.1-9.42-1.36-12.12 1.22-1.9 3.16-3.02 4.98-3.02 1.86 0 3.02 1.02 4.56 1.02 1.5 0 2.42-1.04 4.58-1.04 1.64 0 3.38.9 4.58 2.44-4.02 2.2-3.36 7.94.48 9.46z"/>
+                                    </svg>
+                                    Masuk dengan Apple
+                                </a>
+                            <?php else: ?>
+                                <button type="button" disabled
+                                    class="wf-btn-google w-full inline-flex items-center justify-center gap-3 px-5 py-3.5 text-sm opacity-50 cursor-not-allowed"
+                                    title="Isi APPLE_WEB_CLIENT_ID (Services ID) di .env">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+                                        <path d="M16.365 1.43c0 1.14-.42 2.2-1.18 3.02-.8.88-2.12 1.56-3.24 1.47-.14-1.1.44-2.26 1.2-3.04.8-.84 2.2-1.46 3.22-1.45zM20.7 17.4c-.56 1.28-.82 1.85-1.54 2.98-1 1.56-2.4 3.5-4.14 3.52-1.54.02-1.94-1-4.04-1-2.1 0-2.54.98-4.06 1.02-1.72.04-3.04-1.7-4.04-3.26-2.8-4.34-3.1-9.42-1.36-12.12 1.22-1.9 3.16-3.02 4.98-3.02 1.86 0 3.02 1.02 4.56 1.02 1.5 0 2.42-1.04 4.58-1.04 1.64 0 3.38.9 4.58 2.44-4.02 2.2-3.36 7.94.48 9.46z"/>
+                                    </svg>
+                                    Masuk dengan Apple
+                                </button>
+                                <p class="text-xs text-center text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                                    Login Apple web belum aktif — buat <strong>Services ID</strong> di Apple Developer, isi <code class="font-semibold">APPLE_WEB_CLIENT_ID</code> di <code>.env</code>, daftarkan Return URL <code class="font-semibold"><?php echo e(url('/auth/apple/callback')); ?></code>, lalu <code>php artisan config:clear</code>.
+                                </p>
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            <div class="wf-auth-divider">atau email</div>
+                        </div>
+
+                        <form class="mt-4 space-y-5" action="<?php echo e(route('front.login.submit')); ?>" method="POST">
+                            <?php echo csrf_field(); ?>
+                            <div>
+                                <label for="email-address" class="block text-sm font-semibold text-[var(--wf-navy)] mb-1.5">Email</label>
+                                <input id="email-address" name="email" type="email" autocomplete="username" autofocus required
+                                    class="wf-auth-input"
+                                    placeholder="nama@email.com" value="<?php echo e(old('email')); ?>">
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['email'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <p class="mt-1 text-sm text-red-600"><?php echo e($message); ?></p>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            </div>
+
+                            <div x-data="{ show: false }">
+                                <label for="password" class="block text-sm font-semibold text-[var(--wf-navy)] mb-1.5">Password</label>
+                                <div class="relative">
+                                    <input id="password" name="password" :type="show ? 'text' : 'password'"
+                                        autocomplete="current-password" required
+                                        class="wf-auth-input pr-11"
+                                        placeholder="Masukkan password">
+                                    <button type="button" @click="show = !show"
+                                        class="absolute inset-y-0 right-3 flex items-center text-[var(--wf-muted)] hover:text-[var(--wf-navy)]">
+                                        <i class="fa-solid" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                    </button>
+                                </div>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['password'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <p class="mt-1 text-sm text-red-600"><?php echo e($message); ?></p>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            </div>
+
+                            <div class="flex items-center justify-between gap-3">
+                                <label class="inline-flex items-center gap-2 text-sm text-[var(--wf-muted)] cursor-pointer">
+                                    <input type="checkbox" name="remember" value="1"
+                                        class="rounded border-[var(--wf-line)] text-[var(--wf-navy)] focus:ring-[var(--wf-gold)]">
+                                    Ingat saya
+                                </label>
+                                <a href="<?php echo e(route('front.password.request')); ?>"
+                                    class="text-sm font-semibold text-[var(--wf-navy)] hover:text-[var(--wf-gold)]">
+                                    Lupa password?
+                                </a>
+                            </div>
+
+                            <button type="submit" class="wf-btn-navy w-full inline-flex items-center justify-center px-5 py-3.5 text-sm">
+                                Masuk
+                            </button>
+
+                            <p class="text-center text-sm text-[var(--wf-muted)]">
+                                Belum punya akun?
+                                <a href="<?php echo e(wofins_route('front.register')); ?>" class="font-bold text-[var(--wf-navy)] hover:text-[var(--wf-gold)]">Daftar sekarang</a>
+                            </p>
+                            <p class="text-center text-xs text-[var(--wf-muted)]">
+                                Butuh demo?
+                                <a href="<?php echo e(route('kontak')); ?>" class="font-semibold text-[var(--wf-navy)] hover:text-[var(--wf-gold)]">Hubungi kami</a>
+                                ·
+                                <a href="mailto:support@wofins.id" class="font-semibold text-[var(--wf-navy)] hover:text-[var(--wf-gold)]">support@wofins.id</a>
+                            </p>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /Applications/XAMPP/xamppfiles/htdocs/application/wofins/resources/views/front/auth/login.blade.php ENDPATH**/ ?>

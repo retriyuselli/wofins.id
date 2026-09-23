@@ -134,6 +134,19 @@ final class APIClient {
         )
     }
 
+    func forgotPassword(email: String) async throws -> String? {
+        struct Body: Encodable {
+            let email: String
+        }
+        let response: MessageResponse = try await request(
+            method: "POST",
+            path: "/auth/forgot-password",
+            body: Body(email: email),
+            authorized: false
+        )
+        return response.message
+    }
+
     func loginWithGoogle(idToken: String, pictureURL: String? = nil, deviceName: String) async throws -> LoginResponse {
         struct Body: Encodable {
             let id_token: String

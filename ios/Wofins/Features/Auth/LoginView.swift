@@ -1,6 +1,5 @@
 import LocalAuthentication
 import SwiftUI
-import UIKit
 
 struct LoginView: View {
     @EnvironmentObject private var appState: AppState
@@ -13,6 +12,7 @@ struct LoginView: View {
     @State private var googleInfoMessage: String?
     @State private var faceNote = ""
     @State private var showPrivacy = false
+    @State private var showForgotPassword = false
     @State private var selectedHost = APIConfig.selectedHost
     @State private var showInternalHostPicker = LoginHostPolicy.isInternalUnlocked
     @State private var logoUnlockTaps = 0
@@ -72,6 +72,10 @@ struct LoginView: View {
         .sheet(isPresented: $showPrivacy) {
             PrivacyStatementView()
         }
+        .sheet(isPresented: $showForgotPassword) {
+            ForgotPasswordView()
+                .environmentObject(appState)
+        }
         .alert(
             "Akun belum terdaftar",
             isPresented: Binding(
@@ -123,11 +127,7 @@ struct LoginView: View {
 
     private func openForgotPassword() {
         dismissKeyboard()
-        guard let url = APIConfig.websiteURL("/forgot-password") else {
-            errorMessage = "Halaman atur ulang password tidak tersedia."
-            return
-        }
-        UIApplication.shared.open(url)
+        showForgotPassword = true
     }
 
     // MARK: - Top banner (new design language)
@@ -343,75 +343,86 @@ struct LoginView: View {
             }
             .padding(.top, 22)
 
-            Button {
-                Task { await loginWithGoogle() }
-            } label: {
-                HStack(spacing: 10) {
-                    googleMark
-                    Text("Google")
-                        .font(.poppins(size: 15, weight: .semibold))
+            HStack(spacing: 8) {
+                Button {
+                    Task { await loginWithGoogle() }
+                } label: {
+                    VStack(spacing: 4) {
+                        googleMark
+                        Text("Google")
+                            .font(.poppins(size: 12, weight: .semibold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .foregroundStyle(navy)
+                    .background(WofinsTheme.card)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .stroke(navy.opacity(0.18), lineWidth: 1.2)
+                    )
                 }
-                .frame(maxWidth: .infinity)
-                .frame(height: 50)
-                .foregroundStyle(navy)
-                .background(WofinsTheme.card)
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(navy.opacity(0.18), lineWidth: 1.2)
-                )
+                .buttonStyle(.plain)
+                .disabled(isLoading)
+                .opacity(isLoading ? 0.65 : 1)
+                .accessibilityLabel("Masuk dengan Google")
+
+                Button {
+                    Task { await startAppleSignIn() }
+                } label: {
+                    VStack(spacing: 4) {
+                        Image(systemName: "apple.logo")
+                            .font(.system(size: 18, weight: .medium))
+                        Text("Apple")
+                            .font(.poppins(size: 12, weight: .semibold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .foregroundStyle(navy)
+                    .background(WofinsTheme.card)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .stroke(navy.opacity(0.18), lineWidth: 1.2)
+                    )
+                }
+                .buttonStyle(.plain)
+                .disabled(isLoading)
+                .opacity(isLoading ? 0.65 : 1)
+                .accessibilityLabel("Masuk dengan Apple")
+
+                Button {
+                    Task { await loginWithFaceID() }
+                } label: {
+                    VStack(spacing: 4) {
+                        Image(systemName: "faceid")
+                            .font(.system(size: 18, weight: .medium))
+                        Text("Face ID")
+                            .font(.poppins(size: 12, weight: .semibold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .foregroundStyle(navy)
+                    .background(WofinsTheme.card)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .stroke(navy.opacity(0.18), lineWidth: 1.2)
+                    )
+                }
+                .buttonStyle(.plain)
+                .disabled(isLoading)
+                .opacity(isLoading ? 0.65 : 1)
+                .accessibilityLabel("Masuk dengan Face ID")
             }
-            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity)
             .padding(.top, 14)
-            .disabled(isLoading)
-            .opacity(isLoading ? 0.65 : 1)
-
-            Button {
-                Task { await startAppleSignIn() }
-            } label: {
-                HStack(spacing: 10) {
-                    Image(systemName: "apple.logo")
-                        .font(.system(size: 18, weight: .medium))
-                    Text("Apple")
-                        .font(.poppins(size: 15, weight: .semibold))
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 50)
-                .foregroundStyle(navy)
-                .background(WofinsTheme.card)
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(navy.opacity(0.18), lineWidth: 1.2)
-                )
-            }
-            .buttonStyle(.plain)
-            .padding(.top, 10)
-            .disabled(isLoading)
-            .opacity(isLoading ? 0.65 : 1)
-
-            Button {
-                Task { await loginWithFaceID() }
-            } label: {
-                HStack(spacing: 10) {
-                    Image(systemName: "faceid")
-                        .font(.poppins(size: 20, weight: .medium))
-                    Text("Face ID")
-                        .font(.poppins(size: 15, weight: .semibold))
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 50)
-                .foregroundStyle(navy)
-                .background(canvas)
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(navy.opacity(0.18), lineWidth: 1.2)
-                )
-            }
-            .buttonStyle(.plain)
-            .padding(.top, 10)
-            .disabled(isLoading)
 
             if !faceNote.isEmpty {
                 Text(faceNote)

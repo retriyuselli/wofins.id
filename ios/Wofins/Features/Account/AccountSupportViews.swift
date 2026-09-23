@@ -417,8 +417,8 @@ struct ConnectedDevicesView: View {
 
 struct HelpCenterView: View {
     @EnvironmentObject private var appState: AppState
-    @Environment(\.openURL) private var openURL
     @State private var showContact = false
+    @State private var showForgotPassword = false
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -426,13 +426,16 @@ struct HelpCenterView: View {
                 infoCard("Pertanyaan umum") {
                     faq("Bagaimana masuk dengan Face ID?", "Di halaman masuk, centang Ingat saya lalu masuk sekali. Berikutnya gunakan tombol Face ID.")
                     Divider()
-                    faq("Lupa password?", "Atur ulang lewat tautan di bawah. Halaman web memakai host yang sama dengan API aplikasi.")
+                    faq("Lupa password?", "Atur ulang lewat tombol di bawah. Tautan reset dikirim ke email Anda.")
                     Divider()
                     faq("Fitur bertanda Pro atau Business?", "Fitur mengikuti akses yang sudah ditetapkan untuk perusahaan Anda.")
                 }
 
                 VStack(spacing: 10) {
-                    webButton("Atur ulang password", path: "/forgot-password")
+                    Button { showForgotPassword = true } label: {
+                        helpActionLabel("Atur ulang password")
+                    }
+                    .buttonStyle(.plain)
                     Button { showContact = true } label: {
                         helpActionLabel("Bantuan teknis")
                     }
@@ -450,6 +453,10 @@ struct HelpCenterView: View {
         .wofinsSwipeBack()
         .sheet(isPresented: $showContact) {
             ContactUsSheet()
+                .environmentObject(appState)
+        }
+        .sheet(isPresented: $showForgotPassword) {
+            ForgotPasswordView()
                 .environmentObject(appState)
         }
     }
@@ -476,22 +483,6 @@ struct HelpCenterView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 4)
-    }
-
-    private func webButton(_ title: String, path: String) -> some View {
-        Button {
-            if let url = APIConfig.websiteURL(path) {
-                openURL(url)
-            }
-        } label: {
-            Text(title)
-                .font(.poppins(.subheadline, weight: .semibold))
-                .foregroundStyle(WofinsTheme.primary)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .background(WofinsTheme.primary.opacity(0.08), in: Capsule())
-        }
-        .buttonStyle(.plain)
     }
 }
 
