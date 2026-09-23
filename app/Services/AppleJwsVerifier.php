@@ -106,15 +106,63 @@ class AppleJwsVerifier
     {
         $leafPem = $this->x5cToPem((string) $x5c[0]);
         $parsed = openssl_x509_parse($leafPem);
-        $oid = is_array($parsed) ? ($parsed['extensions']['1.2.840.113635.100.6.11.1'] ?? null) : null;
+        if (! is_array($parsed)) {
+            throw ValidationException::withMessages([
+                'signed_transaction' => ['Sertifikat transaksi Apple tidak dapat dibaca.'],
+            ]);
+        }
 
-        // StoreKit transaction certs include Apple OID; if missing, still require CN/O Apple.
-        $org = is_array($parsed) ? (string) ($parsed['subject']['O'] ?? '') : '';
-        if ($oid === null && stripos($org, 'Apple') === false) {
+        $extensions = is_array($parsed['extensions'] ?? null) ? $parsed['extensions'] : [];
+        $hasAppleTransactionOid = array_key_exists('1.2.840.113635.100.6.11.1', $extensions)
+            || $this->extensionsContainOid($extensions, '1.2.840.113635.100.6.11.1');
+
+        // openssl_x509_parse kadang mengembalikan O/CN sebagai array — casting (string) jadi "Array".
+        $subjectText = $this->distinguishedNameText($parsed['subject'] ?? null);
+        $issuerText = $this->distinguishedNameText($parsed['issuer'] ?? null);
+        $looksLikeApple = str_contains($subjectText, 'apple') || str_contains($issuerText, 'apple');
+
+        if (! $hasAppleTransactionOid && ! $looksLikeApple) {
             throw ValidationException::withMessages([
                 'signed_transaction' => ['Sertifikat transaksi bukan dari Apple.'],
             ]);
         }
+    }
+
+    /**
+     * @param  array<string, mixed>  $extensions
+     */
+    private function extensionsContainOid(array $extensions, string $oid): bool
+    {
+        foreach ($extensions as $key => $value) {
+            if (is_string($key) && str_contains($key, $oid)) {
+                return true;
+            }
+            if (is_string($value) && str_contains($value, $oid)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function distinguishedNameText(mixed $dn): string
+    {
+        if (! is_array($dn)) {
+            return strtolower(trim((string) $dn));
+        }
+
+        $parts = [];
+        foreach ($dn as $value) {
+            if (is_array($value)) {
+                foreach ($value as $nested) {
+                    $parts[] = (string) $nested;
+                }
+                continue;
+            }
+            $parts[] = (string) $value;
+        }
+
+        return strtolower(trim(implode(' ', $parts)));
     }
 
     private function shouldSkipCrypto(): bool
