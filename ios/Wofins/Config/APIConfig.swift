@@ -83,6 +83,11 @@ enum LoginHostPolicy {
     static let unlockKey = "wofins.internalHostUnlocked"
     static let revealedHostsKey = "wofins.revealedInternalHosts"
 
+    /// Host staf tanpa Item Purchase Code (penerbit lisensi, bukan domain klien WO).
+    static let staffInternalHosts: [APIHostOption] = [
+        APIHostOption(host: "maknafinance.id", title: "Makna"),
+    ]
+
     static var isInternalUnlocked: Bool {
         get { UserDefaults.standard.bool(forKey: unlockKey) }
         set { UserDefaults.standard.set(newValue, forKey: unlockKey) }
@@ -144,9 +149,22 @@ enum LoginHostPolicy {
         UserDefaults.standard.removeObject(forKey: revealedHostsKey)
     }
 
-    /// Host yang boleh dipilih di picker: WOFINS + yang sudah dibuka via purchase code.
-    static func visibleHostOptions(revealed: Set<APIHostOption> = revealedInternalHosts) -> [APIHostOption] {
-        [.wofins] + revealed.filter(\.isInternalHost).sorted { $0.title < $1.title }
+    /// Host picker: WOFINS + Makna (saat unlocked) + domain klien yang dibuka via purchase code.
+    static func visibleHostOptions(
+        revealed: Set<APIHostOption> = revealedInternalHosts,
+        unlocked: Bool = isInternalUnlocked
+    ) -> [APIHostOption] {
+        var hosts: [APIHostOption] = [.wofins]
+        if unlocked {
+            for staff in staffInternalHosts where !hosts.contains(where: { $0.host == staff.host }) {
+                hosts.append(staff)
+            }
+        }
+        for host in revealed.filter(\.isInternalHost).sorted(by: { $0.title < $1.title })
+            where !hosts.contains(where: { $0.host == host.host }) {
+            hosts.append(host)
+        }
+        return hosts
     }
 }
 

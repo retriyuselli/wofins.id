@@ -1,4 +1,3 @@
-import LocalAuthentication
 import SwiftUI
 
 struct LoginView: View {
@@ -10,7 +9,6 @@ struct LoginView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var googleInfoMessage: String?
-    @State private var faceNote = ""
     @State private var showPrivacy = false
     @State private var showForgotPassword = false
     @State private var selectedHost = APIConfig.selectedHost
@@ -313,12 +311,12 @@ struct LoginView: View {
                             .tint(Color.white)
                     } else {
                         Text("Masuk")
-                            .font(.poppins(size: 16, weight: .bold))
+                            .font(.system(size: 17, weight: .medium))
                             .foregroundStyle(Color.white)
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 52)
+                .frame(height: 44)
                 .overlay(alignment: .bottom) {
                     Capsule()
                         .fill(gold)
@@ -336,101 +334,43 @@ struct LoginView: View {
             HStack(spacing: 12) {
                 Rectangle().fill(line).frame(height: 1)
                 Text("atau lanjut dengan")
-                    .font(.poppins(size: 12))
+                    .font(.system(size: 13, weight: .regular))
                     .foregroundStyle(muted)
                     .fixedSize()
                 Rectangle().fill(line).frame(height: 1)
             }
             .padding(.top, 22)
 
-            HStack(spacing: 8) {
+            // Logo-only (1:1) berdampingan — sesuai Apple HIG / Google branding.
+            HStack(spacing: 16) {
+                Button {
+                    Task { await loginWithApple() }
+                } label: {
+                    Image(systemName: "apple.logo")
+                        .font(.system(size: 22, weight: .medium))
+                        .foregroundStyle(.white)
+                        .frame(width: 48, height: 48)
+                        .background(Color.black, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .disabled(isLoading)
+                .opacity(isLoading ? 0.65 : 1)
+                .accessibilityLabel("Sign in with Apple")
+
                 Button {
                     Task { await loginWithGoogle() }
                 } label: {
-                    VStack(spacing: 4) {
-                        googleMark
-                        Text("Google")
-                            .font(.poppins(size: 12, weight: .semibold))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 56)
-                    .foregroundStyle(navy)
-                    .background(WofinsTheme.card)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .stroke(navy.opacity(0.18), lineWidth: 1.2)
-                    )
+                    googleMark
+                        .frame(width: 48, height: 48)
+                        .background(Color.black, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
                 .buttonStyle(.plain)
                 .disabled(isLoading)
                 .opacity(isLoading ? 0.65 : 1)
-                .accessibilityLabel("Masuk dengan Google")
-
-                Button {
-                    Task { await startAppleSignIn() }
-                } label: {
-                    VStack(spacing: 4) {
-                        Image(systemName: "apple.logo")
-                            .font(.system(size: 18, weight: .medium))
-                        Text("Apple")
-                            .font(.poppins(size: 12, weight: .semibold))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 56)
-                    .foregroundStyle(navy)
-                    .background(WofinsTheme.card)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .stroke(navy.opacity(0.18), lineWidth: 1.2)
-                    )
-                }
-                .buttonStyle(.plain)
-                .disabled(isLoading)
-                .opacity(isLoading ? 0.65 : 1)
-                .accessibilityLabel("Masuk dengan Apple")
-
-                Button {
-                    Task { await loginWithFaceID() }
-                } label: {
-                    VStack(spacing: 4) {
-                        Image(systemName: "faceid")
-                            .font(.system(size: 18, weight: .medium))
-                        Text("Face ID")
-                            .font(.poppins(size: 12, weight: .semibold))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 56)
-                    .foregroundStyle(navy)
-                    .background(WofinsTheme.card)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .stroke(navy.opacity(0.18), lineWidth: 1.2)
-                    )
-                }
-                .buttonStyle(.plain)
-                .disabled(isLoading)
-                .opacity(isLoading ? 0.65 : 1)
-                .accessibilityLabel("Masuk dengan Face ID")
+                .accessibilityLabel("Sign in with Google")
             }
             .frame(maxWidth: .infinity)
             .padding(.top, 14)
-
-            if !faceNote.isEmpty {
-                Text(faceNote)
-                    .font(.poppins(.caption))
-                    .foregroundStyle(muted)
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 10)
-            }
         }
         .padding(22)
         .background(WofinsTheme.card)
@@ -472,7 +412,10 @@ struct LoginView: View {
     }
 
     private var visibleHostOptions: [APIHostOption] {
-        LoginHostPolicy.visibleHostOptions(revealed: revealedInternalHosts)
+        LoginHostPolicy.visibleHostOptions(
+            revealed: revealedInternalHosts,
+            unlocked: showInternalHostPicker
+        )
     }
 
     private var hostPicker: some View {
@@ -484,7 +427,7 @@ struct LoginView: View {
             HStack(spacing: 8) {
                 ZStack(alignment: .leading) {
                     if internalAccessCode.isEmpty {
-                        Text("Item Purchase Code")
+                        Text("Purchase code domain klien")
                             .font(.poppins(size: 13))
                             .foregroundStyle(muted)
                             .allowsHitTesting(false)
@@ -651,7 +594,7 @@ struct LoginView: View {
 
     private var googleMark: some View {
         Text("G")
-            .font(.poppins(size: 18, weight: .bold))
+            .font(.system(size: 22, weight: .bold))
             .foregroundStyle(
                 LinearGradient(
                     colors: [
@@ -664,7 +607,6 @@ struct LoginView: View {
                     endPoint: .bottomTrailing
                 )
             )
-            .frame(width: 22, height: 22)
     }
 
     private var securityBadge: some View {
@@ -706,7 +648,6 @@ struct LoginView: View {
     private func submit() async {
         dismissKeyboard()
         errorMessage = nil
-        faceNote = ""
         isLoading = true
         defer { isLoading = false }
         let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -730,7 +671,6 @@ struct LoginView: View {
         dismissKeyboard()
         errorMessage = nil
         googleInfoMessage = nil
-        faceNote = ""
         isLoading = true
         defer { isLoading = false }
         do {
@@ -740,7 +680,7 @@ struct LoginView: View {
                 UserDefaults.standard.set(savedEmail, forKey: "wofins.savedEmail")
             }
         } catch let error as GoogleSignInError where error == .cancelled {
-            faceNote = error.localizedDescription
+            // User cancelled — no error banner.
         } catch let error as URLError where error.code == .cannotConnectToHost || error.code == .timedOut || error.code == .networkConnectionLost {
             errorMessage = APIConfig.connectionErrorMessage
         } catch {
@@ -755,21 +695,12 @@ struct LoginView: View {
         }
     }
 
-    private func isGoogleAccountNotRegistered(_ message: String) -> Bool {
-        let text = message.lowercased()
-        return text.contains("belum tersedia")
-            || text.contains("belum terdaftar")
-            || text.contains("sudah diundang")
-    }
-
-    private func startAppleSignIn() async {
+    private func loginWithApple() async {
         dismissKeyboard()
         errorMessage = nil
         googleInfoMessage = nil
-        faceNote = ""
         isLoading = true
         defer { isLoading = false }
-
         do {
             let credential = try await AppleSignInService.shared.signIn()
             try await appState.loginWithApple(
@@ -789,50 +720,11 @@ struct LoginView: View {
         }
     }
 
-    private func loginWithFaceID() async {
-        dismissKeyboard()
-        errorMessage = nil
-        faceNote = ""
-
-        guard keychain.hasAnySavedCredentials else {
-            faceNote = "Login sekali dulu, lalu Face ID bisa dipakai."
-            return
-        }
-
-        let context = LAContext()
-        var authError: NSError?
-        guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &authError) else {
-            faceNote = "Face ID tidak tersedia di perangkat ini."
-            return
-        }
-        context.localizedReason = "Masuk ke WOFINS dengan Face ID"
-
-        if let creds = keychain.readProtectedCredentials(context: context) {
-            email = creds.email
-            password = creds.password
-            rememberMe = true
-            await submit()
-            return
-        }
-
-        guard let legacy = keychain.readLegacyCredentials() else {
-            faceNote = "Login sekali dulu, lalu Face ID bisa dipakai."
-            return
-        }
-
-        do {
-            let ok = try await context.evaluatePolicy(
-                .deviceOwnerAuthenticationWithBiometrics,
-                localizedReason: "Masuk ke WOFINS dengan Face ID"
-            )
-            guard ok else { return }
-            email = legacy.email
-            password = legacy.password
-            rememberMe = true
-            await submit()
-        } catch {
-            faceNote = "Autentikasi Face ID dibatalkan."
-        }
+    private func isGoogleAccountNotRegistered(_ message: String) -> Bool {
+        let text = message.lowercased()
+        return text.contains("belum tersedia")
+            || text.contains("belum terdaftar")
+            || text.contains("sudah diundang")
     }
 }
 

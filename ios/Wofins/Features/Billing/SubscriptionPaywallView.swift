@@ -91,6 +91,25 @@ struct SubscriptionPaywallView: View {
                 .disabled(isRestoring || purchasingId != nil)
             }
 
+            // Guideline 3.1.2(c): functional Privacy + Terms of Use (EULA) links in purchase flow.
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Langganan diperpanjang otomatis kecuali dibatalkan minimal 24 jam sebelum periode berakhir. Pengelolaan dilakukan di pengaturan akun Apple.")
+                    .font(.poppins(.caption2))
+                    .foregroundStyle(WofinsTheme.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                HStack(spacing: 0) {
+                    Link("Kebijakan Privasi", destination: WofinsLegalURL.privacyPolicy)
+                    Text("  ·  ")
+                        .foregroundStyle(WofinsTheme.muted)
+                    Link("Syarat Penggunaan (EULA)", destination: WofinsLegalURL.termsOfUse)
+                }
+                .font(.poppins(.caption, weight: .semibold))
+                .tint(WofinsTheme.primary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.top, 4)
+
             if showsLogout {
                 Button {
                     Task { await appState.logout() }

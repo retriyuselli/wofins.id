@@ -43,6 +43,7 @@
                     <li><a href="{{ route('tentang') }}" class="hover:text-white">Tentang Kami</a></li>
                     <li><a href="{{ route('kontak') }}" class="hover:text-white">Kontak Kami</a></li>
                     <li><a href="{{ route('kebijakan-privasi') }}" class="hover:text-white">Kebijakan Privasi</a></li>
+                    <li><a href="{{ route('syarat-ketentuan') }}" class="hover:text-white">Syarat &amp; Ketentuan</a></li>
                     <li><a href="{{ route('docs.index') }}" class="hover:text-white">Dokumentasi</a></li>
                 </ul>
             </div>

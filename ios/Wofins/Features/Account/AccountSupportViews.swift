@@ -1,4 +1,3 @@
-import LocalAuthentication
 import SwiftUI
 import UIKit
 
@@ -232,10 +231,6 @@ struct AppSettingsView: View {
         ScrollView(showsIndicators: false) {
             LazyVStack(alignment: .leading, spacing: 16) {
                 infoCard("Keamanan") {
-                    NavigationLink { FaceIDSettingsView() } label: {
-                        settingsRow("Face ID", "faceid")
-                    }
-                    Divider()
                     NavigationLink { ConnectedDevicesView() } label: {
                         settingsRow("Perangkat Terhubung", "laptopcomputer.and.iphone")
                     }
@@ -267,70 +262,6 @@ struct AppSettingsView: View {
         .wofinsSwipeBack()
         .sheet(isPresented: $showPrivacy) {
             PrivacyStatementView()
-        }
-    }
-}
-
-struct FaceIDSettingsView: View {
-    private let keychain = KeychainStore()
-    @State private var credentialsSaved = false
-    @State private var confirmDisable = false
-
-    private var biometryName: String {
-        let context = LAContext()
-        _ = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil)
-        switch context.biometryType {
-        case .faceID: return "Face ID"
-        case .touchID: return "Touch ID"
-        default: return "Biometrik"
-        }
-    }
-
-    var body: some View {
-        ScrollView(showsIndicators: false) {
-            LazyVStack(alignment: .leading, spacing: 16) {
-                infoCard("Status di perangkat ini") {
-                    infoRow("Sensor", keychain.canUseBiometrics ? "\(biometryName) tersedia" : "Tidak tersedia")
-                    infoRow("Login cepat", credentialsSaved ? "Aktif" : "Belum diaktifkan")
-                }
-
-                infoCard("Cara memakai") {
-                    Text("Centang Ingat saya saat masuk. Berikutnya, tombol \(biometryName) di halaman login membuka sesi tanpa mengetik password.")
-                        .font(.poppins(.subheadline))
-                        .foregroundStyle(WofinsTheme.ink)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                if credentialsSaved {
-                    Button { confirmDisable = true } label: {
-                        Text("Matikan login \(biometryName)")
-                            .font(.poppins(.subheadline, weight: .semibold))
-                            .foregroundStyle(WofinsTheme.danger)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(WofinsTheme.danger.opacity(0.08), in: Capsule())
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 16)
-            .padding(.bottom, 28)
-        }
-        .background(WofinsTheme.background.ignoresSafeArea())
-        .navigationTitle(biometryName)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.visible, for: .navigationBar)
-        .wofinsSwipeBack()
-        .onAppear { credentialsSaved = keychain.hasAnySavedCredentials }
-        .confirmationDialog("Matikan login \(biometryName)?", isPresented: $confirmDisable, titleVisibility: .visible) {
-            Button("Matikan", role: .destructive) {
-                keychain.clearCredentials()
-                credentialsSaved = false
-            }
-            Button("Batal", role: .cancel) {}
-        } message: {
-            Text("Anda tetap bisa masuk dengan email dan password.")
         }
     }
 }
@@ -424,7 +355,7 @@ struct HelpCenterView: View {
         ScrollView(showsIndicators: false) {
             LazyVStack(alignment: .leading, spacing: 16) {
                 infoCard("Pertanyaan umum") {
-                    faq("Bagaimana masuk dengan Face ID?", "Di halaman masuk, centang Ingat saya lalu masuk sekali. Berikutnya gunakan tombol Face ID.")
+                    faq("Bagaimana masuk dengan Google atau Apple?", "Di halaman masuk, gunakan tombol Sign in with Apple atau Sign in with Google. Pastikan akun sudah diundang ke perusahaan Anda.")
                     Divider()
                     faq("Lupa password?", "Atur ulang lewat tombol di bawah. Tautan reset dikirim ke email Anda.")
                     Divider()

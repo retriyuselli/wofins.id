@@ -64,3 +64,56 @@ How to verify: sign in with the demo owner account → open Account → Paket Ak
 
 Thank you,
 WOFINS Team
+
+Suggested reply to Guideline 4 (Sign in with Apple button)
+Hello App Review Team,
+
+Thank you for the feedback on Guideline 4 regarding Sign in with Apple.
+
+We have replaced the custom Apple button (which used SF Symbol artwork) with Apple’s system-provided SignInWithAppleButton from AuthenticationServices, following Apple Design guidelines for Sign in with Apple. The control now uses the official button appearance.
+
+Please review the latest build.
+
+Thank you,
+WOFINS Team
+
+────────────────────────────────────────
+Guideline 3.1.2(c) — Terms of Use (EULA)
+────────────────────────────────────────
+In-app (paywall / “Pilih paket”):
+  [x] Subscription title, length, and price shown per product
+  [x] Functional link: Privacy Policy → https://wofins.id/kebijakan-privasi
+  [x] Functional link: Terms of Use (EULA) → https://wofins.id/syarat-ketentuan
+
+App Store Connect metadata:
+  [ ] Privacy Policy field = https://wofins.id/kebijakan-privasi
+  [ ] App Description includes a functional Terms of Use link, e.g.:
+        Terms of Use (EULA): https://wofins.id/syarat-ketentuan
+      OR set a custom EULA in App Information → License Agreement
+  [ ] Deploy web so https://wofins.id/syarat-ketentuan returns 200 before review
+  [ ] Record a short screen recording: open paywall → tap EULA link → page loads
+  [ ] Reply in Resolution Center + paste notes below into App Review Information
+
+Suggested App Description add-on (EN)
+Terms of Use (EULA): https://wofins.id/syarat-ketentuan
+Privacy Policy: https://wofins.id/kebijakan-privasi
+
+Suggested App Description add-on (ID)
+Syarat Penggunaan (EULA): https://wofins.id/syarat-ketentuan
+Kebijakan Privasi: https://wofins.id/kebijakan-privasi
+
+Suggested reply to Guideline 3.1.2(c)
+Hello App Review Team,
+
+Thank you for the feedback on Guideline 3.1.2(c).
+
+We updated the in-app subscription purchase flow to include functional links to:
+- Privacy Policy: https://wofins.id/kebijakan-privasi
+- Terms of Use (EULA): https://wofins.id/syarat-ketentuan
+
+Each subscription row already shows the plan title, length (monthly/yearly), and price. We also added the Terms of Use link to the App Store description (custom EULA).
+
+How to verify: sign in with the demo owner account → open the subscription paywall (expired plan screen or Account → Kelola paket) → tap “Syarat Penggunaan (EULA)” and “Kebijakan Privasi”. A screen recording is attached / available in Review Notes.
+
+Thank you,
+WOFINS Team

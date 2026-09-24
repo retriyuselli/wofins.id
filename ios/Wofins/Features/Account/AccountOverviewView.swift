@@ -187,8 +187,6 @@ struct AccountView: View {
         settingsGroup("Keamanan") {
             NavigationLink { ChangePasswordView() } label: { settingRow("Ubah Password", "lock.fill") }
             Divider().padding(.leading, 47)
-            NavigationLink { FaceIDSettingsView() } label: { settingRow("Face ID", "faceid", badge: "Tersedia") }
-            Divider().padding(.leading, 47)
             NavigationLink { ConnectedDevicesView() } label: { settingRow("Perangkat Terhubung", "laptopcomputer.and.iphone") }
             Divider().padding(.leading, 47)
             NavigationLink { CompensationView() } label: {
@@ -202,6 +200,11 @@ struct AccountView: View {
             NavigationLink { HelpCenterView() } label: { settingRow("Pusat Bantuan", "questionmark.circle.fill") }
             Divider().padding(.leading, 47)
             Button { showPrivacy = true } label: { settingRow("Kebijakan Privasi", "hand.raised.fill") }
+            Divider().padding(.leading, 47)
+            Link(destination: WofinsLegalURL.termsOfUse) {
+                settingRow("Syarat Penggunaan (EULA)", "doc.text.fill")
+            }
+            .buttonStyle(.plain)
             Divider().padding(.leading, 47)
             NavigationLink { AboutWofinsView() } label: { settingRow("Tentang WOFINS", "info.circle.fill") }
         }

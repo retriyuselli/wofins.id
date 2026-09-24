@@ -90,6 +90,14 @@ class SecurityHardeningTest extends TestCase
             ->assertSee('support@wofins.id');
     }
 
+    public function test_terms_of_use_is_publicly_accessible(): void
+    {
+        $this->get('/syarat-ketentuan')
+            ->assertOk()
+            ->assertSee('Syarat &amp; Ketentuan Berlangganan WOFINS')
+            ->assertSee('support@wofins.id');
+    }
+
     public function test_inactive_api_account_is_rejected(): void
     {
         $user = new User;

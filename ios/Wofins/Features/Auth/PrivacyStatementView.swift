@@ -1,14 +1,19 @@
 import SwiftUI
 
+enum WofinsLegalURL {
+    static let privacyPolicy = URL(string: "https://wofins.id/kebijakan-privasi")!
+    /// Custom Terms of Use / EULA for auto-renewable subscriptions (Guideline 3.1.2(c)).
+    static let termsOfUse = URL(string: "https://wofins.id/syarat-ketentuan")!
+}
+
 struct PrivacyStatementView: View {
     @Environment(\.dismiss) private var dismiss
-    private let privacyPolicyURL = URL(string: "https://wofins.id/kebijakan-privasi")!
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
-                    Link(destination: privacyPolicyURL) {
+                    Link(destination: WofinsLegalURL.privacyPolicy) {
                         HStack(spacing: 12) {
                             Image(systemName: "hand.raised.fill")
                                 .font(.system(size: 18, weight: .semibold))

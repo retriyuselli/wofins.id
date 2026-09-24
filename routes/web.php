@@ -183,6 +183,7 @@ Route::middleware($frontAuthNoStore)->group(function () {
 
 Route::view('/keamanan', 'front.keamanan')->name('keamanan');
 Route::view('/kebijakan-privasi', 'front.kebijakan-privasi')->name('kebijakan-privasi');
+Route::view('/syarat-ketentuan', 'front.syarat-ketentuan')->name('syarat-ketentuan');
 Route::view('/tentang-kami', 'front.tentang')->name('tentang');
 
 // Form undangan crew freelance (publik, tanpa akun) — token per company

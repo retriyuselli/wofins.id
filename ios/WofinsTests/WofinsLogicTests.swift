@@ -141,20 +141,27 @@ final class APIConfigTests: XCTestCase {
         defer { LoginHostPolicy.revealedInternalHosts = previous }
 
         LoginHostPolicy.clearRevealedHosts()
-        XCTAssertEqual(LoginHostPolicy.visibleHostOptions(revealed: []), [.wofins])
+        XCTAssertEqual(LoginHostPolicy.visibleHostOptions(revealed: [], unlocked: false), [.wofins])
+        XCTAssertEqual(
+            LoginHostPolicy.visibleHostOptions(revealed: [], unlocked: true).map(\.host),
+            ["app.wofins.id", "maknafinance.id"]
+        )
         XCTAssertNil(APIHostOption.fromPurchaseDomain("app.wofins.id", companyName: nil))
         XCTAssertNil(APIHostOption.fromPurchaseDomain("bukan-domain", companyName: nil))
 
         let sarana = APIHostOption.fromPurchaseDomain("https://www.saranafinance.com/admin", companyName: "Sarana Finance")
         XCTAssertEqual(sarana?.host, "saranafinance.com")
         XCTAssertEqual(LoginHostPolicy.reveal(sarana!), sarana)
-        XCTAssertEqual(LoginHostPolicy.visibleHostOptions(), [.wofins, sarana!])
+        XCTAssertEqual(
+            LoginHostPolicy.visibleHostOptions(revealed: LoginHostPolicy.revealedInternalHosts, unlocked: false).map(\.host),
+            ["app.wofins.id", "saranafinance.com"]
+        )
         XCTAssertTrue(APIConfig.allowedProductionHosts.contains("saranafinance.com"))
 
         let makna = APIHostOption.fromPurchaseDomain("maknafinance.id", companyName: "Makna")
         XCTAssertEqual(LoginHostPolicy.reveal(makna!), makna)
         XCTAssertEqual(
-            Set(LoginHostPolicy.visibleHostOptions().map(\.host)),
+            Set(LoginHostPolicy.visibleHostOptions(revealed: LoginHostPolicy.revealedInternalHosts, unlocked: true).map(\.host)),
             Set(["app.wofins.id", "maknafinance.id", "saranafinance.com"])
         )
     }
