@@ -20,7 +20,7 @@
         color: var(--wf-muted);
         font-size: 0.95rem;
         line-height: 1.8;
-        overflow-wrap: anywhere;
+        overflow-wrap: break-word;
     }
 
     .wf-policy-copy h2 {
@@ -74,25 +74,121 @@
         text-underline-offset: 3px;
     }
 
-    .wf-policy-copy table {
+    .wf-policy-table-wrap {
+        margin-top: 0.75rem;
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+        border: 1px solid var(--wf-line);
+        border-radius: 0.75rem;
+        background: #fff;
+    }
+
+    .wf-policy-copy .wf-policy-table-wrap table {
+        margin-top: 0;
         width: 100%;
         border-collapse: collapse;
         font-size: 0.88rem;
+        table-layout: auto;
     }
 
-    .wf-policy-copy th,
-    .wf-policy-copy td {
+    .wf-policy-copy .wf-policy-plan-table table {
+        width: max(100%, 40rem);
+        min-width: 40rem;
+    }
+
+    .wf-policy-copy .wf-policy-table-wrap th,
+    .wf-policy-copy .wf-policy-table-wrap td {
         border: 1px solid var(--wf-line);
-        padding: 0.55rem 0.65rem;
+        padding: 0.65rem 0.75rem;
         text-align: left;
         vertical-align: top;
-        word-break: break-word;
+        overflow-wrap: normal;
+        word-break: normal;
+        white-space: normal;
+        hyphens: none;
     }
 
-    .wf-policy-copy th {
+    .wf-policy-copy .wf-policy-table-wrap th {
         background: var(--wf-cream);
         color: var(--wf-navy);
         font-weight: 700;
+    }
+
+    .wf-policy-copy .wf-policy-plan-table th {
+        white-space: nowrap;
+    }
+
+    .wf-policy-copy .wf-policy-plan-table td:nth-child(1),
+    .wf-policy-copy .wf-policy-plan-table td:nth-child(2),
+    .wf-policy-copy .wf-policy-plan-table td:nth-child(3) {
+        white-space: nowrap;
+    }
+
+    .wf-policy-copy .wf-policy-plan-table td:nth-child(4) {
+        min-width: 14rem;
+    }
+
+    /* Kartu paket di layar sempit — lebih mudah dibaca daripada tabel 4 kolom */
+    .wf-policy-plan-cards {
+        display: none;
+        margin-top: 0.75rem;
+        gap: 0.75rem;
+    }
+
+    .wf-policy-plan-card {
+        border: 1px solid var(--wf-line);
+        border-radius: 0.85rem;
+        padding: 0.9rem 1rem;
+        background: #fff;
+        min-width: 0;
+    }
+
+    .wf-policy-plan-card strong {
+        display: block;
+        color: var(--wf-navy);
+        font-size: 1rem;
+        margin-bottom: 0.45rem;
+    }
+
+    .wf-policy-plan-card dl {
+        margin: 0;
+        display: grid;
+        gap: 0.45rem;
+    }
+
+    .wf-policy-plan-card dt {
+        margin: 0;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--wf-navy);
+    }
+
+    .wf-policy-plan-card dd {
+        margin: 0.1rem 0 0;
+        font-size: 0.9rem;
+        line-height: 1.55;
+        color: var(--wf-muted);
+        overflow-wrap: break-word;
+    }
+
+    @media (max-width: 639px) {
+        .wf-policy-plan-table {
+            display: none;
+        }
+
+        .wf-policy-plan-cards {
+            display: grid;
+        }
+    }
+
+    @media (min-width: 640px) {
+        .wf-policy-plan-cards {
+            display: none !important;
+        }
     }
 
     .wf-sign-line {
@@ -144,6 +240,19 @@
 
         .wf-policy-copy h2 {
             break-after: avoid;
+        }
+
+        .wf-policy-plan-cards {
+            display: none !important;
+        }
+
+        .wf-policy-plan-table {
+            display: block !important;
+        }
+
+        .wf-policy-copy .wf-policy-table-wrap table {
+            min-width: 0;
+            width: 100%;
         }
     }
 </style>
@@ -244,7 +353,7 @@
                         </p>
 
                         <h2>Pasal 3 — Paket, kuota, dan harga</h2>
-                        <div class="overflow-x-auto max-w-full">
+                        <div class="wf-policy-table-wrap wf-policy-plan-table">
                             <table>
                                 <thead>
                                     <tr>
@@ -281,6 +390,76 @@
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
+                        <div class="wf-policy-plan-cards" aria-label="Daftar paket langganan">
+                            <article class="wf-policy-plan-card">
+                                <strong>Starter</strong>
+                                <dl>
+                                    <div>
+                                        <dt>Harga / bulan</dt>
+                                        <dd>Rp 110.000</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Pengguna</dt>
+                                        <dd>1 (pemilik)</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Cakupan utama</dt>
+                                        <dd>Proyek, invoice, kas, nota dinas, laporan dasar</dd>
+                                    </div>
+                                </dl>
+                            </article>
+                            <article class="wf-policy-plan-card">
+                                <strong>Professional</strong>
+                                <dl>
+                                    <div>
+                                        <dt>Harga / bulan</dt>
+                                        <dd>Rp 180.000</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Pengguna</dt>
+                                        <dd>1 (pemilik)</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Cakupan utama</dt>
+                                        <dd>Semua Starter + simulasi, draf kontrak kerja, aset, rekonsiliasi, payroll</dd>
+                                    </div>
+                                </dl>
+                            </article>
+                            <article class="wf-policy-plan-card">
+                                <strong>Business</strong>
+                                <dl>
+                                    <div>
+                                        <dt>Harga / bulan</dt>
+                                        <dd>Rp 295.000</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Pengguna</dt>
+                                        <dd>Hingga 3</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Cakupan utama</dt>
+                                        <dd>Semua Professional + crew freelance, dokumen &amp; SOP, laporan AM, onboarding tim</dd>
+                                    </div>
+                                </dl>
+                            </article>
+                            <article class="wf-policy-plan-card">
+                                <strong>Enterprise</strong>
+                                <dl>
+                                    <div>
+                                        <dt>Harga / bulan</dt>
+                                        <dd>Rp 333.333</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Pengguna</dt>
+                                        <dd>Tidak dibatasi kuota paket</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Cakupan utama</dt>
+                                        <dd>Semua Business + domain, hosting, SSL, cadangan, kustomisasi, support pengembang. Minimal 24 bulan (Rp 8.000.000)</dd>
+                                    </div>
+                                </dl>
+                            </article>
                         </div>
                         <p>
                             Nilai yang dibayar di muka mengikuti durasi yang dipilih
@@ -442,7 +621,7 @@
                             setelah akun perusahaan aktif. Lampiran kosong di bawah dipakai jika
                             para pihak menandatangani salinan tercetak tanpa mengisi sistem.
                         </p>
-                        <div class="overflow-x-auto max-w-full">
+                        <div class="wf-policy-table-wrap">
                             <table>
                                 <tbody>
                                     <tr>
